@@ -32,10 +32,10 @@ class MemberCardWidget extends StatelessWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.grey[300],
-                child: member.photoUrl != null
+                child: member.photo != null
                     ? ClipOval(
                         child: Image.network(
-                          member.photoUrl!,
+                          member.photo!,
                           width: 60,
                           height: 60,
                           fit: BoxFit.cover,
@@ -66,11 +66,11 @@ class MemberCardWidget extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(member.status),
+                            color: _getStatusColor(member.status ?? ''),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            member.status,
+                            member.status ?? '',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -83,7 +83,7 @@ class MemberCardWidget extends StatelessWidget {
                     if (showDetails) ...[
                       const SizedBox(height: 4),
                       Text(
-                        member.position,
+                        member.position ?? '',
                         style: TextStyle(
                           color: Colors.blue[700],
                           fontSize: 12,
@@ -92,7 +92,7 @@ class MemberCardWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${member.district} • ${member.phone}',
+                        '${member.district ?? ''} • ${member.phone ?? ''}',
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 12,
