@@ -45,5 +45,13 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>This app uses the camera to scan QR codes and capture images for learning activities and assignments.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to save and select images for learning activities and assignments.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app may use location services to provide location-based learning content and features.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app may use the microphone for voice recording features in learning activities.</string>
 </dict>
 </plist>

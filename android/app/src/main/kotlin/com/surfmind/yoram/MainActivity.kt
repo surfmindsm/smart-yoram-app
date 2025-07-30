@@ -1,4 +1,4 @@
-package com.example.smart_yoram_app
+package com.surfmind.yoram
 
 import io.flutter.embedding.android.FlutterActivity
 
