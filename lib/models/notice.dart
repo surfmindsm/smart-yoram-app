@@ -10,6 +10,7 @@ class Notice {
   final String? imageUrl;
   final List<String>? attachments;
   final DateTime? expiryDate;
+  final bool isRead;
 
   Notice({
     required this.id,
@@ -23,6 +24,7 @@ class Notice {
     this.imageUrl,
     this.attachments,
     this.expiryDate,
+    this.isRead = false,
   });
 
   factory Notice.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class Notice {
       expiryDate: json['expiry_date'] != null 
           ? DateTime.parse(json['expiry_date'] as String)
           : null,
+      isRead: json['is_read'] as bool? ?? false,
     );
   }
 
@@ -60,6 +63,7 @@ class Notice {
       'image_url': imageUrl,
       'attachments': attachments,
       'expiry_date': expiryDate?.toIso8601String(),
+      'is_read': isRead,
     };
   }
 
@@ -75,6 +79,7 @@ class Notice {
     String? imageUrl,
     List<String>? attachments,
     DateTime? expiryDate,
+    bool? isRead,
   }) {
     return Notice(
       id: id ?? this.id,
@@ -88,6 +93,7 @@ class Notice {
       imageUrl: imageUrl ?? this.imageUrl,
       attachments: attachments ?? this.attachments,
       expiryDate: expiryDate ?? this.expiryDate,
+      isRead: isRead ?? this.isRead,
     );
   }
 
