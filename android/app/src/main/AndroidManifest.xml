@@ -1,4 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- QR 코드 스캔 및 학습 활동용 카메라 권한 -->
+    <uses-permission android:name="android.permission.CAMERA" android:required="false" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" android:required="false" />
+    
+    <!-- 카메라 사용 목적 명시 -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    
+    <!-- 네트워크 접근 권한 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
     <application
         android:label="smart_yoram_app"
         android:name="${applicationName}"
@@ -30,6 +46,41 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+            
+        <!-- 개인정보처리방침 관련 메타데이터 -->
+        <meta-data
+            android:name="camera_permission_description"
+            android:value="@string/permission_camera_description" />
+        <meta-data
+            android:name="privacy_policy_notice"
+            android:value="@string/privacy_policy_notice" />
+        <meta-data
+            android:name="privacy_policy_url"
+            android:value="https://smartyoram.com/privacy-policy" />
+        <meta-data
+            android:name="support_email"
+            android:value="privacy@smartyoram.com" />
+        <meta-data
+            android:name="data_safety_camera"
+            android:value="@string/data_safety_camera_usage" />
+        <meta-data
+            android:name="data_safety_description"
+            android:value="@string/data_safety_description" />
+            
+        <!-- Google Play Console 표준 메타데이터 -->
+        <!-- Google Play Console 데이터 안전성 정보 -->
+        <meta-data
+            android:name="google_play_data_safety"
+            android:value="true" />
+        <meta-data
+            android:name="sensitive_permission_camera"
+            android:value="@string/google_play_camera_purpose" />
+        <meta-data
+            android:name="data_collection_purpose"
+            android:value="@string/google_play_data_collection" />
+        <meta-data
+            android:name="privacy_policy_in_app"
+            android:value="true" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

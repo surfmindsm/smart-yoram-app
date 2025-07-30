@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../utils/permission_utils.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class QRScanScreen extends StatefulWidget {
   const QRScanScreen({super.key});
@@ -132,7 +134,20 @@ class _QRScanScreenState extends State<QRScanScreen> {
     );
   }
 
-  void _startScan() {
+  void _startScan() async {
+    // 카메라 권한 요청 (개인정보처리방침 안내 포함)
+    final hasPermission = await PermissionUtils.requestCameraPermission(context);
+    
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('QR 스캔을 위해 카메라 권한이 필요합니다'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
     setState(() {
       _isScanning = true;
     });

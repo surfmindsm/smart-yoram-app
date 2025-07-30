@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Smart Yoram</string>
+    
+    <!-- 권한 사용 설명 (개인정보처리방침 관련) -->
+    <string name="permission_camera_rationale">QR 코드 스캔 및 교회 활동 기록을 위해 카메라 권한이 필요합니다.</string>
+    <string name="permission_camera_description">이 앱은 다음 목적으로 카메라를 사용합니다:
+• QR 코드 스캔을 통한 출석 체크
+• 교회 행사 및 학습 활동 사진 촬영
+• 교인 프로필 사진 등록
+
+촬영된 사진은 사용자의 동의 하에만 저장되며, 교회 관리 목적으로만 사용됩니다.</string>
+    
+    <!-- Google Play Console 요구사항 -->
+    <string name="data_safety_camera_usage">카메라 권한은 QR 코드 스캔, 교회 활동 사진 촬영, 프로필 사진 등록 목적으로만 사용되며, 수집된 데이터는 사용자의 동의 없이 제3자에게 공유되지 않습니다.</string>
+    <string name="data_safety_description">Smart Yoram 앱은 개인정보보호법을 준수하며, 모든 개인데이터는 암호화되어 안전하게 저장됩니다. 사용자는 언제든지 개인데이터 삭제를 요청할 수 있습니다.</string>
+    
+    <!-- 네트워크 권한 설명 -->
+    <string name="permission_internet_description">서버와의 데이터 동기화 및 클라우드 저장을 위해 인터넷 접근이 필요합니다.</string>
+    
+    <!-- 개인정보처리방침 안내 -->
+    <string name="privacy_policy_notice">본 앱은 개인정보보호법에 따라 사용자의 개인정보를 안전하게 처리합니다. 자세한 내용은 개인정보처리방침을 참조해주세요.</string>
+    
+    <!-- Google Play Console 전용 설명 -->
+    <string name="google_play_privacy_policy_url">https://smartyoram.com/privacy-policy</string>
+    <string name="google_play_camera_purpose">Camera permission is used for QR code scanning for attendance tracking, taking photos of church events and activities, and registering member profile pictures. All photos are stored only with user consent and used solely for church management purposes.</string>
+    <string name="google_play_data_collection">This app collects camera data only for: 1) QR code scanning for attendance, 2) Church event photography, 3) Profile picture registration. No data is shared with third parties without user consent.</string>
+</resources>

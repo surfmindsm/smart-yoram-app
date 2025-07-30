@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widget/widgets.dart';
+import 'privacy_policy_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -508,35 +509,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showPrivacyPolicy() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: const Text('개인정보 처리방침'),
-            backgroundColor: Colors.blue[700],
-            foregroundColor: Colors.white,
-          ),
-          body: const SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              '개인정보 처리방침\n\n'
-              '1. 개인정보의 처리 목적\n'
-              '본 앱은 교회 교인들의 편의를 위해 다음과 같은 목적으로 개인정보를 처리합니다.\n'
-              '- 교인 관리 및 연락처 서비스\n'
-              '- 출석 관리 및 통계\n'
-              '- 교회 공지사항 전달\n'
-              '- 교인증 발급 및 관리\n\n'
-              '2. 수집하는 개인정보 항목\n'
-              '- 성명, 전화번호, 이메일 주소\n'
-              '- 주소, 생년월일\n'
-              '- 출석 기록\n\n'
-              '3. 개인정보의 보유 및 이용기간\n'
-              '교인 탈퇴 시까지 보유하며, 탈퇴 후 즉시 삭제됩니다.\n\n'
-              '4. 개인정보의 제3자 제공\n'
-              '원칙적으로 제3자에게 제공하지 않습니다.\n\n'
-              '문의사항이 있으시면 교회 사무실로 연락해주세요.',
-              style: TextStyle(fontSize: 14, height: 1.5),
-            ),
-          ),
-        ),
+        builder: (context) => const PrivacyPolicyScreen(),
       ),
     );
   }

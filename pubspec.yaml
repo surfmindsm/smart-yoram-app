@@ -58,6 +58,7 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^4.0.0
   share_plus: ^11.0.0
+  permission_handler: ^11.1.0
   
   # 네트워크 관련
   http: ^1.1.0
