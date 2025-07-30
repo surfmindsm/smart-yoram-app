@@ -1,5 +1,5 @@
 name: smart_yoram_app
-description: "A new Flutter project."
+description: "스마트 요람 앱 - 학원 및 교육기관을 위한 통합 관리 솔루션"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.3.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,32 +31,99 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # 기본 UI 패키지
   cupertino_icons: ^1.0.8
+  material_symbols_icons: ^4.2719.1
+  
+  # 디바이스 정보 획득
+  device_info_plus: ^10.1.2
+  flutter_svg: ^2.0.7
+  google_fonts: ^6.1.0
+  lottie: ^3.1.0
+  flutter_screenutil: ^5.9.0
+  
+  # Supabase 연동
   supabase_flutter: ^2.9.1
+  
+  # 상태 관리
+  flutter_riverpod: ^3.0.0-dev.3
+  riverpod_annotation: ^3.0.0-dev.3
+  state_notifier: ^1.0.0
+  
+  # 인앱 결제
+  in_app_purchase: ^3.1.11
+  shared_preferences: ^2.2.2
+  
+  # QR 코드 관련
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^4.0.0
+  share_plus: ^11.0.0
+  
+  # 네트워크 관련
+  http: ^1.1.0
+  connectivity_plus: ^5.0.1
+  
+  # 안전한 저장소
+  flutter_secure_storage: ^9.0.0
+  
+  # 데이터 처리 및 유틸리티
+  intl: ^0.19.0
+  path_provider: ^2.1.1
+  
+  # 푸시 알림
+  firebase_core: ^2.24.2
+  firebase_messaging: ^14.7.10
+  flutter_local_notifications: ^19.3.1
+  crypto: ^3.0.3
+  app_links: ^6.4.0
+  
+  # 키보드 가시성 관련
+  flutter_keyboard_visibility: ^6.0.0
+  
+  # 차트 및 그래프
+  fl_chart: ^0.66.2
+  saver_gallery: ^4.0.1  # Android & iOS 통합
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^2.0.0
+  
+  # 코드 생성
+  build_runner: ^2.4.6
+  riverpod_generator: ^3.0.0-dev.11
+  
+  # 테스트 도구
+  mockito: ^5.4.2
+  
+  # 아이콘 및 스플래시 생성
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.9
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-flutter:
+# 앱 아이콘 설정
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/images/app_icon.png"
 
+flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/lottie/
+    - assets/fonts/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
