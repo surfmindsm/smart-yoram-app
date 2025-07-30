@@ -89,6 +89,11 @@ dependencies:
   # 차트 및 그래프
   fl_chart: ^0.66.2
   saver_gallery: ^4.0.1  # Android & iOS 통합
+  
+  # 엑셀 파일 처리
+  excel: ^4.0.6
+  file_picker: ^8.0.0
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:
