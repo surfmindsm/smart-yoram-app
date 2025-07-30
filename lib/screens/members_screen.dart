@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/church_member.dart';
+import '../widget/widgets.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -126,10 +127,8 @@ class _MembersScreenState extends State<MembersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('교인 관리'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+      appBar: CommonAppBar(
+        title: '교인 관리',
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -148,16 +147,10 @@ class _MembersScreenState extends State<MembersScreen> {
             child: Column(
               children: [
                 // 검색창
-                TextField(
+                SearchBarWidget(
                   controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: '이름이나 전화번호를 입력하세요',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
+                  hintText: '이름 또는 전화번호로 검색',
+                  onChanged: (value) => _filterMembers(),
                 ),
                 const SizedBox(height: 12),
                 
@@ -187,22 +180,34 @@ class _MembersScreenState extends State<MembersScreen> {
             ),
           ),
           
-          // 교인 목록
+          // 멤버 목록
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const LoadingWidget()
                 : filteredMembers.isEmpty
-                    ? const Center(
-                        child: Text(
-                          '검색 결과가 없습니다',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
+                    ? const EmptyStateWidget(
+                        icon: Icons.people_outline,
+                        title: '교인 정보가 없습니다',
+                        subtitle: '지정된 조건에 맞는 교인이 없습니다',
                       )
                     : ListView.builder(
                         itemCount: filteredMembers.length,
                         itemBuilder: (context, index) {
                           final member = filteredMembers[index];
-                          return _buildMemberCard(member);
+                          return MemberCardWidget(
+                            member: member,
+                            onTap: () => _showMemberDetail(member),
+                            actionButtons: [
+                              IconButton(
+                                icon: const Icon(Icons.phone, color: Colors.green),
+                                onPressed: () => _makePhoneCall(member.phone),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.message, color: Colors.blue),
+                                onPressed: () => _sendMessage(member.phone),
+                              ),
+                            ],
+                          );
                         },
                       ),
           ),
@@ -211,127 +216,9 @@ class _MembersScreenState extends State<MembersScreen> {
     );
   }
 
-  Widget _buildMemberCard(ChurchMember member) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.blue[100],
-          child: Text(
-            member.name.isNotEmpty ? member.name[0] : '?',
-            style: TextStyle(
-              color: Colors.blue[700],
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        title: Row(
-          children: [
-            Text(
-              member.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(width: 8),
-            if (member.position != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _getPositionColor(member.position!),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  member.position!,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (member.phone != null)
-              Text('📞 ${member.phone}'),
-            Row(
-              children: [
-                if (member.district != null)
-                  Text('📍 ${member.district}'),
-                const SizedBox(width: 16),
-                if (member.status != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(member.status!),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: Text(
-                      member.status!,
-                      style: const TextStyle(
-                        fontSize: 8,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.phone, color: Colors.green),
-              onPressed: () {
-                // 전화 걸기
-                _makePhoneCall(member.phone);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.message, color: Colors.blue),
-              onPressed: () {
-                // 문자 보내기
-                _sendMessage(member.phone);
-              },
-            ),
-          ],
-        ),
-        onTap: () {
-          _showMemberDetail(member);
-        },
-      ),
-    );
-  }
 
-  Color _getPositionColor(String position) {
-    switch (position) {
-      case '교역자':
-        return Colors.purple;
-      case '장로':
-        return Colors.red;
-      case '권사':
-        return Colors.orange;
-      case '집사':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case '출석':
-        return Colors.green;
-      case '등록':
-        return Colors.blue;
-      case '휴면':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
-  }
+
 
   void _showMemberDetail(ChurchMember member) {
     showDialog(
@@ -350,16 +237,18 @@ class _MembersScreenState extends State<MembersScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          CommonButton(
+            text: '닫기',
+            type: ButtonType.text,
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
           ),
-          TextButton(
+          CommonButton(
+            text: '수정',
+            type: ButtonType.primary,
             onPressed: () {
               Navigator.pop(context);
               _showEditMemberDialog(member);
             },
-            child: const Text('수정'),
           ),
         ],
       ),
@@ -368,35 +257,19 @@ class _MembersScreenState extends State<MembersScreen> {
 
   void _showAddMemberDialog() {
     // 교인 추가 다이얼로그
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('교인 추가'),
-        content: const Text('교인 추가 기능은 준비 중입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
+    CommonDialog.showInfoDialog(
+      context,
+      title: '교인 추가',
+      content: '교인 추가 기능은 준비 중입니다.',
     );
   }
 
   void _showEditMemberDialog(ChurchMember member) {
     // 교인 수정 다이얼로그
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('${member.name} 정보 수정'),
-        content: const Text('교인 정보 수정 기능은 준비 중입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
+    CommonDialog.showInfoDialog(
+      context,
+      title: '${member.name} 정보 수정',
+      content: '교인 정보 수정 기능은 준비 중입니다.',
     );
   }
 

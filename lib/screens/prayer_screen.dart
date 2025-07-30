@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widget/widgets.dart';
 
 class PrayerRequest {
   final String id;
@@ -168,17 +169,25 @@ class _PrayerScreenState extends State<PrayerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('기도/심방'),
+        title: const Text('기도'),
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              _showAddDialog();
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: const [
-            Tab(text: '내 기도제목'),
+            Tab(text: '내 기도'),
             Tab(text: '공동 기도'),
-            Tab(text: '심방 신청'),
+            Tab(text: '심방'),
           ],
         ),
       ),
@@ -190,73 +199,56 @@ class _PrayerScreenState extends State<PrayerScreen>
           _buildVisitationTab(),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddDialog(),
-        backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 
   Widget _buildMyPrayerTab() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingWidget();
+    }
+    
+    if (myPrayerRequests.isEmpty) {
+      return const EmptyStateWidget(
+        icon: Icons.church_outlined,
+        title: '등록된 기도제목이 없습니다',
+        subtitle: '처음 기도제목을 등록해보세요',
+      );
     }
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      child: myPrayerRequests.isEmpty
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.favorite_border, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    '등록된 기도제목이 없습니다',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              itemCount: myPrayerRequests.length,
-              itemBuilder: (context, index) {
-                final request = myPrayerRequests[index];
-                return _buildPrayerCard(request, isMyRequest: true);
-              },
-            ),
+      child: ListView.builder(
+        itemCount: myPrayerRequests.length,
+        itemBuilder: (context, index) {
+          final request = myPrayerRequests[index];
+          return _buildPrayerCard(request, isMyRequest: true);
+        },
+      ),
     );
   }
 
   Widget _buildSharedPrayerTab() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingWidget();
+    }
+    
+    if (sharedPrayerRequests.isEmpty) {
+      return const EmptyStateWidget(
+        icon: Icons.people_outline,
+        title: '공동 기도제목이 없습니다',
+        subtitle: '공동체와 함께 기도해보세요',
+      );
     }
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      child: sharedPrayerRequests.isEmpty
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.people_outline, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    '공유된 기도제목이 없습니다',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              itemCount: sharedPrayerRequests.length,
-              itemBuilder: (context, index) {
-                final request = sharedPrayerRequests[index];
-                return _buildPrayerCard(request, isMyRequest: false);
-              },
-            ),
+      child: ListView.builder(
+        itemCount: sharedPrayerRequests.length,
+        itemBuilder: (context, index) {
+          final request = sharedPrayerRequests[index];
+          return _buildPrayerCard(request, isMyRequest: false);
+        },
+      ),
     );
   }
 

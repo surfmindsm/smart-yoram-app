@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widget/widgets.dart';
 import 'calendar_screen.dart';
 import 'prayer_screen.dart';
 import 'settings_screen.dart';
@@ -63,27 +64,31 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: LoadingWidget(),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(churchInfo?['name'] ?? '스마트 교회요람'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+      appBar: CommonAppBar(
+        title: churchInfo?['name'] ?? '스마트 교회요람',
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {
-              // 알림 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotificationCenterScreen()),
+              );
             },
           ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              // 설정 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
             },
           ),
         ],
@@ -122,45 +127,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildChurchInfoCard() {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.church, color: Colors.blue[700], size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  churchInfo?['name'] ?? '교회명',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(Icons.person, size: 16, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text('담임목사: ${churchInfo?['pastor'] ?? ''}'),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.phone, size: 16, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text(churchInfo?['phone'] ?? ''),
-              ],
-            ),
-          ],
+    return InfoCardWidget(
+      title: churchInfo?['name'] ?? '교회명',
+      icon: Icons.church,
+      items: [
+        InfoItem(
+          label: '담임목사',
+          value: churchInfo?['pastor'] ?? '김목사',
+          icon: Icons.person,
         ),
-      ),
+        InfoItem(
+          label: '전화번호',
+          value: churchInfo?['phone'] ?? '031-123-4567',
+          icon: Icons.phone,
+        ),
+        InfoItem(
+          label: '이메일',
+          value: churchInfo?['email'] ?? 'church@example.com',
+          icon: Icons.email,
+        ),
+      ],
     );
   }
 
@@ -168,10 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '내 정보',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        SectionHeader(title: '내 정보'),
         const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: 2,
@@ -246,68 +229,51 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '빠른 메뉴',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        SectionHeader(title: '빠른 메뉴'),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 1,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildQuickMenu('QR 출석', Icons.qr_code_scanner, () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const QRScanScreen()),
-              );
-            }),
-            _buildQuickMenu('내 정보', Icons.person, () {
-              Navigator.pushNamed(context, '/members');
-            }),
-            _buildQuickMenu('주보', Icons.book, () {
-              Navigator.pushNamed(context, '/bulletin');
-            }),
-            _buildQuickMenu('공지사항', Icons.announcement, () {
-              Navigator.pushNamed(context, '/notices');
-            }),
-            _buildQuickMenu('교인증', Icons.card_membership, () {
-              Navigator.pushNamed(context, '/member-card');
-            }),
-            _buildQuickMenu('연락처', Icons.contact_phone, () {
-              Navigator.pushNamed(context, '/contacts');
-            }),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickMenu(String title, IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: Colors.blue[700]),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12),
-              textAlign: TextAlign.center,
+            QuickMenuItem(
+              title: '출석체크',
+              icon: Icons.check_circle,
+              onTap: () {
+                Navigator.pushNamed(context, '/attendance');
+              },
+            ),
+            QuickMenuItem(
+              title: '일정',
+              icon: Icons.calendar_today,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CalendarScreen()),
+                );
+              },
+            ),
+            QuickMenuItem(
+              title: '기도요청',
+              icon: Icons.favorite,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PrayerScreen()),
+                );
+              },
+            ),
+            QuickMenuItem(
+              title: 'QR체크',
+              icon: Icons.qr_code,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const QRScanScreen()),
+                );
+              },
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 
@@ -315,37 +281,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '더 많은 기능',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        SectionHeader(title: '더 많은 기능'),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-              child: _buildFeatureCard(
-                '일정',
-                Icons.calendar_today,
-                '교회 일정과 생일을 확인하세요',
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CalendarScreen()),
-                  );
+              child: FeatureCard(
+                title: '교회 소식',
+                icon: Icons.announcement,
+                description: '공지사항과 교회 소식을 확인하세요',
+                onTap: () {
+                  Navigator.pushNamed(context, '/notices');
                 },
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildFeatureCard(
-                '기도/심방',
-                Icons.favorite,
-                '기도제목과 심방을 신청하세요',
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PrayerScreen()),
-                  );
+              child: FeatureCard(
+                title: '교인 명단',
+                icon: Icons.people,
+                description: '교인들의 연락처를 찾아보세요',
+                onTap: () {
+                  Navigator.pushNamed(context, '/members');
                 },
               ),
             ),
@@ -355,25 +312,22 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           children: [
             Expanded(
-              child: _buildFeatureCard(
-                '알림센터',
-                Icons.notifications,
-                '중요한 알림과 공지를 확인하세요',
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const NotificationCenterScreen()),
-                  );
+              child: FeatureCard(
+                title: '주보',
+                icon: Icons.book,
+                description: '이번 주 주보를 확인하세요',
+                onTap: () {
+                  Navigator.pushNamed(context, '/bulletin');
                 },
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildFeatureCard(
-                '교역자 명단',
-                Icons.people,
-                '교역자와 임직자 연락처를 확인하세요',
-                () {
+              child: FeatureCard(
+                title: '교역자 명단',
+                icon: Icons.people,
+                description: '교역자와 임직자 연락처를 확인하세요',
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const StaffDirectoryScreen()),
@@ -387,11 +341,11 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           children: [
             Expanded(
-              child: _buildFeatureCard(
-                '관리자',
-                Icons.admin_panel_settings,
-                '교회 관리 및 시스템 설정',
-                () {
+              child: FeatureCard(
+                title: '관리자',
+                icon: Icons.admin_panel_settings,
+                description: '교회 관리 및 시스템 설정',
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
@@ -401,11 +355,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildFeatureCard(
-                '설정',
-                Icons.settings,
-                '앱 설정과 개인정보를 관리하세요',
-                () {
+              child: FeatureCard(
+                title: '설정',
+                icon: Icons.settings,
+                description: '앱 설정과 개인정보를 관리하세요',
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SettingsScreen()),
@@ -419,48 +373,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFeatureCard(String title, IconData icon, String description, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.blue[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.blue[200]!),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: Colors.blue[700], size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[700],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildRecentNotices() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,15 +380,13 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              '최근 공지사항',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            TextButton(
+            SectionHeader(title: '최근 공지사항'),
+            CommonButton(
+              text: '더보기',
+              type: ButtonType.text,
               onPressed: () {
                 Navigator.pushNamed(context, '/notices');
               },
-              child: const Text('더보기'),
             ),
           ],
         ),
@@ -488,6 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: 3,
             separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
+              // Notice 객체가 필요하므로 임시로 ListTile 사용
               return ListTile(
                 leading: const Icon(Icons.announcement, size: 20),
                 title: Text('공지사항 제목 ${index + 1}'),

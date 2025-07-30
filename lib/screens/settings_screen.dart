@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widget/widgets.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -23,161 +24,176 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('설정'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+      appBar: CommonAppBar(
+        title: '설정',
       ),
       body: ListView(
         children: [
           // 계정 섹션
-          _buildSectionHeader('계정'),
-          _buildListTile(
-            Icons.person,
-            '개인정보 수정',
-            '이름, 전화번호, 주소 등',
+          SectionHeader(title: '계정'),
+          CustomListTile(
+            icon: Icons.person,
+            title: '개인정보 수정',
+            subtitle: '이름, 전화번호, 주소 등',
             onTap: () {
               Navigator.pushNamed(context, '/profile');
             },
           ),
-          _buildListTile(
-            Icons.lock,
-            '비밀번호 변경',
-            '로그인 비밀번호 변경',
+          CustomListTile(
+            icon: Icons.lock,
+            title: '비밀번호 변경',
+            subtitle: '로그인 비밀번호 변경',
             onTap: _changePassword,
           ),
-          _buildListTile(
-            Icons.family_restroom,
-            '가족 관리',
-            '가족 구성원 추가/수정',
+          CustomListTile(
+            icon: Icons.family_restroom,
+            title: '가족 관리',
+            subtitle: '가족 구성원 추가/수정',
             onTap: _manageFamilyMembers,
           ),
           
           const Divider(height: 32),
           
           // 알림 섹션
-          _buildSectionHeader('알림 설정'),
-          _buildSwitchTile(
-            Icons.notifications,
-            '푸시 알림',
-            '모든 푸시 알림 수신',
-            _pushNotifications,
-            (value) => setState(() => _pushNotifications = value),
+          SectionHeader(title: '알림 설정'),
+          CustomListTile(
+            icon: Icons.notifications,
+            title: '푸시 알림',
+            subtitle: '모든 푸시 알림 수신',
+            trailing: Switch(
+              value: _pushNotifications,
+              onChanged: (value) => setState(() => _pushNotifications = value),
+            ),
           ),
-          _buildSwitchTile(
-            Icons.schedule,
-            '출석 알림',
-            '예배 시간 30분 전 알림',
-            _attendanceReminder,
-            (value) => setState(() => _attendanceReminder = value),
+          CustomListTile(
+            icon: Icons.schedule,
+            title: '출석 알림',
+            subtitle: '예배 시간 30분 전 알림',
+            trailing: Switch(
+              value: _attendanceReminder,
+              onChanged: (value) => setState(() => _attendanceReminder = value),
+            ),
           ),
-          _buildSwitchTile(
-            Icons.cake,
-            '생일 알림',
-            '교인 생일 알림',
-            _birthdayNotifications,
-            (value) => setState(() => _birthdayNotifications = value),
+          CustomListTile(
+            icon: Icons.cake,
+            title: '생일 알림',
+            subtitle: '교인 생일 알림',
+            trailing: Switch(
+              value: _birthdayNotifications,
+              onChanged: (value) => setState(() => _birthdayNotifications = value),
+            ),
           ),
-          _buildSwitchTile(
-            Icons.campaign,
-            '교회 공지',
-            '새로운 공지사항 알림',
-            _churchNotices,
-            (value) => setState(() => _churchNotices = value),
+          CustomListTile(
+            icon: Icons.campaign,
+            title: '교회 공지',
+            subtitle: '새로운 공지사항 알림',
+            trailing: Switch(
+              value: _churchNotices,
+              onChanged: (value) => setState(() => _churchNotices = value),
+            ),
           ),
           
           const Divider(height: 32),
           
           // 앱 설정 섹션
-          _buildSectionHeader('앱 설정'),
-          _buildSwitchTile(
-            Icons.dark_mode,
-            '다크 모드',
-            '어두운 테마 사용',
-            _darkMode,
-            (value) => setState(() => _darkMode = value),
+          SectionHeader(title: '앱 설정'),
+          CustomListTile(
+            icon: Icons.dark_mode,
+            title: '다크 모드',
+            subtitle: '어두운 테마 사용',
+            trailing: Switch(
+              value: _darkMode,
+              onChanged: (value) => setState(() => _darkMode = value),
+            ),
           ),
-          _buildDropdownTile(
-            Icons.text_fields,
-            '글꼴 크기',
-            _fontSize,
-            ['작게', '보통', '크게'],
-            (value) => setState(() => _fontSize = value!),
+          CustomListTile(
+            icon: Icons.text_fields,
+            title: '글꼴 크기',
+            subtitle: _fontSize,
+            trailing: DropdownButton<String>(
+              value: _fontSize,
+              items: ['작게', '보통', '크게']
+                  .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                  .toList(),
+              onChanged: (value) => setState(() => _fontSize = value!),
+              underline: Container(),
+            ),
           ),
-          _buildDropdownTile(
-            Icons.language,
-            '언어',
-            _language,
-            ['한국어', 'English'],
-            (value) => setState(() => _language = value!),
+          CustomListTile(
+            icon: Icons.language,
+            title: '언어',
+            subtitle: _language,
+            trailing: DropdownButton<String>(
+              value: _language,
+              items: ['한국어', 'English']
+                  .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                  .toList(),
+              onChanged: (value) => setState(() => _language = value!),
+              underline: Container(),
+            ),
           ),
           
           const Divider(height: 32),
           
           // 교회 정보 섹션
-          _buildSectionHeader('교회 정보'),
-          _buildListTile(
-            Icons.church,
-            '우리 교회',
-            '새생명교회',
+          SectionHeader(title: '교회 정보'),
+          CustomListTile(
+            icon: Icons.church,
+            title: '우리 교회',
+            subtitle: '새생명교회',
             onTap: _showChurchInfo,
           ),
-          _buildListTile(
-            Icons.contact_phone,
-            '교회 연락처',
-            '02-123-4567',
+          CustomListTile(
+            icon: Icons.contact_phone,
+            title: '교회 연락처',
+            subtitle: '02-123-4567',
             onTap: _showChurchContact,
           ),
-          _buildListTile(
-            Icons.location_on,
-            '교회 위치',
-            '서울시 강남구',
+          CustomListTile(
+            icon: Icons.location_on,
+            title: '교회 위치',
+            subtitle: '서울시 강남구',
             onTap: _showChurchLocation,
           ),
           
           const Divider(height: 32),
           
-          // 지원 섹션
-          _buildSectionHeader('지원'),
-          _buildListTile(
-            Icons.help,
-            '도움말',
-            '앱 사용법',
+          // 도움말 섹션
+          SectionHeader(title: '도움말'),
+          CustomListTile(
+            icon: Icons.help,
+            title: '도움말',
+            subtitle: '자주 묻는 질문',
             onTap: _showHelp,
           ),
-          _buildListTile(
-            Icons.bug_report,
-            '문제 신고',
-            '오류 신고 및 개선 제안',
+          CustomListTile(
+            icon: Icons.bug_report,
+            title: '버그 신고',
+            subtitle: '오류 또는 개선사항 신고',
             onTap: _reportBug,
           ),
-          _buildListTile(
-            Icons.info,
-            '앱 정보',
-            '버전 1.0.0',
+          CustomListTile(
+            icon: Icons.info,
+            title: '앱 정보',
+            subtitle: '버전 및 담당자 정보',
             onTap: _showAppInfo,
           ),
-          
-          const Divider(height: 32),
-          
-          // 기타 섹션
-          _buildSectionHeader('기타'),
-          _buildListTile(
-            Icons.privacy_tip,
-            '개인정보 처리방침',
-            '',
+          CustomListTile(
+            icon: Icons.security,
+            title: '개인정보 처리방침',
+            subtitle: '개인정보 보호 정책',
             onTap: _showPrivacyPolicy,
           ),
-          _buildListTile(
-            Icons.article,
-            '이용약관',
-            '',
+          CustomListTile(
+            icon: Icons.article,
+            title: '이용약관',
+            subtitle: '서비스 이용약관',
             onTap: _showTermsOfService,
           ),
-          _buildListTile(
-            Icons.logout,
-            '로그아웃',
-            '',
+          CustomListTile(
+            icon: Icons.logout,
+            title: '로그아웃',
+            subtitle: '계정에서 로그아웃',
             onTap: _logout,
             textColor: Colors.red,
           ),
@@ -188,93 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.blue[700],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildListTile(
-    IconData icon,
-    String title,
-    String subtitle, {
-    VoidCallback? onTap,
-    Color? textColor,
-  }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: textColor ?? Colors.grey[600],
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildSwitchTile(
-    IconData icon,
-    String title,
-    String subtitle,
-    bool value,
-    Function(bool) onChanged,
-  ) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.grey[600]),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      subtitle: Text(subtitle),
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-        activeColor: Colors.blue[700],
-      ),
-    );
-  }
-
-  Widget _buildDropdownTile(
-    IconData icon,
-    String title,
-    String value,
-    List<String> options,
-    Function(String?) onChanged,
-  ) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.grey[600]),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      trailing: DropdownButton<String>(
-        value: value,
-        underline: Container(),
-        items: options
-            .map((option) => DropdownMenuItem(
-                  value: option,
-                  child: Text(option),
-                ))
-            .toList(),
-        onChanged: onChanged,
-      ),
-    );
-  }
 
   void _changePassword() {
     showDialog(

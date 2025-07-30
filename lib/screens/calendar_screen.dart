@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widget/widgets.dart';
 
 class Event {
   final String id;
@@ -157,13 +158,21 @@ class _CalendarScreenState extends State<CalendarScreen>
         title: const Text('일정'),
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              _showAddEventDialog();
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: const [
             Tab(text: '오늘'),
-            Tab(text: '다가오는 일정'),
+            Tab(text: '예정'),
             Tab(text: '전체'),
           ],
         ),
@@ -186,7 +195,15 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   Widget _buildTodayTab() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingWidget();
+    }
+    
+    if (todayEvents.isEmpty) {
+      return const EmptyStateWidget(
+        icon: Icons.today_outlined,
+        title: '오늘 일정이 없습니다',
+        subtitle: '좋은 하루 보내세요!',
+      );
     }
 
     return RefreshIndicator(
@@ -221,31 +238,13 @@ class _CalendarScreenState extends State<CalendarScreen>
           
           // 오늘 일정 목록
           Expanded(
-            child: todayEvents.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.event_available,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          '오늘 일정이 없습니다',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: todayEvents.length,
-                    itemBuilder: (context, index) {
-                      final event = todayEvents[index];
-                      return _buildEventCard(event);
-                    },
-                  ),
+            child: ListView.builder(
+              itemCount: todayEvents.length,
+              itemBuilder: (context, index) {
+                final event = todayEvents[index];
+                return _buildEventCard(event);
+              },
+            ),
           ),
         ],
       ),
@@ -254,28 +253,16 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   Widget _buildUpcomingTab() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingWidget();
     }
 
     return RefreshIndicator(
       onRefresh: _loadEvents,
       child: upcomingEvents.isEmpty
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.event_note,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    '예정된 일정이 없습니다',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
+          ? const EmptyStateWidget(
+              icon: Icons.event_note,
+              title: '예정된 일정이 없습니다',
+              subtitle: '새로운 일정을 추가하세요!',
             )
           : ListView.builder(
               itemCount: upcomingEvents.length,
@@ -289,8 +276,9 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   Widget _buildAllEventsTab() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingWidget();
     }
+    
 
     // 월별로 그룹화
     final groupedEvents = <String, List<Event>>{};

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widget/widgets.dart';
 import '../models/church_member.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -78,10 +79,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('내 정보'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+      appBar: CommonAppBar(
+        title: '내 정보',
         actions: [
           if (!isEditing)
             IconButton(
@@ -103,9 +102,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? LoadingWidget()
           : currentUser == null
-              ? const Center(child: Text('사용자 정보를 찾을 수 없습니다'))
+              ? EmptyStateWidget(
+                  icon: Icons.person_off,
+                  title: '사용자 정보 없음',
+                  subtitle: '사용자 정보를 찾을 수 없습니다',
+                )
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: Form(
@@ -370,25 +373,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildActionButtons() {
     return Column(
       children: [
-        SizedBox(
+        CommonButton(
+          text: '저장',
+          type: ButtonType.primary,
           width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _saveProfile,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[700],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-            child: const Text('저장'),
-          ),
+          onPressed: _saveProfile,
         ),
         const SizedBox(height: 12),
-        SizedBox(
+        CommonButton(
+          text: '취소',
+          type: ButtonType.secondary,
           width: double.infinity,
-          child: OutlinedButton(
-            onPressed: _cancelEdit,
-            child: const Text('취소'),
-          ),
+          onPressed: _cancelEdit,
         ),
       ],
     );

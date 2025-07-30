@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widget/widgets.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -11,10 +12,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('관리자 대시보드'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+      appBar: CommonAppBar(
+        title: '관리자 대시보드',
         actions: [
           IconButton(
             onPressed: _showAdminMenu,
@@ -51,76 +50,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '교회 현황',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        SectionHeader(title: '교회 현황'),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: _buildStatCard('총 교인수', '342명', Icons.people, Colors.blue)),
+            Expanded(child: StatCard(title: '총 교인수', value: '342명', icon: Icons.people, color: Colors.blue)),
             const SizedBox(width: 12),
-            Expanded(child: _buildStatCard('이번주 출석', '287명', Icons.check_circle, Colors.green)),
+            Expanded(child: StatCard(title: '이번주 출석', value: '287명', icon: Icons.check_circle, color: Colors.green)),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _buildStatCard('새가족', '12명', Icons.person_add, Colors.orange)),
+            Expanded(child: StatCard(title: '새가족', value: '12명', icon: Icons.person_add, color: Colors.orange)),
             const SizedBox(width: 12),
-            Expanded(child: _buildStatCard('신규공지', '3개', Icons.announcement, Colors.purple)),
+            Expanded(child: StatCard(title: '신규공지', value: '3개', icon: Icons.announcement, color: Colors.purple)),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 24),
-              const Spacer(),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildQuickActionsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '빠른 작업',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        SectionHeader(title: '빠른 작업'),
         const SizedBox(height: 16),
         GridView.count(
           crossAxisCount: 3,
@@ -129,48 +86,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: [
-            _buildQuickActionCard('교인 등록', Icons.person_add, () => _addMember()),
-            _buildQuickActionCard('공지 작성', Icons.edit, () => _createNotice()),
-            _buildQuickActionCard('출석 관리', Icons.fact_check, () => _manageAttendance()),
-            _buildQuickActionCard('주보 업로드', Icons.upload, () => _uploadBulletin()),
-            _buildQuickActionCard('단체 문자', Icons.message, () => _sendGroupMessage()),
-            _buildQuickActionCard('통계 보기', Icons.analytics, () => _viewStatistics()),
+            QuickMenuItem(title: '교인 등록', icon: Icons.person_add, onTap: () => _addMember()),
+            QuickMenuItem(title: '공지 작성', icon: Icons.edit, onTap: () => _createNotice()),
+            QuickMenuItem(title: '출석 관리', icon: Icons.assignment_turned_in, onTap: () => _manageAttendance()),
+            QuickMenuItem(title: '주보 업로드', icon: Icons.upload_file, onTap: () => _uploadBulletin()),
+            QuickMenuItem(title: '단체 메시지', icon: Icons.message, onTap: () => _sendGroupMessage()),
+            QuickMenuItem(title: '통계 보기', icon: Icons.analytics, onTap: () => _viewStatistics()),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildQuickActionCard(String title, IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: Colors.blue[600]),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -181,13 +105,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              '최근 활동',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            TextButton(
-              onPressed: () => _viewAllActivities(),
-              child: const Text('전체보기'),
+            SectionHeader(title: '최근 활동'),
+            CommonButton(
+              text: '전체보기',
+              type: ButtonType.text,
+              onPressed: _viewAllActivities,
             ),
           ],
         ),
@@ -276,87 +198,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '관리 메뉴',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        SectionHeader(title: '관리 메뉴'),
         const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 3,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              _buildManagementItem(
-                '교인 관리',
-                '교인 정보 등록, 수정, 삭제',
-                Icons.people_outline,
-                () => _manageMembersScreen(),
-              ),
-              _buildDivider(),
-              _buildManagementItem(
-                '권한 관리',
-                '사용자 권한 설정 및 관리',
-                Icons.admin_panel_settings,
-                () => _managePermissions(),
-              ),
-              _buildDivider(),
-              _buildManagementItem(
-                '데이터 관리',
-                '엑셀 업로드/다운로드, 백업',
-                Icons.storage,
-                () => _manageData(),
-              ),
-              _buildDivider(),
-              _buildManagementItem(
-                '결제 관리',
-                '구독 상태 및 결제 내역',
-                Icons.payment,
-                () => _managePayments(),
-              ),
-              _buildDivider(),
-              _buildManagementItem(
-                '시스템 설정',
-                '교회 정보 및 앱 설정',
-                Icons.settings,
-                () => _systemSettings(),
-              ),
-            ],
-          ),
+        CustomListTile(
+          icon: Icons.people,
+          title: '교인 관리',
+          subtitle: '교인 정보 수정 및 관리',
+          onTap: _manageMembersScreen,
+        ),
+        CustomListTile(
+          icon: Icons.security,
+          title: '권한 관리',
+          subtitle: '사용자 권한 설정',
+          onTap: _managePermissions,
+        ),
+        CustomListTile(
+          icon: Icons.storage,
+          title: '데이터 관리',
+          subtitle: '데이터 가져오기 및 내보내기',
+          onTap: _manageData,
+        ),
+        CustomListTile(
+          icon: Icons.payment,
+          title: '결제 관리',
+          subtitle: '헌금 및 십일조 관리',
+          onTap: _managePayments,
+        ),
+        CustomListTile(
+          icon: Icons.settings,
+          title: '시스템 설정',
+          subtitle: '전체 시스템 설정',
+          onTap: _systemSettings,
         ),
       ],
     );
   }
 
-  Widget _buildManagementItem(String title, String subtitle, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.blue[50],
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: Colors.blue[600]),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap,
-    );
-  }
 
-  Widget _buildDivider() {
-    return Divider(height: 1, color: Colors.grey[200]);
-  }
 
   void _showAdminMenu() {
     showModalBottomSheet(

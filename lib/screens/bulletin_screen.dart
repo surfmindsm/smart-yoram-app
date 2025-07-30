@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/bulletin.dart';
+import '../widget/widgets.dart';
 
 class BulletinScreen extends StatefulWidget {
   const BulletinScreen({super.key});
@@ -119,10 +120,8 @@ class _BulletinScreenState extends State<BulletinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('주보'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+      appBar: CommonAppBar(
+        title: '주보',
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -161,13 +160,12 @@ class _BulletinScreenState extends State<BulletinScreen> {
           // 주보 목록
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const LoadingWidget()
                 : filteredBulletins.isEmpty
-                    ? const Center(
-                        child: Text(
-                          '주보가 없습니다',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
+                    ? const EmptyStateWidget(
+                        icon: Icons.description_outlined,
+                        title: '주보가 없습니다',
+                        subtitle: '아직 등록된 주보가 없습니다',
                       )
                     : RefreshIndicator(
                         onRefresh: _loadBulletins,
