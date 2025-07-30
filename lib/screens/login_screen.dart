@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widget/widgets.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,19 +10,33 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final supabase = Supabase.instance.client;
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   
   bool isLoading = false;
   bool obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    _checkExistingLogin();
+  }
+
+  @override
   void dispose() {
-    _phoneController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+  
+  // 기존 로그인 상태 확인
+  Future<void> _checkExistingLogin() async {
+    final hasStoredAuth = await _authService.loadStoredAuth();
+    if (hasStoredAuth && mounted) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
   }
 
   @override
@@ -79,19 +93,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 const SizedBox(height: 60),
                 
-                // 전화번호 입력
+                // 사용자명/이메일 입력
                 CustomFormField(
-                  label: '전화번호',
-                  controller: _phoneController,
-                  hintText: '010-0000-0000',
-                  prefixIcon: const Icon(Icons.phone),
-                  keyboardType: TextInputType.phone,
+                  label: '사용자명 또는 이메일',
+                  controller: _usernameController,
+                  hintText: 'admin@church.com 또는 admin',
+                  prefixIcon: const Icon(Icons.person),
+                  keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '전화번호를 입력해주세요';
-                    }
-                    if (!RegExp(r'^010-\d{4}-\d{4}$').hasMatch(value)) {
-                      return '올바른 전화번호 형식을 입력해주세요 (010-0000-0000)';
+                      return '사용자명 또는 이메일을 입력해주세요';
                     }
                     return null;
                   },
@@ -227,18 +238,37 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // 실제 구현에서는 Supabase 인증을 사용
-      // 현재는 임시로 성공 처리
-      await Future.delayed(const Duration(seconds: 2));
+      final response = await _authService.login(
+        _usernameController.text.trim(),
+        _passwordController.text,
+      );
       
-      if (mounted) {
+      if (response.success && mounted) {
+        // 로그인 성공
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('로그인 성공!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
         Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        // 로그인 실패
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('로그인 실패: ${response.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('로그인 실패: $e'),
+            content: Text('네트워크 오류: $e'),
             backgroundColor: Colors.red,
           ),
         );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../utils/permission_utils.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../services/qr_service.dart';
+import '../models/qr_code.dart';
 
 class QRScanScreen extends StatefulWidget {
   const QRScanScreen({super.key});
@@ -10,8 +12,70 @@ class QRScanScreen extends StatefulWidget {
 }
 
 class _QRScanScreenState extends State<QRScanScreen> {
+  final QRService _qrService = QRService();
+  MobileScannerController? _scannerController;
   bool _isScanning = false;
+  bool _hasPermission = false;
+  bool _flashEnabled = false;
   String? _scannedCode;
+  QRScanResult? _scanResult;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeScanner();
+  }
+
+  @override
+  void dispose() {
+    _scannerController?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeScanner() async {
+    final hasPermission = await PermissionUtils.requestCameraPermission(context);
+    setState(() {
+      _hasPermission = hasPermission;
+    });
+
+    if (hasPermission && mounted) {
+      _scannerController = MobileScannerController();
+    }
+  }
+
+  void _onQRCodeDetected(BarcodeCapture capture) async {
+    if (_isScanning) return;
+    
+    final List<Barcode> barcodes = capture.barcodes;
+    if (barcodes.isEmpty) return;
+    
+    final String code = barcodes.first.rawValue ?? '';
+    if (code.isEmpty) return;
+
+    setState(() {
+      _isScanning = true;
+      _scannedCode = code;
+    });
+
+    try {
+      final response = await _qrService.scanQRCode(code);
+      
+      if (response.success && response.data != null && mounted) {
+        _scanResult = response.data;
+        _showAttendanceSuccess();
+      } else {
+        _showAttendanceError(response.message);
+      }
+    } catch (e) {
+      _showAttendanceError('네트워크 오류: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isScanning = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,25 +87,51 @@ class _QRScanScreenState extends State<QRScanScreen> {
         actions: [
           IconButton(
             onPressed: _toggleFlash,
-            icon: const Icon(Icons.flash_on),
+            icon: Icon(_flashEnabled ? Icons.flash_on : Icons.flash_off),
           ),
         ],
       ),
       body: Stack(
         children: [
-          // QR 스캔 영역 (실제 구현시 qr_code_scanner 패키지 사용)
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.black,
-            child: const Center(
-              child: Text(
-                'QR 스캐너 영역\n(qr_code_scanner 패키지 필요)',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-                textAlign: TextAlign.center,
+          // QR 스캔 영역
+          if (_hasPermission && _scannerController != null)
+            MobileScanner(
+              controller: _scannerController!,
+              onDetect: _onQRCodeDetected,
+            )
+          else
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.black,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _hasPermission ? Icons.camera_alt : Icons.camera_alt_outlined,
+                      color: Colors.white,
+                      size: 80,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _hasPermission ? '카메라 초기화 중...' : '카메라 권한이 필요합니다',
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (!_hasPermission) ...[
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await _initializeScanner();
+                        },
+                        child: const Text('권한 설정'),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
-          ),
           
           // 스캔 가이드 오버레이
           Container(
@@ -114,9 +204,9 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: _isScanning ? null : _startScan,
-                          icon: Icon(_isScanning ? Icons.stop : Icons.play_arrow),
-                          label: Text(_isScanning ? '스캔 중지' : '스캔 시작'),
+                          onPressed: _hasPermission ? _startScan : null,
+                          icon: const Icon(Icons.qr_code_scanner),
+                          label: Text(_isScanning ? '스캔 중...' : '스캔 시작'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue[700],
                             foregroundColor: Colors.white,
@@ -161,16 +251,24 @@ class _QRScanScreenState extends State<QRScanScreen> {
           _scannedCode = 'ATTENDANCE_${DateTime.now().millisecondsSinceEpoch}';
         });
         
-        _showAttendanceResult();
+        _showAttendanceSuccess();
       }
     });
   }
 
-  void _toggleFlash() {
-    // TODO: 플래시 토글 구현
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('플래시 토글 기능은 추후 구현 예정입니다')),
-    );
+  void _toggleFlash() async {
+    if (_scannerController != null) {
+      try {
+        await _scannerController!.toggleTorch();
+        setState(() {
+          _flashEnabled = !_flashEnabled;
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('플래시 제어 오류: $e')),
+        );
+      }
+    }
   }
 
   void _showMyQR() {
@@ -182,7 +280,9 @@ class _QRScanScreenState extends State<QRScanScreen> {
     );
   }
 
-  void _showAttendanceResult() {
+  void _showAttendanceSuccess() {
+    if (_scanResult == null) return;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -193,17 +293,56 @@ class _QRScanScreenState extends State<QRScanScreen> {
             Text('출석 완료'),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('출석 체크가 완료되었습니다.'),
-            SizedBox(height: 8),
-            Text(
+            if (_scanResult!.member != null) ...[
+              CircleAvatar(
+                radius: 30,
+                backgroundImage: _scanResult!.member!.profilePhotoUrl != null 
+                    ? NetworkImage(_scanResult!.member!.profilePhotoUrl!) 
+                    : null,
+                child: _scanResult!.member!.profilePhotoUrl == null 
+                    ? const Icon(Icons.person, size: 30) 
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _scanResult!.member!.name,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+            ],
+            Text(_scanResult!.message),
+            const SizedBox(height: 8),
+            const Text(
               '오늘도 예배에 참석해주셔서 감사합니다!',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _showAttendanceError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.error, color: Colors.red),
+            SizedBox(width: 8),
+            Text('오류'),
+          ],
+        ),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

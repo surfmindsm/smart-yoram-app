@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/church_member.dart';
+import '../models/member.dart';
 import 'member_detail_screen.dart';
 
 class ContactsScreen extends StatefulWidget {
@@ -16,8 +16,8 @@ class _ContactsScreenState extends State<ContactsScreen>
   final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
   
-  List<ChurchMember> allMembers = [];
-  List<ChurchMember> filteredMembers = [];
+  List<Member> allMembers = [];
+  List<Member> filteredMembers = [];
   bool isLoading = true;
 
   final List<String> tabs = ['전체', '교역자', '임직자', '부서별'];
@@ -56,62 +56,62 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
   }
 
-  List<ChurchMember> _generateSampleMembers() {
+  List<Member> _generateSampleMembers() {
     return [
-      ChurchMember(
-        id: '1',
+      Member(
+        id: 1,
         name: '김목사',
-        phone: '010-1234-5678',
-        email: 'pastor@church.com',
+        phoneNumber: '010-1234-5678',
         position: '교역자',
         district: '1구역',
-        department: '목회',
-        status: '출석',
-        gender: '남',
+        churchId: 1,
+        memberStatus: 'active',
+        gender: 'male',
+        registrationDate: DateTime.now(),
       ),
-      ChurchMember(
-        id: '2',
+      Member(
+        id: 2,
         name: '이장로',
-        phone: '010-2345-6789',
-        email: 'elder@church.com',
+        phoneNumber: '010-2345-6789',
         position: '장로',
         district: '2구역',
-        department: '당회',
-        status: '출석',
-        gender: '남',
+        churchId: 1,
+        memberStatus: 'active',
+        gender: 'male',
+        registrationDate: DateTime.now(),
       ),
-      ChurchMember(
-        id: '3',
+      Member(
+        id: 3,
         name: '박권사',
-        phone: '010-3456-7890',
-        email: 'deaconess@church.com',
+        phoneNumber: '010-3456-7890',
         position: '권사',
         district: '1구역',
-        department: '여전도회',
-        status: '출석',
-        gender: '여',
+        churchId: 1,
+        memberStatus: 'active',
+        gender: 'female',
+        registrationDate: DateTime.now(),
       ),
-      ChurchMember(
-        id: '4',
+      Member(
+        id: 4,
         name: '최집사',
-        phone: '010-4567-8901',
-        email: 'deacon@church.com',
+        phoneNumber: '010-4567-8901',
         position: '집사',
         district: '3구역',
-        department: '남전도회',
-        status: '출석',
-        gender: '남',
+        churchId: 1,
+        memberStatus: 'active',
+        gender: 'male',
+        registrationDate: DateTime.now(),
       ),
-      ChurchMember(
-        id: '5',
+      Member(
+        id: 5,
         name: '정성도',
-        phone: '010-5678-9012',
-        email: 'member@church.com',
+        phoneNumber: '010-5678-9012',
         position: '성도',
         district: '2구역',
-        department: '청년부',
-        status: '등록',
-        gender: '여',
+        churchId: 1,
+        memberStatus: 'active',
+        gender: 'female',
+        registrationDate: DateTime.now(),
       ),
     ];
   }
@@ -121,7 +121,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     int currentTab = _tabController.index;
     
     setState(() {
-      List<ChurchMember> baseList = allMembers;
+      List<Member> baseList = allMembers;
       
       // 탭에 따른 필터링
       switch (currentTab) {
@@ -141,7 +141,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       if (query.isNotEmpty) {
         filteredMembers = baseList.where((member) {
           return member.name.toLowerCase().contains(query) ||
-                 (member.phone?.contains(query) ?? false) ||
+                 member.phoneNumber.contains(query) ||
                  (member.position?.toLowerCase().contains(query) ?? false);
         }).toList();
       } else {
@@ -233,7 +233,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
   }
 
-  Widget _buildContactCard(ChurchMember member) {
+  Widget _buildContactCard(Member member) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
@@ -275,15 +275,13 @@ class _ContactsScreenState extends State<ContactsScreen>
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (member.phone != null)
-              Text('📞 ${member.phone}'),
+            Text('📞 ${member.phoneNumber}'),
             Row(
               children: [
                 if (member.district != null)
                   Text('📍 ${member.district}'),
                 const SizedBox(width: 16),
-                if (member.department != null)
-                  Text('🏢 ${member.department}'),
+                Text('🏢 ${member.position ?? '성도'}'),
               ],
             ),
           ],
@@ -357,39 +355,29 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
   }
 
-  void _makePhoneCall(ChurchMember member) {
-    if (member.phone != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${member.name}님(${member.phone})에게 전화를 걸어요')),
-      );
-    }
+  void _makePhoneCall(Member member) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${member.name}님(${member.phoneNumber})에게 전화를 걸어요')),
+    );
   }
 
-  void _sendMessage(ChurchMember member) {
-    if (member.phone != null) {
-      _showMessageDialog(member);
-    }
+  void _sendMessage(Member member) {
+    _showMessageDialog(member);
   }
 
-  void _sendEmail(ChurchMember member) {
-    if (member.email != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${member.name}님(${member.email})에게 이메일을 보내요')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이메일 주소가 없습니다')),
-      );
-    }
+  void _sendEmail(Member member) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('이메일 기능은 준비 중입니다')),
+    );
   }
 
-  void _sendKakaoMessage(ChurchMember member) {
+  void _sendKakaoMessage(Member member) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${member.name}님에게 카카오톡을 보내요')),
     );
   }
 
-  void _showContactDetail(ChurchMember member) {
+  void _showContactDetail(Member member) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -400,7 +388,7 @@ class _ContactsScreenState extends State<ContactsScreen>
 
 
 
-  void _showMessageDialog(ChurchMember member) {
+  void _showMessageDialog(Member member) {
     final TextEditingController messageController = TextEditingController();
     
     showDialog(
@@ -410,7 +398,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('받는 사람: ${member.phone}'),
+            Text('받는 사람: ${member.phoneNumber}'),
             const SizedBox(height: 16),
             TextField(
               controller: messageController,

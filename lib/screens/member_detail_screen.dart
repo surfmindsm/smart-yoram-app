@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/church_member.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../models/member.dart';
+import '../services/member_service.dart';
 
 class MemberDetailScreen extends StatefulWidget {
-  final ChurchMember member;
+  final Member member;
   final bool isEditable;
 
   const MemberDetailScreen({
@@ -16,31 +19,42 @@ class MemberDetailScreen extends StatefulWidget {
 }
 
 class _MemberDetailScreenState extends State<MemberDetailScreen> {
+  final MemberService _memberService = MemberService();
+  final ImagePicker _picker = ImagePicker();
+  
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-  late TextEditingController _emailController;
   late TextEditingController _addressController;
-  late TextEditingController _memoController;
   
   String _selectedGender = '남';
-  String _selectedPosition = '일반교인';
-  String _selectedStatus = '출석';
+  String _selectedPosition = '성도';
+  String _selectedStatus = 'active';
+  String _selectedDistrict = '';
   DateTime? _selectedBirthDate;
-  DateTime? _selectedBaptismDate;
   DateTime? _selectedRegistrationDate;
   
   bool _isEditing = false;
+  bool _isSaving = false;
+  File? _selectedImage;
+  
+  final List<String> _genderOptions = ['남', '여'];
+  final List<String> _positionOptions = ['교역자', '장로', '권사', '집사', '성도'];
+  final List<String> _statusOptions = ['active', 'inactive', 'transferred'];
+  final List<String> _districtOptions = ['1구역', '2구역', '3구역', '4구역', '5구역'];
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.member.name);
-    _phoneController = TextEditingController(text: widget.member.phone);
-    _emailController = TextEditingController(text: widget.member.email);
-    _addressController = TextEditingController(text: widget.member.address);
-    _memoController = TextEditingController();
+    _phoneController = TextEditingController(text: widget.member.phoneNumber);
+    _addressController = TextEditingController(text: widget.member.address ?? '');
     
-    _selectedPosition = widget.member.position ?? '일반교인';
+    _selectedGender = widget.member.gender;
+    _selectedPosition = widget.member.position ?? '성도';
+    _selectedStatus = widget.member.memberStatus;
+    _selectedDistrict = widget.member.district ?? '1구역';
+    _selectedBirthDate = widget.member.dateOfBirth;
+    _selectedRegistrationDate = widget.member.registrationDate;
     _isEditing = widget.isEditable;
   }
 
@@ -48,9 +62,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _emailController.dispose();
     _addressController.dispose();
-    _memoController.dispose();
     super.dispose();
   }
 
@@ -64,12 +76,22 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
         actions: [
           if (!widget.isEditable)
             IconButton(
-              onPressed: () {
-                setState(() {
-                  _isEditing = !_isEditing;
-                });
+              onPressed: _isSaving ? null : () async {
+                if (_isEditing) {
+                  await _saveMemberInfo();
+                } else {
+                  setState(() {
+                    _isEditing = true;
+                  });
+                }
               },
-              icon: Icon(_isEditing ? Icons.save : Icons.edit),
+              icon: _isSaving 
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(_isEditing ? Icons.save : Icons.edit),
             ),
         ],
       ),
@@ -84,12 +106,19 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                 children: [
                   CircleAvatar(
                     radius: 60,
+                    backgroundImage: _selectedImage != null 
+                        ? FileImage(_selectedImage!) as ImageProvider
+                        : widget.member.fullProfilePhotoUrl != null
+                            ? NetworkImage(widget.member.fullProfilePhotoUrl!) as ImageProvider
+                            : null,
                     backgroundColor: Colors.grey[300],
-                    child: Icon(
-                      Icons.person,
-                      size: 80,
-                      color: Colors.grey[600],
-                    ),
+                    child: (_selectedImage == null && widget.member.fullProfilePhotoUrl == null)
+                        ? Icon(
+                            Icons.person,
+                            size: 80,
+                            color: Colors.grey[600],
+                          )
+                        : null,
                   ),
                   if (_isEditing)
                     Positioned(
@@ -122,31 +151,15 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             _buildGenderSelector(),
             _buildDateField('생년월일', _selectedBirthDate, _selectBirthDate),
             _buildTextField('휴대폰', _phoneController, enabled: _isEditing),
-            _buildTextField('이메일', _emailController, enabled: _isEditing),
             _buildTextField('주소', _addressController, enabled: _isEditing, maxLines: 2),
-            
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             
             // 교회 정보
             _buildSectionTitle('교회 정보'),
-            _buildDropdownField('직분', _selectedPosition, [
-              '일반교인', '집사', '권사', '안수집사', '장로', '목사', '전도사'
-            ]),
-            _buildDropdownField('구역', '1구역', [
-              '1구역', '2구역', '3구역', '4구역', '5구역'
-            ]),
-            _buildDropdownField('출석상태', _selectedStatus, [
-              '출석', '등록', '휴면', '출타', '이명'
-            ]),
-            
-            const SizedBox(height: 24),
-            
-            // 세례/등록 정보
-            _buildSectionTitle('세례/등록 정보'),
-            _buildDropdownField('세례구분', '세례', ['세례', '입교', '유아세례', '미세례']),
-            _buildDateField('세례일', _selectedBaptismDate, _selectBaptismDate),
+            _buildDropdownField('직분', _selectedPosition, _positionOptions),
+            _buildDropdownField('상태', _selectedStatus, _statusOptions),
+            _buildDropdownField('구역', _selectedDistrict, _districtOptions),
             _buildDateField('등록일', _selectedRegistrationDate, _selectRegistrationDate),
-            
             const SizedBox(height: 24),
             
             // 가족 정보
@@ -158,13 +171,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             // 봉사부서
             _buildSectionTitle('봉사부서'),
             _buildServiceDepartments(),
-            
-            const SizedBox(height: 24),
-            
-            // 메모
-            _buildSectionTitle('메모'),
-            _buildTextField('관리자 메모', _memoController, 
-                enabled: _isEditing, maxLines: 3, maxLength: 200),
             
             const SizedBox(height: 32),
             
@@ -224,19 +230,19 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   }
 
   Widget _buildGenderSelector() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('성별'),
+          const Text('성별', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('남'),
-                  value: '남',
+            children: _genderOptions.map((gender) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Radio<String>(
+                  value: gender,
                   groupValue: _selectedGender,
                   onChanged: _isEditing ? (value) {
                     setState(() {
@@ -244,20 +250,10 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                     });
                   } : null,
                 ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('여'),
-                  value: '여',
-                  groupValue: _selectedGender,
-                  onChanged: _isEditing ? (value) {
-                    setState(() {
-                      _selectedGender = value!;
-                    });
-                  } : null,
-                ),
-              ),
-            ],
+                Text(gender),
+                const SizedBox(width: 24),
+              ],
+            )).toList(),
           ),
         ],
       ),
@@ -265,24 +261,29 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   }
 
   Widget _buildDropdownField(String label, String value, List<String> items) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
-        value: value,
-        items: items.map((item) => DropdownMenuItem(
-          value: item,
-          child: Text(item),
-        )).toList(),
-        onChanged: _isEditing ? (newValue) {
-          setState(() {
-            if (label == '직분') _selectedPosition = newValue!;
-            if (label == '출석상태') _selectedStatus = newValue!;
-          });
-        } : null,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: items.contains(value) ? value : items.first,
+            items: items.map((item) => DropdownMenuItem(
+              value: item,
+              child: Text(item),
+            )).toList(),
+            onChanged: _isEditing ? (newValue) {
+              setState(() {
+                if (label == '직분') _selectedPosition = newValue!;
+                else if (label == '상태') _selectedStatus = newValue!;
+                else if (label == '구역') _selectedDistrict = newValue!;
+              });
+            } : null,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+          ),
+        ],
       ),
     );
   }
@@ -387,19 +388,43 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: const Text('갤러리에서 선택'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                // TODO: 갤러리 이미지 선택 구현
+                final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+                if (image != null) {
+                  setState(() {
+                    _selectedImage = File(image.path);
+                  });
+                  // TODO: 이미지 업로드 API 호출
+                }
               },
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera),
               title: const Text('카메라로 촬영'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                // TODO: 카메라 촬영 구현
+                final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+                if (image != null) {
+                  setState(() {
+                    _selectedImage = File(image.path);
+                  });
+                  // TODO: 이미지 업로드 API 호출
+                }
               },
             ),
+            if (widget.member.profilePhotoUrl != null)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('프로필 사진 삭제'),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    _selectedImage = null;
+                  });
+                  // TODO: 이미지 삭제 API 호출
+                },
+              ),
           ],
         ),
       ),
@@ -420,19 +445,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     }
   }
 
-  void _selectBaptismDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (date != null) {
-      setState(() {
-        _selectedBaptismDate = date;
-      });
-    }
-  }
+
 
   void _selectRegistrationDate() async {
     final date = await showDatePicker(
@@ -482,13 +495,61 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     );
   }
 
-  void _saveMemberInfo() {
-    // TODO: 교인 정보 저장 로직
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('교인 정보가 저장되었습니다.')),
-    );
+  Future<void> _saveMemberInfo() async {
+    if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이름과 전화번호는 필수 입력 항목입니다.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
     setState(() {
-      _isEditing = false;
+      _isSaving = true;
     });
+    
+    try {
+      final request = MemberUpdateRequest(
+        name: _nameController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        address: _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : null,
+        position: _selectedPosition,
+        district: _selectedDistrict,
+        memberStatus: _selectedStatus,
+      );
+      
+      final response = await _memberService.updateMember(widget.member.id, request);
+      
+      if (response.success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('교인 정보가 수정되었습니다.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        setState(() {
+          _isEditing = false;
+        });
+      } else {
+        throw Exception(response.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('수정 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 }

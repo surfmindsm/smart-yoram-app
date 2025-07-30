@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/church_member.dart';
+import '../services/member_service.dart';
+import '../models/member.dart';
 import '../widget/widgets.dart';
 
 class MembersScreen extends StatefulWidget {
@@ -11,15 +11,17 @@ class MembersScreen extends StatefulWidget {
 }
 
 class _MembersScreenState extends State<MembersScreen> {
-  final supabase = Supabase.instance.client;
+  final MemberService _memberService = MemberService();
   final TextEditingController _searchController = TextEditingController();
   
-  List<ChurchMember> allMembers = [];
-  List<ChurchMember> filteredMembers = [];
+  List<Member> allMembers = [];
+  List<Member> filteredMembers = [];
   String selectedFilter = '전체';
+  String selectedStatus = '전체';
   bool isLoading = true;
 
   final List<String> filterOptions = ['전체', '교역자', '장로', '권사', '집사', '성도'];
+  final List<String> statusOptions = ['전체', 'active', 'inactive', 'transferred'];
 
   @override
   void initState() {
@@ -34,92 +36,53 @@ class _MembersScreenState extends State<MembersScreen> {
     super.dispose();
   }
 
-  Future<void> _loadMembers() async {
+  Future<void> _loadMembers({String? search}) async {
     setState(() => isLoading = true);
     
     try {
-      // 임시 교인 데이터 생성
-      allMembers = _generateSampleMembers();
-      filteredMembers = List.from(allMembers);
+      // 백엔드 API에서 교인 목록 가져오기
+      final response = await _memberService.getMembers(
+        search: search?.isNotEmpty == true ? search : null,
+        memberStatus: selectedStatus != '전체' ? selectedStatus : null,
+        limit: 100,
+      );
+      
+      if (response.success && response.data != null) {
+        allMembers = response.data!;
+        _filterMembers();
+      } else {
+        throw Exception(response.message);
+      }
       
       setState(() => isLoading = false);
     } catch (e) {
       setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('교인 정보 로드 실패: $e')),
+          SnackBar(
+            content: Text('교인 정보 로드 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  List<ChurchMember> _generateSampleMembers() {
-    return [
-      ChurchMember(
-        id: '1',
-        name: '김목사',
-        phone: '010-1234-5678',
-        email: 'pastor@church.com',
-        position: '교역자',
-        district: '1구역',
-        status: '출석',
-        gender: '남',
-      ),
-      ChurchMember(
-        id: '2',
-        name: '이장로',
-        phone: '010-2345-6789',
-        email: 'elder@church.com',
-        position: '장로',
-        district: '2구역',
-        status: '출석',
-        gender: '남',
-      ),
-      ChurchMember(
-        id: '3',
-        name: '박권사',
-        phone: '010-3456-7890',
-        email: 'deaconess@church.com',
-        position: '권사',
-        district: '1구역',
-        status: '출석',
-        gender: '여',
-      ),
-      ChurchMember(
-        id: '4',
-        name: '최집사',
-        phone: '010-4567-8901',
-        email: 'deacon@church.com',
-        position: '집사',
-        district: '3구역',
-        status: '출석',
-        gender: '남',
-      ),
-      ChurchMember(
-        id: '5',
-        name: '정성도',
-        phone: '010-5678-9012',
-        email: 'member@church.com',
-        position: '성도',
-        district: '2구역',
-        status: '등록',
-        gender: '여',
-      ),
-    ];
-  }
+
 
   void _filterMembers() {
     String query = _searchController.text.toLowerCase();
     
     setState(() {
       filteredMembers = allMembers.where((member) {
-        bool matchesSearch = member.name.toLowerCase().contains(query) ||
-                           (member.phone?.contains(query) ?? false);
+        bool matchesSearch = query.isEmpty ||
+                           member.name.toLowerCase().contains(query) ||
+                           member.phoneNumber.contains(query);
         
-        bool matchesFilter = selectedFilter == '전체' || 
-                           member.position == selectedFilter;
+        bool matchesPosition = selectedFilter == '전체' || 
+                             (member.position != null && member.position!.contains(selectedFilter));
         
-        return matchesSearch && matchesFilter;
+        return matchesSearch && matchesPosition;
       }).toList();
     });
   }
@@ -194,19 +157,40 @@ class _MembersScreenState extends State<MembersScreen> {
                         itemCount: filteredMembers.length,
                         itemBuilder: (context, index) {
                           final member = filteredMembers[index];
-                          return MemberCardWidget(
-                            member: member,
-                            onTap: () => _showMemberDetail(member),
-                            actionButtons: [
-                              IconButton(
-                                icon: const Icon(Icons.phone, color: Colors.green),
-                                onPressed: () => _makePhoneCall(member.phone),
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.blue,
+                                child: Text(
+                                  member.name.isNotEmpty ? member.name[0] : '?',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.message, color: Colors.blue),
-                                onPressed: () => _sendMessage(member.phone),
+                              title: Text(member.name),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(member.phoneNumber),
+                                  if (member.position != null)
+                                    Text(member.position!, style: TextStyle(color: Colors.grey[600])),
+                                ],
                               ),
-                            ],
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.phone, color: Colors.green),
+                                    onPressed: () => _makePhoneCall(member.phoneNumber),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.message, color: Colors.blue),
+                                    onPressed: () => _sendMessage(member.phoneNumber),
+                                  ),
+                                ],
+                              ),
+                              onTap: () => _showMemberDetail(member),
+                            ),
                           );
                         },
                       ),
@@ -220,35 +204,39 @@ class _MembersScreenState extends State<MembersScreen> {
 
 
 
-  void _showMemberDetail(ChurchMember member) {
+  void _showMemberDetail(Member member) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(member.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (member.phone != null) Text('전화번호: ${member.phone}'),
-            if (member.email != null) Text('이메일: ${member.email}'),
-            if (member.position != null) Text('직분: ${member.position}'),
-            if (member.district != null) Text('구역: ${member.district}'),
-            if (member.status != null) Text('상태: ${member.status}'),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('전화번호: ${member.phoneNumber}'),
+              Text('성별: ${member.gender}'),
+              if (member.position != null) Text('직분: ${member.position}'),
+              if (member.district != null) Text('구역: ${member.district}'),
+              Text('상태: ${member.memberStatus}'),
+              if (member.address != null) Text('주소: ${member.address}'),
+              if (member.dateOfBirth != null) Text('생년월일: ${member.dateOfBirth!.toLocal().toString().split(' ')[0]}'),
+              if (member.age != null) Text('나이: ${member.age}세'),
+              if (member.registrationDate != null) Text('등록일: ${member.registrationDate!.toLocal().toString().split(' ')[0]}'),
+            ],
+          ),
         ),
         actions: [
-          CommonButton(
-            text: '닫기',
-            type: ButtonType.text,
+          TextButton(
             onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
           ),
-          CommonButton(
-            text: '수정',
-            type: ButtonType.primary,
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _showEditMemberDialog(member);
             },
+            child: const Text('수정'),
           ),
         ],
       ),
@@ -257,19 +245,35 @@ class _MembersScreenState extends State<MembersScreen> {
 
   void _showAddMemberDialog() {
     // 교인 추가 다이얼로그
-    CommonDialog.showInfoDialog(
-      context,
-      title: '교인 추가',
-      content: '교인 추가 기능은 준비 중입니다.',
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('교인 추가'),
+        content: const Text('교인 추가 기능은 준비 중입니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showEditMemberDialog(ChurchMember member) {
+  void _showEditMemberDialog(Member member) {
     // 교인 수정 다이얼로그
-    CommonDialog.showInfoDialog(
-      context,
-      title: '${member.name} 정보 수정',
-      content: '교인 정보 수정 기능은 준비 중입니다.',
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${member.name} 정보 수정'),
+        content: const Text('교인 정보 수정 기능은 준비 중입니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
     );
   }
 

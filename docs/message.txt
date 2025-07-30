@@ -30,6 +30,9 @@ https://your-domain.com/api/v1(미정)
 개발/임시 환경:
 https://packs-holds-marc-extended.trycloudflare.com/api/v1
 
+API 문서: swagger
+https://packs-holds-marc-extended.trycloudflare.com/docs#/
+
 설정 위치:
 /Users/admin/Desktop/workspace/smart_yoram_app/lib/config/supabase_config.dart
 에서 변수로 처리하여 관리합니다.

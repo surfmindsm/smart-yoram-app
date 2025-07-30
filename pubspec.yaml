@@ -48,6 +48,12 @@ dependencies:
   # 상태 관리
   flutter_riverpod: ^3.0.0-dev.3
   riverpod_annotation: ^3.0.0-dev.3
+  
+  # 이미지 선택
+  image_picker: ^1.0.4
+  
+  # QR 코드 생성
+  qr_flutter: ^4.1.0
   state_notifier: ^1.0.0
   
   # 인앱 결제
@@ -55,7 +61,6 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # QR 코드 관련
-  qr_flutter: ^4.1.0
   mobile_scanner: ^4.0.0
   share_plus: ^11.0.0
   permission_handler: ^11.1.0

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widget/widgets.dart';
+import '../services/auth_service.dart';
 import 'privacy_policy_screen.dart';
+import 'api_test_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,7 +12,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final supabase = Supabase.instance.client;
+  final AuthService _authService = AuthService();
   
   // 설정 값들
   bool _pushNotifications = true;
@@ -172,6 +173,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: '버그 신고',
             subtitle: '오류 또는 개선사항 신고',
             onTap: _reportBug,
+          ),
+          CustomListTile(
+            icon: Icons.api,
+            title: 'API 테스트',
+            subtitle: 'API 연결 상태 확인',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ApiTestScreen()),
+              );
+            },
           ),
           CustomListTile(
             icon: Icons.info,
@@ -563,14 +575,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              // 로그아웃 처리 후 로그인 화면으로 이동
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/login',
-                (route) => false,
-              );
+              
+              try {
+                // AuthService를 통한 로그아웃 처리
+                await _authService.logout();
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('로그아웃되었습니다'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  
+                  // 로그인 화면으로 이동
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('로그아웃 오류: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text('로그아웃', style: TextStyle(color: Colors.red)),
           ),
