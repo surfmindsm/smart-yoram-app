@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
+import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../services/services.dart';
 
@@ -285,8 +286,13 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
   void _addDebugLog(String message) {
     final timestamp = DateTime.now().toString().substring(11, 19);
+    final logMessage = '[$timestamp] $message';
+    
+    // 터미널에 출력
+    print('🔍 API_DEBUG: $logMessage');
+    
     setState(() {
-      _debugLogs.add('[$timestamp] $message');
+      _debugLogs.add(logMessage);
       // 로그가 너무 많이 쌓이지 않도록 100개로 제한
       if (_debugLogs.length > 100) {
         _debugLogs.removeAt(0);
@@ -416,15 +422,231 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     _startTest('basic_connection');
     try {
       // 로그 추가: 기본 연결 정보
+      _addDebugLog('=== 기본 API 연결 테스트 ===');
+      _addDebugLog('Base URL: ${ApiConfig.baseUrl}');
+      _addDebugLog('Auth Endpoint: ${ApiConfig.authLogin}');
+      
       developer.log('=== 기본 API 연결 테스트 ===', name: 'API_TEST');
       developer.log('Base URL: ${ApiConfig.baseUrl}', name: 'API_TEST');
-      developer.log('Auth Endpoint: ${ApiConfig.auth}', name: 'API_TEST');
+      developer.log('Auth Endpoint: ${ApiConfig.authLogin}', name: 'API_TEST');
       
-      // 기본 API 연결 테스트
-      _updateResult('basic_connection', '✅ 성공: API 서버 연결 가능\nBase URL: ${ApiConfig.baseUrl}');
+      // 실제 HTTP 요청으로 서버 연결 테스트
+      await _testMultipleServerUrls();
     } catch (e) {
+      _addDebugLog('Basic connection error: $e');
       developer.log('Basic connection error: $e', name: 'API_TEST');
-      _updateResult('basic_connection', '❌ 오류: $e');
+      
+      if (e.toString().contains('TimeoutException')) {
+        _updateResult('basic_connection', '❌ 시간 초과: 서버가 응답하지 않습니다\n서버가 꺼져있거나 URL이 잘못되었을 수 있습니다');
+      } else {
+        _updateResult('basic_connection', '❌ 연결 오류: $e');
+      }
+    }
+  }
+
+  Future<void> _testMultipleServerUrls() async {
+    _addDebugLog('=== 다중 서버 URL 테스트 ===');
+    
+    // 가능한 서버 URL들
+    final possibleServers = [
+      // 현재 설정된 URL
+      'https://packs-holds-marc-extended.trycloudflare.com/api/v1',
+      'https://packs-holds-marc-extended.trycloudflare.com',
+      
+      // 로컬 개발 서버
+      'http://localhost:8000/api/v1',
+      'http://localhost:8000',
+      'http://127.0.0.1:8000/api/v1',
+      'http://127.0.0.1:8000',
+      
+      // 다른 일반적인 포트
+      'http://localhost:3000/api/v1',
+      'http://localhost:5000/api/v1',
+      'http://localhost:8080/api/v1',
+    ];
+    
+    String? workingServer;
+    
+    for (final serverUrl in possibleServers) {
+      _addDebugLog('테스트 중: $serverUrl');
+      
+      try {
+        // docs 엔드포인트 테스트
+        final docsUrl = Uri.parse('$serverUrl/docs');
+        final docsResponse = await http.get(
+          docsUrl,
+          headers: {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'},
+        ).timeout(const Duration(seconds: 5));
+        
+        _addDebugLog('➡️ $serverUrl/docs - Status: ${docsResponse.statusCode}');
+        
+        if (docsResponse.statusCode == 200) {
+          workingServer = serverUrl;
+          _addDebugLog('✅ 서버 발견! $serverUrl');
+          break;
+        }
+        
+        // 루트 경로도 테스트
+        final rootUrl = Uri.parse(serverUrl);
+        final rootResponse = await http.get(
+          rootUrl,
+          headers: {'Accept': 'application/json'},
+        ).timeout(const Duration(seconds: 5));
+        
+        _addDebugLog('➡️ $serverUrl - Status: ${rootResponse.statusCode}');
+        
+        if (rootResponse.statusCode == 200) {
+          workingServer = serverUrl;
+          _addDebugLog('✅ 서버 발견! $serverUrl (루트)');
+          break;
+        }
+        
+      } catch (e) {
+        _addDebugLog('❌ $serverUrl - 연결 실패: ${e.toString().substring(0, 30)}...');
+      }
+    }
+    
+    if (workingServer != null) {
+      _updateResult('basic_connection', '✅ 성공: 서버 발견!\nURL: $workingServer\n이 URL로 API 설정을 업데이트하세요.');
+      
+      // 로그인 엔드포인트 테스트
+      await _testLoginEndpointForServer(workingServer);
+    } else {
+      _updateResult('basic_connection', '❌ 실패: 사용 가능한 서버를 찾을 수 없습니다\n\n확인 사항:\n1. 백엔드 서버가 실행 중인가?\n2. Cloudflare tunnel이 활성상태인가?\n3. 네트워크 연결이 정상인가?');
+    }
+  }
+
+  Future<void> _testLoginEndpointForServer(String serverUrl) async {
+    _addDebugLog('=== $serverUrl API 엔드포인트 대귀모 탐색 ===');
+    
+    // 더 많은 가능한 엔드포인트 패턴
+    final apiEndpoints = [
+      // 로그인 엔드포인트
+      '/auth/login',
+      '/login', 
+      '/api/auth/login',
+      '/api/v1/auth/login',
+      '/v1/auth/login',
+      '/user/login',
+      '/users/login',
+      '/authenticate',
+      '/signin',
+      
+      // 일반적인 API 엔드포인트
+      '/api',
+      '/api/v1',
+      '/api/users',
+      '/api/v1/users', 
+      '/users',
+      '/members',
+      '/api/members',
+      '/api/v1/members',
+      '/health',
+      '/ping',
+      '/status',
+      
+      // FastAPI 기본 엔드포인트
+      '/openapi.json',
+      '/redoc',
+    ];
+    
+    final List<String> workingEndpoints = [];
+    
+    for (final endpoint in apiEndpoints) {
+      try {
+        final fullUrl = '$serverUrl$endpoint';
+        _addDebugLog('테스트: $endpoint');
+        
+        // GET 요청으로 먼저 테스트
+        final getResponse = await http.get(
+          Uri.parse(fullUrl),
+          headers: {'Accept': 'application/json'},
+        ).timeout(const Duration(seconds: 3));
+        
+        if (getResponse.statusCode != 404) {
+          _addDebugLog('✅ GET $endpoint - Status: ${getResponse.statusCode}');
+          workingEndpoints.add('GET $endpoint (${getResponse.statusCode})');
+          
+          if (getResponse.body.isNotEmpty && getResponse.body.length < 500) {
+            _addDebugLog('Response: ${getResponse.body}');
+          }
+        }
+        
+        // 로그인 관련 엔드포인트에는 POST도 테스트
+        if (endpoint.contains('login') || endpoint.contains('auth') || endpoint.contains('signin')) {
+          final postResponse = await http.post(
+            Uri.parse(fullUrl),
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json'
+            },
+            body: 'username=test&password=test',
+          ).timeout(const Duration(seconds: 3));
+          
+          if (postResponse.statusCode != 404) {
+            _addDebugLog('✅ POST $endpoint - Status: ${postResponse.statusCode}');
+            workingEndpoints.add('POST $endpoint (${postResponse.statusCode})');
+            
+            if (postResponse.statusCode == 422 || postResponse.statusCode == 401 || postResponse.statusCode == 400) {
+              _addDebugLog('✨ 예상됨! 인증 오류 - 엔드포인트가 작동 중');
+            }
+            
+            if (postResponse.body.isNotEmpty && postResponse.body.length < 300) {
+              _addDebugLog('Response: ${postResponse.body}');
+            }
+          }
+        }
+      } catch (e) {
+        // 에러는 로그에 기록하지 않음 (너무 많아서)
+      }
+    }
+    
+    _addDebugLog('=== 발견된 작동 엔드포인트 요약 ===');
+    if (workingEndpoints.isNotEmpty) {
+      for (final endpoint in workingEndpoints) {
+        _addDebugLog('✅ $endpoint');
+      }
+      
+      // 추천 설정 제안
+      _addDebugLog('\n💡 추천: ApiConfig.baseUrl을 "$serverUrl"로 변경하세요');
+    } else {
+      _addDebugLog('❌ 사용 가능한 API 엔드포인트를 찾을 수 없습니다');
+    }
+  }
+
+  Future<void> _testLoginEndpoint() async {
+    try {
+      _addDebugLog('=== 로그인 엔드포인트 테스트 ===');
+      
+      // 다양한 로그인 엔드포인트 경로 테스트
+      final possibleEndpoints = [
+        '${ApiConfig.baseUrl}/auth/login',
+        '${ApiConfig.baseUrl}/login',
+        '${ApiConfig.baseUrl}/api/auth/login',
+        '${ApiConfig.baseUrl}/v1/auth/login',
+      ];
+      
+      for (final endpoint in possibleEndpoints) {
+        _addDebugLog('테스트 중: $endpoint');
+        try {
+          final testResponse = await http.post(
+            Uri.parse(endpoint),
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: '',
+          ).timeout(const Duration(seconds: 5));
+          
+          _addDebugLog('➡️ $endpoint - Status: ${testResponse.statusCode}');
+          
+          if (testResponse.statusCode != 404) {
+            _addDebugLog('✅ 발견! 사용 가능한 엔드포인트: $endpoint');
+            _addDebugLog('Response body: ${testResponse.body.length > 100 ? testResponse.body.substring(0, 100) + "..." : testResponse.body}');
+          }
+        } catch (e) {
+          _addDebugLog('❌ $endpoint - Error: ${e.toString().substring(0, 50)}...');
+        }
+      }
+    } catch (e) {
+      _addDebugLog('로그인 엔드포인트 테스트 오류: $e');
     }
   }
 
@@ -441,12 +663,12 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       
       // 로그 추가: 요청 정보
       _addDebugLog('=== API 로그인 시도 ===');
-      _addDebugLog('URL: ${ApiConfig.baseUrl}${ApiConfig.auth}/login');
+      _addDebugLog('URL: ${ApiConfig.baseUrl}${ApiConfig.authLogin}');
       _addDebugLog('Username: $username');
       _addDebugLog('Password length: ${password.length}');
       
       developer.log('=== API 로그인 시도 ===', name: 'API_TEST');
-      developer.log('URL: ${ApiConfig.baseUrl}${ApiConfig.auth}/login', name: 'API_TEST');
+      developer.log('URL: ${ApiConfig.baseUrl}${ApiConfig.authLogin}', name: 'API_TEST');
       developer.log('Username: $username', name: 'API_TEST');
       developer.log('Password length: ${password.length}', name: 'API_TEST');
       
@@ -477,6 +699,9 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
         _updateResult('auth_login', '❌ 실패: ${result.message}\n디버그 로그를 확인하세요.');
       }
     } catch (e) {
+      _addDebugLog('Exception: $e');
+      _addDebugLog('Stack trace: ${StackTrace.current}');
+      
       developer.log('Exception: $e', name: 'API_TEST');
       developer.log('Stack trace: ${StackTrace.current}', name: 'API_TEST');
       _updateResult('auth_login', '❌ 오류: $e\n디버그 로그를 확인하세요.');

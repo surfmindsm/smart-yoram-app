@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../models/api_response.dart';
 import '../models/excel_model.dart';
-import '../config/supabase_config.dart';
+import '../config/api_config.dart';
 import 'api_service.dart';
 
 class ExcelService {

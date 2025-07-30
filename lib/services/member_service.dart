@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import '../config/supabase_config.dart';
+import '../config/api_config.dart';
 import '../models/api_response.dart';
 import '../models/member.dart';
 import 'api_service.dart';

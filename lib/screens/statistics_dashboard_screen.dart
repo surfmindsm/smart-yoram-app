@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widget/widgets.dart';
-import '../config/supabase_config.dart';
+import '../config/api_config.dart';
 
 class StatisticsDashboardScreen extends StatefulWidget {
   const StatisticsDashboardScreen({Key? key}) : super(key: key);

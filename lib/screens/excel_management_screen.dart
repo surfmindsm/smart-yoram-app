@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widget/widgets.dart';
-import '../config/supabase_config.dart';
+import '../config/api_config.dart';
 // import 'package:file_picker/file_picker.dart'; // TODO: 파일 선택용 패키지 추가 필요
 
 class ExcelManagementScreen extends StatefulWidget {

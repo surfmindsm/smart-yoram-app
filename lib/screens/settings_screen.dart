@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widget/widgets.dart';
-import '../config/supabase_config.dart';
+import '../config/api_config.dart';
 import 'api_test_screen.dart';
 import 'users_management_screen.dart';
 import 'family_management_screen.dart';

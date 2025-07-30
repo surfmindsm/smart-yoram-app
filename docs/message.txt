@@ -28,7 +28,7 @@ Base URL:
 https://your-domain.com/api/v1(미정)
 
 개발/임시 환경:
-https://packs-holds-marc-extended.trycloudflare.com/api/v1
+https://packs-holds-marc-extended.trycloudflare.com/
 
 API 문서: swagger
 https://packs-holds-marc-extended.trycloudflare.com/docs#/

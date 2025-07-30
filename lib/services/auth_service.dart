@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import '../config/supabase_config.dart';
+import '../config/api_config.dart';
 import '../models/api_response.dart';
 import '../models/user.dart';
 import 'api_service.dart';
