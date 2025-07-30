@@ -1,3 +1,5 @@
+import 'member.dart';
+
 class QRCodeInfo {
   final int id;
   final String code;
@@ -115,23 +117,4 @@ class AttendanceRecord {
   }
 }
 
-// Member 클래스 import가 필요하므로 따로 import 해야 함
-class Member {
-  final int id;
-  final String name;
-  final String? profilePhotoUrl;
-
-  Member({
-    required this.id,
-    required this.name,
-    this.profilePhotoUrl,
-  });
-
-  factory Member.fromJson(Map<String, dynamic> json) {
-    return Member(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      profilePhotoUrl: json['profile_photo_url'],
-    );
-  }
-}
+// Member 클래스는 member.dart에서 import

@@ -50,7 +50,7 @@ class Bulletin {
   }
 }
 
-class Notice {
+class BulletinNotice {
   final String id;
   final String title;
   final String content;
@@ -59,7 +59,7 @@ class Notice {
   final DateTime createdAt;
   final String createdBy;
 
-  Notice({
+  BulletinNotice({
     required this.id,
     required this.title,
     required this.content,
@@ -69,8 +69,8 @@ class Notice {
     required this.createdBy,
   });
 
-  factory Notice.fromJson(Map<String, dynamic> json) {
-    return Notice(
+  factory BulletinNotice.fromJson(Map<String, dynamic> json) {
+    return BulletinNotice(
       id: json['id'],
       title: json['title'],
       content: json['content'],

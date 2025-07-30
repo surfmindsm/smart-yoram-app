@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/bulletin.dart';
+import '../models/notice.dart';
 
 class NoticesScreen extends StatefulWidget {
   const NoticesScreen({super.key});
@@ -57,7 +57,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
 준비물: 감사제목 적은 종이
 
 모든 성도님들의 참석을 부탁드립니다.''',
-        isImportant: true,
+        type: 'important',
         createdAt: now.subtract(const Duration(days: 1)),
         createdBy: '관리자',
       ),
@@ -71,7 +71,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
 교육: 별도 교육 제공
 
 관심 있으신 분은 교육부장에게 연락 바랍니다.''',
-        isImportant: false,
+        type: 'general',
         createdAt: now.subtract(const Duration(days: 3)),
         createdBy: '교육부',
       ),
@@ -84,7 +84,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
 준비사항: 자기 성찰과 회개의 시간
 
 성찬식 참여를 위해 미리 마음을 준비해 주시기 바랍니다.''',
-        isImportant: true,
+        type: 'important',
         createdAt: now.subtract(const Duration(days: 5)),
         createdBy: '관리자',
       ),
@@ -98,7 +98,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
 3. 귀중품은 차량에 방치하지 마세요
 
 협조해 주시기 바랍니다.''',
-        isImportant: false,
+        type: 'general',
         createdAt: now.subtract(const Duration(days: 7)),
         createdBy: '관리자',
       ),
@@ -113,7 +113,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
 신청: 교육부장에게 문의
 
 많은 참여 바랍니다.''',
-        isImportant: false,
+        type: 'general',
         createdAt: now.subtract(const Duration(days: 10)),
         createdBy: '교육부',
       ),
