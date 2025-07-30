@@ -100,6 +100,83 @@ class CommonButton extends StatelessWidget {
 
     return button;
   }
+
+  // Static helper methods for common button types
+  static CommonButton primary({
+    required String text,
+    VoidCallback? onPressed,
+    IconData? icon,
+    bool isLoading = false,
+    double? width,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return CommonButton(
+      text: text,
+      onPressed: onPressed,
+      type: ButtonType.primary,
+      icon: icon,
+      isLoading: isLoading,
+      width: width,
+      padding: padding,
+    );
+  }
+
+  static CommonButton secondary({
+    required String text,
+    VoidCallback? onPressed,
+    IconData? icon,
+    bool isLoading = false,
+    double? width,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return CommonButton(
+      text: text,
+      onPressed: onPressed,
+      type: ButtonType.secondary,
+      icon: icon,
+      isLoading: isLoading,
+      width: width,
+      padding: padding,
+    );
+  }
+
+  static CommonButton textButton({
+    required String text,
+    VoidCallback? onPressed,
+    IconData? icon,
+    bool isLoading = false,
+    double? width,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return CommonButton(
+      text: text,
+      onPressed: onPressed,
+      type: ButtonType.text,
+      icon: icon,
+      isLoading: isLoading,
+      width: width,
+      padding: padding,
+    );
+  }
+
+  static CommonButton danger({
+    required String text,
+    VoidCallback? onPressed,
+    IconData? icon,
+    bool isLoading = false,
+    double? width,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return CommonButton(
+      text: text,
+      onPressed: onPressed,
+      type: ButtonType.danger,
+      icon: icon,
+      isLoading: isLoading,
+      width: width,
+      padding: padding,
+    );
+  }
 }
 
 enum ButtonType {

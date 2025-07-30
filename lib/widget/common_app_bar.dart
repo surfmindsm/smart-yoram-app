@@ -7,6 +7,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final bool automaticallyImplyLeading;
   final VoidCallback? onLeadingPressed;
+  final PreferredSizeWidget? bottom;
 
   const CommonAppBar({
     super.key,
@@ -15,6 +16,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.onLeadingPressed,
+    this.bottom,
   });
 
   @override
@@ -26,9 +28,12 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: actions,
       leading: leading,
       automaticallyImplyLeading: automaticallyImplyLeading,
+      bottom: bottom,
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(
+    kToolbarHeight + (bottom?.preferredSize.height ?? 0.0),
+  );
 }

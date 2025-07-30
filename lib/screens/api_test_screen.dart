@@ -292,7 +292,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
                   child: const Text('교인관리'),
                 ),
                 ElevatedButton(
-                  onPressed: _isLoading ? null : () => _testSpecificEndpoint(ApiConfig.attendance, '출석관리'),
+                  onPressed: _isLoading ? null : () => _testSpecificEndpoint(ApiConfig.attendances, '출석관리'),
                   child: const Text('출석관리'),
                 ),
                 ElevatedButton(

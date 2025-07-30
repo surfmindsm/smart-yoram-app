@@ -4,17 +4,62 @@ class ApiConfig {
   static const String swaggerDocsUrl = 'https://packs-holds-marc-extended.trycloudflare.com/docs#/';
   
   // API 엔드포인트들
+  // 인증 및 사용자 관리
   static const String authLogin = '/auth/login';
+  static const String users = '/users/';
   static const String usersMe = '/users/me';
+  
+  // 교인 관리
   static const String members = '/members/';
-  static const String attendance = '/attendance/';
+  static const String membersUploadPhoto = '/members/{member_id}/upload-photo';
+  static const String membersDeletePhoto = '/members/{member_id}/delete-photo';
+  
+  // 출석 관리
+  static const String attendances = '/attendances/';
+  
+  // QR 코드 관리
   static const String qrCodes = '/qr-codes/';
+  static const String qrCodesGenerate = '/qr-codes/generate/{member_id}';
+  static const String qrCodesImage = '/qr-codes/{code}/image';
+  static const String qrCodesVerify = '/qr-codes/verify/{code}';
+  static const String qrCodesMember = '/qr-codes/member/{member_id}';
+  
+  // SMS 발송
   static const String sms = '/sms/';
+  static const String smsSend = '/sms/send';
+  static const String smsSendBulk = '/sms/send-bulk';
+  static const String smsHistory = '/sms/history';
+  static const String smsTemplates = '/sms/templates';
+  
+  // 일정 관리
   static const String calendar = '/calendar/';
+  static const String calendarBirthdays = '/calendar/birthdays';
+  static const String calendarBirthdaysCreate = '/calendar/birthdays/create-events';
+  
+  // 가족 관계 관리
   static const String family = '/family/';
+  static const String familyRelationships = '/family/relationships';
+  static const String familyTree = '/family/tree/{member_id}';
+  
+  // 모바일 교인증
   static const String memberCard = '/member-card/';
+  static const String memberCardData = '/member-card/{member_id}/card';
+  static const String memberCardHtml = '/member-card/{member_id}/card/html';
+  static const String memberCardRegenerateQr = '/member-card/{member_id}/card/regenerate-qr';
+  
+  // 엑셀 연동
   static const String excel = '/excel/';
+  static const String excelMembersUpload = '/excel/members/upload';
+  static const String excelMembersDownload = '/excel/members/download';
+  static const String excelMembersTemplate = '/excel/members/template';
+  static const String excelAttendanceDownload = '/excel/attendance/download';
+  
+  // 통계 및 리포트
   static const String statistics = '/statistics/';
+  static const String statisticsAttendanceSummary = '/statistics/attendance/summary';
+  static const String statisticsAttendanceByMember = '/statistics/attendance/by-member';
+  static const String statisticsMembersDemographics = '/statistics/members/demographics';
+  static const String statisticsMembersGrowth = '/statistics/members/growth';
   
   // HTTP 헤더들
   static const Map<String, String> defaultHeaders = {
