@@ -25,6 +25,22 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   final Map<String, String> _testResults = {};
   final Map<String, bool> _testingStatus = {};
 
+  // 로그인 상태 관리
+  bool _isLoggedIn = false;
+  String? _authToken;
+  String? _currentUserEmail;
+  
+  // 로그인 폼 컨트롤러
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,6 +59,9 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 20),
+            // 로그인 상태 표시 및 로그인 폼
+            _buildLoginSection(),
             const SizedBox(height: 20),
             _buildSection('기본 연결 테스트', [
               _buildTestButton('기본 연결', 'basic_connection', testBasicConnection),
@@ -107,19 +126,143 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     );
   }
 
-  Widget _buildSection(String title, List<Widget> buttons) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  Widget _buildLoginSection() {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      color: _isLoggedIn ? Colors.green[50] : Colors.orange[50],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  _isLoggedIn ? Icons.check_circle : Icons.warning,
+                  color: _isLoggedIn ? Colors.green : Colors.orange,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isLoggedIn ? '로그인 상태: $_currentUserEmail' : '로그인 필요 (API 인증)',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _isLoggedIn ? Colors.green[700] : Colors.orange[700],
+                  ),
+                ),
+              ],
+            ),
+            if (!_isLoggedIn) ...[
+              const SizedBox(height: 16),
+              const Text(
+                '실제 계정으로 로그인하여 API 인증을 받으세요:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: '이메일',
+                  hintText: 'your-email@example.com',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: '비밀번호',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: testAuthLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700],
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                child: const Text('로그인하기'),
+              ),
+            ] else ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '토큰: ${_authToken?.substring(0, 20)}...',
+                      style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _logout,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('로그아웃'),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
-        const SizedBox(height: 8),
-        ...buttons,
-        const SizedBox(height: 8),
-      ],
+      ),
+    );
+  }
+
+  void _logout() {
+    setState(() {
+      _isLoggedIn = false;
+      _authToken = null;
+      _currentUserEmail = null;
+      _emailController.clear();
+      _passwordController.clear();
+    });
+    
+    // 로그아웃 결과 업데이트
+    _updateResult('auth_login', '로그아웃 완료');
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('로그아웃되었습니다. 다시 로그인하여 API 테스트를 진행하세요.'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  bool _checkAuthRequired(String testKey) {
+    if (!_isLoggedIn && testKey != 'basic_connection') {
+      _updateResult(testKey, '❌ 실패: 로그인이 필요합니다. 먼저 실제 계정으로 로그인해주세요.');
+      return false;
+    }
+    return true;
+  }
+
+
+
+  Widget _buildSection(String title, List<Widget> buttons) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            ...buttons,
+          ],
+        ),
+      ),
     );
   }
 
@@ -190,9 +333,23 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   Future<void> testAuthLogin() async {
     _startTest('auth_login');
     try {
-      final result = await _authService.login('test@example.com', 'password123');
+      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+        _updateResult('auth_login', '❌ 실패: 이메일과 비밀번호를 입력해주세요');
+        return;
+      }
+      
+      final result = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text
+      );
+      
       if (result.success) {
-        _updateResult('auth_login', '✅ 성공: ${result.message}');
+        setState(() {
+          _isLoggedIn = true;
+          _authToken = result.data?.accessToken;
+          _currentUserEmail = _emailController.text.trim();
+        });
+        _updateResult('auth_login', '✅ 성공: 로그인 완료 (${result.message})');
       } else {
         _updateResult('auth_login', '❌ 실패: ${result.message}');
       }
@@ -218,10 +375,12 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
   Future<void> testMemberList() async {
     _startTest('member_list');
+    if (!_checkAuthRequired('member_list')) return;
+    
     try {
       final result = await _memberService.getMembers();
       if (result.success) {
-        _updateResult('member_list', '✅ 성공: ${result.data?.length ?? 0}명의 교인 데이터 조회');
+        _updateResult('member_list', '✅ 성공: ${result.data?.length ?? 0}명의 교인 목록 조회');
       } else {
         _updateResult('member_list', '❌ 실패: ${result.message}');
       }
@@ -232,10 +391,12 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
   Future<void> testMemberDetail() async {
     _startTest('member_detail');
+    if (!_checkAuthRequired('member_detail')) return;
+    
     try {
       final result = await _memberService.getMember(1);
       if (result.success) {
-        _updateResult('member_detail', '✅ 성공: 교인 상세 정보 조회됨');
+        _updateResult('member_detail', '✅ 성공: 교인 상세정보 조회됨');
       } else {
         _updateResult('member_detail', '❌ 실패: ${result.message}');
       }
@@ -461,6 +622,8 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
   Future<void> testUserInfo() async {
     _startTest('user_info');
+    if (!_checkAuthRequired('user_info')) return;
+    
     try {
       final result = await _userService.getCurrentUser();
       if (result.success) {
