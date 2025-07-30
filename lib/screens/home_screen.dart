@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'calendar_screen.dart';
+import 'prayer_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -99,6 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
               
               // 빠른 메뉴
               _buildQuickMenus(),
+              const SizedBox(height: 24),
+              
+              // 더 많은 기능
+              _buildMoreFeaturesSection(),
               const SizedBox(height: 24),
               
               // 최근 공지사항
@@ -290,6 +297,112 @@ class _HomeScreenState extends State<HomeScreen> {
               title,
               style: const TextStyle(fontSize: 12),
               textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMoreFeaturesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '더 많은 기능',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildFeatureCard(
+                '일정',
+                Icons.calendar_today,
+                '교회 일정과 생일을 확인하세요',
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CalendarScreen()),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildFeatureCard(
+                '기도/심방',
+                Icons.favorite,
+                '기도제목과 심방을 신청하세요',
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PrayerScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildFeatureCard(
+                '설정',
+                Icons.settings,
+                '앱 설정과 개인정보를 관리하세요',
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(child: SizedBox()), // 빈 공간
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureCard(String title, IconData icon, String description, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blue[200]!),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Colors.blue[700], size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[700],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
             ),
           ],
         ),
