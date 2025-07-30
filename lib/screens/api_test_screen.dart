@@ -531,6 +531,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       '/users/login',
       '/authenticate',
       '/signin',
+      '/token',  // FastAPI 기본 로그인 엔드포인트
       
       // 일반적인 API 엔드포인트
       '/api',
@@ -593,6 +594,31 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
             
             if (postResponse.body.isNotEmpty && postResponse.body.length < 300) {
               _addDebugLog('Response: ${postResponse.body}');
+            }
+          }
+        }
+        
+        // /token 엔드포인트 따로 테스트 (FastAPI 기본)
+        if (endpoint == '/token') {
+          final tokenResponse = await http.post(
+            Uri.parse(fullUrl),
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json'
+            },
+            body: 'username=test&password=test',
+          ).timeout(const Duration(seconds: 3));
+          
+          if (tokenResponse.statusCode != 404) {
+            _addDebugLog('✅ POST $endpoint - Status: ${tokenResponse.statusCode}');
+            workingEndpoints.add('POST $endpoint (${tokenResponse.statusCode})');
+            
+            if (tokenResponse.statusCode == 422 || tokenResponse.statusCode == 401 || tokenResponse.statusCode == 400) {
+              _addDebugLog('✨ 예상됨! 인증 오류 - 엔드포인트가 작동 중');
+            }
+            
+            if (tokenResponse.body.isNotEmpty && tokenResponse.body.length < 300) {
+              _addDebugLog('Response: ${tokenResponse.body}');
             }
           }
         }
