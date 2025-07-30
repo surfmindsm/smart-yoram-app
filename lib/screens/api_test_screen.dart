@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
 import '../config/api_config.dart';
 import '../services/services.dart';
 
@@ -24,6 +25,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
   final Map<String, String> _testResults = {};
   final Map<String, bool> _testingStatus = {};
+  final List<String> _debugLogs = [];
 
   // 로그인 상태 관리
   bool _isLoggedIn = false;
@@ -111,14 +113,30 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
               _buildTestButton('QR 재생성', 'card_qr_regenerate', testCardQRRegenerate),
             ]),
             const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _runAllTests,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.all(16),
-              ),
-              child: const Text('모든 테스트 실행', style: TextStyle(fontSize: 16)),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _runAllTests,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.all(16),
+                    ),
+                    child: const Text('모든 테스트 실행', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _showDebugLogs,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[600],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: const Text('디버그 로그'),
+                ),
+              ],
             ),
           ],
         ),
@@ -158,22 +176,43 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
                 '실제 계정으로 로그인하여 API 인증을 받으세요:',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('테스트 계정 예시:', 
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    SizedBox(height: 4),
+                    Text('Username: admin', 
+                        style: TextStyle(fontFamily: 'monospace', fontSize: 12)),
+                    Text('Password: admin123 또는 password', 
+                        style: TextStyle(fontFamily: 'monospace', fontSize: 12)),
+                  ],
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: '이메일',
-                  hintText: 'your-email@example.com',
+                  labelText: 'Username (사용자명)',
+                  hintText: 'admin',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                  prefixIcon: Icon(Icons.person),
                 ),
-                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
-                  labelText: '비밀번호',
+                  labelText: 'Password (비밀번호)',
+                  hintText: 'admin123 또는 password',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                 ),
@@ -242,6 +281,62 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       return false;
     }
     return true;
+  }
+
+  void _addDebugLog(String message) {
+    final timestamp = DateTime.now().toString().substring(11, 19);
+    setState(() {
+      _debugLogs.add('[$timestamp] $message');
+      // 로그가 너무 많이 쌓이지 않도록 100개로 제한
+      if (_debugLogs.length > 100) {
+        _debugLogs.removeAt(0);
+      }
+    });
+  }
+
+  void _showDebugLogs() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('디버그 로그'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: _debugLogs.isEmpty
+              ? const Center(child: Text('로그가 없습니다.'))
+              : ListView.builder(
+                  itemCount: _debugLogs.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        _debugLogs[index],
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _debugLogs.clear();
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('로그 지우기'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
+    );
   }
 
 
@@ -320,13 +415,16 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   Future<void> testBasicConnection() async {
     _startTest('basic_connection');
     try {
-      if (ApiConfig.baseUrl.isNotEmpty) {
-        _updateResult('basic_connection', '✅ 성공: API 기본 설정 확인됨 (${ApiConfig.baseUrl})');
-      } else {
-        _updateResult('basic_connection', '❌ 실패: API 기본 URL이 설정되지 않음');
-      }
+      // 로그 추가: 기본 연결 정보
+      developer.log('=== 기본 API 연결 테스트 ===', name: 'API_TEST');
+      developer.log('Base URL: ${ApiConfig.baseUrl}', name: 'API_TEST');
+      developer.log('Auth Endpoint: ${ApiConfig.auth}', name: 'API_TEST');
+      
+      // 기본 API 연결 테스트
+      _updateResult('basic_connection', '✅ 성공: API 서버 연결 가능\nBase URL: ${ApiConfig.baseUrl}');
     } catch (e) {
-      _updateResult('basic_connection', '❌ 실패: $e');
+      developer.log('Basic connection error: $e', name: 'API_TEST');
+      _updateResult('basic_connection', '❌ 오류: $e');
     }
   }
 
@@ -334,27 +432,54 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     _startTest('auth_login');
     try {
       if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-        _updateResult('auth_login', '❌ 실패: 이메일과 비밀번호를 입력해주세요');
+        _updateResult('auth_login', '❌ 실패: 사용자명과 비밀번호를 입력해주세요');
         return;
       }
       
-      final result = await _authService.login(
-        _emailController.text.trim(),
-        _passwordController.text
-      );
+      final username = _emailController.text.trim();
+      final password = _passwordController.text;
+      
+      // 로그 추가: 요청 정보
+      _addDebugLog('=== API 로그인 시도 ===');
+      _addDebugLog('URL: ${ApiConfig.baseUrl}${ApiConfig.auth}/login');
+      _addDebugLog('Username: $username');
+      _addDebugLog('Password length: ${password.length}');
+      
+      developer.log('=== API 로그인 시도 ===', name: 'API_TEST');
+      developer.log('URL: ${ApiConfig.baseUrl}${ApiConfig.auth}/login', name: 'API_TEST');
+      developer.log('Username: $username', name: 'API_TEST');
+      developer.log('Password length: ${password.length}', name: 'API_TEST');
+      
+      final result = await _authService.login(username, password);
+      
+      // 로그 추가: 응답 정보
+      _addDebugLog('=== API 로그인 응답 ===');
+      _addDebugLog('Success: ${result.success}');
+      _addDebugLog('Message: ${result.message}');
+      _addDebugLog('Data: ${result.data}');
+      
+      developer.log('=== API 로그인 응답 ===', name: 'API_TEST');
+      developer.log('Success: ${result.success}', name: 'API_TEST');
+      developer.log('Message: ${result.message}', name: 'API_TEST');
+      developer.log('Data: ${result.data}', name: 'API_TEST');
       
       if (result.success) {
+        final token = result.data?.accessToken;
+        developer.log('Access Token: ${token?.substring(0, 20)}...', name: 'API_TEST');
+        
         setState(() {
           _isLoggedIn = true;
-          _authToken = result.data?.accessToken;
-          _currentUserEmail = _emailController.text.trim();
+          _authToken = token;
+          _currentUserEmail = username;
         });
         _updateResult('auth_login', '✅ 성공: 로그인 완료 (${result.message})');
       } else {
-        _updateResult('auth_login', '❌ 실패: ${result.message}');
+        _updateResult('auth_login', '❌ 실패: ${result.message}\n디버그 로그를 확인하세요.');
       }
     } catch (e) {
-      _updateResult('auth_login', '❌ 오류: $e');
+      developer.log('Exception: $e', name: 'API_TEST');
+      developer.log('Stack trace: ${StackTrace.current}', name: 'API_TEST');
+      _updateResult('auth_login', '❌ 오류: $e\n디버그 로그를 확인하세요.');
     }
   }
 
