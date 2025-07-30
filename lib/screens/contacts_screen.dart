@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/church_member.dart';
+import 'member_detail_screen.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
@@ -389,54 +390,15 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   void _showContactDetail(ChurchMember member) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(member.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (member.phone != null) 
-              _buildDetailRow('전화번호', member.phone!),
-            if (member.email != null) 
-              _buildDetailRow('이메일', member.email!),
-            if (member.position != null) 
-              _buildDetailRow('직분', member.position!),
-            if (member.district != null) 
-              _buildDetailRow('구역', member.district!),
-            if (member.department != null) 
-              _buildDetailRow('부서', member.department!),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MemberDetailScreen(member: member),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 60,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
+
 
   void _showMessageDialog(ChurchMember member) {
     final TextEditingController messageController = TextEditingController();

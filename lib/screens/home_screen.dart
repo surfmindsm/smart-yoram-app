@@ -3,6 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'calendar_screen.dart';
 import 'prayer_screen.dart';
 import 'settings_screen.dart';
+import 'qr_scan_screen.dart';
+import 'notification_center_screen.dart';
+import 'staff_directory_screen.dart';
+import 'admin_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -255,8 +259,11 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: [
-            _buildQuickMenu('출석 체크', Icons.qr_code_scanner, () {
-              Navigator.pushNamed(context, '/attendance');
+            _buildQuickMenu('QR 출석', Icons.qr_code_scanner, () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QRScanScreen()),
+              );
             }),
             _buildQuickMenu('내 정보', Icons.person, () {
               Navigator.pushNamed(context, '/members');
@@ -349,6 +356,52 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: _buildFeatureCard(
+                '알림센터',
+                Icons.notifications,
+                '중요한 알림과 공지를 확인하세요',
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NotificationCenterScreen()),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildFeatureCard(
+                '교역자 명단',
+                Icons.people,
+                '교역자와 임직자 연락처를 확인하세요',
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const StaffDirectoryScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildFeatureCard(
+                '관리자',
+                Icons.admin_panel_settings,
+                '교회 관리 및 시스템 설정',
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildFeatureCard(
                 '설정',
                 Icons.settings,
                 '앱 설정과 개인정보를 관리하세요',
@@ -360,8 +413,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            const SizedBox(width: 12),
-            const Expanded(child: SizedBox()), // 빈 공간
           ],
         ),
       ],
