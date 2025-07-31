@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../services/services.dart';
+import '../models/announcement.dart';
 
 class ApiTestScreen extends StatefulWidget {
   const ApiTestScreen({super.key});
@@ -23,6 +24,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   final StatisticsService _statisticsService = StatisticsService();
   final UserService _userService = UserService();
   final MemberCardService _memberCardService = MemberCardService();
+  final AnnouncementService _announcementService = AnnouncementService();
 
   final Map<String, String> _testResults = {};
   final Map<String, bool> _testingStatus = {};
@@ -126,6 +128,12 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
             _buildSection('모바일 교인증', [
               _buildTestButton('교인증 정보', 'member_card', testMemberCard),
               _buildTestButton('QR 재생성', 'card_qr_regenerate', testCardQRRegenerate),
+            ]),
+            _buildSection('공지사항 관리', [
+              _buildTestButton('공지사항 목록', 'announcement_list', testAnnouncementList),
+              _buildTestButton('공지사항 생성', 'announcement_create', testAnnouncementCreate),
+              _buildTestButton('공지사항 상세', 'announcement_detail', testAnnouncementDetail),
+              _buildTestButton('공지사항 고정 토글', 'announcement_toggle_pin', testAnnouncementTogglePin),
             ]),
             const SizedBox(height: 32),
             Row(
@@ -549,6 +557,9 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
         break;
       case '교인증 관리':
         sectionTestKeys.addAll(['member_card', 'card_qr_regenerate']);
+        break;
+      case '공지사항 관리':
+        sectionTestKeys.addAll(['announcement_list', 'announcement_create', 'announcement_detail', 'announcement_toggle_pin']);
         break;
     }
     
@@ -1290,6 +1301,125 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     }
   }
 
+  // 공지사항 목록 조회 테스트
+  Future<void> testAnnouncementList() async {
+    _addDebugLog('📢 [announcement_list] 공지사항 목록 조회 테스트 시작');
+    
+    try {
+      final announcements = await _announcementService.getAnnouncements(
+        skip: 0,
+        limit: 10,
+      );
+      
+      _addDebugLog('📢 [announcement_list] 공지사항 ${announcements.length}개 조회됨');
+      
+      if (announcements.isNotEmpty) {
+        for (int i = 0; i < announcements.length && i < 3; i++) {
+          final announcement = announcements[i];
+          _addDebugLog('📢 [announcement_list] [$i] ID: ${announcement.id}, 제목: ${announcement.title}');
+          _addDebugLog('📢 [announcement_list] [$i] 고정: ${announcement.isPinned}, 작성자: ${announcement.authorName}');
+        }
+      }
+      
+      _updateResult('announcement_list', '성공: 공지사항 ${announcements.length}개 조회');
+    } catch (e) {
+      _addDebugLog('❌ [announcement_list] 예외 발생: $e');
+      _updateResult('announcement_list', '오류: $e');
+    }
+  }
+
+  // 공지사항 생성 테스트
+  Future<void> testAnnouncementCreate() async {
+    _addDebugLog('📢 [announcement_create] 공지사항 생성 테스트 시작');
+    
+    try {
+      final request = AnnouncementCreateRequest(
+        title: '테스트 공지사항',
+        content: '이것은 API 테스트를 위한 공지사항입니다. 생성일시: ${DateTime.now()}',
+        isPinned: false,
+        targetAudience: '전체',
+      );
+      
+      _addDebugLog('📢 [announcement_create] 요청 데이터: 제목=${request.title}');
+      _addDebugLog('📢 [announcement_create] 요청 데이터: 고정=${request.isPinned}');
+      
+      final announcement = await _announcementService.createAnnouncement(request);
+      
+      _addDebugLog('📢 [announcement_create] 생성된 공지사항 ID: ${announcement.id}');
+      _addDebugLog('📢 [announcement_create] 제목: ${announcement.title}');
+      _addDebugLog('📢 [announcement_create] 작성자: ${announcement.authorName}');
+      
+      _updateResult('announcement_create', '성공: 공지사항 생성 완료 (ID: ${announcement.id})');
+    } catch (e) {
+      _addDebugLog('❌ [announcement_create] 예외 발생: $e');
+      _updateResult('announcement_create', '오류: $e');
+    }
+  }
+
+  // 공지사항 상세 조회 테스트
+  Future<void> testAnnouncementDetail() async {
+    _addDebugLog('📢 [announcement_detail] 공지사항 상세 조회 테스트 시작');
+    
+    try {
+      // 먼저 공지사항 목록을 가져와서 첫 번째 항목의 ID 사용
+      final announcements = await _announcementService.getAnnouncements(limit: 1);
+      
+      if (announcements.isEmpty) {
+        _updateResult('announcement_detail', '실패: 테스트할 공지사항이 없음');
+        return;
+      }
+      
+      final firstId = announcements.first.id;
+      _addDebugLog('📢 [announcement_detail] 조회할 공지사항 ID: $firstId');
+      
+      final announcement = await _announcementService.getAnnouncement(firstId);
+      
+      _addDebugLog('📢 [announcement_detail] 제목: ${announcement.title}');
+      _addDebugLog('📢 [announcement_detail] 내용 길이: ${announcement.content.length}자');
+      _addDebugLog('📢 [announcement_detail] 고정 여부: ${announcement.isPinned}');
+      _addDebugLog('📢 [announcement_detail] 대상: ${announcement.targetAudience}');
+      
+      _updateResult('announcement_detail', '성공: 공지사항 상세 조회 완료');
+    } catch (e) {
+      _addDebugLog('❌ [announcement_detail] 예외 발생: $e');
+      _updateResult('announcement_detail', '오류: $e');
+    }
+  }
+
+  // 공지사항 고정 토글 테스트
+  Future<void> testAnnouncementTogglePin() async {
+    _addDebugLog('📢 [announcement_toggle_pin] 공지사항 고정 토글 테스트 시작');
+    
+    try {
+      // 먼저 공지사항 목록을 가져와서 첫 번째 항목 사용
+      final announcements = await _announcementService.getAnnouncements(limit: 1);
+      
+      if (announcements.isEmpty) {
+        _updateResult('announcement_toggle_pin', '실패: 테스트할 공지사항이 없음');
+        return;
+      }
+      
+      final firstAnnouncement = announcements.first;
+      final originalPinStatus = firstAnnouncement.isPinned;
+      
+      _addDebugLog('📢 [announcement_toggle_pin] 대상 ID: ${firstAnnouncement.id}');
+      _addDebugLog('📢 [announcement_toggle_pin] 현재 고정 상태: $originalPinStatus');
+      
+      final updatedAnnouncement = await _announcementService.togglePin(firstAnnouncement.id);
+      
+      _addDebugLog('📢 [announcement_toggle_pin] 변경된 고정 상태: ${updatedAnnouncement.isPinned}');
+      
+      if (updatedAnnouncement.isPinned != originalPinStatus) {
+        _updateResult('announcement_toggle_pin', '성공: 고정 상태 토글 완료');
+      } else {
+        _updateResult('announcement_toggle_pin', '실패: 고정 상태가 변경되지 않음');
+      }
+    } catch (e) {
+      _addDebugLog('❌ [announcement_toggle_pin] 예외 발생: $e');
+      _updateResult('announcement_toggle_pin', '오류: $e');
+    }
+  }
+
   Future<void> _runAllTests() async {
     // 테스트 시작 전 상태 리셋
     _resetTestState();
@@ -1326,6 +1456,10 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       ('is_first 업데이트', testIsFirstUpdate),
       ('교인증', testMemberCard),
       ('QR 재생성', testCardQRRegenerate),
+      ('공지사항 목록', testAnnouncementList),
+      ('공지사항 생성', testAnnouncementCreate),
+      ('공지사항 상세', testAnnouncementDetail),
+      ('공지사항 고정', testAnnouncementTogglePin),
     ];
 
     setState(() {

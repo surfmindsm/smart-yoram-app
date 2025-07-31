@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/notice.dart';
-import '../services/notice_service.dart';
+import '../models/announcement.dart';
+import '../services/announcement_service.dart';
 
 class NoticesScreen extends StatefulWidget {
   const NoticesScreen({super.key});
@@ -10,68 +10,61 @@ class NoticesScreen extends StatefulWidget {
 }
 
 class _NoticesScreenState extends State<NoticesScreen> {
-  final _noticeService = NoticeService();
+  final _announcementService = AnnouncementService();
   
-  List<Notice> allNotices = [];
-  List<Notice> filteredNotices = [];
+  List<Announcement> allAnnouncements = [];
+  List<Announcement> filteredAnnouncements = [];
   bool isLoading = true;
   String selectedFilter = '전체';
 
-  final List<String> filterOptions = ['전체', '중요', '일반'];
+  final List<String> filterOptions = ['전체', '고정', '일반'];
 
   @override
   void initState() {
     super.initState();
-    _loadNotices();
+    _loadAnnouncements();
   }
 
-  Future<void> _loadNotices() async {
+  Future<void> _loadAnnouncements() async {
+    print('🔄 공지사항 로드 시작');
     setState(() => isLoading = true);
     
     try {
-      // NoticeService를 통해 실제 API 호출
-      final response = await _noticeService.getNotices(
+      // AnnouncementService를 통해 실제 API 호출
+      print('📞 API 호출 중...');
+      final announcements = await _announcementService.getAnnouncements(
         skip: 0,
         limit: 100,
-        type: selectedFilter == '전체' ? null : 
-              (selectedFilter == '중요' ? 'important' : 'general'),
       );
       
-      if (response.success && response.data != null) {
-        allNotices = response.data!;
-        _filterNotices();
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        
-        // API 실패 시 빈 목록으로 설정
-        allNotices = [];
-        _filterNotices();
+      print('✅ API 호출 성공: ${announcements.length}개 공지사항');
+      allAnnouncements = announcements;
+      _filterAnnouncements();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('공지사항 ${announcements.length}개를 불러왔습니다'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
       
       setState(() => isLoading = false);
     } catch (e) {
+      print('❌ API 호출 실패: $e');
       setState(() => isLoading = false);
+      
+      // 실제 API에 공지사항이 없을 수 있으므로 빈 목록으로 설정
+      allAnnouncements = [];
+      _filterAnnouncements();
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('공지사항 로드 실패: $e'),
-            backgroundColor: Colors.red,
+            content: Text('공지사항을 불러올 수 없습니다. 서버에 등록된 공지사항이 없을 수 있습니다.'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -80,21 +73,30 @@ class _NoticesScreenState extends State<NoticesScreen> {
 
 
 
-  void _filterNotices() {
+  void _filterAnnouncements() {
     setState(() {
       if (selectedFilter == '전체') {
-        filteredNotices = List.from(allNotices);
-      } else if (selectedFilter == '중요') {
-        filteredNotices = allNotices.where((notice) => notice.isImportant).toList();
+        filteredAnnouncements = List.from(allAnnouncements);
+      } else if (selectedFilter == '고정') {
+        filteredAnnouncements = allAnnouncements.where((announcement) => announcement.isPinned).toList();
       } else {
-        filteredNotices = allNotices.where((notice) => !notice.isImportant).toList();
+        filteredAnnouncements = allAnnouncements.where((announcement) => !announcement.isPinned).toList();
       }
+      
+      // 고정된 공지사항을 맨 위로 정렬
+      filteredAnnouncements.sort((a, b) {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return b.createdAt.compareTo(a.createdAt); // 최신순
+      });
     });
   }
   
   void _onFilterChanged(String filter) {
-    selectedFilter = filter;
-    _loadNotices(); // 필터 변경 시 API를 다시 호출하여 새로운 데이터 가져오기
+    setState(() {
+      selectedFilter = filter;
+    });
+    _filterAnnouncements();
   }
 
   @override
@@ -119,10 +121,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: InkWell(
                       onTap: () {
-                        setState(() {
-                          selectedFilter = filter;
-                        });
-                        _filterNotices();
+                        _onFilterChanged(filter);
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -153,41 +152,58 @@ class _NoticesScreenState extends State<NoticesScreen> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : filteredNotices.isEmpty
-                    ? const Center(
-                        child: Text(
-                          '공지사항이 없습니다',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                : filteredAnnouncements.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.announcement_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '공지사항이 없습니다',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '기다려주세요. 공지사항이 등록되는 대로\n여기에 표시됩니다.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadNotices,
+                        onRefresh: _loadAnnouncements,
                         child: ListView.builder(
-                          itemCount: filteredNotices.length,
+                          itemCount: filteredAnnouncements.length,
                           itemBuilder: (context, index) {
-                            final notice = filteredNotices[index];
-                            return _buildNoticeCard(notice);
+                            return _buildAnnouncementCard(filteredAnnouncements[index]);
                           },
                         ),
                       ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: "notices_fab",
-        onPressed: _showAddNoticeDialog,
-        backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 
-  Widget _buildNoticeCard(Notice notice) {
+  Widget _buildAnnouncementCard(Announcement announcement) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
       child: InkWell(
-        onTap: () => _viewNoticeDetail(notice),
+        onTap: () => _viewNoticeDetail(announcement),
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -198,7 +214,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (notice.isImportant) ...[
+                  if (announcement.isPinned) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -218,7 +234,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   ],
                   Expanded(
                     child: Text(
-                      notice.title,
+                      announcement.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -232,7 +248,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
               
               // 내용 미리보기
               Text(
-                notice.content,
+                announcement.truncatedContent,
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
@@ -248,14 +264,14 @@ class _NoticesScreenState extends State<NoticesScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    notice.createdBy,
+                    announcement.authorName ?? '관리자',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
                     ),
                   ),
                   Text(
-                    _formatDate(notice.createdAt),
+                    announcement.formattedDate,
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
@@ -270,22 +286,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-    
-    if (difference.inDays == 0) {
-      return '오늘';
-    } else if (difference.inDays == 1) {
-      return '어제';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}일 전';
-    } else {
-      return '${date.month}.${date.day}';
-    }
-  }
-
-  void _viewNoticeDetail(Notice notice) {
+  void _viewNoticeDetail(Announcement announcement) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -299,7 +300,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
               // 제목
               Row(
                 children: [
-                  if (notice.isImportant) ...[
+                  if (announcement.isPinned) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -307,7 +308,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
-                        '중요',
+                        '고정',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -319,7 +320,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   ],
                   Expanded(
                     child: Text(
-                      notice.title,
+                      announcement.title,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -339,7 +340,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
               Row(
                 children: [
                   Text(
-                    notice.createdBy,
+                    announcement.authorName ?? '관리자',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
@@ -347,7 +348,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   ),
                   const SizedBox(width: 16),
                   Text(
-                    '${notice.createdAt.year}.${notice.createdAt.month.toString().padLeft(2, '0')}.${notice.createdAt.day.toString().padLeft(2, '0')}',
+                    '${announcement.createdAt.year}.${announcement.createdAt.month.toString().padLeft(2, '0')}.${announcement.createdAt.day.toString().padLeft(2, '0')}',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
@@ -362,7 +363,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Text(
-                    notice.content,
+                    announcement.content,
                     style: const TextStyle(
                       fontSize: 16,
                       height: 1.5,
@@ -380,7 +381,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   TextButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
-                      _shareNotice(notice);
+                      _shareAnnouncement(announcement);
                     },
                     icon: const Icon(Icons.share),
                     label: const Text('공유'),
@@ -394,27 +395,15 @@ class _NoticesScreenState extends State<NoticesScreen> {
     );
   }
 
-  void _shareNotice(Notice notice) {
+  void _shareAnnouncement(Announcement announcement) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${notice.title}이 공유되었습니다'),
+        content: Text('${announcement.title}이 공유되었습니다'),
       ),
     );
   }
 
-  void _showAddNoticeDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('공지사항 추가'),
-        content: const Text('공지사항 추가 기능은 관리자 권한이 필요합니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
-  }
+
+
+
 }

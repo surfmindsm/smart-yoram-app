@@ -8,6 +8,7 @@ export 'attendance.dart';
 export 'qr_code.dart';
 export 'notice.dart';
 export 'bulletin.dart';
+export 'announcement.dart';
 export 'sms_model.dart';
 export 'calendar_model.dart';
 export 'family_model.dart';

@@ -194,6 +194,17 @@ class AuthService {
     }
   }
 
+  // 저장된 토큰 조회
+  Future<String?> getStoredToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_tokenKey);
+    } catch (e) {
+      print('토큰 조회 실패: $e');
+      return null;
+    }
+  }
+
   // 사용자 정보 저장
   Future<void> _saveUser(User user) async {
     try {

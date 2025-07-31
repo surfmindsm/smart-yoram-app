@@ -21,8 +21,12 @@ class ApiConfig {
   // 출석 관리
   static const String attendances = '/attendances/';
 
-  // 주보/공지사항 관리
+  // 주보 관리
   static const String bulletins = '/bulletins/';
+
+  // 공지사항 관리
+  static const String announcements = '/announcements/';
+  static const String announcementsTogglePin = '/announcements/{id}/toggle-pin';
 
   // QR 코드 관리
   static const String qrCodes = '/qr-codes/';
