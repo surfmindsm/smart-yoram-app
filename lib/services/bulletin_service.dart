@@ -37,8 +37,8 @@ class BulletinService {
       final user = userResponse.data!;
       print('📰 BULLETIN_SERVICE: 사용자 정보 - ID: ${user.id}, Church ID: ${user.churchId}');
       
-      // church_id 파라미터를 포함한 직접 API 호출
-      String endpoint = '${ApiConfig.baseUrl}${ApiConfig.bulletins}?skip=$skip&limit=$limit&church_id=${user.churchId}';
+      // API 엔드포인트 구성 (ApiService에서 baseUrl을 붙이므로 경로만 전달)
+      String endpoint = '${ApiConfig.bulletins}?skip=$skip&limit=$limit&church_id=${user.churchId}';
       
       if (search != null && search.isNotEmpty) {
         endpoint += '&search=${Uri.encodeComponent(search)}';
@@ -48,8 +48,8 @@ class BulletinService {
         endpoint += '&category=${Uri.encodeComponent(category)}';
       }
 
-      print('📰 BULLETIN_SERVICE: API 요청 시작 - $endpoint');
-      print('📰 BULLETIN_SERVICE: API 전체 URL - $endpoint');
+      print('📰 BULLETIN_SERVICE: API 요청 시작 - ${ApiConfig.baseUrl}$endpoint');
+      print('📰 BULLETIN_SERVICE: API 엔드포인트 - $endpoint');
       
       try {
         var response = await _apiService.get<List<dynamic>>(
@@ -118,7 +118,7 @@ class BulletinService {
   Future<ApiResponse<Bulletin>> getBulletin(String bulletinId) async {
     try {
       final response = await _apiService.get<Bulletin>(
-        '${ApiConfig.baseUrl}bulletins/$bulletinId',
+        '${ApiConfig.bulletins}$bulletinId',
         fromJson: (json) => Bulletin.fromJson(json),
       );
 
@@ -136,7 +136,7 @@ class BulletinService {
   Future<ApiResponse<Bulletin>> createBulletin(BulletinCreateRequest request) async {
     try {
       final response = await _apiService.post<Bulletin>(
-        '${ApiConfig.baseUrl}bulletins',
+        ApiConfig.bulletins,
         body: request.toJson(),
         fromJson: (json) => Bulletin.fromJson(json),
       );
@@ -158,7 +158,7 @@ class BulletinService {
   ) async {
     try {
       final response = await _apiService.put<Bulletin>(
-        '${ApiConfig.baseUrl}bulletins/$bulletinId',
+        '${ApiConfig.bulletins}$bulletinId',
         body: request.toJson(),
         fromJson: (json) => Bulletin.fromJson(json),
       );
@@ -177,7 +177,7 @@ class BulletinService {
   Future<ApiResponse<void>> deleteBulletin(String bulletinId) async {
     try {
       final response = await _apiService.delete<void>(
-        '${ApiConfig.baseUrl}bulletins/$bulletinId',
+        '${ApiConfig.bulletins}$bulletinId',
       );
 
       return response;
@@ -193,7 +193,7 @@ class BulletinService {
   Future<ApiResponse<String>> downloadBulletin(String bulletinId) async {
     try {
       final response = await _apiService.get<String>(
-        '${ApiConfig.baseUrl}bulletins/$bulletinId/download',
+        '${ApiConfig.bulletins}$bulletinId/download',
       );
 
       return response;
