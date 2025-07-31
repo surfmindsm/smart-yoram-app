@@ -12,3 +12,4 @@ export 'excel_service.dart';
 export 'statistics_service.dart';
 export 'user_service.dart';
 export 'member_card_service.dart';
+export 'bulletin_service.dart';

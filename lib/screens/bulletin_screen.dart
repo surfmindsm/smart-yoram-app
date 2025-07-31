@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/bulletin.dart';
+import '../services/bulletin_service.dart';
 import '../widget/widgets.dart';
 
 class BulletinScreen extends StatefulWidget {
@@ -11,7 +11,7 @@ class BulletinScreen extends StatefulWidget {
 }
 
 class _BulletinScreenState extends State<BulletinScreen> {
-  final supabase = Supabase.instance.client;
+  final BulletinService _bulletinService = BulletinService();
   final TextEditingController _searchController = TextEditingController();
   
   List<Bulletin> allBulletins = [];
@@ -35,12 +35,25 @@ class _BulletinScreenState extends State<BulletinScreen> {
     setState(() => isLoading = true);
     
     try {
-      // 임시 주보 데이터 생성
-      allBulletins = _generateSampleBulletins();
-      filteredBulletins = List.from(allBulletins);
+      print('🔍 BULLETIN_SCREEN: 주보 목록 로드 시작');
+      final response = await _bulletinService.getBulletins(limit: 50);
+      
+      if (response.success && response.data != null) {
+        print('🔍 BULLETIN_SCREEN: API 호출 성공 - ${response.data!.length}개 주보 로드');
+        allBulletins = response.data!;
+        filteredBulletins = List.from(allBulletins);
+      } else {
+        print('🔍 BULLETIN_SCREEN: API 호출 실패 - ${response.message}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('주보 정보 로드 실패: ${response.message}')),
+          );
+        }
+      }
       
       setState(() => isLoading = false);
     } catch (e) {
+      print('🔍 BULLETIN_SCREEN: 예외 발생 - $e');
       setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -50,61 +63,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
     }
   }
 
-  List<Bulletin> _generateSampleBulletins() {
-    final now = DateTime.now();
-    return [
-      Bulletin(
-        id: '1',
-        title: '2024년 1월 마지막 주일 주보',
-        date: now.subtract(const Duration(days: 1)),
-        description: '주일예배 및 각종 행사 안내',
-        fileType: 'pdf',
-        fileSize: 1024 * 500, // 500KB
-        createdAt: now.subtract(const Duration(days: 1)),
-        createdBy: '관리자',
-      ),
-      Bulletin(
-        id: '2',
-        title: '2024년 1월 넷째주 주보',
-        date: now.subtract(const Duration(days: 8)),
-        description: '신년예배 및 새해계획 안내',
-        fileType: 'pdf',
-        fileSize: 1024 * 450, // 450KB
-        createdAt: now.subtract(const Duration(days: 8)),
-        createdBy: '관리자',
-      ),
-      Bulletin(
-        id: '3',
-        title: '2024년 1월 셋째주 주보',
-        date: now.subtract(const Duration(days: 15)),
-        description: '새해 첫 성찬식 안내',
-        fileType: 'pdf',
-        fileSize: 1024 * 600, // 600KB
-        createdAt: now.subtract(const Duration(days: 15)),
-        createdBy: '관리자',
-      ),
-      Bulletin(
-        id: '4',
-        title: '2024년 1월 둘째주 주보',
-        date: now.subtract(const Duration(days: 22)),
-        description: '신년 감사예배 및 떡국 나눔',
-        fileType: 'pdf',
-        fileSize: 1024 * 700, // 700KB
-        createdAt: now.subtract(const Duration(days: 22)),
-        createdBy: '관리자',
-      ),
-      Bulletin(
-        id: '5',
-        title: '2024년 1월 첫째주 주보',
-        date: now.subtract(const Duration(days: 29)),
-        description: '새해 첫 주일예배',
-        fileType: 'pdf',
-        fileSize: 1024 * 400, // 400KB
-        createdAt: now.subtract(const Duration(days: 29)),
-        createdBy: '관리자',
-      ),
-    ];
-  }
+
 
   void _filterBulletins() {
     String query = _searchController.text.toLowerCase();
@@ -401,16 +360,40 @@ class _BulletinScreenState extends State<BulletinScreen> {
     );
   }
 
-  void _downloadBulletin(Bulletin bulletin) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${bulletin.title} 다운로드 중...'),
-        action: SnackBarAction(
-          label: '취소',
-          onPressed: () {},
+  Future<void> _downloadBulletin(Bulletin bulletin) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${bulletin.title} 다운로드 중...'),
+          action: SnackBarAction(
+            label: '취소',
+            onPressed: () {},
+          ),
         ),
-      ),
-    );
+      );
+
+      final response = await _bulletinService.downloadBulletin(bulletin.id);
+      
+      if (response.success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${bulletin.title} 다운로드 완료')),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('다운로드 실패: ${response.message}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('다운로드 실패: $e')),
+        );
+      }
+    }
   }
 
   void _shareBulletin(Bulletin bulletin) {
