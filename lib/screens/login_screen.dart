@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widget/widgets.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -290,15 +291,22 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       
       if (response.success && mounted) {
-        // 로그인 성공
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('로그인 성공!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
+      // 로그인 성공
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('로그인 성공!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      // 첫 로그인 체크
+      final currentUser = _authService.currentUser;
+      if (currentUser != null && currentUser.isFirst) {
+        // 첫 로그인이므로 비밀번호 변경 화면으로 이동
+        _showPasswordChangeDialog();
+      } else {
         Navigator.pushReplacementNamed(context, '/home');
+      }
       } else {
         // 로그인 실패
         if (mounted) {
@@ -444,6 +452,233 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.red,
           ),
         );
+      }
+    }
+  }
+
+  // 첫 로그인 시 비밀번호 변경 다이얼로그
+  void _showPasswordChangeDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // 다이얼로그 밖 클릭으로 닫기 방지
+      builder: (context) => _PasswordChangeDialog(),
+    );
+  }
+}
+
+// 비밀번호 변경 다이얼로그 위젯
+class _PasswordChangeDialog extends StatefulWidget {
+  @override
+  _PasswordChangeDialogState createState() => _PasswordChangeDialogState();
+}
+
+class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
+  final AuthService _authService = AuthService();
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  
+  bool _isLoading = false;
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
+
+  @override
+  void dispose() {
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Column(
+        children: [
+          Icon(Icons.lock_reset, size: 40, color: Colors.orange),
+          SizedBox(height: 8),
+          Text('첫 로그인 - 비밀번호 변경'),
+        ],
+      ),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '보안상 첫 로그인 시 비밀번호를 변경해주세요.',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            // 현재 비밀번호
+            TextFormField(
+              controller: _currentPasswordController,
+              obscureText: _obscureCurrentPassword,
+              decoration: InputDecoration(
+                labelText: '현재 비밀번호',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureCurrentPassword ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '현재 비밀번호를 입력해주세요';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            // 새 비밀번호
+            TextFormField(
+              controller: _newPasswordController,
+              obscureText: _obscureNewPassword,
+              decoration: InputDecoration(
+                labelText: '새 비밀번호',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureNewPassword ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '새 비밀번호를 입력해주세요';
+                }
+                if (value.length < 6) {
+                  return '비밀번호는 최소 6자 이상이어야 합니다';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            // 비밀번호 확인
+            TextFormField(
+              controller: _confirmPasswordController,
+              obscureText: _obscureConfirmPassword,
+              decoration: InputDecoration(
+                labelText: '비밀번호 확인',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '비밀번호 확인을 입력해주세요';
+                }
+                if (value != _newPasswordController.text) {
+                  return '비밀번호가 일치하지 않습니다';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () {
+            // 나중에 변경하기 - 홈으로 이동
+            Navigator.pop(context);
+            Navigator.pushReplacementNamed(context, '/home');
+          },
+          child: const Text('나중에'),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _changePassword,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue[700],
+            foregroundColor: Colors.white,
+          ),
+          child: _isLoading 
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('변경하기'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _changePassword() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final result = await _authService.changePassword(
+        currentPassword: _currentPasswordController.text,
+        newPassword: _newPasswordController.text,
+      );
+
+      if (mounted) {
+        if (result.success) {
+          print('🔑 PASSWORD_CHANGE: 비밀번호 변경 성공, is_first 상태 업데이트 시작');
+          
+          try {
+            // UserService를 사용하여 첫 로그인 완료 처리
+            final userService = UserService();
+            final firstLoginResult = await userService.completeFirstLogin();
+            
+            if (firstLoginResult.success && firstLoginResult.data != null) {
+              final updatedUser = firstLoginResult.data!;
+              print('🔑 PASSWORD_CHANGE: is_first 업데이트 성공 - 새 상태: ${updatedUser.isFirst}');
+              
+              // AuthService에도 업데이트된 사용자 정보 반영
+              await _authService.getCurrentUser();
+            } else {
+              print('⚠️ PASSWORD_CHANGE: is_first 업데이트 실패: ${firstLoginResult.message}');
+              // 실패해도 비밀번호 변경은 성공했으므로 계속 진행
+            }
+          } catch (e) {
+            print('⚠️ PASSWORD_CHANGE: is_first 업데이트 예외: $e');
+            // 예외가 발생해도 비밀번호 변경은 성공했으므로 계속 진행
+          }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('비밀번호가 성공적으로 변경되었습니다.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // 비밀번호 변경 성공 후 홈으로 이동
+          Navigator.pop(context);
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('비밀번호 변경 실패: ${result.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }

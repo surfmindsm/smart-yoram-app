@@ -112,6 +112,24 @@ class UserService {
     );
   }
 
+  /// 첫 로그인 상태 업데이트
+  Future<ApiResponse<User>> updateIsFirst(bool isFirst) async {
+    final body = {
+      'is_first': isFirst,
+    };
+
+    return await _apiService.put<User>(
+      '/users/me',
+      body: body,
+      fromJson: (json) => User.fromJson(json),
+    );
+  }
+
+  /// 첫 로그인 완료 처리 (비밀번호 변경 후 호출)
+  Future<ApiResponse<User>> completeFirstLogin() async {
+    return await updateIsFirst(false);
+  }
+
   /// 사용자 권한 레벨 확인
   static bool hasPermission(String userRole, String requiredRole) {
     const roleHierarchy = ['member', 'pastor', 'admin'];

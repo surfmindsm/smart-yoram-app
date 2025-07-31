@@ -121,6 +121,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
               _buildTestButton('사용자 정보', 'user_info', testUserInfo),
               _buildTestButton('사용자 목록', 'user_list', testUserList),
               _buildTestButton('비밀번호 변경', 'password_change', testPasswordChange),
+              _buildTestButton('is_first 업데이트', 'is_first_update', testIsFirstUpdate),
             ]),
             _buildSection('모바일 교인증', [
               _buildTestButton('교인증 정보', 'member_card', testMemberCard),
@@ -1124,13 +1125,28 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     
     try {
       final result = await _userService.getCurrentUser();
-      if (result.success) {
-        _updateResult('user_info', '성공: 현재 사용자 정보 조회됨');
+      
+      _addDebugLog('📝 [user_info] 응답 성공여부: ${result.success}');
+      _addDebugLog('📝 [user_info] 응답 메시지: ${result.message}');
+      
+      if (result.success && result.data != null) {
+        final user = result.data!;
+        _addDebugLog('📝 [user_info] 사용자 ID: ${user.id}');
+        _addDebugLog('📝 [user_info] 사용자명: ${user.username}');
+        _addDebugLog('📝 [user_info] 이름: ${user.fullName}');
+        _addDebugLog('📝 [user_info] 이메일: ${user.email}');
+        _addDebugLog('📝 [user_info] 교회 ID: ${user.churchId}');
+        _addDebugLog('📝 [user_info] 권한: ${user.role}');
+        _addDebugLog('📝 [user_info] 활성 상태: ${user.isActive}');
+        _addDebugLog('📝 [user_info] 첫 로그인 여부: ${user.isFirst}');
+        _addDebugLog('📝 [user_info] 생성일: ${user.createdAt}');
+        
+        _updateResult('user_info', '성공: 현재 사용자 정보 조회됨 (is_first: ${user.isFirst})');
       } else {
         _updateResult('user_info', '실패: ${result.message}');
       }
     } catch (e) {
-      _addDebugLog('[user_info] 예외 발생: $e');
+      _addDebugLog('❌ [user_info] 예외 발생: $e');
       _updateResult('user_info', '오류: $e');
     }
   }
@@ -1183,6 +1199,48 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     } catch (e) {
       _addDebugLog('❌ [password_change] 예외 발생: $e');
       _updateResult('password_change', '오류: $e');
+    }
+  }
+
+  Future<void> testIsFirstUpdate() async {
+    _startTest('is_first_update');
+    try {
+      _addDebugLog('🔄 [is_first_update] is_first 상태 업데이트 요청');
+      
+      // 현재 사용자 정보 확인
+      final userInfoResult = await _userService.getCurrentUser();
+      if (userInfoResult.success && userInfoResult.data != null) {
+        final currentIsFirst = userInfoResult.data!.isFirst;
+        _addDebugLog('🔄 [is_first_update] 현재 is_first 상태: $currentIsFirst');
+        
+        // 반대 값으로 업데이트 테스트
+        final newIsFirst = !currentIsFirst;
+        _addDebugLog('🔄 [is_first_update] 새로운 is_first 값: $newIsFirst');
+        
+        final updateResult = await _userService.updateIsFirst(newIsFirst);
+        
+        _addDebugLog('🔄 [is_first_update] 업데이트 응답 성공여부: ${updateResult.success}');
+        _addDebugLog('🔄 [is_first_update] 업데이트 응답 메시지: ${updateResult.message}');
+        
+        if (updateResult.success && updateResult.data != null) {
+          final updatedUser = updateResult.data!;
+          _addDebugLog('🔄 [is_first_update] 업데이트 후 is_first: ${updatedUser.isFirst}');
+          
+          // 원래 상태로 다시 복구 (테스트 후 상태 복구)
+          _addDebugLog('🔄 [is_first_update] 테스트 뒤정리 - 원래 상태로 복구 시도');
+          await _userService.updateIsFirst(currentIsFirst);
+          
+          _updateResult('is_first_update', '성공: is_first 업데이트됨 ($currentIsFirst → $newIsFirst → $currentIsFirst)');
+        } else {
+          _updateResult('is_first_update', '실패: ${updateResult.message}');
+        }
+      } else {
+        _addDebugLog('❌ [is_first_update] 사용자 정보 조회 실패: ${userInfoResult.message}');
+        _updateResult('is_first_update', '실패: 사용자 정보 조회 실패');
+      }
+    } catch (e) {
+      _addDebugLog('❌ [is_first_update] 예외 발생: $e');
+      _updateResult('is_first_update', '오류: $e');
     }
   }
 
@@ -1265,6 +1323,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       ('사용자 정보', testUserInfo),
       ('사용자 목록', testUserList),
       ('비밀번호 변경', testPasswordChange),
+      ('is_first 업데이트', testIsFirstUpdate),
       ('교인증', testMemberCard),
       ('QR 재생성', testCardQRRegenerate),
     ];

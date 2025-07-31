@@ -69,8 +69,16 @@ class _AttendanceScreenState extends State<AttendanceScreen>
       print('🔍 QR_LOAD: 사용자 응답 - success: ${userResponse.success}, data: ${userResponse.data != null}');
       
       if (userResponse.success && userResponse.data != null) {
-        final userId = userResponse.data!.id;
-        print('🔍 QR_LOAD: 사용자 ID: $userId');
+        final user = userResponse.data!;
+        final userId = user.id;
+        print('🔍 QR_LOAD: 사용자 ID: $userId, is_first: ${user.isFirst}');
+        
+        // 첫 로그인 체크
+        if (user.isFirst) {
+          print('🔍 QR_LOAD: 첫 로그인 사용자입니다. 새 QR 코드를 생성합니다.');
+        } else {
+          print('🔍 QR_LOAD: 기존 사용자입니다. QR 코드를 조회합니다.');
+        }
         
         // 올바른 매핑: user_id → member_id → QR 코드
         print('🔍 QR_LOAD: members 테이블에서 user_id $userId로 member 조회');
