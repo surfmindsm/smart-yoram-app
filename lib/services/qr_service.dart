@@ -109,15 +109,53 @@ class QRService {
 
   // 교인의 모든 QR 코드 조회
   Future<ApiResponse<List<QRCodeInfo>>> getMemberQRCodes(int memberId) async {
+    print('🔍 QR_SERVICE: getMemberQRCodes 시작 - memberId: $memberId');
     try {
-      final response = await _apiService.get<List<dynamic>>(
-        '${ApiConfig.qrCodes}member/$memberId',
+      final url = '${ApiConfig.qrCodes}member/$memberId';
+      print('🔍 QR_SERVICE: API 호출 URL: $url');
+      
+      final response = await _apiService.get<dynamic>(
+        url,
       );
+      
+      print('🔍 QR_SERVICE: API 응답 - success: ${response.success}');
+      print('🔍 QR_SERVICE: API 응답 - message: "${response.message}"');
+      print('🔍 QR_SERVICE: API 응답 - data null 여부: ${response.data == null}');
 
       if (response.success && response.data != null) {
-        final List<QRCodeInfo> qrCodes = (response.data as List)
-            .map((qrJson) => QRCodeInfo.fromJson(qrJson))
-            .toList();
+        print('🔍 QR_SERVICE: 원본 데이터 타입: ${response.data.runtimeType}');
+        
+        List<QRCodeInfo> qrCodes;
+        
+        if (response.data is List) {
+          // 배열로 오는 경우 (기존 로직)
+          print('🔍 QR_SERVICE: 배열 형태 데이터 - 길이: ${(response.data as List).length}');
+          qrCodes = (response.data as List)
+              .map((qrJson) {
+                print('🔍 QR_SERVICE: QR 데이터 파싱: $qrJson');
+                return QRCodeInfo.fromJson(qrJson);
+              })
+              .toList();
+        } else if (response.data is Map) {
+          // 단일 객체로 오는 경우 (현재 백엔드)
+          print('🔍 QR_SERVICE: 단일 객체 형태 데이터');
+          print('🔍 QR_SERVICE: QR 데이터 파싱: ${response.data}');
+          final qrInfo = QRCodeInfo.fromJson(response.data as Map<String, dynamic>);
+          qrCodes = [qrInfo]; // 단일 객체를 배열로 변환
+        } else {
+          print('🔍 QR_SERVICE: 예상치 못한 데이터 타입: ${response.data.runtimeType}');
+          return ApiResponse<List<QRCodeInfo>>(
+            success: false,
+            message: '예상치 못한 데이터 타입: ${response.data.runtimeType}',
+            data: null,
+          );
+        }
+        
+        print('🔍 QR_SERVICE: 파싱된 QR 코드 수: ${qrCodes.length}');
+        for (int i = 0; i < qrCodes.length; i++) {
+          final qr = qrCodes[i];
+          print('🔍 QR_SERVICE: [$i] code: ${qr.code}, active: ${qr.isActive}, expires: ${qr.expiresAt}');
+        }
 
         return ApiResponse<List<QRCodeInfo>>(
           success: true,
@@ -126,12 +164,14 @@ class QRService {
         );
       }
 
+      print('🔍 QR_SERVICE: API 응답 실패 또는 데이터 없음');
       return ApiResponse<List<QRCodeInfo>>(
         success: false,
         message: response.message,
         data: null,
       );
     } catch (e) {
+      print('🔍 QR_SERVICE: getMemberQRCodes 예외 - $e');
       return ApiResponse<List<QRCodeInfo>>(
         success: false,
         message: '교인 QR 코드 조회 실패: ${e.toString()}',

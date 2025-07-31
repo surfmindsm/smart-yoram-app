@@ -1,5 +1,6 @@
 import '../models/api_response.dart';
 import '../models/user.dart';
+import '../config/api_config.dart';
 import 'api_service.dart';
 
 class UserService {
@@ -112,22 +113,63 @@ class UserService {
     );
   }
 
-  /// 첫 로그인 상태 업데이트
+  /// 첫 로그인 상태 업데이트 (새 엔드포인트 사용)
   Future<ApiResponse<User>> updateIsFirst(bool isFirst) async {
+    print('🔧 USER_SERVICE: updateIsFirst 시작 - 설정할 값: $isFirst');
+  
     final body = {
       'is_first': isFirst,
     };
+  
+    print('🔧 USER_SERVICE: 요청 데이터: $body');
+    print('🔧 USER_SERVICE: API 호출 - POST ${ApiConfig.usersUpdateFirstLogin}');
 
-    return await _apiService.put<User>(
-      '/users/me',
+    final result = await _apiService.post<User>(
+      ApiConfig.usersUpdateFirstLogin,
       body: body,
       fromJson: (json) => User.fromJson(json),
     );
+  
+    print('🔧 USER_SERVICE: API 응답 - success: ${result.success}');
+    if (result.success && result.data != null) {
+      print('🔧 USER_SERVICE: 응답 데이터 - is_first: ${result.data!.isFirst}');
+    } else {
+      print('🔧 USER_SERVICE: 응답 실패 - message: ${result.message}');
+    }
+  
+    return result;
   }
 
   /// 첫 로그인 완료 처리 (비밀번호 변경 후 호출)
   Future<ApiResponse<User>> completeFirstLogin() async {
     return await updateIsFirst(false);
+  }
+
+  /// 대체 옵션 1: 기존 PUT /users/me 사용 (JSON 객체)
+  Future<ApiResponse<User>> updateIsFirstViaPUT(bool isFirst) async {
+    print('🔧 USER_SERVICE: updateIsFirstViaPUT 시작 - 설정할 값: $isFirst');
+  
+    final body = {
+      'is_first': isFirst,
+    };
+  
+    print('🔧 USER_SERVICE: 요청 데이터: $body');
+    print('🔧 USER_SERVICE: API 호출 - PUT /users/me');
+
+    final result = await _apiService.put<User>(
+      ApiConfig.usersMe,
+      body: body,
+      fromJson: (json) => User.fromJson(json),
+    );
+  
+    print('🔧 USER_SERVICE: API 응답 - success: ${result.success}');
+    if (result.success && result.data != null) {
+      print('🔧 USER_SERVICE: 응답 데이터 - is_first: ${result.data!.isFirst}');
+    } else {
+      print('🔧 USER_SERVICE: 응답 실패 - message: ${result.message}');
+    }
+  
+    return result;
   }
 
   /// 사용자 권한 레벨 확인

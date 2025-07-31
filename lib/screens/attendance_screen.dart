@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
 import '../models/attendance.dart';
+import '../models/api_response.dart';
 import '../models/qr_code.dart';
 import '../services/attendance_service.dart';
 import '../services/qr_service.dart';
@@ -88,15 +89,43 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           final memberId = memberResponse.data!.id;
           print('🔍 QR_LOAD: 매핑 성공! user_id $userId → member_id $memberId');
           
-          // member_id로 QR 코드 생성 (최신 QR 가져오기)
-          final qrResponse = await _qrService.generateQRCode(memberId);
+          late ApiResponse qrResponse;
           
-          if (qrResponse.success && qrResponse.data != null) {
-            myQRCode = qrResponse.data;
-            print('🔍 QR_LOAD: QR 코드 로드 성공! code: ${myQRCode!.code}');
+          if (user.isFirst) {
+            // 첫 로그인: 새로운 QR 코드 생성
+            print('🔍 QR_LOAD: 첫 로그인 → 새 QR 코드 생성');
+            qrResponse = await _qrService.generateQRCode(memberId);
+            
+            if (qrResponse.success && qrResponse.data != null) {
+              myQRCode = qrResponse.data;
+              print('🔍 QR_LOAD: 새 QR 코드 생성 성공! code: ${myQRCode!.code}');
+            } else {
+              print('🔍 QR_LOAD: 새 QR 코드 생성 실패 - ${qrResponse.message}');
+              await _createTemporaryQRCode();
+            }
           } else {
-            print('🔍 QR_LOAD: QR 코드 생성 실패 - ${qrResponse.message}');
-            await _createTemporaryQRCode();
+            // 기존 사용자: 기존 QR 코드 조회
+            print('🔍 QR_LOAD: 기존 사용자 → 기존 QR 코드 조회');
+            final qrListResponse = await _qrService.getMemberQRCodes(memberId);
+            
+            if (qrListResponse.success && qrListResponse.data != null && qrListResponse.data!.isNotEmpty) {
+              // 가장 최신 QR 코드 사용 (첫 번째)
+              myQRCode = qrListResponse.data!.first;
+              print('🔍 QR_LOAD: 기존 QR 코드 조회 성공! code: ${myQRCode!.code}');
+              print('🔍 QR_LOAD: 총 ${qrListResponse.data!.length}개 QR 코드 중 첫 번째 사용');
+            } else {
+              // 기존 QR이 없으면 새로 생성
+              print('🔍 QR_LOAD: 기존 QR 코드가 없음, 새로 생성');
+              qrResponse = await _qrService.generateQRCode(memberId);
+              
+              if (qrResponse.success && qrResponse.data != null) {
+                myQRCode = qrResponse.data;
+                print('🔍 QR_LOAD: 대체 QR 코드 생성 성공! code: ${myQRCode!.code}');
+              } else {
+                print('🔍 QR_LOAD: 대체 QR 코드 생성 실패 - ${qrResponse.message}');
+                await _createTemporaryQRCode();
+              }
+            }
           }
         } else {
           print('🔍 QR_LOAD: user_id $userId에 해당하는 member를 찾을 수 없음');

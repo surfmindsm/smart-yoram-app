@@ -12,6 +12,7 @@ class ApiConfig {
   static const String authChangePassword = '/auth/member/change-password';
   static const String users = '/users/';
   static const String usersMe = '/users/me';
+  static const String usersUpdateFirstLogin = '/users/me/update-first-login';
 
   // 교인 관리
   static const String members = '/members/';
