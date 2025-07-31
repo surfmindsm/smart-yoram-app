@@ -1,6 +1,7 @@
 class Member {
   final int id;
   final String name;
+  final String? email;
   final String gender;
   final DateTime? birthdate;
   final String phone;
@@ -21,6 +22,7 @@ class Member {
   Member({
     required this.id,
     required this.name,
+    this.email,
     required this.gender,
     this.birthdate,
     required this.phone,
@@ -43,6 +45,7 @@ class Member {
     return Member(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
+      email: json['email'],
       gender: json['gender'] ?? '',
       birthdate: json['birthdate'] != null 
           ? DateTime.parse(json['birthdate']) 
@@ -76,6 +79,7 @@ class Member {
     return {
       'id': id,
       'name': name,
+      'email': email,
       'gender': gender,
       'birthdate': birthdate?.toIso8601String().split('T')[0],
       'phone': phone,

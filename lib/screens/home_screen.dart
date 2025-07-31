@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../widget/widgets.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
+import '../services/member_service.dart';
+
+import '../models/user.dart' as app_user;
+import '../models/member.dart';
+
 import 'calendar_screen.dart';
 import 'prayer_screen.dart';
 import 'settings_screen.dart';
@@ -18,6 +24,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
+  final MemberService _memberService = MemberService();
+
+  
+  app_user.User? currentUser;
+  Member? currentMember;
   Map<String, dynamic>? churchInfo;
   Map<String, dynamic>? userStats;
   bool isLoading = true;
@@ -30,15 +42,41 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadDashboardData() async {
     try {
-      // 교회 정보 로드 (임시 데이터)
+      // 현재 사용자 정보 로드
+      final userResponse = await _userService.getCurrentUser();
+      if (userResponse.success && userResponse.data != null) {
+        currentUser = userResponse.data!;
+        
+        // 현재 사용자의 교인 정보 조회
+        final membersResponse = await _memberService.getMembers(limit: 1000);
+        if (membersResponse.success && membersResponse.data != null) {
+          // 현재 사용자의 email과 일치하는 교인 찾기
+          final members = membersResponse.data!;
+          currentMember = members.firstWhere(
+            (member) => member.email == currentUser!.email,
+            orElse: () => Member(
+              id: 0,
+              name: currentUser!.fullName,
+              email: currentUser!.email,
+              gender: '',
+              phone: '',
+              churchId: currentUser!.churchId,
+              memberStatus: 'active',
+              createdAt: DateTime.now(),
+            ),
+          );
+        }
+      }
+
+      // 교회 정보 로드 (현재는 임시 데이터, 추후 Church API 연동)
       churchInfo = {
-        'name': '새로운 교회',
-        'pastor': '김목사',
+        'name': '스마트 교회요람',
+        'pastor': '담임목사',
         'phone': '031-123-4567',
-        'email': 'church@example.com',
+        'email': 'info@smartchurch.com',
       };
 
-      // 사용자 개인 통계 로드 (임시 데이터)
+      // 사용자 개인 통계 로드 (임시 데이터, 추후 실제 통계 API 연동)
       userStats = {
         'myAttendanceRate': 85,
         'monthlyAttendance': 12,
@@ -71,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: CommonAppBar(
-        title: churchInfo?['name'] ?? '스마트 교회요람',
+        title: '안녕하세요, ${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
         actions: [
           // 개발용 로그아웃 버튼 (테스트 목적)
           IconButton(
@@ -134,23 +172,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildChurchInfoCard() {
     return InfoCardWidget(
-      title: churchInfo?['name'] ?? '교회명',
-      icon: Icons.church,
+      title: '내 정보',
+      icon: Icons.person_pin,
       items: [
         InfoItem(
-          label: '담임목사',
-          value: churchInfo?['pastor'] ?? '김목사',
+          label: '이름',
+          value: currentMember?.name ?? currentUser?.fullName ?? '이름 없음',
           icon: Icons.person,
         ),
         InfoItem(
           label: '전화번호',
-          value: churchInfo?['phone'] ?? '031-123-4567',
+          value: currentMember?.phone ?? '전화번호 없음',
           icon: Icons.phone,
         ),
         InfoItem(
           label: '이메일',
-          value: churchInfo?['email'] ?? 'church@example.com',
+          value: currentUser?.email ?? '이메일 없음',
           icon: Icons.email,
+        ),
+        InfoItem(
+          label: '권한',
+          value: _getRoleDisplayName(currentUser?.role),
+          icon: Icons.security,
         ),
       ],
     );
@@ -516,6 +559,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       }
+    }
+  }
+
+  String _getRoleDisplayName(String? role) {
+    switch (role) {
+      case 'admin':
+        return '관리자';
+      case 'pastor':
+        return '목회자';
+      case 'member':
+        return '교인';
+      default:
+        return '미정';
     }
   }
 }
