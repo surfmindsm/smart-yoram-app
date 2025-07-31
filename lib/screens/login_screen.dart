@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widget/widgets.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
+import '../models/api_response.dart';
+import '../models/user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -354,48 +356,20 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // 기존 로그인 API 사용 (users 테이블에서 가져오기)
-      final result = await _authService.login(
-        _usernameController.text.trim(),
-        _passwordController.text,
-      );
-
-      if (mounted) {
-        if (result.success) {
-          print('🔑 LOGIN: 로그인 성공');
-          
-          // 로그인 성공 후 사용자 정보 가져오기
-          final userResponse = await _authService.getCurrentUser();
-          if (userResponse.success && userResponse.data != null) {
-            final currentUser = userResponse.data!;
-            print('🔑 LOGIN: User ID: ${currentUser.id}, is_first: ${currentUser.isFirst}');
-            
-            // 첫 로그인 처리
-            if (currentUser.isFirst) {
-              print('🔑 LOGIN: 첫 로그인 사용자 - 비밀번호 변경 다이얼로그 표시');
-              _showPasswordChangeDialog();
-            } else {
-              print('🔑 LOGIN: 기존 사용자 - 홈 화면으로 이동');
-              Navigator.pushReplacementNamed(context, '/home');
-            }
-          } else {
-            print('🔑 LOGIN: 사용자 정보 가져오기 실패, 홈으로 이동');
-            Navigator.pushReplacementNamed(context, '/home');
-          }
-        } else {
-          String errorMessage = result.message;
-          if (errorMessage.isEmpty) {
-            errorMessage = '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
-          }
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('로그인 실패: $errorMessage'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+      String username = _usernameController.text.trim();
+      
+      // 새로운 멤버 API는 이메일/전화번호 모두 지원
+      print('🔑 LOGIN: $_loginType 로그인 시도 - username: $username');
+      
+      // 전화번호인 경우 숫자만 전송 (사용자 테이블의 phone 필드와 매치)
+      if (_loginType == 'phone') {
+        username = username.replaceAll(RegExp(r'[^0-9]'), ''); // 숫자만 추출
+        print('🔑 LOGIN: 전화번호 정규화: $username');
       }
+      
+      final result = await _authService.login(username, _passwordController.text);
+
+      await _handleLoginSuccess(result);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -410,6 +384,46 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           isLoading = false;
         });
+      }
+    }
+  }
+  
+  // 로그인 성공 처리
+  Future<void> _handleLoginSuccess(ApiResponse<LoginResponse> result) async {
+    if (mounted) {
+      if (result.success) {
+        print('🔑 LOGIN: 로그인 성공');
+        
+        // 로그인 성공 후 사용자 정보 가져오기
+        final userResponse = await _authService.getCurrentUser();
+        if (userResponse.success && userResponse.data != null) {
+          final currentUser = userResponse.data!;
+          print('🔑 LOGIN: User ID: ${currentUser.id}, is_first: ${currentUser.isFirst}');
+          
+          // 첫 로그인 처리
+          if (currentUser.isFirst) {
+            print('🔑 LOGIN: 첫 로그인 사용자 - 비밀번호 변경 다이얼로그 표시');
+            _showPasswordChangeDialog();
+          } else {
+            print('🔑 LOGIN: 기존 사용자 - 홈 화면으로 이동');
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        } else {
+          print('🔑 LOGIN: 사용자 정보 가져오기 실패, 홈으로 이동');
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } else {
+        String errorMessage = result.message;
+        if (errorMessage.isEmpty) {
+          errorMessage = '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('로그인 실패: $errorMessage'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

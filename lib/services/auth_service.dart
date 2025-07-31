@@ -76,7 +76,7 @@ class AuthService {
       };
 
       final response = await _apiService.postForm<LoginResponse>(
-        ApiConfig.authLogin,
+        ApiConfig.authMemberLogin,
         formData,
         fromJson: (json) => LoginResponse.fromJson(json),
       );
@@ -115,7 +115,7 @@ class AuthService {
       };
 
       final response = await _apiService.post<LoginWithUserResponse>(
-        ApiConfig.authLogin,
+        ApiConfig.authMemberLoginAccessToken,
         body: body,
         fromJson: (json) => LoginWithUserResponse.fromJson(json),
       );
