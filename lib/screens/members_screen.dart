@@ -37,25 +37,42 @@ class _MembersScreenState extends State<MembersScreen> {
   }
 
   Future<void> _loadMembers({String? search}) async {
+    print('📁 MEMBERS_SCREEN: _loadMembers 시작');
+    print('📁 MEMBERS_SCREEN: search: $search, status: $selectedStatus');
     setState(() => isLoading = true);
     
     try {
       // 백엔드 API에서 교인 목록 가져오기
+      print('📁 MEMBERS_SCREEN: getMembers API 호출 시작');
       final response = await _memberService.getMembers(
         search: search?.isNotEmpty == true ? search : null,
         memberStatus: selectedStatus != '전체' ? selectedStatus : null,
-        limit: 100,
+        limit: 1000,
       );
+      
+      print('📁 MEMBERS_SCREEN: API 응답 - success: ${response.success}');
+      print('📁 MEMBERS_SCREEN: API 응답 - message: "${response.message}"');
       
       if (response.success && response.data != null) {
         allMembers = response.data!;
+        print('📁 MEMBERS_SCREEN: 받은 교인 수: ${allMembers.length}');
+        
+        // 처음 5명 상세 정보 로그
+        for (int i = 0; i < allMembers.length && i < 5; i++) {
+          final member = allMembers[i];
+          print('📁 MEMBERS_SCREEN: [$i] ID: ${member.id}, 이름: ${member.name}, 전화: ${member.phone}');
+        }
+        
         _filterMembers();
       } else {
+        print('📁 MEMBERS_SCREEN: API 응답 실패 - ${response.message}');
         throw Exception(response.message);
       }
       
       setState(() => isLoading = false);
+      print('📁 MEMBERS_SCREEN: _loadMembers 완료');
     } catch (e) {
+      print('📁 MEMBERS_SCREEN: _loadMembers 예외 - $e');
       setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -71,7 +88,11 @@ class _MembersScreenState extends State<MembersScreen> {
 
 
   void _filterMembers() {
+    print('🔍 MEMBERS_SCREEN: _filterMembers 시작');
+    print('🔍 MEMBERS_SCREEN: allMembers.length: ${allMembers.length}');
     String query = _searchController.text.toLowerCase();
+    print('🔍 MEMBERS_SCREEN: 검색어: "$query"');
+    print('🔍 MEMBERS_SCREEN: selectedFilter: $selectedFilter');
     
     setState(() {
       filteredMembers = allMembers.where((member) {
@@ -82,8 +103,21 @@ class _MembersScreenState extends State<MembersScreen> {
         bool matchesPosition = selectedFilter == '전체' || 
                              (member.position != null && member.position!.contains(selectedFilter));
         
+        // 처음 3명만 상세 필터링 로그
+        if (allMembers.indexOf(member) < 3) {
+          print('🔍 MEMBERS_SCREEN: [${allMembers.indexOf(member)}] ${member.name} - search: $matchesSearch, position: $matchesPosition');
+        }
+        
         return matchesSearch && matchesPosition;
       }).toList();
+      
+      print('🔍 MEMBERS_SCREEN: 필터링 후 교인 수: ${filteredMembers.length}');
+      
+      // 필터링된 처음 5명 로그
+      for (int i = 0; i < filteredMembers.length && i < 5; i++) {
+        final member = filteredMembers[i];
+        print('🔍 MEMBERS_SCREEN: 필터링된 [$i] 이름: ${member.name}, 전화: ${member.phone}');
+      }
     });
   }
 

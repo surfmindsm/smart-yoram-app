@@ -20,6 +20,10 @@ class MemberService {
     String? search,
     String? memberStatus,
   }) async {
+    print('👥 MEMBER_SERVICE: getMembers 시작');
+    print('👥 MEMBER_SERVICE: 파라미터 - skip: $skip, limit: $limit');
+    print('👥 MEMBER_SERVICE: search: $search, memberStatus: $memberStatus');
+    
     try {
       String endpoint = '${ApiConfig.members}?skip=$skip&limit=$limit';
       
@@ -30,13 +34,35 @@ class MemberService {
       if (memberStatus != null && memberStatus.isNotEmpty) {
         endpoint += '&member_status=${Uri.encodeComponent(memberStatus)}';
       }
+      
+      print('👥 MEMBER_SERVICE: API 엔드포인트: $endpoint');
+      print('👥 MEMBER_SERVICE: 전체 URL: ${ApiConfig.baseUrl}$endpoint');
 
       final response = await _apiService.get<List<dynamic>>(endpoint);
+      
+      print('👥 MEMBER_SERVICE: API 응답 - success: ${response.success}');
+      print('👥 MEMBER_SERVICE: API 응답 - message: "${response.message}"');
+      print('👥 MEMBER_SERVICE: API 응답 - data null 여부: ${response.data == null}');
 
       if (response.success && response.data != null) {
+        print('👥 MEMBER_SERVICE: 원본 데이터 타입: ${response.data.runtimeType}');
+        print('👥 MEMBER_SERVICE: 원본 데이터 길이: ${(response.data as List).length}');
+        
         final List<Member> members = (response.data as List)
-            .map((memberJson) => Member.fromJson(memberJson))
+            .map((memberJson) {
+              // 처음 3개 데이터만 상세 로그
+              if ((response.data as List).indexOf(memberJson) < 3) {
+                print('👥 MEMBER_SERVICE: member 데이터 파싱: $memberJson');
+              }
+              return Member.fromJson(memberJson);
+            })
             .toList();
+        
+        print('👥 MEMBER_SERVICE: 파싱된 교인 수: ${members.length}');
+        for (int i = 0; i < members.length && i < 3; i++) {
+          final member = members[i];
+          print('👥 MEMBER_SERVICE: [$i] ID: ${member.id}, 이름: ${member.name}, 교회ID: ${member.churchId}');
+        }
 
         return ApiResponse<List<Member>>(
           success: true,
@@ -45,12 +71,14 @@ class MemberService {
         );
       }
 
+      print('👥 MEMBER_SERVICE: API 응답 실패 또는 데이터 없음');
       return ApiResponse<List<Member>>(
         success: false,
         message: response.message,
         data: null,
       );
     } catch (e) {
+      print('👥 MEMBER_SERVICE: getMembers 예외 - $e');
       return ApiResponse<List<Member>>(
         success: false,
         message: '교인 목록 조회 실패: ${e.toString()}',

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/main_navigation.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/members_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'screens/bulletin_screen.dart';
 import 'screens/notices_screen.dart';
@@ -57,7 +58,7 @@ class MyApp extends ConsumerWidget {
           routes: {
             '/login': (context) => const LoginScreen(),
             '/home': (context) => const MainNavigation(),
-            '/members': (context) => const ProfileScreen(),
+            '/members': (context) => const MembersScreen(),
             '/attendance': (context) => const AttendanceScreen(),
             '/bulletin': (context) => const BulletinScreen(),
             '/notices': (context) => const NoticesScreen(),
