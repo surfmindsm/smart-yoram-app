@@ -1,37 +1,37 @@
 class Bulletin {
-  final String id;
+  final int id;
   final String title;
   final DateTime date;
-  final String? description;
-  final String? fileUrl; // PDF 또는 이미지 URL
-  final String fileType; // 'pdf' 또는 'image'
-  final int? fileSize;
+  final String? content;  // API에서 content 사용
+  final String? fileUrl;
+  final int churchId;  // 추가
   final DateTime createdAt;
-  final String createdBy;
+  final int createdBy;  // API에서 int 사용
+  final DateTime? updatedAt;  // 추가
 
   Bulletin({
     required this.id,
     required this.title,
     required this.date,
-    this.description,
+    this.content,
     this.fileUrl,
-    required this.fileType,
-    this.fileSize,
+    required this.churchId,
     required this.createdAt,
     required this.createdBy,
+    this.updatedAt,
   });
 
   factory Bulletin.fromJson(Map<String, dynamic> json) {
     return Bulletin(
-      id: json['id'],
-      title: json['title'],
-      date: DateTime.parse(json['date']),
-      description: json['description'],
+      id: json['id'] ?? 0,
+      title: json['title'] ?? '',
+      date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
+      content: json['content'],
       fileUrl: json['file_url'],
-      fileType: json['file_type'],
-      fileSize: json['file_size'],
-      createdAt: DateTime.parse(json['created_at']),
-      createdBy: json['created_by'],
+      churchId: json['church_id'] ?? 0,
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
+      createdBy: json['created_by'] ?? 0,
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
     );
   }
 
@@ -39,15 +39,20 @@ class Bulletin {
     return {
       'id': id,
       'title': title,
-      'date': date.toIso8601String(),
-      'description': description,
+      'date': date.toIso8601String().substring(0, 10), // YYYY-MM-DD 형식
+      'content': content,
       'file_url': fileUrl,
-      'file_type': fileType,
-      'file_size': fileSize,
+      'church_id': churchId,
       'created_at': createdAt.toIso8601String(),
       'created_by': createdBy,
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
+
+  // 호환성을 위한 getter
+  String? get description => content;
+  String get fileType => fileUrl?.split('.').last ?? 'unknown';
+  int? get fileSize => null;
 }
 
 class BulletinNotice {

@@ -247,25 +247,33 @@ class _HomeScreenState extends State<HomeScreen> {
     return Card(
       elevation: 1,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12), // 패딩 약간 줄임
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min, // 필요한 최소 공간만 사용
           children: [
-            Icon(icon, size: 32, color: color),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
+            Icon(icon, size: 28, color: color), // 아이콘 크기 약간 줄임
+            const SizedBox(height: 6), // 간격 약간 줄임
+            Flexible( // 텍스트 오버플로우 방지
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18, // 폰트 크기 약간 줄임
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
+            Flexible( // 텍스트 오버플로우 방지
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 11, // 폰트 크기 약간 줄임
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

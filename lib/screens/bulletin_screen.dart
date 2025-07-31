@@ -21,46 +21,107 @@ class _BulletinScreenState extends State<BulletinScreen> {
   @override
   void initState() {
     super.initState();
-    _loadBulletins();
+    print('📰 BULLETIN_SCREEN: initState 시작 - 주보 화면 진입');
+    print('📰 BULLETIN_SCREEN: BulletinService 인스턴스: ${_bulletinService.toString()}');
+    print('📰 BULLETIN_SCREEN: 검색 컨트롤러 설정');
     _searchController.addListener(_filterBulletins);
+    print('📰 BULLETIN_SCREEN: _loadBulletins 호출 예정');
+    _loadBulletins();
+    print('📰 BULLETIN_SCREEN: initState 완료');
   }
 
   @override
   void dispose() {
+    print('📰 BULLETIN_SCREEN: dispose 시작 - 주보 화면 종료');
     _searchController.dispose();
     super.dispose();
+    print('📰 BULLETIN_SCREEN: dispose 완료');
   }
 
   Future<void> _loadBulletins() async {
-    setState(() => isLoading = true);
+    print('📰 BULLETIN_SCREEN: =================');
+    print('📰 BULLETIN_SCREEN: _loadBulletins 시작');
+    print('📰 BULLETIN_SCREEN: 현재 상태 - isLoading: $isLoading');
+    print('📰 BULLETIN_SCREEN: 현재 주보 수 - allBulletins: ${allBulletins.length}');
+    
+    setState(() {
+      isLoading = true;
+      print('📰 BULLETIN_SCREEN: 로딩 상태를 true로 변경');
+    });
     
     try {
-      print('🔍 BULLETIN_SCREEN: 주보 목록 로드 시작');
+      print('📰 BULLETIN_SCREEN: BulletinService.getBulletins 호출 시작');
+      print('📰 BULLETIN_SCREEN: 요청 파라미터 - limit: 50');
+      
       final response = await _bulletinService.getBulletins(limit: 50);
       
+      print('📰 BULLETIN_SCREEN: BulletinService 응답 받음');
+      print('📰 BULLETIN_SCREEN: 응답 success: ${response.success}');
+      print('📰 BULLETIN_SCREEN: 응답 message: "${response.message}"');
+      print('📰 BULLETIN_SCREEN: 응답 data null 여부: ${response.data == null}');
+      
       if (response.success && response.data != null) {
-        print('🔍 BULLETIN_SCREEN: API 호출 성공 - ${response.data!.length}개 주보 로드');
+        final dataLength = response.data!.length;
+        print('📰 BULLETIN_SCREEN: 성공! 받은 주보 데이터 수: $dataLength');
+        
+        if (dataLength > 0) {
+          print('📰 BULLETIN_SCREEN: 주보 상세 정보:');
+          for (int i = 0; i < dataLength; i++) {
+            final bulletin = response.data![i];
+            print('📰 BULLETIN_SCREEN: [$i] ID=${bulletin.id}, 제목="${bulletin.title}"');
+            print('📰 BULLETIN_SCREEN: [$i] 날짜=${bulletin.date}, 설명="${bulletin.description}"');
+          }
+        } else {
+          print('📰 BULLETIN_SCREEN: 응답은 성공이지만 주보 데이터가 비어있음');
+        }
+        
+        print('📰 BULLETIN_SCREEN: allBulletins 업데이트 (${allBulletins.length} → $dataLength)');
         allBulletins = response.data!;
+        print('📰 BULLETIN_SCREEN: filteredBulletins 업데이트');
         filteredBulletins = List.from(allBulletins);
+        
+        print('📰 BULLETIN_SCREEN: 최종 상태 - allBulletins: ${allBulletins.length}, filtered: ${filteredBulletins.length}');
       } else {
-        print('🔍 BULLETIN_SCREEN: API 호출 실패 - ${response.message}');
+        print('📰 BULLETIN_SCREEN: ❌ API 호출 실패 또는 null 데이터');
+        print('📰 BULLETIN_SCREEN: 실패 세부사항:');
+        print('📰 BULLETIN_SCREEN: - success: ${response.success}');
+        print('📰 BULLETIN_SCREEN: - data == null: ${response.data == null}');
+        print('📰 BULLETIN_SCREEN: - message: "${response.message}"');
+        
+        allBulletins = [];
+        filteredBulletins = [];
+        print('📰 BULLETIN_SCREEN: 빈 목록으로 초기화');
+        
         if (mounted) {
+          print('📰 BULLETIN_SCREEN: 사용자에게 오류 메시지 표시');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('주보 정보 로드 실패: ${response.message}')),
           );
         }
       }
       
+      print('📰 BULLETIN_SCREEN: setState로 화면 갱신 준비');
+      setState(() {
+        isLoading = false;
+        print('📰 BULLETIN_SCREEN: 로딩 상태를 false로 변경 완료');
+      });
+      
+    } catch (e, stackTrace) {
+      print('📰 BULLETIN_SCREEN: ❌ 예외 발생!');
+      print('📰 BULLETIN_SCREEN: 예외 메시지: $e');
+      print('📰 BULLETIN_SCREEN: 스택 트레이스: $stackTrace');
+      
       setState(() => isLoading = false);
-    } catch (e) {
-      print('🔍 BULLETIN_SCREEN: 예외 발생 - $e');
-      setState(() => isLoading = false);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('주보 정보 로드 실패: $e')),
         );
       }
     }
+    
+    print('📰 BULLETIN_SCREEN: _loadBulletins 완료');
+    print('📰 BULLETIN_SCREEN: =================');
   }
 
 
@@ -372,7 +433,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
         ),
       );
 
-      final response = await _bulletinService.downloadBulletin(bulletin.id);
+      final response = await _bulletinService.downloadBulletin(bulletin.id.toString());
       
       if (response.success) {
         if (mounted) {

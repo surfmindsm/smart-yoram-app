@@ -20,6 +20,9 @@ class ApiConfig {
   // 출석 관리
   static const String attendances = '/attendances/';
 
+  // 주보/공지사항 관리
+  static const String bulletins = '/bulletins/';
+
   // QR 코드 관리
   static const String qrCodes = '/qr-codes/';
   static const String qrCodesGenerate = '/qr-codes/generate/{member_id}';
