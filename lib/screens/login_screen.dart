@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../widget/widgets.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/auth_service.dart';
-import '../services/user_service.dart';
-import '../models/api_response.dart';
 import '../models/user.dart';
+import '../models/api_response.dart';
+import '../services/user_service.dart';
+import '../widget/widgets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -48,312 +49,343 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 60),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: constraints.maxWidth > 600 ? 60.w : 24.w,
+                vertical: 24.h,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: constraints.maxWidth > 600 ? 80.h : 60.h),
 
-                // 앱 로고 및 제목
-                Center(
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Colors.blue[700],
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.church,
-                          size: 50,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        '스마트 교회요람',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[700],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '교회 생활의 새로운 시작',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 60),
-
-                // 로그인 방식 선택 탭
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _loginType = 'email'),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                    // 앱 로고 및 제목
+                    Center(
+                      child: Column(
+                        children: [
+                          Container(
+                            width: constraints.maxWidth > 600 ? 120.w : 100.w,
+                            height: constraints.maxWidth > 600 ? 120.w : 100.w,
                             decoration: BoxDecoration(
-                              color: _loginType == 'email'
-                                  ? Colors.blue[700]
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '이메일 로그인',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _loginType == 'email'
-                                    ? Colors.white
-                                    : Colors.grey[600],
-                                fontWeight: _loginType == 'email'
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                              color: Colors.blue[50],
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.blue[200]!,
+                                width: 2.w,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 15.r,
+                                  offset: Offset(0, 5.h),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.church,
+                              size: constraints.maxWidth > 600 ? 60.w : 50.w,
+                              color: Colors.blue[700],
                             ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _loginType = 'phone'),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _loginType == 'phone'
-                                  ? Colors.blue[700]
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '전화번호 로그인',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _loginType == 'phone'
-                                    ? Colors.white
-                                    : Colors.grey[600],
-                                fontWeight: _loginType == 'phone'
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
+                          SizedBox(height: 24.h),
+                          Text(
+                            '스마트 교회요람',
+                            style: TextStyle(
+                              fontSize:
+                                  constraints.maxWidth > 600 ? 32.sp : 28.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[700],
                             ),
                           ),
-                        ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '교회 생활의 새로운 시작',
+                            style: TextStyle(
+                              fontSize:
+                                  constraints.maxWidth > 600 ? 18.sp : 16.sp,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // 사용자명/이메일/전화번호 입력
-                CustomFormField(
-                  label: _loginType == 'email' ? '이메일' : '전화번호',
-                  controller: _usernameController,
-                  hintText: _loginType == 'email'
-                      ? 'user@example.com'
-                      : '010-1234-5678',
-                  prefixIcon: Icon(
-                    _loginType == 'email' ? Icons.email : Icons.phone,
-                  ),
-                  keyboardType: _loginType == 'email'
-                      ? TextInputType.emailAddress
-                      : TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '${_loginType == 'email' ? '이메일' : '전화번호'}를 입력해주세요';
-                    }
-                    if (_loginType == 'email' && !value.contains('@')) {
-                      return '유효한 이메일 주소를 입력해주세요';
-                    }
-                    if (_loginType == 'phone' &&
-                        !RegExp(r'^[0-9-+]+$').hasMatch(value)) {
-                      return '유효한 전화번호를 입력해주세요';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // 비밀번호 입력
-                CustomFormField(
-                  label: '비밀번호',
-                  controller: _passwordController,
-                  hintText: '비밀번호를 입력하세요',
-                  prefixIcon: const Icon(Icons.lock),
-                  obscureText: obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscurePassword ? Icons.visibility : Icons.visibility_off,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        obscurePassword = !obscurePassword;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '비밀번호를 입력해주세요';
-                    }
-                    if (value.length < 6) {
-                      return '비밀번호는 6자 이상이어야 합니다';
-                    }
-                    return null;
-                  },
-                ),
 
-                const SizedBox(height: 24),
+                    SizedBox(height: 50.h),
 
-                // 로그인 버튼
-                CommonButton(
-                  text: '로그인',
-                  type: ButtonType.primary,
-                  width: double.infinity,
-                  isLoading: isLoading,
-                  onPressed: isLoading ? null : _login,
-                ),
-
-                const SizedBox(height: 16),
-
-                // 개발자 옵션: 자동 로그인 상태 표시 및 활성화
-                FutureBuilder<bool>(
-                  future: _authService.isAutoLoginDisabled,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData && snapshot.data == true) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.orange[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.orange[200]!),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.warning_amber,
-                                color: Colors.orange[700], size: 20),
-                            const SizedBox(width: 8),
-                            const Expanded(
-                              child: Text(
-                                '개발 모드: 자동 로그인 비활성화됨',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: _enableAutoLogin,
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                              ),
-                              child: Text(
-                                '활성화',
-                                style: TextStyle(
-                                  color: Colors.orange[700],
-                                  fontSize: 12,
+                    // 로그인 방식 선택 탭
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _loginType = 'email'),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 16.h),
+                                decoration: BoxDecoration(
+                                  color: _loginType == 'email'
+                                      ? Colors.blue[700]
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Text(
+                                  '이메일 로그인',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: constraints.maxWidth > 600
+                                        ? 16.sp
+                                        : 14.sp,
+                                    color: _loginType == 'email'
+                                        ? Colors.white
+                                        : Colors.grey[600],
+                                    fontWeight: _loginType == 'email'
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-
-                // 비밀번호 찾기
-                Center(
-                  child: TextButton(
-                    onPressed: _forgotPassword,
-                    child: Text(
-                      '비밀번호를 잊으셨나요?',
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _loginType = 'phone'),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 16.h),
+                                decoration: BoxDecoration(
+                                  color: _loginType == 'phone'
+                                      ? Colors.blue[700]
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10.r),
+                                ),
+                                child: Text(
+                                  '전화번호 로그인',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: constraints.maxWidth > 600
+                                        ? 16.sp
+                                        : 14.sp,
+                                    color: _loginType == 'phone'
+                                        ? Colors.white
+                                        : Colors.grey[600],
+                                    fontWeight: _loginType == 'phone'
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+
+                    SizedBox(height: 30.h),
+
+                    // 사용자명/이메일/전화번호 입력
+                    CustomFormField(
+                      label: _loginType == 'email' ? '이메일' : '전화번호',
+                      controller: _usernameController,
+                      hintText: _loginType == 'email'
+                          ? 'user@example.com'
+                          : '010-1234-5678',
+                      prefixIcon: Icon(
+                        _loginType == 'email' ? Icons.email : Icons.phone,
+                      ),
+                      keyboardType: _loginType == 'email'
+                          ? TextInputType.emailAddress
+                          : TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '${_loginType == 'email' ? '이메일' : '전화번호'}를 입력해주세요';
+                        }
+                        if (_loginType == 'email' && !value.contains('@')) {
+                          return '유효한 이메일 주소를 입력해주세요';
+                        }
+                        if (_loginType == 'phone' &&
+                            !RegExp(r'^[0-9-+]+$').hasMatch(value)) {
+                          return '유효한 전화번호를 입력해주세요';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    // 비밀번호 입력
+                    CustomFormField(
+                      label: '비밀번호',
+                      controller: _passwordController,
+                      hintText: '비밀번호를 입력하세요',
+                      prefixIcon: const Icon(Icons.lock),
+                      obscureText: obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '비밀번호를 입력해주세요';
+                        }
+                        if (value.length < 6) {
+                          return '비밀번호는 6자 이상이어야 합니다';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    SizedBox(height: 30.h),
+
+                    // 로그인 버튼
+                    CommonButton(
+                      text: '로그인',
+                      type: ButtonType.primary,
+                      width: double.infinity,
+                      isLoading: isLoading,
+                      onPressed: isLoading ? null : _login,
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    // 개발자 옵션: 자동 로그인 상태 표시 및 활성화
+                    FutureBuilder<bool>(
+                      future: _authService.isAutoLoginDisabled,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData && snapshot.data == true) {
+                          return Container(
+                            margin: EdgeInsets.only(bottom: 20.h),
+                            padding: EdgeInsets.all(16.w),
+                            decoration: BoxDecoration(
+                              color: Colors.orange[50],
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(color: Colors.orange[200]!),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.warning_amber,
+                                    color: Colors.orange[700], size: 20.w),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: Text(
+                                    '개발 모드: 자동 로그인 비활성화됨',
+                                    style: TextStyle(fontSize: 12.sp),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: _enableAutoLogin,
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 8.w, vertical: 4.h),
+                                  ),
+                                  child: Text(
+                                    '활성화',
+                                    style: TextStyle(
+                                      color: Colors.orange[700],
+                                      fontSize: 12.sp,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+
+                    // 비밀번호 찾기
+                    Center(
+                      child: TextButton(
+                        onPressed: _forgotPassword,
+                        child: Text(
+                          '비밀번호를 잊으셨나요?',
+                          style: TextStyle(
+                            fontSize:
+                                constraints.maxWidth > 600 ? 16.sp : 14.sp,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 50.h),
+
+                    // 교회 가입 안내
+                    // Container(
+                    //   padding: const EdgeInsets.all(20),
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.blue[50],
+                    //     borderRadius: BorderRadius.circular(12),
+                    //     border: Border.all(color: Colors.blue[200]!),
+                    //   ),
+                    //   child: Column(
+                    //     children: [
+                    //       Icon(
+                    //         Icons.info_outline,
+                    //         color: Colors.blue[700],
+                    //         size: 32,
+                    //       ),
+                    //       const SizedBox(height: 12),
+                    //       Text(
+                    //         '처음 이용하시나요?',
+                    //         style: TextStyle(
+                    //           fontSize: 16,
+                    //           fontWeight: FontWeight.bold,
+                    //           color: Colors.blue[700],
+                    //         ),
+                    //       ),
+                    //       const SizedBox(height: 8),
+                    //       const Text(
+                    //         '교회 관리자에게 계정 생성을 요청하거나\n초대장을 받아 가입하실 수 있습니다.',
+                    //         textAlign: TextAlign.center,
+                    //         style: TextStyle(fontSize: 14),
+                    //       ),
+                    //       const SizedBox(height: 16),
+                    //       SizedBox(
+                    //         width: double.infinity,
+                    //         child: OutlinedButton(
+                    //           onPressed: _requestAccount,
+                    //           style: OutlinedButton.styleFrom(
+                    //             side: BorderSide(color: Colors.blue[700]!),
+                    //             shape: RoundedRectangleBorder(
+                    //               borderRadius: BorderRadius.circular(8),
+                    //             ),
+                    //           ),
+                    //           child: Text(
+                    //             '계정 생성 요청',
+                    //             style: TextStyle(
+                    //               color: Colors.blue[700],
+                    //               fontWeight: FontWeight.w500,
+                    //             ),
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                  ],
                 ),
-
-                const SizedBox(height: 40),
-
-                // 교회 가입 안내
-                // Container(
-                //   padding: const EdgeInsets.all(20),
-                //   decoration: BoxDecoration(
-                //     color: Colors.blue[50],
-                //     borderRadius: BorderRadius.circular(12),
-                //     border: Border.all(color: Colors.blue[200]!),
-                //   ),
-                //   child: Column(
-                //     children: [
-                //       Icon(
-                //         Icons.info_outline,
-                //         color: Colors.blue[700],
-                //         size: 32,
-                //       ),
-                //       const SizedBox(height: 12),
-                //       Text(
-                //         '처음 이용하시나요?',
-                //         style: TextStyle(
-                //           fontSize: 16,
-                //           fontWeight: FontWeight.bold,
-                //           color: Colors.blue[700],
-                //         ),
-                //       ),
-                //       const SizedBox(height: 8),
-                //       const Text(
-                //         '교회 관리자에게 계정 생성을 요청하거나\n초대장을 받아 가입하실 수 있습니다.',
-                //         textAlign: TextAlign.center,
-                //         style: TextStyle(fontSize: 14),
-                //       ),
-                //       const SizedBox(height: 16),
-                //       SizedBox(
-                //         width: double.infinity,
-                //         child: OutlinedButton(
-                //           onPressed: _requestAccount,
-                //           style: OutlinedButton.styleFrom(
-                //             side: BorderSide(color: Colors.blue[700]!),
-                //             shape: RoundedRectangleBorder(
-                //               borderRadius: BorderRadius.circular(8),
-                //             ),
-                //           ),
-                //           child: Text(
-                //             '계정 생성 요청',
-                //             style: TextStyle(
-                //               color: Colors.blue[700],
-                //               fontWeight: FontWeight.w500,
-                //             ),
-                //           ),
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
