@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/notice.dart';
+import '../services/notice_service.dart';
 
 class NoticesScreen extends StatefulWidget {
   const NoticesScreen({super.key});
@@ -10,7 +10,7 @@ class NoticesScreen extends StatefulWidget {
 }
 
 class _NoticesScreenState extends State<NoticesScreen> {
-  final supabase = Supabase.instance.client;
+  final _noticeService = NoticeService();
   
   List<Notice> allNotices = [];
   List<Notice> filteredNotices = [];
@@ -29,96 +29,56 @@ class _NoticesScreenState extends State<NoticesScreen> {
     setState(() => isLoading = true);
     
     try {
-      // 임시 공지사항 데이터 생성
-      allNotices = _generateSampleNotices();
-      _filterNotices();
+      // NoticeService를 통해 실제 API 호출
+      final response = await _noticeService.getNotices(
+        skip: 0,
+        limit: 100,
+        type: selectedFilter == '전체' ? null : 
+              (selectedFilter == '중요' ? 'important' : 'general'),
+      );
+      
+      if (response.success && response.data != null) {
+        allNotices = response.data!;
+        _filterNotices();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.message),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.message),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        
+        // API 실패 시 빈 목록으로 설정
+        allNotices = [];
+        _filterNotices();
+      }
       
       setState(() => isLoading = false);
     } catch (e) {
       setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('공지사항 로드 실패: $e')),
+          SnackBar(
+            content: Text('공지사항 로드 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  List<Notice> _generateSampleNotices() {
-    final now = DateTime.now();
-    return [
-      Notice(
-        id: '1',
-        title: '2024년 새해 감사예배 안내',
-        content: '''새해를 맞이하여 하나님께 감사하는 예배를 드리고자 합니다.
 
-일시: 2024년 1월 7일(일) 오전 11시
-장소: 본당
-준비물: 감사제목 적은 종이
-
-모든 성도님들의 참석을 부탁드립니다.''',
-        type: 'important',
-        createdAt: now.subtract(const Duration(days: 1)),
-        createdBy: '관리자',
-      ),
-      Notice(
-        id: '2',
-        title: '주일학교 교사 모집',
-        content: '''주일학교에서 아이들을 가르쳐 주실 교사를 모집합니다.
-
-대상: 청년부 이상 성도
-자격: 아이들을 사랑하는 마음
-교육: 별도 교육 제공
-
-관심 있으신 분은 교육부장에게 연락 바랍니다.''',
-        type: 'general',
-        createdAt: now.subtract(const Duration(days: 3)),
-        createdBy: '교육부',
-      ),
-      Notice(
-        id: '3',
-        title: '성찬식 예정 안내',
-        content: '''이번 달 첫째 주일에 성찬식을 거행합니다.
-
-일시: 2024년 2월 4일(일) 주일예배 중
-준비사항: 자기 성찰과 회개의 시간
-
-성찬식 참여를 위해 미리 마음을 준비해 주시기 바랍니다.''',
-        type: 'important',
-        createdAt: now.subtract(const Duration(days: 5)),
-        createdBy: '관리자',
-      ),
-      Notice(
-        id: '4',
-        title: '교회 주차장 이용 안내',
-        content: '''교회 주차장 이용에 관한 안내사항입니다.
-
-1. 예배 시간 외에는 주차 금지
-2. 타 차량 통행에 방해되지 않도록 주차
-3. 귀중품은 차량에 방치하지 마세요
-
-협조해 주시기 바랍니다.''',
-        type: 'general',
-        createdAt: now.subtract(const Duration(days: 7)),
-        createdBy: '관리자',
-      ),
-      Notice(
-        id: '5',
-        title: '겨울 성경학교 개최',
-        content: '''겨울방학을 맞이하여 성경학교를 개최합니다.
-
-기간: 2024년 1월 15일 ~ 19일 (5일간)
-시간: 오전 9시 ~ 오후 3시
-대상: 유치부 ~ 중학생
-신청: 교육부장에게 문의
-
-많은 참여 바랍니다.''',
-        type: 'general',
-        createdAt: now.subtract(const Duration(days: 10)),
-        createdBy: '교육부',
-      ),
-    ];
-  }
 
   void _filterNotices() {
     setState(() {
@@ -130,6 +90,11 @@ class _NoticesScreenState extends State<NoticesScreen> {
         filteredNotices = allNotices.where((notice) => !notice.isImportant).toList();
       }
     });
+  }
+  
+  void _onFilterChanged(String filter) {
+    selectedFilter = filter;
+    _loadNotices(); // 필터 변경 시 API를 다시 호출하여 새로운 데이터 가져오기
   }
 
   @override
