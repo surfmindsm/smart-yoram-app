@@ -135,6 +135,44 @@ class AuthService {
     }
   }
 
+  // 비밀번호 변경
+  Future<ApiResponse<String>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final body = {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      };
+
+      final response = await _apiService.post(
+        ApiConfig.authChangePassword,
+        body: body,
+      );
+
+      if (response.success) {
+        return ApiResponse<String>(
+          success: true,
+          message: '비밀번호가 성공적으로 변경되었습니다.',
+          data: 'success',
+        );
+      }
+
+      return ApiResponse<String>(
+        success: false,
+        message: response.message.isNotEmpty ? response.message : '비밀번호 변경에 실패했습니다.',
+        data: null,
+      );
+    } catch (e) {
+      return ApiResponse<String>(
+        success: false,
+        message: '비밀번호 변경 중 오류가 발생했습니다: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
   // 로그아웃
   Future<void> logout() async {
     try {

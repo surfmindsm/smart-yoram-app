@@ -6,6 +6,7 @@ class User {
   final int churchId;
   final String role;
   final bool isActive;
+  final bool isFirst;
   final DateTime? createdAt;
 
   User({
@@ -16,6 +17,7 @@ class User {
     required this.churchId,
     required this.role,
     required this.isActive,
+    required this.isFirst,
     this.createdAt,
   });
 
@@ -28,6 +30,7 @@ class User {
       churchId: json['church_id'] ?? 0,
       role: json['role'] ?? 'member',
       isActive: json['is_active'] ?? true,
+      isFirst: json['is_first'] ?? false,
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : null,
@@ -43,6 +46,7 @@ class User {
       'church_id': churchId,
       'role': role,
       'is_active': isActive,
+      'is_first': isFirst,
       'created_at': createdAt?.toIso8601String(),
     };
   }

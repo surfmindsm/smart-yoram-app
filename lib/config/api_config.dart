@@ -9,6 +9,7 @@ class ApiConfig {
   // 인증 및 사용자 관리
   static const String authLogin = '/auth/login/access-token';
   static const String authTestToken = '/auth/test-token';
+  static const String authChangePassword = '/auth/member/change-password';
   static const String users = '/users/';
   static const String usersMe = '/users/me';
 

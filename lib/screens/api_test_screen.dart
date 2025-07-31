@@ -120,6 +120,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
             _buildSection('사용자 관리', [
               _buildTestButton('사용자 정보', 'user_info', testUserInfo),
               _buildTestButton('사용자 목록', 'user_list', testUserList),
+              _buildTestButton('비밀번호 변경', 'password_change', testPasswordChange),
             ]),
             _buildSection('모바일 교인증', [
               _buildTestButton('교인증 정보', 'member_card', testMemberCard),
@@ -1149,6 +1150,42 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     }
   }
 
+  Future<void> testPasswordChange() async {
+    _startTest('password_change');
+    try {
+      const currentPassword = 'test123'; // 테스트용 현재 비밀번호
+      const newPassword = 'newtest123'; // 테스트용 새 비밀번호
+      
+      _addDebugLog('🔑 [password_change] 비밀번호 변경 요청');
+      _addDebugLog('🔑 [password_change] 현재 비밀번호: $currentPassword');
+      _addDebugLog('🔑 [password_change] 새 비밀번호: $newPassword');
+      
+      final result = await _authService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      
+      _addDebugLog('🔑 [password_change] 응답 성공여부: ${result.success}');
+      _addDebugLog('🔑 [password_change] 응답 메시지: ${result.message}');
+      
+      if (result.success) {
+        _updateResult('password_change', '성공: 비밀번호가 변경되었습니다');
+        
+        // 비밀번호를 다시 원래대로 돌려놓기 (테스트 후 상태 복구)
+        _addDebugLog('🔑 [password_change] 테스트 뒤정리 - 원래 비밀번호로 복구 시도');
+        await _authService.changePassword(
+          currentPassword: newPassword,
+          newPassword: currentPassword,
+        );
+      } else {
+        _updateResult('password_change', '실패: ${result.message}');
+      }
+    } catch (e) {
+      _addDebugLog('❌ [password_change] 예외 발생: $e');
+      _updateResult('password_change', '오류: $e');
+    }
+  }
+
 
 
   Future<void> testMemberCard() async {
@@ -1227,6 +1264,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       ('대시보드 통계', testStatsDashboard),
       ('사용자 정보', testUserInfo),
       ('사용자 목록', testUserList),
+      ('비밀번호 변경', testPasswordChange),
       ('교인증', testMemberCard),
       ('QR 재생성', testCardQRRegenerate),
     ];
