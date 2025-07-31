@@ -66,21 +66,21 @@ class _SmsManagementScreenState extends State<SmsManagementScreen>
           {
             'id': 1,
             'name': '김철수',
-            'phone_number': '010-1234-5678',
+            'phone': '010-1234-5678',
             'position': '집사',
             'district': '1구역',
           },
           {
             'id': 2,
             'name': '이영희',
-            'phone_number': '010-9876-5432',
+            'phone': '010-9876-5432',
             'position': '권사',
             'district': '2구역',
           },
           {
             'id': 3,
             'name': '박민수',
-            'phone_number': '010-5555-6666',
+            'phone': '010-5555-6666',
             'position': '성도',
             'district': '1구역',
           },
@@ -255,7 +255,7 @@ class _SmsManagementScreenState extends State<SmsManagementScreen>
                       
                       return CheckboxListTile(
                         title: Text(member['name']),
-                        subtitle: Text('${member['phone_number']} • ${member['position']} • ${member['district']}'),
+                        subtitle: Text('${member['phone']} • ${member['position']} • ${member['district']}'),
                         value: isSelected,
                         onChanged: (value) {
                           setState(() {
@@ -516,7 +516,7 @@ class _SmsManagementScreenState extends State<SmsManagementScreen>
                           child: Card(
                             child: InkWell(
                               onTap: () {
-                                _phoneController.text = member['phone_number'];
+                                _phoneController.text = member['phone'];
                               },
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),

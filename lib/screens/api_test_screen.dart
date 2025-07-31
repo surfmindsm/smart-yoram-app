@@ -752,7 +752,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       _addDebugLog('📡 [member_detail] 응답 메시지: ${result.message}');
       if (result.data != null) {
         _addDebugLog('📡 [member_detail] 교인 이름: ${result.data?.name}');
-        _addDebugLog('📡 [member_detail] 교인 전화번호: ${result.data?.phoneNumber}');
+        _addDebugLog('📡 [member_detail] 교인 전화번호: ${result.data?.phone}');
         _addDebugLog('📡 [member_detail] 교인 직분: ${result.data?.position}');
       }
       

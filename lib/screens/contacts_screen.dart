@@ -61,7 +61,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       Member(
         id: 1,
         name: '김목사',
-        phoneNumber: '010-1234-5678',
+        phone: '010-1234-5678',
         position: '교역자',
         district: '1구역',
         churchId: 1,
@@ -72,7 +72,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       Member(
         id: 2,
         name: '이장로',
-        phoneNumber: '010-2345-6789',
+        phone: '010-2345-6789',
         position: '장로',
         district: '2구역',
         churchId: 1,
@@ -83,7 +83,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       Member(
         id: 3,
         name: '박권사',
-        phoneNumber: '010-3456-7890',
+        phone: '010-3456-7890',
         position: '권사',
         district: '1구역',
         churchId: 1,
@@ -94,7 +94,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       Member(
         id: 4,
         name: '최집사',
-        phoneNumber: '010-4567-8901',
+        phone: '010-4567-8901',
         position: '집사',
         district: '3구역',
         churchId: 1,
@@ -105,7 +105,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       Member(
         id: 5,
         name: '정성도',
-        phoneNumber: '010-5678-9012',
+        phone: '010-5678-9012',
         position: '성도',
         district: '2구역',
         churchId: 1,
@@ -141,7 +141,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       if (query.isNotEmpty) {
         filteredMembers = baseList.where((member) {
           return member.name.toLowerCase().contains(query) ||
-                 member.phoneNumber.contains(query) ||
+                 member.phone.contains(query) ||
                  (member.position?.toLowerCase().contains(query) ?? false);
         }).toList();
       } else {
@@ -202,6 +202,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "contacts_fab",
         onPressed: _showBulkMessageDialog,
         backgroundColor: Colors.blue[700],
         child: const Icon(Icons.message, color: Colors.white),
@@ -275,7 +276,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('📞 ${member.phoneNumber}'),
+            Text('📞 ${member.phone}'),
             Row(
               children: [
                 if (member.district != null)
@@ -357,7 +358,7 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   void _makePhoneCall(Member member) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${member.name}님(${member.phoneNumber})에게 전화를 걸어요')),
+      SnackBar(content: Text('${member.name}님(${member.phone})에게 전화를 걸어요')),
     );
   }
 
@@ -398,7 +399,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('받는 사람: ${member.phoneNumber}'),
+            Text('받는 사람: ${member.phone}'),
             const SizedBox(height: 16),
             TextField(
               controller: messageController,

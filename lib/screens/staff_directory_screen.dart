@@ -91,6 +91,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "staff_fab",
         onPressed: _showContactAllDialog,
         backgroundColor: Colors.blue[700],
         child: const Icon(Icons.mail, color: Colors.white),

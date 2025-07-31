@@ -2,18 +2,18 @@ class Attendance {
   final String id;
   final String memberId;
   final String memberName;
-  final DateTime date;
+  final DateTime serviceDate;
   final String serviceType; // 주일예배, 수요예배, 새벽예배 등
-  final bool isPresent;
+  final bool present;
   final String? notes;
 
   Attendance({
     required this.id,
     required this.memberId,
     required this.memberName,
-    required this.date,
+    required this.serviceDate,
     required this.serviceType,
-    required this.isPresent,
+    required this.present,
     this.notes,
   });
 
@@ -22,9 +22,9 @@ class Attendance {
       id: json['id'],
       memberId: json['member_id'],
       memberName: json['member_name'],
-      date: DateTime.parse(json['date']),
+      serviceDate: DateTime.parse(json['service_date']),
       serviceType: json['service_type'],
-      isPresent: json['is_present'],
+      present: json['present'],
       notes: json['notes'],
     );
   }
@@ -34,9 +34,9 @@ class Attendance {
       'id': id,
       'member_id': memberId,
       'member_name': memberName,
-      'date': date.toIso8601String(),
+      'service_date': serviceDate.toIso8601String(),
       'service_type': serviceType,
-      'is_present': isPresent,
+      'present': present,
       'notes': notes,
     };
   }

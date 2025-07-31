@@ -181,6 +181,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "bulletin_fab",
         onPressed: _showAddBulletinDialog,
         backgroundColor: Colors.blue[700],
         child: const Icon(Icons.add, color: Colors.white),

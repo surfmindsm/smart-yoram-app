@@ -77,7 +77,7 @@ class _MembersScreenState extends State<MembersScreen> {
       filteredMembers = allMembers.where((member) {
         bool matchesSearch = query.isEmpty ||
                            member.name.toLowerCase().contains(query) ||
-                           member.phoneNumber.contains(query);
+                           member.phone.contains(query);
         
         bool matchesPosition = selectedFilter == '전체' || 
                              (member.position != null && member.position!.contains(selectedFilter));
@@ -171,7 +171,7 @@ class _MembersScreenState extends State<MembersScreen> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(member.phoneNumber),
+                                  Text(member.phone),
                                   if (member.position != null)
                                     Text(member.position!, style: TextStyle(color: Colors.grey[600])),
                                 ],
@@ -181,11 +181,11 @@ class _MembersScreenState extends State<MembersScreen> {
                                 children: [
                                   IconButton(
                                     icon: const Icon(Icons.phone, color: Colors.green),
-                                    onPressed: () => _makePhoneCall(member.phoneNumber),
+                                    onPressed: () => _makePhoneCall(member.phone),
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.message, color: Colors.blue),
-                                    onPressed: () => _sendMessage(member.phoneNumber),
+                                    onPressed: () => _sendMessage(member.phone),
                                   ),
                                 ],
                               ),
@@ -214,13 +214,13 @@ class _MembersScreenState extends State<MembersScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('전화번호: ${member.phoneNumber}'),
+              Text('전화번호: ${member.phone}'),
               Text('성별: ${member.gender}'),
               if (member.position != null) Text('직분: ${member.position}'),
               if (member.district != null) Text('구역: ${member.district}'),
               Text('상태: ${member.memberStatus}'),
               if (member.address != null) Text('주소: ${member.address}'),
-              if (member.dateOfBirth != null) Text('생년월일: ${member.dateOfBirth!.toLocal().toString().split(' ')[0]}'),
+              if (member.birthdate != null) Text('생년월일: ${member.birthdate!.toLocal().toString().split(' ')[0]}'),
               if (member.age != null) Text('나이: ${member.age}세'),
               if (member.registrationDate != null) Text('등록일: ${member.registrationDate!.toLocal().toString().split(' ')[0]}'),
             ],

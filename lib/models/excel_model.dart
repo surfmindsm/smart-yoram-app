@@ -37,8 +37,8 @@ class ExcelUploadResult {
 class ExcelMemberData {
   final String name;
   final String gender;
-  final String? dateOfBirth;
-  final String phoneNumber;
+  final String? birthdate;
+  final String phone;
   final String? address;
   final String? position;
   final String? district;
@@ -47,8 +47,8 @@ class ExcelMemberData {
   ExcelMemberData({
     required this.name,
     required this.gender,
-    this.dateOfBirth,
-    required this.phoneNumber,
+    this.birthdate,
+    required this.phone,
     this.address,
     this.position,
     this.district,
@@ -59,8 +59,8 @@ class ExcelMemberData {
     return ExcelMemberData(
       name: map['이름'] ?? map['name'] ?? '',
       gender: map['성별'] ?? map['gender'] ?? '',
-      dateOfBirth: map['생년월일'] ?? map['date_of_birth'],
-      phoneNumber: map['전화번호'] ?? map['phone_number'] ?? '',
+      birthdate: map['생년월일'] ?? map['birthdate'],
+      phone: map['전화번호'] ?? map['phone'] ?? '',
       address: map['주소'] ?? map['address'],
       position: map['직분'] ?? map['position'],
       district: map['구역'] ?? map['district'],
@@ -72,8 +72,8 @@ class ExcelMemberData {
     return {
       'name': name,
       'gender': gender,
-      'date_of_birth': dateOfBirth,
-      'phone_number': phoneNumber,
+      'birthdate': birthdate,
+      'phone': phone,
       'address': address,
       'position': position,
       'district': district,
@@ -84,7 +84,7 @@ class ExcelMemberData {
   bool get isValid {
     return name.isNotEmpty && 
            gender.isNotEmpty && 
-           phoneNumber.isNotEmpty;
+           phone.isNotEmpty;
   }
 
   List<String> get validationErrors {
@@ -100,15 +100,15 @@ class ExcelMemberData {
       errors.add('성별은 "남", "여", "M", "F" 중 하나여야 합니다.');
     }
     
-    if (phoneNumber.isEmpty) {
+    if (phone.isEmpty) {
       errors.add('전화번호가 필요합니다.');
-    } else if (!RegExp(r'^[\d\-\s\(\)]+$').hasMatch(phoneNumber)) {
+    } else if (!RegExp(r'^[\d\-\s\(\)]+$').hasMatch(phone)) {
       errors.add('전화번호 형식이 올바르지 않습니다.');
     }
     
-    if (dateOfBirth != null && dateOfBirth!.isNotEmpty) {
+    if (birthdate != null && birthdate!.isNotEmpty) {
       try {
-        DateTime.parse(dateOfBirth!);
+        DateTime.parse(birthdate!);
       } catch (e) {
         errors.add('생년월일 형식이 올바르지 않습니다. (예: 1980-05-15)');
       }

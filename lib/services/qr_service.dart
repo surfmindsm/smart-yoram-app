@@ -14,6 +14,7 @@ class QRService {
   Future<ApiResponse<QRCodeInfo>> generateQRCode(int memberId) async {
     try {
       final requestBody = {
+        'member_id': memberId,
         'qr_type': 'attendance',
         'expires_at': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
       };

@@ -55,8 +55,8 @@ class FamilyMember {
   final String name;
   final String relationshipType;
   final String? profilePhotoUrl;
-  final DateTime? dateOfBirth;
-  final String? phoneNumber;
+  final DateTime? birthdate;
+  final String? phone;
   final String? gender;
 
   FamilyMember({
@@ -64,8 +64,8 @@ class FamilyMember {
     required this.name,
     required this.relationshipType,
     this.profilePhotoUrl,
-    this.dateOfBirth,
-    this.phoneNumber,
+    this.birthdate,
+    this.phone,
     this.gender,
   });
 
@@ -75,20 +75,20 @@ class FamilyMember {
       name: json['name'],
       relationshipType: json['relationship_type'],
       profilePhotoUrl: json['profile_photo_url'],
-      dateOfBirth: json['date_of_birth'] != null 
-        ? DateTime.parse(json['date_of_birth']) 
+      birthdate: json['birthdate'] != null 
+        ? DateTime.parse(json['birthdate']) 
         : null,
-      phoneNumber: json['phone_number'],
+      phone: json['phone'],
       gender: json['gender'],
     );
   }
 
   int? get age {
-    if (dateOfBirth == null) return null;
+    if (birthdate == null) return null;
     final now = DateTime.now();
-    int age = now.year - dateOfBirth!.year;
-    if (now.month < dateOfBirth!.month || 
-        (now.month == dateOfBirth!.month && now.day < dateOfBirth!.day)) {
+    int age = now.year - birthdate!.year;
+    if (now.month < birthdate!.month || 
+        (now.month == birthdate!.month && now.day < birthdate!.day)) {
       age--;
     }
     return age;

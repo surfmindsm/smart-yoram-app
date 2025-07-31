@@ -46,14 +46,14 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.member.name);
-    _phoneController = TextEditingController(text: widget.member.phoneNumber);
+    _phoneController = TextEditingController(text: widget.member.phone);
     _addressController = TextEditingController(text: widget.member.address ?? '');
     
     _selectedGender = widget.member.gender;
     _selectedPosition = widget.member.position ?? '성도';
     _selectedStatus = widget.member.memberStatus;
     _selectedDistrict = widget.member.district ?? '1구역';
-    _selectedBirthDate = widget.member.dateOfBirth;
+    _selectedBirthDate = widget.member.birthdate;
     _selectedRegistrationDate = widget.member.registrationDate;
     _isEditing = widget.isEditable;
   }
@@ -513,7 +513,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     try {
       final request = MemberUpdateRequest(
         name: _nameController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
+        phone: _phoneController.text.trim(),
         address: _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : null,
         position: _selectedPosition,
         district: _selectedDistrict,

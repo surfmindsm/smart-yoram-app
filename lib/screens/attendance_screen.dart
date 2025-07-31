@@ -60,47 +60,47 @@ class _AttendanceScreenState extends State<AttendanceScreen>
         id: '1',
         memberId: '1',
         memberName: '김목사',
-        date: selectedDate,
+        serviceDate: selectedDate,
         serviceType: selectedServiceType,
-        isPresent: true,
+        present: true,
       ),
       Attendance(
         id: '2',
         memberId: '2',
         memberName: '이장로',
-        date: selectedDate,
+        serviceDate: selectedDate,
         serviceType: selectedServiceType,
-        isPresent: true,
+        present: true,
       ),
       Attendance(
         id: '3',
         memberId: '3',
         memberName: '박권사',
-        date: selectedDate,
+        serviceDate: selectedDate,
         serviceType: selectedServiceType,
-        isPresent: false,
+        present: false,
       ),
       Attendance(
         id: '4',
         memberId: '4',
         memberName: '최집사',
-        date: selectedDate,
+        serviceDate: selectedDate,
         serviceType: selectedServiceType,
-        isPresent: true,
+        present: true,
       ),
       Attendance(
         id: '5',
         memberId: '5',
         memberName: '정성도',
-        date: selectedDate,
+        serviceDate: selectedDate,
         serviceType: selectedServiceType,
-        isPresent: true,
+        present: true,
       ),
     ];
   }
 
   AttendanceStats _generateSampleStats() {
-    int presentCount = attendanceList.where((a) => a.isPresent).length;
+    int presentCount = attendanceList.where((a) => a.present).length;
     return AttendanceStats(
       totalMembers: attendanceList.length,
       presentMembers: presentCount,
@@ -313,16 +313,16 @@ class _AttendanceScreenState extends State<AttendanceScreen>
               final attendance = attendanceList[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: attendance.isPresent ? Colors.green : Colors.red,
+                  backgroundColor: attendance.present ? Colors.green : Colors.red,
                   child: Icon(
-                    attendance.isPresent ? Icons.check : Icons.close,
+                    attendance.present ? Icons.check : Icons.close,
                     color: Colors.white,
                   ),
                 ),
                 title: Text(attendance.memberName),
-                subtitle: Text(attendance.isPresent ? '출석' : '결석'),
+                subtitle: Text(attendance.present ? '출석' : '결석'),
                 trailing: Switch(
-                  value: attendance.isPresent,
+                  value: attendance.present,
                   onChanged: (value) {
                     _toggleAttendance(attendance, value);
                   },
@@ -550,9 +550,9 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           id: attendance.id,
           memberId: attendance.memberId,
           memberName: attendance.memberName,
-          date: attendance.date,
+          serviceDate: attendance.serviceDate,
           serviceType: attendance.serviceType,
-          isPresent: isPresent,
+          present: isPresent,
           notes: attendance.notes,
         );
       }

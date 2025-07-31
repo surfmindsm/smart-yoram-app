@@ -323,6 +323,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "users_fab",
         onPressed: _createUser,
         backgroundColor: Colors.blue[700],
         child: const Icon(Icons.add, color: Colors.white),

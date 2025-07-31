@@ -2,8 +2,8 @@ class Member {
   final int id;
   final String name;
   final String gender;
-  final DateTime? dateOfBirth;
-  final String phoneNumber;
+  final DateTime? birthdate;
+  final String phone;
   final String? address;
   final String? position;
   final String? district;
@@ -12,13 +12,18 @@ class Member {
   final String memberStatus;
   final DateTime? registrationDate;
   final DateTime? createdAt;
+  final String? transferChurch;
+  final DateTime? transferDate;
+  final String? memo;
+  final bool invitationSent;
+  final DateTime? invitationSentAt;
 
   Member({
     required this.id,
     required this.name,
     required this.gender,
-    this.dateOfBirth,
-    required this.phoneNumber,
+    this.birthdate,
+    required this.phone,
     this.address,
     this.position,
     this.district,
@@ -27,6 +32,11 @@ class Member {
     required this.memberStatus,
     this.registrationDate,
     this.createdAt,
+    this.transferChurch,
+    this.transferDate,
+    this.memo,
+    this.invitationSent = false,
+    this.invitationSentAt,
   });
 
   factory Member.fromJson(Map<String, dynamic> json) {
@@ -34,10 +44,10 @@ class Member {
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
       gender: json['gender'] ?? '',
-      dateOfBirth: json['date_of_birth'] != null 
-          ? DateTime.parse(json['date_of_birth']) 
+      birthdate: json['birthdate'] != null 
+          ? DateTime.parse(json['birthdate']) 
           : null,
-      phoneNumber: json['phone_number'] ?? '',
+      phone: json['phone'] ?? '',
       address: json['address'],
       position: json['position'],
       district: json['district'],
@@ -50,6 +60,15 @@ class Member {
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : null,
+      transferChurch: json['transfer_church'],
+      transferDate: json['transfer_date'] != null 
+          ? DateTime.parse(json['transfer_date']) 
+          : null,
+      memo: json['memo'],
+      invitationSent: json['invitation_sent'] ?? false,
+      invitationSentAt: json['invitation_sent_at'] != null 
+          ? DateTime.parse(json['invitation_sent_at']) 
+          : null,
     );
   }
 
@@ -58,8 +77,8 @@ class Member {
       'id': id,
       'name': name,
       'gender': gender,
-      'date_of_birth': dateOfBirth?.toIso8601String().split('T')[0],
-      'phone_number': phoneNumber,
+      'birthdate': birthdate?.toIso8601String().split('T')[0],
+      'phone': phone,
       'address': address,
       'position': position,
       'district': district,
@@ -68,16 +87,21 @@ class Member {
       'member_status': memberStatus,
       'registration_date': registrationDate?.toIso8601String().split('T')[0],
       'created_at': createdAt?.toIso8601String(),
+      'transfer_church': transferChurch,
+      'transfer_date': transferDate?.toIso8601String().split('T')[0],
+      'memo': memo,
+      'invitation_sent': invitationSent,
+      'invitation_sent_at': invitationSentAt?.toIso8601String(),
     };
   }
 
   // 나이 계산
   int? get age {
-    if (dateOfBirth == null) return null;
+    if (birthdate == null) return null;
     final now = DateTime.now();
-    int age = now.year - dateOfBirth!.year;
-    if (now.month < dateOfBirth!.month || 
-        (now.month == dateOfBirth!.month && now.day < dateOfBirth!.day)) {
+    int age = now.year - birthdate!.year;
+    if (now.month < birthdate!.month || 
+        (now.month == birthdate!.month && now.day < birthdate!.day)) {
       age--;
     }
     return age;
@@ -92,7 +116,7 @@ class Member {
 
   @override
   String toString() {
-    return 'Member(id: $id, name: $name, phoneNumber: $phoneNumber, memberStatus: $memberStatus)';
+    return 'Member(id: $id, name: $name, phone: $phone, memberStatus: $memberStatus)';
   }
 }
 
@@ -100,34 +124,43 @@ class Member {
 class MemberCreateRequest {
   final String name;
   final String gender;
-  final DateTime? dateOfBirth;
-  final String phoneNumber;
+  final DateTime? birthdate;
+  final String phone;
   final String? address;
   final String? position;
   final String? district;
   final int churchId;
+  final String? transferChurch;
+  final DateTime? transferDate;
+  final String? memo;
 
   MemberCreateRequest({
     required this.name,
     required this.gender,
-    this.dateOfBirth,
-    required this.phoneNumber,
+    this.birthdate,
+    required this.phone,
     this.address,
     this.position,
     this.district,
     required this.churchId,
+    this.transferChurch,
+    this.transferDate,
+    this.memo,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'name': name,
       'gender': gender,
-      'date_of_birth': dateOfBirth?.toIso8601String().split('T')[0],
-      'phone_number': phoneNumber,
+      'birthdate': birthdate?.toIso8601String().split('T')[0],
+      'phone': phone,
       'address': address,
       'position': position,
       'district': district,
       'church_id': churchId,
+      'transfer_church': transferChurch,
+      'transfer_date': transferDate?.toIso8601String().split('T')[0],
+      'memo': memo,
     };
   }
 }
@@ -135,29 +168,38 @@ class MemberCreateRequest {
 // 교인 업데이트를 위한 DTO
 class MemberUpdateRequest {
   final String? name;
-  final String? phoneNumber;
+  final String? phone;
   final String? memberStatus;
   final String? address;
   final String? position;
   final String? district;
+  final String? transferChurch;
+  final DateTime? transferDate;
+  final String? memo;
 
   MemberUpdateRequest({
     this.name,
-    this.phoneNumber,
+    this.phone,
     this.memberStatus,
     this.address,
     this.position,
     this.district,
+    this.transferChurch,
+    this.transferDate,
+    this.memo,
   });
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
     if (name != null) data['name'] = name;
-    if (phoneNumber != null) data['phone_number'] = phoneNumber;
+    if (phone != null) data['phone'] = phone;
     if (memberStatus != null) data['member_status'] = memberStatus;
     if (address != null) data['address'] = address;
     if (position != null) data['position'] = position;
     if (district != null) data['district'] = district;
+    if (transferChurch != null) data['transfer_church'] = transferChurch;
+    if (transferDate != null) data['transfer_date'] = transferDate?.toIso8601String().split('T')[0];
+    if (memo != null) data['memo'] = memo;
     return data;
   }
 }

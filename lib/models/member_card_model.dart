@@ -1,54 +1,54 @@
 class MemberCard {
-  final MemberCardData member;
-  final ChurchCardData church;
-  final MemberCardQRCode qrCode;
-  final MemberCardStatistics statistics;
+  final MemberCardData? member;
+  final ChurchCardData? church;
+  final MemberCardQRCode? qrCode;
+  final MemberCardStatistics? statistics;
 
   MemberCard({
-    required this.member,
-    required this.church,
-    required this.qrCode,
-    required this.statistics,
+    this.member,
+    this.church,
+    this.qrCode,
+    this.statistics,
   });
 
   factory MemberCard.fromJson(Map<String, dynamic> json) {
     return MemberCard(
-      member: MemberCardData.fromJson(json['member']),
-      church: ChurchCardData.fromJson(json['church']),
-      qrCode: MemberCardQRCode.fromJson(json['qr_code']),
-      statistics: MemberCardStatistics.fromJson(json['statistics']),
+      member: json['member'] != null ? MemberCardData.fromJson(json['member']) : null,
+      church: json['church'] != null ? ChurchCardData.fromJson(json['church']) : null,
+      qrCode: json['qr_code'] != null ? MemberCardQRCode.fromJson(json['qr_code']) : null,
+      statistics: json['statistics'] != null ? MemberCardStatistics.fromJson(json['statistics']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'member': member.toJson(),
-      'church': church.toJson(),
-      'qr_code': qrCode.toJson(),
-      'statistics': statistics.toJson(),
+      'member': member?.toJson(),
+      'church': church?.toJson(),
+      'qr_code': qrCode?.toJson(),
+      'statistics': statistics?.toJson(),
     };
   }
 }
 
 class MemberCardData {
-  final int id;
-  final String name;
+  final int? id;
+  final String? name;
   final String? profilePhotoUrl;
-  final String phoneNumber;
-  final String position;
-  final String district;
-  final int age;
-  final String memberStatus;
+  final String? phone;
+  final String? position;
+  final String? district;
+  final int? age;
+  final String? memberStatus;
 
   MemberCardData({
-    required this.id,
-    required this.name,
+    this.id,
+    this.name,
     this.profilePhotoUrl,
-    required this.phoneNumber,
-    required this.position,
-    required this.district,
-    required this.age,
-    required this.memberStatus,
+    this.phone,
+    this.position,
+    this.district,
+    this.age,
+    this.memberStatus,
   });
 
   factory MemberCardData.fromJson(Map<String, dynamic> json) {
@@ -56,7 +56,7 @@ class MemberCardData {
       id: json['id'],
       name: json['name'],
       profilePhotoUrl: json['profile_photo_url'],
-      phoneNumber: json['phone_number'],
+      phone: json['phone'],
       position: json['position'],
       district: json['district'],
       age: json['age'],
@@ -69,7 +69,7 @@ class MemberCardData {
       'id': id,
       'name': name,
       'profile_photo_url': profilePhotoUrl,
-      'phone_number': phoneNumber,
+      'phone': phone,
       'position': position,
       'district': district,
       'age': age,
@@ -79,14 +79,14 @@ class MemberCardData {
 }
 
 class ChurchCardData {
-  final String name;
-  final String address;
-  final String phone;
+  final String? name;
+  final String? address;
+  final String? phone;
 
   ChurchCardData({
-    required this.name,
-    required this.address,
-    required this.phone,
+    this.name,
+    this.address,
+    this.phone,
   });
 
   factory ChurchCardData.fromJson(Map<String, dynamic> json) {
@@ -107,18 +107,18 @@ class ChurchCardData {
 }
 
 class MemberCardQRCode {
-  final String code;
-  final String imageBase64;
+  final String? code;
+  final String? imageBase64;
 
   MemberCardQRCode({
-    required this.code,
-    required this.imageBase64,
+    this.code,
+    this.imageBase64,
   });
 
   factory MemberCardQRCode.fromJson(Map<String, dynamic> json) {
     return MemberCardQRCode(
-      code: json['code'] ?? '',
-      imageBase64: json['image_base64'] ?? '',
+      code: json['code'],
+      imageBase64: json['image_base64'],
     );
   }
 
@@ -131,12 +131,12 @@ class MemberCardQRCode {
 }
 
 class MemberCardStatistics {
-  final int recentAttendanceCount;
-  final String memberSince;
+  final int? recentAttendanceCount;
+  final String? memberSince;
 
   MemberCardStatistics({
-    required this.recentAttendanceCount,
-    required this.memberSince,
+    this.recentAttendanceCount,
+    this.memberSince,
   });
 
   factory MemberCardStatistics.fromJson(Map<String, dynamic> json) {

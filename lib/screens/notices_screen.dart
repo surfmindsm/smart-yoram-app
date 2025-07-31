@@ -209,6 +209,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "notices_fab",
         onPressed: _showAddNoticeDialog,
         backgroundColor: Colors.blue[700],
         child: const Icon(Icons.add, color: Colors.white),

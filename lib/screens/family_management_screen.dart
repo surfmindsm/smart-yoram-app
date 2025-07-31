@@ -41,7 +41,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
             'name': '김철수',
             'gender': '남',
             'date_of_birth': '1980-05-15',
-            'phone_number': '010-1234-5678',
+            'phone': '010-1234-5678',
             'age': 44,
           },
           {
@@ -49,7 +49,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
             'name': '김미영',
             'gender': '여',
             'date_of_birth': '1985-03-20',
-            'phone_number': '010-9876-5432',
+            'phone': '010-9876-5432',
             'age': 39,
           },
           {
@@ -57,7 +57,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
             'name': '김지민',
             'gender': '남',
             'date_of_birth': '2010-07-10',
-            'phone_number': '010-1111-2222',
+            'phone': '010-1111-2222',
             'age': 14,
           },
           {
@@ -65,7 +65,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
             'name': '김하늘',
             'gender': '여',
             'date_of_birth': '2012-12-25',
-            'phone_number': '010-3333-4444',
+            'phone': '010-3333-4444',
             'age': 12,
           },
         ];
@@ -360,6 +360,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "family_fab",
         onPressed: _addRelationship,
         backgroundColor: Colors.blue[700],
         child: const Icon(Icons.add, color: Colors.white),
