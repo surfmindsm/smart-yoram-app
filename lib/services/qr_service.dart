@@ -13,8 +13,14 @@ class QRService {
   // 교인의 QR 코드 생성
   Future<ApiResponse<QRCodeInfo>> generateQRCode(int memberId) async {
     try {
+      final requestBody = {
+        'qr_type': 'attendance',
+        'expires_at': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+      };
+      
       final response = await _apiService.post<QRCodeInfo>(
         '${ApiConfig.qrCodes}generate/$memberId',
+        body: requestBody,
         fromJson: (json) => QRCodeInfo.fromJson(json),
       );
 

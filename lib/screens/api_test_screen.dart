@@ -28,6 +28,17 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   final Map<String, bool> _testingStatus = {};
   final List<String> _debugLogs = [];
 
+  // 동적으로 가져온 첫 번째 교인 ID
+  int? _firstMemberId;
+
+  // QR 코드 관련 데이터
+  String? _generatedQRCode;
+  
+  // 전체 테스트 진행률
+  bool _runningAllTests = false;
+  int _currentTestIndex = 0;
+  int _totalTests = 0;
+  
   // 로그인 상태 관리
   bool _isLoggedIn = false;
   String? _authToken;
@@ -65,13 +76,14 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
             const SizedBox(height: 20),
             // 로그인 상태 표시 및 로그인 폼
             _buildLoginSection(),
+            // 테스트 결과 요약
+            _buildTestSummary(),
             const SizedBox(height: 20),
             _buildSection('기본 연결 테스트', [
               _buildTestButton('기본 연결', 'basic_connection', testBasicConnection),
             ]),
             _buildSection('인증 서비스', [
               _buildTestButton('로그인', 'auth_login', testAuthLogin),
-              _buildTestButton('회원가입', 'auth_register', testAuthRegister),
             ]),
             _buildSection('교인 관리', [
               _buildTestButton('교인 목록', 'member_list', testMemberList),
@@ -118,13 +130,30 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _runAllTests,
+                    onPressed: _runningAllTests ? null : _runAllTests,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: _runningAllTests ? Colors.grey : Colors.green,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.all(16),
                     ),
-                    child: const Text('모든 테스트 실행', style: TextStyle(fontSize: 16)),
+                    child: _runningAllTests 
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('테스트 실행 중... ($_currentTestIndex/$_totalTests)', 
+                                   style: const TextStyle(fontSize: 16)),
+                            ],
+                          )
+                        : const Text('모든 테스트 실행', style: TextStyle(fontSize: 16)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -141,6 +170,83 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTestSummary() {
+    if (_testResults.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final successCount = _testResults.values.where((result) => result.contains('성공')).length;
+    final failCount = _testResults.values.where((result) => result.contains('실패') || result.contains('오류')).length;
+    final totalCount = _testResults.length;
+    final successRate = totalCount > 0 ? (successCount / totalCount * 100).round() : 0;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.analytics, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text('테스트 결과 요약', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSummaryCard('성공', successCount.toString(), Colors.green, Icons.check_circle),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildSummaryCard('실패', failCount.toString(), Colors.red, Icons.error),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildSummaryCard('성공률', '$successRate%', Colors.blue, Icons.percent),
+                ),
+              ],
+            ),
+            if (totalCount > 0) ...[
+              const SizedBox(height: 16),
+              LinearProgressIndicator(
+                value: successCount / totalCount,
+                backgroundColor: Colors.red[100],
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                minHeight: 8,
+              ),
+              const SizedBox(height: 8),
+              Text('전체 $totalCount개 테스트 중 $successCount개 성공',
+                   style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(String title, String value, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+          Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        ],
       ),
     );
   }
@@ -285,19 +391,20 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   }
 
   void _addDebugLog(String message) {
-    final timestamp = DateTime.now().toString().substring(11, 19);
-    final logMessage = '[$timestamp] $message';
-    
-    // 터미널에 출력
-    print('🔍 API_DEBUG: $logMessage');
-    
+    final timestamp = DateTime.now().toIso8601String();
+    final logEntry = '[$timestamp] $message';
     setState(() {
-      _debugLogs.add(logMessage);
-      // 로그가 너무 많이 쌓이지 않도록 100개로 제한
-      if (_debugLogs.length > 100) {
+      _debugLogs.add(logEntry);
+      // 최대 1000개 로그만 유지
+      if (_debugLogs.length > 1000) {
         _debugLogs.removeAt(0);
       }
     });
+    
+    // developer.log를 사용하여 콘솔에도 출력
+    developer.log(logEntry, name: 'API_TEST');
+    // print도 함께 사용하여 더 확실하게 출력
+    print('🔍 API_TEST: $logEntry');
   }
 
   void _showDebugLogs() {
@@ -345,9 +452,11 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     );
   }
 
-
-
   Widget _buildSection(String title, List<Widget> buttons) {
+    // 해당 섹션의 테스트 결과를 계산
+    final sectionResults = _getSectionResults(title);
+    final sectionProgress = _getSectionProgress(sectionResults);
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -355,16 +464,122 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                if (sectionResults.isNotEmpty) 
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: sectionProgress['color']!.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: sectionProgress['color']!.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      '${sectionProgress['success']}/${sectionProgress['total']}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: sectionProgress['color'],
+                      ),
+                    ),
+                  ),
+              ],
             ),
+            if (sectionResults.isNotEmpty && sectionProgress['total']! > 0) ...[
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: sectionProgress['success']! / sectionProgress['total']!,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(sectionProgress['color']!),
+                minHeight: 3,
+              ),
+            ],
             const SizedBox(height: 12),
             ...buttons,
           ],
         ),
       ),
     );
+  }
+
+  List<String> _getSectionResults(String sectionTitle) {
+    final sectionTestKeys = <String>[];
+    
+    switch (sectionTitle) {
+      case '기본 연결 테스트':
+        sectionTestKeys.addAll(['basic_connection']);
+        break;
+      case '인증 서비스':
+        sectionTestKeys.addAll(['auth_login']);
+        break;
+      case '교인 관리':
+        sectionTestKeys.addAll(['member_list', 'member_detail']);
+        break;
+      case '출석 관리':
+        sectionTestKeys.addAll(['attendance_records', 'attendance_stats']);
+        break;
+      case 'QR 코드':
+        sectionTestKeys.addAll(['qr_generate', 'qr_info']);
+        break;
+      case 'SMS 서비스':
+        sectionTestKeys.addAll(['sms_send', 'sms_history']);
+        break;
+      case '일정 관리':
+        sectionTestKeys.addAll(['calendar_events', 'calendar_birthdays']);
+        break;
+      case '가족 관리':
+        sectionTestKeys.addAll(['family_relations', 'family_tree']);
+        break;
+      case '엑셀 다운로드':
+        sectionTestKeys.addAll(['excel_members', 'excel_attendance']);
+        break;
+      case '통계 서비스':
+        sectionTestKeys.addAll(['stats_attendance', 'stats_dashboard']);
+        break;
+      case '사용자 관리':
+        sectionTestKeys.addAll(['user_info', 'user_list']);
+        break;
+      case '교인증 관리':
+        sectionTestKeys.addAll(['member_card', 'card_qr_regenerate']);
+        break;
+    }
+    
+    return sectionTestKeys.where((key) => _testResults.containsKey(key)).map((key) => _testResults[key]!).toList();
+  }
+
+  Map<String, dynamic> _getSectionProgress(List<String> results) {
+    if (results.isEmpty) {
+      return {
+        'success': 0,
+        'total': 0,
+        'color': Colors.grey,
+      };
+    }
+    
+    final successCount = results.where((result) => result.contains('성공')).length;
+    final totalCount = results.length;
+    final successRate = successCount / totalCount;
+    
+    Color color;
+    if (successRate == 1.0) {
+      color = Colors.green;
+    } else if (successRate >= 0.5) {
+      color = Colors.orange;
+    } else {
+      color = Colors.red;
+    }
+    
+    return {
+      'success': successCount,
+      'total': totalCount,
+      'color': color,
+    };
   }
 
   Widget _buildTestButton(String title, String key, VoidCallback onPressed) {
@@ -407,8 +622,9 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   void _startTest(String key) {
     setState(() {
       _testingStatus[key] = true;
-      _testResults.remove(key);
+      _testResults[key] = '테스팅 중...';
     });
+    _addDebugLog('[$key] 테스트 시작');
   }
 
   void _updateResult(String key, String result) {
@@ -416,336 +632,79 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       _testingStatus[key] = false;
       _testResults[key] = result;
     });
+    _addDebugLog('[$key] 결과: $result');
+  }
+
+  // 테스트 상태 리셋
+  void _resetTestState() {
+    setState(() {
+      _testResults.clear();
+      _testingStatus.clear();
+      _generatedQRCode = null;
+      _firstMemberId = null;
+    });
+    _addDebugLog('🔄 테스트 상태 리셋 완료');
   }
 
   Future<void> testBasicConnection() async {
     _startTest('basic_connection');
     try {
-      // 로그 추가: 기본 연결 정보
-      _addDebugLog('=== 기본 API 연결 테스트 ===');
-      _addDebugLog('Base URL: ${ApiConfig.baseUrl}');
-      _addDebugLog('Auth Endpoint: ${ApiConfig.authLogin}');
+      // health 엔드포인트가 없으므로 docs 엔드포인트로 테스트
+      final url = '${ApiConfig.baseUrl.replaceAll('/api/v1', '')}/docs';
+      _addDebugLog('📡 [basic_connection] 요청 URL: $url');
       
-      developer.log('=== 기본 API 연결 테스트 ===', name: 'API_TEST');
-      developer.log('Base URL: ${ApiConfig.baseUrl}', name: 'API_TEST');
-      developer.log('Auth Endpoint: ${ApiConfig.authLogin}', name: 'API_TEST');
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Accept': 'text/html,application/xhtml+xml'},
+      ).timeout(const Duration(seconds: 10));
       
-      // 실제 HTTP 요청으로 서버 연결 테스트
-      await _testMultipleServerUrls();
-    } catch (e) {
-      _addDebugLog('Basic connection error: $e');
-      developer.log('Basic connection error: $e', name: 'API_TEST');
+      _addDebugLog('📡 [basic_connection] 응답 상태코드: ${response.statusCode}');
+      _addDebugLog('📡 [basic_connection] 응답 헤더: ${response.headers}');
+      _addDebugLog('📡 [basic_connection] 응답 본문 크기: ${response.body.length} bytes');
       
-      if (e.toString().contains('TimeoutException')) {
-        _updateResult('basic_connection', '❌ 시간 초과: 서버가 응답하지 않습니다\n서버가 꺼져있거나 URL이 잘못되었을 수 있습니다');
+      if (response.statusCode == 200) {
+        _updateResult('basic_connection', '✅ 성공: 서버 연결 정상 (Swagger Docs 접근 가능)');
       } else {
-        _updateResult('basic_connection', '❌ 연결 오류: $e');
-      }
-    }
-  }
-
-  Future<void> _testMultipleServerUrls() async {
-    _addDebugLog('=== 다중 서버 URL 테스트 ===');
-    
-    // 가능한 서버 URL들
-    final possibleServers = [
-      // 현재 설정된 URL
-      'https://packs-holds-marc-extended.trycloudflare.com/api/v1',
-      'https://packs-holds-marc-extended.trycloudflare.com',
-      
-      // 로컬 개발 서버
-      'http://localhost:8000/api/v1',
-      'http://localhost:8000',
-      'http://127.0.0.1:8000/api/v1',
-      'http://127.0.0.1:8000',
-      
-      // 다른 일반적인 포트
-      'http://localhost:3000/api/v1',
-      'http://localhost:5000/api/v1',
-      'http://localhost:8080/api/v1',
-    ];
-    
-    String? workingServer;
-    
-    for (final serverUrl in possibleServers) {
-      _addDebugLog('테스트 중: $serverUrl');
-      
-      try {
-        // docs 엔드포인트 테스트
-        final docsUrl = Uri.parse('$serverUrl/docs');
-        final docsResponse = await http.get(
-          docsUrl,
-          headers: {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'},
-        ).timeout(const Duration(seconds: 5));
-        
-        _addDebugLog('➡️ $serverUrl/docs - Status: ${docsResponse.statusCode}');
-        
-        if (docsResponse.statusCode == 200) {
-          workingServer = serverUrl;
-          _addDebugLog('✅ 서버 발견! $serverUrl');
-          break;
-        }
-        
-        // 루트 경로도 테스트
-        final rootUrl = Uri.parse(serverUrl);
-        final rootResponse = await http.get(
-          rootUrl,
-          headers: {'Accept': 'application/json'},
-        ).timeout(const Duration(seconds: 5));
-        
-        _addDebugLog('➡️ $serverUrl - Status: ${rootResponse.statusCode}');
-        
-        if (rootResponse.statusCode == 200) {
-          workingServer = serverUrl;
-          _addDebugLog('✅ 서버 발견! $serverUrl (루트)');
-          break;
-        }
-        
-      } catch (e) {
-        _addDebugLog('❌ $serverUrl - 연결 실패: ${e.toString().substring(0, 30)}...');
-      }
-    }
-    
-    if (workingServer != null) {
-      _updateResult('basic_connection', '✅ 성공: 서버 발견!\nURL: $workingServer\n이 URL로 API 설정을 업데이트하세요.');
-      
-      // 로그인 엔드포인트 테스트
-      await _testLoginEndpointForServer(workingServer);
-    } else {
-      _updateResult('basic_connection', '❌ 실패: 사용 가능한 서버를 찾을 수 없습니다\n\n확인 사항:\n1. 백엔드 서버가 실행 중인가?\n2. Cloudflare tunnel이 활성상태인가?\n3. 네트워크 연결이 정상인가?');
-    }
-  }
-
-  Future<void> _testLoginEndpointForServer(String serverUrl) async {
-    _addDebugLog('=== $serverUrl API 엔드포인트 대귀모 탐색 ===');
-    
-    // 더 많은 가능한 엔드포인트 패턴
-    final apiEndpoints = [
-      // 로그인 엔드포인트
-      '/auth/login',
-      '/login', 
-      '/api/auth/login',
-      '/api/v1/auth/login',
-      '/v1/auth/login',
-      '/user/login',
-      '/users/login',
-      '/authenticate',
-      '/signin',
-      '/token',  // FastAPI 기본 로그인 엔드포인트
-      
-      // 일반적인 API 엔드포인트
-      '/api',
-      '/api/v1',
-      '/api/users',
-      '/api/v1/users', 
-      '/users',
-      '/members',
-      '/api/members',
-      '/api/v1/members',
-      '/health',
-      '/ping',
-      '/status',
-      
-      // FastAPI 기본 엔드포인트
-      '/openapi.json',
-      '/redoc',
-    ];
-    
-    final List<String> workingEndpoints = [];
-    
-    for (final endpoint in apiEndpoints) {
-      try {
-        final fullUrl = '$serverUrl$endpoint';
-        _addDebugLog('테스트: $endpoint');
-        
-        // GET 요청으로 먼저 테스트
-        final getResponse = await http.get(
-          Uri.parse(fullUrl),
-          headers: {'Accept': 'application/json'},
-        ).timeout(const Duration(seconds: 3));
-        
-        if (getResponse.statusCode != 404) {
-          _addDebugLog('✅ GET $endpoint - Status: ${getResponse.statusCode}');
-          workingEndpoints.add('GET $endpoint (${getResponse.statusCode})');
-          
-          if (getResponse.body.isNotEmpty && getResponse.body.length < 500) {
-            _addDebugLog('Response: ${getResponse.body}');
-          }
-        }
-        
-        // 로그인 관련 엔드포인트에는 POST도 테스트
-        if (endpoint.contains('login') || endpoint.contains('auth') || endpoint.contains('signin')) {
-          final postResponse = await http.post(
-            Uri.parse(fullUrl),
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Accept': 'application/json'
-            },
-            body: 'username=test&password=test',
-          ).timeout(const Duration(seconds: 3));
-          
-          if (postResponse.statusCode != 404) {
-            _addDebugLog('✅ POST $endpoint - Status: ${postResponse.statusCode}');
-            workingEndpoints.add('POST $endpoint (${postResponse.statusCode})');
-            
-            if (postResponse.statusCode == 422 || postResponse.statusCode == 401 || postResponse.statusCode == 400) {
-              _addDebugLog('✨ 예상됨! 인증 오류 - 엔드포인트가 작동 중');
-            }
-            
-            if (postResponse.body.isNotEmpty && postResponse.body.length < 300) {
-              _addDebugLog('Response: ${postResponse.body}');
-            }
-          }
-        }
-        
-        // /token 엔드포인트 따로 테스트 (FastAPI 기본)
-        if (endpoint == '/token') {
-          final tokenResponse = await http.post(
-            Uri.parse(fullUrl),
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Accept': 'application/json'
-            },
-            body: 'username=test&password=test',
-          ).timeout(const Duration(seconds: 3));
-          
-          if (tokenResponse.statusCode != 404) {
-            _addDebugLog('✅ POST $endpoint - Status: ${tokenResponse.statusCode}');
-            workingEndpoints.add('POST $endpoint (${tokenResponse.statusCode})');
-            
-            if (tokenResponse.statusCode == 422 || tokenResponse.statusCode == 401 || tokenResponse.statusCode == 400) {
-              _addDebugLog('✨ 예상됨! 인증 오류 - 엔드포인트가 작동 중');
-            }
-            
-            if (tokenResponse.body.isNotEmpty && tokenResponse.body.length < 300) {
-              _addDebugLog('Response: ${tokenResponse.body}');
-            }
-          }
-        }
-      } catch (e) {
-        // 에러는 로그에 기록하지 않음 (너무 많아서)
-      }
-    }
-    
-    _addDebugLog('=== 발견된 작동 엔드포인트 요약 ===');
-    if (workingEndpoints.isNotEmpty) {
-      for (final endpoint in workingEndpoints) {
-        _addDebugLog('✅ $endpoint');
-      }
-      
-      // 추천 설정 제안
-      _addDebugLog('\n💡 추천: ApiConfig.baseUrl을 "$serverUrl"로 변경하세요');
-    } else {
-      _addDebugLog('❌ 사용 가능한 API 엔드포인트를 찾을 수 없습니다');
-    }
-  }
-
-  Future<void> _testLoginEndpoint() async {
-    try {
-      _addDebugLog('=== 로그인 엔드포인트 테스트 ===');
-      
-      // 다양한 로그인 엔드포인트 경로 테스트
-      final possibleEndpoints = [
-        '${ApiConfig.baseUrl}/auth/login',
-        '${ApiConfig.baseUrl}/login',
-        '${ApiConfig.baseUrl}/api/auth/login',
-        '${ApiConfig.baseUrl}/v1/auth/login',
-      ];
-      
-      for (final endpoint in possibleEndpoints) {
-        _addDebugLog('테스트 중: $endpoint');
-        try {
-          final testResponse = await http.post(
-            Uri.parse(endpoint),
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: '',
-          ).timeout(const Duration(seconds: 5));
-          
-          _addDebugLog('➡️ $endpoint - Status: ${testResponse.statusCode}');
-          
-          if (testResponse.statusCode != 404) {
-            _addDebugLog('✅ 발견! 사용 가능한 엔드포인트: $endpoint');
-            _addDebugLog('Response body: ${testResponse.body.length > 100 ? testResponse.body.substring(0, 100) + "..." : testResponse.body}');
-          }
-        } catch (e) {
-          _addDebugLog('❌ $endpoint - Error: ${e.toString().substring(0, 50)}...');
-        }
+        _updateResult('basic_connection', '❌ 실패: HTTP ${response.statusCode}');
       }
     } catch (e) {
-      _addDebugLog('로그인 엔드포인트 테스트 오류: $e');
+      _addDebugLog('❌ [basic_connection] 예외 발생: $e');
+      _updateResult('basic_connection', '❌ 오류: $e');
     }
   }
 
   Future<void> testAuthLogin() async {
     _startTest('auth_login');
     try {
-      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-        _updateResult('auth_login', '❌ 실패: 사용자명과 비밀번호를 입력해주세요');
-        return;
-      }
+      final email = _emailController.text.isNotEmpty ? _emailController.text : 'test@example.com';
+      final password = _passwordController.text.isNotEmpty ? _passwordController.text : 'password123';
       
-      final username = _emailController.text.trim();
-      final password = _passwordController.text;
+      _addDebugLog('[auth_login] 로그인 시도 - 이메일: $email');
       
-      // 로그 추가: 요청 정보
-      _addDebugLog('=== API 로그인 시도 ===');
-      _addDebugLog('URL: ${ApiConfig.baseUrl}${ApiConfig.authLogin}');
-      _addDebugLog('Username: $username');
-      _addDebugLog('Password length: ${password.length}');
+      final result = await _authService.login(email, password);
       
-      developer.log('=== API 로그인 시도 ===', name: 'API_TEST');
-      developer.log('URL: ${ApiConfig.baseUrl}${ApiConfig.authLogin}', name: 'API_TEST');
-      developer.log('Username: $username', name: 'API_TEST');
-      developer.log('Password length: ${password.length}', name: 'API_TEST');
-      
-      final result = await _authService.login(username, password);
-      
-      // 로그 추가: 응답 정보
-      _addDebugLog('=== API 로그인 응답 ===');
-      _addDebugLog('Success: ${result.success}');
-      _addDebugLog('Message: ${result.message}');
-      _addDebugLog('Data: ${result.data}');
-      
-      developer.log('=== API 로그인 응답 ===', name: 'API_TEST');
-      developer.log('Success: ${result.success}', name: 'API_TEST');
-      developer.log('Message: ${result.message}', name: 'API_TEST');
-      developer.log('Data: ${result.data}', name: 'API_TEST');
+      _addDebugLog('[auth_login] 응답 성공여부: ${result.success}');
+      _addDebugLog('[auth_login] 응답 메시지: ${result.message}');
+      _addDebugLog('[auth_login] 응답 데이터: ${result.data}');
       
       if (result.success) {
-        final token = result.data?.accessToken;
-        developer.log('Access Token: ${token?.substring(0, 20)}...', name: 'API_TEST');
-        
         setState(() {
           _isLoggedIn = true;
-          _authToken = token;
-          _currentUserEmail = username;
+          _authToken = result.data?.accessToken;
+          _currentUserEmail = email;
         });
-        _updateResult('auth_login', '✅ 성공: 로그인 완료 (${result.message})');
+        
+        _addDebugLog('[auth_login] 토큰 획득: ${_authToken?.substring(0, 20)}...');
+        
+        _addDebugLog('🔑 [auth_login] 로그인 성공, 토큰이 서비스에 자동 설정됨');
+        
+        _updateResult('auth_login', '성공: 로그인 완료');
       } else {
-        _updateResult('auth_login', '❌ 실패: ${result.message}\n디버그 로그를 확인하세요.');
+        _updateResult('auth_login', '실패: ${result.message}');
       }
     } catch (e) {
-      _addDebugLog('Exception: $e');
-      _addDebugLog('Stack trace: ${StackTrace.current}');
-      
-      developer.log('Exception: $e', name: 'API_TEST');
-      developer.log('Stack trace: ${StackTrace.current}', name: 'API_TEST');
-      _updateResult('auth_login', '❌ 오류: $e\n디버그 로그를 확인하세요.');
-    }
-  }
-
-  Future<void> testAuthRegister() async {
-    _startTest('auth_register');
-    try {
-      // register 메서드가 없으므로 로그인만 테스트
-      final result = await _authService.login('test@example.com', 'password123');
-      if (result.success) {
-        _updateResult('auth_register', '✅ 성공: ${result.message}');
-      } else {
-        _updateResult('auth_register', '❌ 실패: ${result.message}');
-      }
-    } catch (e) {
-      _updateResult('auth_register', '❌ 오류: $e');
+      _addDebugLog('[auth_login] 예외 발생: $e');
+      _updateResult('auth_login', '오류: $e');
     }
   }
 
@@ -754,14 +713,28 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     if (!_checkAuthRequired('member_list')) return;
     
     try {
+      _addDebugLog('📡 [member_list] 교인 목록 요청 시작');
+      
       final result = await _memberService.getMembers();
+      
+      _addDebugLog('📡 [member_list] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [member_list] 응답 메시지: ${result.message}');
+      _addDebugLog('📡 [member_list] 데이터 개수: ${result.data?.length ?? 0}');
+      
+      // 첫 번째 교인 ID 저장 (다른 테스트에서 사용)
+      if (result.success && result.data != null && result.data!.isNotEmpty) {
+        _firstMemberId = result.data!.first.id;
+        _addDebugLog('📡 [member_list] 첫 번째 교인 ID 저장: $_firstMemberId');
+      }
+      
       if (result.success) {
-        _updateResult('member_list', '✅ 성공: ${result.data?.length ?? 0}명의 교인 목록 조회');
+        _updateResult('member_list', '성공: ${result.data?.length ?? 0}명의 교인 목록 조회');
       } else {
-        _updateResult('member_list', '❌ 실패: ${result.message}');
+        _updateResult('member_list', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('member_list', '❌ 오류: $e');
+      _addDebugLog('❌ [member_list] 예외 발생: $e');
+      _updateResult('member_list', '오류: $e');
     }
   }
 
@@ -770,102 +743,191 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     if (!_checkAuthRequired('member_detail')) return;
     
     try {
-      final result = await _memberService.getMember(1);
+      final memberId = _firstMemberId ?? 1;
+      _addDebugLog('📡 [member_detail] 교인 상세정보 요청 (ID: $memberId)');
+      
+      final result = await _memberService.getMember(memberId);
+      
+      _addDebugLog('📡 [member_detail] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [member_detail] 응답 메시지: ${result.message}');
+      if (result.data != null) {
+        _addDebugLog('📡 [member_detail] 교인 이름: ${result.data?.name}');
+        _addDebugLog('📡 [member_detail] 교인 전화번호: ${result.data?.phoneNumber}');
+        _addDebugLog('📡 [member_detail] 교인 직분: ${result.data?.position}');
+      }
+      
       if (result.success) {
-        _updateResult('member_detail', '✅ 성공: 교인 상세정보 조회됨');
+        _updateResult('member_detail', '성공: 교인 상세정보 조회됨');
       } else {
-        _updateResult('member_detail', '❌ 실패: ${result.message}');
+        _updateResult('member_detail', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('member_detail', '❌ 오류: $e');
+      _addDebugLog('❌ [member_detail] 예외 발생: $e');
+      _updateResult('member_detail', '오류: $e');
     }
   }
 
   Future<void> testAttendanceRecords() async {
     _startTest('attendance_records');
     try {
-      final result = await _attendanceService.getMemberAttendanceRecords(1);
+      final memberId = _firstMemberId ?? 1;
+      _addDebugLog('📡 [attendance_records] 출석 기록 요청 (Member ID: $memberId)');
+      
+      final result = await _attendanceService.getMemberAttendanceRecords(memberId);
+      
+      _addDebugLog('📡 [attendance_records] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [attendance_records] 응답 메시지: ${result.message}');
+      _addDebugLog('📡 [attendance_records] 기록 개수: ${result.data?.length ?? 0}');
+      
       if (result.success) {
-        _updateResult('attendance_records', '✅ 성공: ${result.data?.length ?? 0}개의 출석 기록 조회');
+        _updateResult('attendance_records', '성공: ${result.data?.length ?? 0}개의 출석 기록 조회');
       } else {
-        _updateResult('attendance_records', '❌ 실패: ${result.message}');
+        _updateResult('attendance_records', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('attendance_records', '❌ 오류: $e');
+      _addDebugLog('❌ [attendance_records] 예외 발생: $e');
+      _updateResult('attendance_records', '오류: $e');
     }
   }
 
   Future<void> testAttendanceStats() async {
     _startTest('attendance_stats');
     try {
-      final result = await _attendanceService.getMemberAttendanceStats(1);
+      final memberId = _firstMemberId ?? 1;
+      _addDebugLog('📡 [attendance_stats] 출석 통계 요청 (Member ID: $memberId)');
+      
+      final result = await _attendanceService.getMemberAttendanceStats(memberId);
+      
+      _addDebugLog('📡 [attendance_stats] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [attendance_stats] 응답 메시지: ${result.message}');
+      
       if (result.success) {
-        _updateResult('attendance_stats', '✅ 성공: 출석 통계 데이터 조회됨');
+        _updateResult('attendance_stats', '성공: 출석 통계 데이터 조회됨');
       } else {
-        _updateResult('attendance_stats', '❌ 실패: ${result.message}');
+        _updateResult('attendance_stats', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('attendance_stats', '❌ 오류: $e');
+      _addDebugLog('❌ [attendance_stats] 예외 발생: $e');
+      _updateResult('attendance_stats', '오류: $e');
     }
   }
 
   Future<void> testQRGenerate() async {
     _startTest('qr_generate');
     try {
-      final result = await _qrService.generateQRCode(1);
+      final memberId = _firstMemberId ?? 1;
+      _addDebugLog('📡 [qr_generate] QR 코드 생성 요청 (Member ID: $memberId)');
+      
+      final result = await _qrService.generateQRCode(memberId);
+      
+      _addDebugLog('📡 [qr_generate] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [qr_generate] 응답 메시지: ${result.message}');
+      if (result.data != null) {
+        _addDebugLog('📡 [qr_generate] 생성된 QR 코드: ${result.data?.code}');
+        _addDebugLog('📡 [qr_generate] 만료 시간: ${result.data?.expiresAt}');
+      }
+      
       if (result.success) {
-        _updateResult('qr_generate', '✅ 성공: QR 코드 생성됨 - ${result.data?.code ?? 'N/A'}');
+        // 생성된 QR 코드 저장 (다른 테스트에서 사용)
+        _generatedQRCode = result.data?.code;
+        _addDebugLog('🔑 [qr_generate] 생성된 QR 코드 저장: $_generatedQRCode');
+        _updateResult('qr_generate', '성공: QR 코드 생성됨 - ${result.data?.code ?? 'N/A'}');
       } else {
-        _updateResult('qr_generate', '❌ 실패: ${result.message}');
+        _updateResult('qr_generate', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('qr_generate', '❌ 오류: $e');
+      _addDebugLog('❌ [qr_generate] 예외 발생: $e');
+      _updateResult('qr_generate', '오류: $e');
     }
   }
 
   Future<void> testQRInfo() async {
     _startTest('qr_info');
     try {
-      final result = await _qrService.getQRCodeInfo('test_qr_code');
+      // 이전에 생성된 QR 코드 사용, 없으면 테스트 코드 사용
+      final qrCode = _generatedQRCode ?? 'test_qr_code';
+      _addDebugLog('📱 [qr_info] QR 코드 정보 조회 (Code: $qrCode)');
+      
+      final result = await _qrService.getQRCodeInfo(qrCode);
+      
+      _addDebugLog('📱 [qr_info] 응답 성공여부: ${result.success}');
+      _addDebugLog('📱 [qr_info] 응답 메시지: ${result.message}');
+      
       if (result.success) {
-        _updateResult('qr_info', '✅ 성공: QR 코드 정보 조회됨');
+        _addDebugLog('📱 [qr_info] QR 코드 정보: ${result.data?.code}');
+        _addDebugLog('📱 [qr_info] 교인 ID: ${result.data?.memberId}');
+        _addDebugLog('📱 [qr_info] 교인 이름: ${result.data?.memberName}');
+        _addDebugLog('📱 [qr_info] 활성 상태: ${result.data?.isActive}');
+        _addDebugLog('📱 [qr_info] 만료 시간: ${result.data?.expiresAt}');
+        _updateResult('qr_info', '성공: QR 코드 정보 조회됨');
       } else {
-        _updateResult('qr_info', '❌ 실패: ${result.message}');
+        _updateResult('qr_info', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('qr_info', '❌ 오류: $e');
+      _addDebugLog('[qr_info] 예외 발생: $e');
+      _updateResult('qr_info', '오류: $e');
     }
   }
 
   Future<void> testSmsSend() async {
     _startTest('sms_send');
     try {
+      const testPhone = '01012345678';
+      const testMessage = '테스트 메시지';
+      const testType = 'general';
+      
+      _addDebugLog('📱 [sms_send] SMS 발송 요청 (Phone: $testPhone)');
+      _addDebugLog('📱 [sms_send] 메시지: $testMessage');
+      _addDebugLog('📱 [sms_send] 타입: $testType');
+      
       final result = await _smsService.sendSms(
-        recipientPhone: '01012345678',
-        message: '테스트 메시지',
-        smsType: 'general',
+        recipientPhone: testPhone,
+        message: testMessage,
+        smsType: testType,
       );
+      
+      _addDebugLog('📱 [sms_send] 응답 성공여부: ${result.success}');
+      _addDebugLog('📱 [sms_send] 응답 메시지: ${result.message}');
+      
       if (result.success) {
-        _updateResult('sms_send', '✅ 성공: SMS 발송 완료');
+        _addDebugLog('📱 [sms_send] SMS ID: ${result.data?.id}');
+        _addDebugLog('📱 [sms_send] 발송 시간: ${result.data?.sentAt}');
+        _updateResult('sms_send', '성공: SMS 발송 완료');
       } else {
-        _updateResult('sms_send', '❌ 실패: ${result.message}');
+        _updateResult('sms_send', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('sms_send', '❌ 오류: $e');
+      _addDebugLog('[sms_send] 예외 발생: $e');
+      _updateResult('sms_send', '오류: $e');
     }
   }
 
   Future<void> testSmsHistory() async {
     _startTest('sms_history');
     try {
+      _addDebugLog('📜 [sms_history] SMS 기록 조회 요청');
+      
       final result = await _smsService.getSmsHistory();
+      
+      _addDebugLog('📜 [sms_history] 응답 성공여부: ${result.success}');
+      _addDebugLog('📜 [sms_history] 응답 메시지: ${result.message}');
+      _addDebugLog('📜 [sms_history] 기록 갯수: ${result.data?.length ?? 0}');
+      
       if (result.success) {
-        _updateResult('sms_history', '✅ 성공: ${result.data?.length ?? 0}개의 SMS 기록 조회');
+        // 최신 SMS 기록 상세 정보 로깅
+        if (result.data != null && result.data!.isNotEmpty) {
+          final latestSms = result.data!.first;
+          _addDebugLog('📜 [sms_history] 최신 SMS - ID: ${latestSms.id}');
+          _addDebugLog('📜 [sms_history] 최신 SMS - 수신자: ${latestSms.recipientPhone}');
+          _addDebugLog('📜 [sms_history] 최신 SMS - 상태: ${latestSms.status}');
+        }
+        _updateResult('sms_history', '성공: ${result.data?.length ?? 0}개의 SMS 기록 조회');
       } else {
-        _updateResult('sms_history', '❌ 실패: ${result.message}');
+        _updateResult('sms_history', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('sms_history', '❌ 오류: $e');
+      _addDebugLog('[sms_history] 예외 발생: $e');
+      _updateResult('sms_history', '오류: $e');
     }
   }
 
@@ -874,59 +936,111 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     try {
       final startDate = DateTime.now().subtract(const Duration(days: 30));
       final endDate = DateTime.now().add(const Duration(days: 30));
+      final startDateStr = startDate.toIso8601String().split('T')[0];
+      final endDateStr = endDate.toIso8601String().split('T')[0];
+      
+      _addDebugLog('📅 [calendar_events] 일정 조회 요청');
+      _addDebugLog('📅 [calendar_events] 기간: $startDateStr ~ $endDateStr');
+      
       final result = await _calendarService.getEvents(
-        startDate: startDate.toIso8601String().split('T')[0],
-        endDate: endDate.toIso8601String().split('T')[0],
+        startDate: startDateStr,
+        endDate: endDateStr,
       );
+      
+      _addDebugLog('📅 [calendar_events] 응답 성공여부: ${result.success}');
+      _addDebugLog('📅 [calendar_events] 응답 메시지: ${result.message}');
+      _addDebugLog('📅 [calendar_events] 일정 갯수: ${result.data?.length ?? 0}');
+      
       if (result.success) {
-        _updateResult('calendar_events', '✅ 성공: ${result.data?.length ?? 0}개의 일정 조회');
+        // 첫 번째 일정 상세 정보 로깅
+        if (result.data != null && result.data!.isNotEmpty) {
+          final firstEvent = result.data!.first;
+          _addDebugLog('📅 [calendar_events] 첫 번째 일정: ${firstEvent.title}');
+          _addDebugLog('📅 [calendar_events] 일정 날짜: ${firstEvent.eventDate}');
+          _addDebugLog('📅 [calendar_events] 일정 타입: ${firstEvent.eventType}');
+        }
+        _updateResult('calendar_events', '성공: ${result.data?.length ?? 0}개의 일정 조회');
       } else {
-        _updateResult('calendar_events', '❌ 실패: ${result.message}');
+        _updateResult('calendar_events', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('calendar_events', '❌ 오류: $e');
+      _addDebugLog('[calendar_events] 예외 발생: $e');
+      _updateResult('calendar_events', '오류: $e');
     }
   }
 
   Future<void> testCalendarBirthdays() async {
     _startTest('calendar_birthdays');
     try {
-      final result = await _calendarService.getUpcomingBirthdays();
+      const daysAhead = 30;
+      _addDebugLog('🎂 [calendar_birthdays] 다가오는 생일 조회 요청 (30일 내)');
+      
+      final result = await _calendarService.getUpcomingBirthdays(daysAhead: daysAhead);
+      
+      _addDebugLog('🎂 [calendar_birthdays] 응답 성공여부: ${result.success}');
+      _addDebugLog('🎂 [calendar_birthdays] 응답 메시지: ${result.message}');
+      _addDebugLog('🎂 [calendar_birthdays] 생일 갯수: ${result.data?.length ?? 0}');
+      
       if (result.success) {
-        _updateResult('calendar_birthdays', '✅ 성공: ${result.data?.length ?? 0}명의 생일 조회');
+        // 첫 번째 생일 상세 정보 로깅
+        if (result.data != null && result.data!.isNotEmpty) {
+          final firstBirthday = result.data!.first;
+          _addDebugLog('🎂 [calendar_birthdays] 첫 번째 생일 - 이름: ${firstBirthday.memberName}');
+          _addDebugLog('🎂 [calendar_birthdays] 첫 번째 생일 - 날짜: ${firstBirthday.birthday}');
+          _addDebugLog('🎂 [calendar_birthdays] 첫 번째 생일 - 나이: ${firstBirthday.age}세');
+        }
+        _updateResult('calendar_birthdays', '성공: ${result.data?.length ?? 0}명의 생일 조회');
       } else {
-        _updateResult('calendar_birthdays', '❌ 실패: ${result.message}');
+        _updateResult('calendar_birthdays', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('calendar_birthdays', '❌ 오류: $e');
+      _addDebugLog('[calendar_birthdays] 예외 발생: $e');
+      _updateResult('calendar_birthdays', '오류: $e');
     }
   }
 
   Future<void> testFamilyRelations() async {
     _startTest('family_relations');
     try {
-      final result = await _familyService.getMemberRelationships(1);
+      final memberId = _firstMemberId ?? 1;
+      _addDebugLog('📡 [family_relations] 가족 관계 요청 (Member ID: $memberId)');
+      
+      final result = await _familyService.getMemberRelationships(memberId);
+      
+      _addDebugLog('📡 [family_relations] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [family_relations] 응답 메시지: ${result.message}');
+      _addDebugLog('📡 [family_relations] 관계 개수: ${result.data?.length ?? 0}');
+      
       if (result.success) {
-        _updateResult('family_relations', '✅ 성공: ${result.data?.length ?? 0}개의 가족 관계 조회');
+        _updateResult('family_relations', '성공: ${result.data?.length ?? 0}개의 가족 관계 조회');
       } else {
-        _updateResult('family_relations', '❌ 실패: ${result.message}');
+        _updateResult('family_relations', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('family_relations', '❌ 오류: $e');
+      _addDebugLog('❌ [family_relations] 예외 발생: $e');
+      _updateResult('family_relations', '오류: $e');
     }
   }
 
   Future<void> testFamilyTree() async {
     _startTest('family_tree');
     try {
-      final result = await _familyService.getFamilyTree(1);
+      final memberId = _firstMemberId ?? 1;
+      _addDebugLog('📡 [family_tree] 가족 트리 요청 (Member ID: $memberId)');
+      
+      final result = await _familyService.getFamilyTree(memberId);
+      
+      _addDebugLog('📡 [family_tree] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [family_tree] 응답 메시지: ${result.message}');
+      
       if (result.success) {
-        _updateResult('family_tree', '✅ 성공: 가족 트리 데이터 조회됨');
+        _updateResult('family_tree', '성공: 가족 트리 데이터 조회됨');
       } else {
-        _updateResult('family_tree', '❌ 실패: ${result.message}');
+        _updateResult('family_tree', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('family_tree', '❌ 오류: $e');
+      _addDebugLog('❌ [family_tree] 예외 발생: $e');
+      _updateResult('family_tree', '오류: $e');
     }
   }
 
@@ -935,12 +1049,13 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     try {
       final result = await _excelService.downloadMembersExcel();
       if (result.success) {
-        _updateResult('excel_members', '✅ 성공: 교인 엑셀 다운로드 완료');
+        _updateResult('excel_members', '성공: 교인 엑셀 다운로드 완료');
       } else {
-        _updateResult('excel_members', '❌ 실패: ${result.message}');
+        _updateResult('excel_members', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('excel_members', '❌ 오류: $e');
+      _addDebugLog('[excel_members] 예외 발생: $e');
+      _updateResult('excel_members', '오류: $e');
     }
   }
 
@@ -954,12 +1069,13 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
         endDate: endDate.toIso8601String().split('T')[0],
       );
       if (result.success) {
-        _updateResult('excel_attendance', '✅ 성공: 출석 엑셀 다운로드 완료');
+        _updateResult('excel_attendance', '성공: 출석 엑셀 다운로드 완료');
       } else {
-        _updateResult('excel_attendance', '❌ 실패: ${result.message}');
+        _updateResult('excel_attendance', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('excel_attendance', '❌ 오류: $e');
+      _addDebugLog('[excel_attendance] 예외 발생: $e');
+      _updateResult('excel_attendance', '오류: $e');
     }
   }
 
@@ -973,26 +1089,31 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
         endDate: endDate.toIso8601String().split('T')[0],
       );
       if (result.success) {
-        _updateResult('stats_attendance', '✅ 성공: 출석 통계 데이터 조회됨');
+        _updateResult('stats_attendance', '성공: 출석 통계 데이터 조회됨');
       } else {
-        _updateResult('stats_attendance', '❌ 실패: ${result.message}');
+        _updateResult('stats_attendance', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('stats_attendance', '❌ 오류: $e');
+      _addDebugLog('[stats_attendance] 예외 발생: $e');
+      _updateResult('stats_attendance', '오류: $e');
     }
   }
 
   Future<void> testStatsDashboard() async {
     _startTest('stats_dashboard');
+    if (!_checkAuthRequired('stats_dashboard')) return;
+    
     try {
-      final result = await _statisticsService.getDashboardStats();
+      // 대시보드 엔드포인트가 없으므로 교인 인구통계로 대체
+      final result = await _statisticsService.getMemberDemographics();
+      
       if (result.success) {
-        _updateResult('stats_dashboard', '✅ 성공: 대시보드 통계 데이터 조회됨');
+        _updateResult('stats_dashboard', '성공: 교인 인구통계 데이터 조회됨');
       } else {
-        _updateResult('stats_dashboard', '❌ 실패: ${result.message}');
+        _updateResult('stats_dashboard', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('stats_dashboard', '❌ 오류: $e');
+      _updateResult('stats_dashboard', '오류: $e');
     }
   }
 
@@ -1003,12 +1124,13 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     try {
       final result = await _userService.getCurrentUser();
       if (result.success) {
-        _updateResult('user_info', '✅ 성공: 현재 사용자 정보 조회됨');
+        _updateResult('user_info', '성공: 현재 사용자 정보 조회됨');
       } else {
-        _updateResult('user_info', '❌ 실패: ${result.message}');
+        _updateResult('user_info', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('user_info', '❌ 오류: $e');
+      _addDebugLog('[user_info] 예외 발생: $e');
+      _updateResult('user_info', '오류: $e');
     }
   }
 
@@ -1017,82 +1139,149 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     try {
       final result = await _userService.getUsers();
       if (result.success) {
-        _updateResult('user_list', '✅ 성공: ${result.data?.length ?? 0}명의 사용자 목록 조회');
+        _updateResult('user_list', '성공: ${result.data?.length ?? 0}명의 사용자 목록 조회');
       } else {
-        _updateResult('user_list', '❌ 실패: ${result.message}');
+        _updateResult('user_list', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('user_list', '❌ 오류: $e');
+      _addDebugLog('[user_list] 예외 발생: $e');
+      _updateResult('user_list', '오류: $e');
     }
   }
+
+
 
   Future<void> testMemberCard() async {
     _startTest('member_card');
     try {
-      final result = await _memberCardService.getMemberCard(1);
+      final memberId = _firstMemberId ?? 1;
+      _addDebugLog('📡 [member_card] 모바일 교인증 요청 (Member ID: $memberId)');
+      
+      final result = await _memberCardService.getMemberCard(memberId);
+      
+      _addDebugLog('📡 [member_card] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [member_card] 응답 메시지: ${result.message}');
+      
       if (result.success) {
-        _updateResult('member_card', '✅ 성공: 모바일 교인증 데이터 조회됨');
+        _updateResult('member_card', '성공: 모바일 교인증 데이터 조회됨');
       } else {
-        _updateResult('member_card', '❌ 실패: ${result.message}');
+        _updateResult('member_card', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('member_card', '❌ 오류: $e');
+      _addDebugLog('❌ [member_card] 예외 발생: $e');
+      _updateResult('member_card', '오류: $e');
     }
   }
 
   Future<void> testCardQRRegenerate() async {
     _startTest('card_qr_regenerate');
     try {
-      final result = await _memberCardService.regenerateQRCode(1);
+      final memberId = _firstMemberId ?? 1;
+      _addDebugLog('📡 [card_qr_regenerate] QR 코드 재생성 요청 (Member ID: $memberId)');
+      
+      final result = await _memberCardService.regenerateQRCode(memberId);
+      
+      _addDebugLog('📡 [card_qr_regenerate] 응답 성공여부: ${result.success}');
+      _addDebugLog('📡 [card_qr_regenerate] 응답 메시지: ${result.message}');
+      
       if (result.success) {
-        _updateResult('card_qr_regenerate', '✅ 성공: QR 코드 재생성 완료');
+        _updateResult('card_qr_regenerate', '성공: QR 코드 재생성 완료');
       } else {
-        _updateResult('card_qr_regenerate', '❌ 실패: ${result.message}');
+        _updateResult('card_qr_regenerate', '실패: ${result.message}');
       }
     } catch (e) {
-      _updateResult('card_qr_regenerate', '❌ 오류: $e');
+      _addDebugLog('❌ [card_qr_regenerate] 예외 발생: $e');
+      _updateResult('card_qr_regenerate', '오류: $e');
     }
   }
 
   Future<void> _runAllTests() async {
+    // 테스트 시작 전 상태 리셋
+    _resetTestState();
+    
+    setState(() {
+      _runningAllTests = true;
+      _currentTestIndex = 0;
+    });
+    
+    _addDebugLog('전체 API 테스트 시작');
+    
     final tests = [
-      testBasicConnection,
-      testAuthLogin,
-      testAuthRegister,
-      testMemberList,
-      testMemberDetail,
-      testAttendanceRecords,
-      testAttendanceStats,
-      testQRGenerate,
-      testQRInfo,
-      testSmsSend,
-      testSmsHistory,
-      testCalendarEvents,
-      testCalendarBirthdays,
-      testFamilyRelations,
-      testFamilyTree,
-      testExcelMembers,
-      testExcelAttendance,
-      testStatsAttendance,
-      testStatsDashboard,
-      testUserInfo,
-      testUserList,
-      testMemberCard,
-      testCardQRRegenerate,
+      ('기본 연결', testBasicConnection),
+      ('로그인', testAuthLogin),
+      ('교인 목록', testMemberList),
+      ('교인 상세', testMemberDetail),
+      ('출석 기록', testAttendanceRecords),
+      ('출석 통계', testAttendanceStats),
+      ('QR 생성', testQRGenerate),
+      ('QR 정보', testQRInfo),
+      ('SMS 발송', testSmsSend),
+      ('SMS 기록', testSmsHistory),
+      ('일정 조회', testCalendarEvents),
+      ('생일 조회', testCalendarBirthdays),
+      ('가족 관계', testFamilyRelations),
+      ('가족 트리', testFamilyTree),
+      ('엑셀 교인', testExcelMembers),
+      ('엑셀 출석', testExcelAttendance),
+      ('출석 통계', testStatsAttendance),
+      ('대시보드 통계', testStatsDashboard),
+      ('사용자 정보', testUserInfo),
+      ('사용자 목록', testUserList),
+      ('교인증', testMemberCard),
+      ('QR 재생성', testCardQRRegenerate),
     ];
 
-    for (final test in tests) {
-      await test();
-      // 각 테스트 사이에 약간의 지연을 둠
+    setState(() {
+      _totalTests = tests.length;
+    });
+
+    for (int i = 0; i < tests.length; i++) {
+      final (testName, testFunction) = tests[i];
+      
+      setState(() {
+        _currentTestIndex = i + 1;
+      });
+      
+      _addDebugLog('📋 [${i + 1}/${tests.length}] $testName 테스트 실행 중...');
+      
+      try {
+        await testFunction();
+      } catch (e) {
+        _addDebugLog('❌ [$testName] 테스트 중 예외 발생: $e');
+      }
+      
+      // 각 테스트 사이에 약간의 지연을 둡
       await Future.delayed(const Duration(milliseconds: 500));
     }
+
+    _addDebugLog('✅ 전체 API 테스트 완료');
+    
+    // 테스트 결과 요약
+    final successCount = _testResults.values.where((result) => result.contains('성공')).length;
+    final failCount = _testResults.values.where((result) => result.contains('실패') || result.contains('오류')).length;
+    
+    _addDebugLog('📊 테스트 결과 요약: 성공 $successCount개, 실패 $failCount개');
+    
+    // 상세 결과 로그
+    _testResults.forEach((key, result) {
+      final status = result.contains('성공') ? '✅' : '❌';
+      _addDebugLog('$status [$key]: $result');
+    });
+
+    // 테스트 완료 후 상태 리셋
+    setState(() {
+      _runningAllTests = false;
+      _currentTestIndex = 0;
+      _totalTests = 0;
+    });
 
     // 모든 테스트 완료 메시지
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('모든 API 테스트가 완료되었습니다!'),
+        SnackBar(
+          content: Text('모든 API 테스트가 완료되었습니다! (성공: $successCount, 실패: $failCount)'),
           backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
       );
     }

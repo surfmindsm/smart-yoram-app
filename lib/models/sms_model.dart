@@ -23,13 +23,15 @@ class SmsRecord {
 
   factory SmsRecord.fromJson(Map<String, dynamic> json) {
     return SmsRecord(
-      id: json['id'],
-      recipientPhone: json['recipient_phone'],
+      id: json['id'] ?? 0,
+      recipientPhone: json['recipient_phone'] ?? '',
       recipientMemberId: json['recipient_member_id'],
-      message: json['message'],
-      smsType: json['sms_type'],
-      status: json['status'],
-      createdAt: DateTime.parse(json['created_at']),
+      message: json['message'] ?? '',
+      smsType: json['sms_type'] ?? 'general',
+      status: json['status'] ?? 'unknown',
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : DateTime.now(),
       sentAt: json['sent_at'] != null ? DateTime.parse(json['sent_at']) : null,
       errorMessage: json['error_message'],
     );
@@ -90,10 +92,10 @@ class SmsTemplate {
 
   factory SmsTemplate.fromJson(Map<String, dynamic> json) {
     return SmsTemplate(
-      id: json['id'],
-      name: json['name'],
-      message: json['message'],
-      smsType: json['sms_type'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      message: json['message'] ?? '',
+      smsType: json['sms_type'] ?? 'general',
       isActive: json['is_active'] ?? true,
     );
   }

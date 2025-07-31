@@ -85,6 +85,24 @@ class ApiService {
     T Function(Map<String, dynamic>)? fromJson,
   ) {
     try {
+      // JSON 파싱 전에 응답 내용 확인
+      if (response.body.isEmpty) {
+        return ApiResponse<T>(
+          success: response.statusCode >= 200 && response.statusCode < 300,
+          message: response.statusCode >= 200 && response.statusCode < 300 ? '성공' : 'HTTP ${response.statusCode}: 빈 응답',
+          data: null,
+        );
+      }
+      
+      // HTML 오류 페이지 감지 (Internal Server Error 등)
+      if (response.body.trim().startsWith('<') || response.body.contains('Internal Server Error')) {
+        return ApiResponse<T>(
+          success: false,
+          message: 'HTTP ${response.statusCode}: 서버 내부 오류 (HTML 응답)',
+          data: null,
+        );
+      }
+      
       final responseData = jsonDecode(response.body);
       
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -94,7 +112,15 @@ class ApiService {
             // 리스트 데이터 처리는 별도로 처리 필요
             data = responseData as T;
           } else if (responseData is Map<String, dynamic>) {
-            data = fromJson(responseData);
+            try {
+              data = fromJson(responseData);
+            } catch (modelError) {
+              return ApiResponse<T>(
+                success: false,
+                message: '데이터 모델 변환 오류: ${modelError.toString()}',
+                data: null,
+              );
+            }
           }
         } else {
           data = responseData as T?;
@@ -106,14 +132,17 @@ class ApiService {
           data: data,
         );
       } else {
-        String errorMessage = '알 수 없는 오류가 발생했습니다.';
+        String errorMessage = 'HTTP ${response.statusCode}: 알 수 없는 오류가 발생했습니다.';
         
         if (responseData is Map<String, dynamic>) {
           errorMessage = responseData['detail']?.toString() ?? 
                          responseData['message']?.toString() ?? 
-                         errorMessage;
+                         'HTTP ${response.statusCode}: ${responseData.toString()}';
+        } else if (responseData is List) {
+          // FastAPI 유효성 검사 오류 형식 처리
+          errorMessage = responseData.toString();
         } else if (responseData is String) {
-          errorMessage = responseData;
+          errorMessage = 'HTTP ${response.statusCode}: $responseData';
         }
         
         return ApiResponse<T>(
@@ -123,9 +152,15 @@ class ApiService {
         );
       }
     } catch (e) {
+      // JSON 파싱 실패 시 원본 응답도 포함
+      String errorDetail = e.toString();
+      if (response.body.isNotEmpty && response.body.length < 1000) {
+        errorDetail += '\n원본 응답: ${response.body}';
+      }
+      
       return ApiResponse<T>(
         success: false,
-        message: '응답 파싱 오류: ${e.toString()}',
+        message: 'HTTP ${response.statusCode} 응답 파싱 오류: $errorDetail',
         data: null,
       );
     }

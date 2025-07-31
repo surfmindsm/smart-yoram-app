@@ -117,8 +117,8 @@ class MemberCardQRCode {
 
   factory MemberCardQRCode.fromJson(Map<String, dynamic> json) {
     return MemberCardQRCode(
-      code: json['code'],
-      imageBase64: json['image_base64'],
+      code: json['code'] ?? '',
+      imageBase64: json['image_base64'] ?? '',
     );
   }
 
