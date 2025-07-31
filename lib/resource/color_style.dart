@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Tweak Color Palette
-class TweakColorPalette {
+class AppColor {
   /// Business subject background color
   static const Color primary100 = Color.fromRGBO(239, 243, 255, 1);
   static const Color primary2 = Color.fromRGBO(236, 240, 255, 1);

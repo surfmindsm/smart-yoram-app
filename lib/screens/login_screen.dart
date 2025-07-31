@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_yoram_app/resource/text_style.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
 import '../models/api_response.dart';
 import '../services/user_service.dart';
 import '../widget/widgets.dart';
+import '../resource/text_style.dart';
+import '../resource/color_style.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColor.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -73,44 +76,26 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: constraints.maxWidth > 600 ? 120.w : 100.w,
                             height: constraints.maxWidth > 600 ? 120.w : 100.w,
                             decoration: BoxDecoration(
-                              color: Colors.blue[50],
+                              color: AppColor.primary2,
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.blue[200]!,
-                                width: 2.w,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 15.r,
-                                  offset: Offset(0, 5.h),
-                                ),
-                              ],
                             ),
                             child: Icon(
                               Icons.church,
                               size: constraints.maxWidth > 600 ? 60.w : 50.w,
-                              color: Colors.blue[700],
+                              color: AppColor.primary900,
                             ),
                           ),
                           SizedBox(height: 24.h),
                           Text(
                             '스마트 교회요람',
-                            style: TextStyle(
-                              fontSize:
-                                  constraints.maxWidth > 600 ? 32.sp : 28.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue[700],
-                            ),
+                            style: AppTextStyle(color: AppColor.secondary07)
+                                .title1(),
                           ),
                           SizedBox(height: 8.h),
                           Text(
                             '교회 생활의 새로운 시작',
-                            style: TextStyle(
-                              fontSize:
-                                  constraints.maxWidth > 600 ? 18.sp : 16.sp,
-                              color: Colors.grey[600],
-                            ),
+                            style:
+                                AppTextStyle(color: AppColor.secondary07).b2(),
                           ),
                         ],
                       ),
@@ -121,9 +106,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     // 로그인 방식 선택 탭
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: AppColor.secondary01,
                         borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: Colors.grey[200]!),
+                        border: Border.all(color: Colors.grey.shade200),
                       ),
                       child: Row(
                         children: [
@@ -134,24 +119,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                 padding: EdgeInsets.symmetric(vertical: 16.h),
                                 decoration: BoxDecoration(
                                   color: _loginType == 'email'
-                                      ? Colors.blue[700]
+                                      ? AppColor.primary900
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(12.r),
                                 ),
                                 child: Text(
                                   '이메일 로그인',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: constraints.maxWidth > 600
-                                        ? 16.sp
-                                        : 14.sp,
+                                  style: AppTextStyle(
                                     color: _loginType == 'email'
                                         ? Colors.white
-                                        : Colors.grey[600],
-                                    fontWeight: _loginType == 'email'
+                                        : Colors.grey.shade600,
+                                    weight: _loginType == 'email'
                                         ? FontWeight.bold
                                         : FontWeight.normal,
-                                  ),
+                                  ).h3(),
                                 ),
                               ),
                             ),
@@ -163,24 +145,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                 padding: EdgeInsets.symmetric(vertical: 16.h),
                                 decoration: BoxDecoration(
                                   color: _loginType == 'phone'
-                                      ? Colors.blue[700]
+                                      ? AppColor.primary900
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(10.r),
                                 ),
                                 child: Text(
                                   '전화번호 로그인',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: constraints.maxWidth > 600
-                                        ? 16.sp
-                                        : 14.sp,
+                                  style: AppTextStyle(
                                     color: _loginType == 'phone'
                                         ? Colors.white
-                                        : Colors.grey[600],
-                                    fontWeight: _loginType == 'phone'
+                                        : Colors.grey.shade600,
+                                    weight: _loginType == 'phone'
                                         ? FontWeight.bold
                                         : FontWeight.normal,
-                                  ),
+                                  ).h3(),
                                 ),
                               ),
                             ),
@@ -197,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _usernameController,
                       hintText: _loginType == 'email'
                           ? 'user@example.com'
-                          : '010-1234-5678',
+                          : '01012345678',
                       prefixIcon: Icon(
                         _loginType == 'email' ? Icons.email : Icons.phone,
                       ),
@@ -256,6 +235,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     // 로그인 버튼
                     CommonButton(
                       text: '로그인',
+                      fontStyle: AppTextStyle(
+                        color: Colors.white,
+                      ).buttonLarge(),
                       type: ButtonType.primary,
                       width: double.infinity,
                       isLoading: isLoading,
@@ -273,14 +255,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             margin: EdgeInsets.only(bottom: 20.h),
                             padding: EdgeInsets.all(16.w),
                             decoration: BoxDecoration(
-                              color: Colors.orange[50],
+                              color: Colors.orange.shade50,
                               borderRadius: BorderRadius.circular(12.r),
-                              border: Border.all(color: Colors.orange[200]!),
+                              border: Border.all(color: Colors.orange.shade200),
                             ),
                             child: Row(
                               children: [
                                 Icon(Icons.warning_amber,
-                                    color: Colors.orange[700], size: 20.w),
+                                    color: Colors.orange.shade700, size: 20.w),
                                 SizedBox(width: 8.w),
                                 Expanded(
                                   child: Text(
@@ -297,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Text(
                                     '활성화',
                                     style: TextStyle(
-                                      color: Colors.orange[700],
+                                      color: Colors.orange.shade700,
                                       fontSize: 12.sp,
                                     ),
                                   ),
@@ -319,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(
                             fontSize:
                                 constraints.maxWidth > 600 ? 16.sp : 14.sp,
-                            color: Colors.blue[700],
+                            color: Colors.blue.shade700,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -560,7 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[700],
+                backgroundColor: Colors.blue.shade700,
                 foregroundColor: Colors.white,
               ),
               child: isLoading
@@ -807,7 +789,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
         ElevatedButton(
           onPressed: _isLoading ? null : _changePassword,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue[700],
+            backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
           ),
           child: _isLoading

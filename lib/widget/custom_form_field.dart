@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class CustomFormField extends StatelessWidget {
   final String label;
   final String? hintText;
+  final TextStyle? hintStyle;
   final TextEditingController? controller;
   final String? initialValue;
   final ValueChanged<String>? onChanged;
@@ -20,6 +21,7 @@ class CustomFormField extends StatelessWidget {
     super.key,
     required this.label,
     this.hintText,
+    this.hintStyle,
     this.controller,
     this.initialValue,
     this.onChanged,
@@ -56,6 +58,13 @@ class CustomFormField extends StatelessWidget {
                   fontSize: 16,
                 ),
               ),
+              if (hintText != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  hintText!,
+                  style: hintStyle,
+                ),
+              ],
             ],
           ],
         ),

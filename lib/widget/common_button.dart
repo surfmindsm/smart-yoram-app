@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_yoram_app/resource/text_style.dart';
+import 'package:smart_yoram_app/resource/color_style.dart';
 
 /// 앱에서 공통으로 사용되는 버튼 위젯들
 class CommonButton extends StatelessWidget {
@@ -9,6 +12,7 @@ class CommonButton extends StatelessWidget {
   final bool isLoading;
   final double? width;
   final EdgeInsetsGeometry? padding;
+  final TextStyle? fontStyle;
 
   const CommonButton({
     super.key,
@@ -19,6 +23,7 @@ class CommonButton extends StatelessWidget {
     this.isLoading = false,
     this.width,
     this.padding,
+    this.fontStyle,
   });
 
   @override
@@ -39,20 +44,28 @@ class CommonButton extends StatelessWidget {
                 Icon(icon),
                 const SizedBox(width: 8),
               ],
-              Text(text),
+              Text(
+                text,
+                style: fontStyle,
+              ),
             ],
           );
 
     Widget button;
-    
+
     switch (type) {
       case ButtonType.primary:
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue[700],
+            backgroundColor: AppColor.primary900,
             foregroundColor: Colors.white,
-            padding: padding ?? const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            padding: padding ??
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            elevation: 0.0,
           ),
           child: child,
         );
@@ -61,9 +74,14 @@ class CommonButton extends StatelessWidget {
         button = OutlinedButton(
           onPressed: isLoading ? null : onPressed,
           style: OutlinedButton.styleFrom(
-            side: BorderSide(color: Colors.blue[700]!),
-            foregroundColor: Colors.blue[700],
-            padding: padding ?? const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            side: BorderSide(color: AppColor.primary900),
+            foregroundColor: AppColor.primary900,
+            padding: padding ??
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            elevation: 0.0,
           ),
           child: child,
         );
@@ -72,8 +90,13 @@ class CommonButton extends StatelessWidget {
         button = TextButton(
           onPressed: isLoading ? null : onPressed,
           style: TextButton.styleFrom(
-            foregroundColor: Colors.blue[700],
-            padding: padding ?? const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            foregroundColor: AppColor.primary900,
+            padding: padding ??
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            elevation: 0.0,
           ),
           child: child,
         );
@@ -82,9 +105,14 @@ class CommonButton extends StatelessWidget {
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
+            backgroundColor: AppColor.error,
             foregroundColor: Colors.white,
-            padding: padding ?? const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            padding: padding ??
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            elevation: 0.0,
           ),
           child: child,
         );
@@ -109,6 +137,7 @@ class CommonButton extends StatelessWidget {
     bool isLoading = false,
     double? width,
     EdgeInsetsGeometry? padding,
+    TextStyle? fontStyle,
   }) {
     return CommonButton(
       text: text,
@@ -118,6 +147,7 @@ class CommonButton extends StatelessWidget {
       isLoading: isLoading,
       width: width,
       padding: padding,
+      fontStyle: fontStyle,
     );
   }
 
@@ -128,6 +158,7 @@ class CommonButton extends StatelessWidget {
     bool isLoading = false,
     double? width,
     EdgeInsetsGeometry? padding,
+    TextStyle? fontStyle,
   }) {
     return CommonButton(
       text: text,
@@ -137,6 +168,7 @@ class CommonButton extends StatelessWidget {
       isLoading: isLoading,
       width: width,
       padding: padding,
+      fontStyle: fontStyle,
     );
   }
 
@@ -147,6 +179,7 @@ class CommonButton extends StatelessWidget {
     bool isLoading = false,
     double? width,
     EdgeInsetsGeometry? padding,
+    TextStyle? fontStyle,
   }) {
     return CommonButton(
       text: text,
@@ -156,6 +189,7 @@ class CommonButton extends StatelessWidget {
       isLoading: isLoading,
       width: width,
       padding: padding,
+      fontStyle: fontStyle,
     );
   }
 
@@ -166,6 +200,7 @@ class CommonButton extends StatelessWidget {
     bool isLoading = false,
     double? width,
     EdgeInsetsGeometry? padding,
+    TextStyle? fontStyle,
   }) {
     return CommonButton(
       text: text,
@@ -175,6 +210,7 @@ class CommonButton extends StatelessWidget {
       isLoading: isLoading,
       width: width,
       padding: padding,
+      fontStyle: fontStyle,
     );
   }
 }
