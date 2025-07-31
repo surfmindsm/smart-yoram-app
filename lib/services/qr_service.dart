@@ -39,7 +39,7 @@ class QRService {
   Future<ApiResponse<QRCodeInfo>> getQRCodeInfo(String code) async {
     try {
       final response = await _apiService.get<QRCodeInfo>(
-        '${ApiConfig.qrCodes}$code',
+        '${ApiConfig.qrCodes}qr_info/$code',
         fromJson: (json) => QRCodeInfo.fromJson(json),
       );
 
