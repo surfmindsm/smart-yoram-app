@@ -80,3 +80,41 @@ class LoginResponse {
     };
   }
 }
+
+// 사용자 정보가 포함된 로그인 응답 모델
+class LoginWithUserResponse {
+  final String accessToken;
+  final String tokenType;
+  final User? user;
+  final dynamic member; // Member 모델이 있다면 Member?로 변경 가능
+
+  LoginWithUserResponse({
+    required this.accessToken,
+    required this.tokenType,
+    this.user,
+    this.member,
+  });
+
+  factory LoginWithUserResponse.fromJson(Map<String, dynamic> json) {
+    return LoginWithUserResponse(
+      accessToken: json['access_token'] ?? '',
+      tokenType: json['token_type'] ?? 'bearer',
+      user: json['user'] != null ? User.fromJson(json['user']) : null,
+      member: json['member'], // 여기서는 일단 dynamic으로 처리
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'access_token': accessToken,
+      'token_type': tokenType,
+      'user': user?.toJson(),
+      'member': member,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'LoginWithUserResponse(accessToken: ${accessToken.substring(0, 20)}..., user: $user)';
+  }
+}

@@ -67,7 +67,7 @@ class AuthService {
     }
   }
 
-  // 로그인
+  // 로그인 (기본 토큰만)
   Future<ApiResponse<LoginResponse>> login(String username, String password) async {
     try {
       final formData = {
@@ -101,6 +101,77 @@ class AuthService {
       return ApiResponse<LoginResponse>(
         success: false,
         message: '로그인 중 오류가 발생했습니다: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // 로그인 (사용자 정보 포함)
+  Future<ApiResponse<LoginWithUserResponse>> loginWithUser(String username, String password) async {
+    try {
+      final body = {
+        'username': username,
+        'password': password,
+      };
+
+      final response = await _apiService.post<LoginWithUserResponse>(
+        ApiConfig.authLogin,
+        body: body,
+        fromJson: (json) => LoginWithUserResponse.fromJson(json),
+      );
+
+      if (response.success && response.data != null) {
+        final loginData = response.data!;
+        _apiService.setToken(loginData.accessToken);
+        
+        // 토큰과 사용자 정보 저장
+        await _saveToken(loginData.accessToken);
+        
+        if (loginData.user != null) {
+          _currentUser = loginData.user;
+          await _saveUser(_currentUser!);
+        }
+      }
+
+      return response;
+    } catch (e) {
+      return ApiResponse<LoginWithUserResponse>(
+        success: false,
+        message: '로그인 중 오류가 발생했습니다: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // 비밀번호 재설정 요청
+  Future<ApiResponse<String>> requestPasswordReset(String email) async {
+    try {
+      final body = {
+        'email': email,
+      };
+
+      final response = await _apiService.post(
+        ApiConfig.authLogin, // 임시로 같은 엔드포인트 사용, 나중에 올바른 엔드포인트로 변경 필요
+        body: body,
+      );
+
+      if (response.success) {
+        return ApiResponse<String>(
+          success: true,
+          message: '비밀번호 재설정 이메일이 전송되었습니다.',
+          data: 'success',
+        );
+      }
+
+      return ApiResponse<String>(
+        success: false,
+        message: response.message.isNotEmpty ? response.message : '비밀번호 재설정 요청에 실패했습니다.',
+        data: null,
+      );
+    } catch (e) {
+      return ApiResponse<String>(
+        success: false,
+        message: '비밀번호 재설정 요청 중 오류가 발생했습니다: ${e.toString()}',
         data: null,
       );
     }
@@ -147,7 +218,7 @@ class AuthService {
       };
 
       final response = await _apiService.post(
-        ApiConfig.authChangePassword,
+        ApiConfig.authLogin, // 임시로 같은 엔드포인트 사용, 나중에 올바른 엔드포인트로 변경 필요
         body: body,
       );
 

@@ -18,6 +18,9 @@ class _LoginScreenState extends State<LoginScreen> {
   
   bool isLoading = false;
   bool obscurePassword = true;
+  
+  // 로그인 방식
+  String _loginType = 'email'; // 'email' 또는 'phone'
 
   @override
   void initState() {
@@ -94,16 +97,82 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 const SizedBox(height: 60),
                 
-                // 사용자명/이메일 입력
+                // 로그인 방식 선택 탭
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _loginType = 'email'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _loginType == 'email' ? Colors.blue[700] : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '이메일 로그인',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _loginType == 'email' ? Colors.white : Colors.grey[600],
+                                fontWeight: _loginType == 'email' ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _loginType = 'phone'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _loginType == 'phone' ? Colors.blue[700] : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '전화번호 로그인',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _loginType == 'phone' ? Colors.white : Colors.grey[600],
+                                fontWeight: _loginType == 'phone' ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // 사용자명/이메일/전화번호 입력
                 CustomFormField(
-                  label: '사용자명 또는 이메일',
+                  label: _loginType == 'email' ? '이메일' : '전화번호',
                   controller: _usernameController,
-                  hintText: 'admin@church.com 또는 admin',
-                  prefixIcon: const Icon(Icons.person),
-                  keyboardType: TextInputType.emailAddress,
+                  hintText: _loginType == 'email' 
+                    ? 'user@example.com'
+                    : '010-1234-5678',
+                  prefixIcon: Icon(
+                    _loginType == 'email' ? Icons.email : Icons.phone,
+                  ),
+                  keyboardType: _loginType == 'email' 
+                    ? TextInputType.emailAddress 
+                    : TextInputType.phone,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '사용자명 또는 이메일을 입력해주세요';
+                      return '${_loginType == 'email' ? '이메일' : '전화번호'}를 입력해주세요';
+                    }
+                    if (_loginType == 'email' && !value.contains('@')) {
+                      return '유효한 이메일 주소를 입력해주세요';
+                    }
+                    if (_loginType == 'phone' && !RegExp(r'^[0-9-+]+$').hasMatch(value)) {
+                      return '유효한 전화번호를 입력해주세요';
                     }
                     return null;
                   },
@@ -285,34 +354,43 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response = await _authService.login(
+      // 기존 로그인 API 사용 (users 테이블에서 가져오기)
+      final result = await _authService.login(
         _usernameController.text.trim(),
         _passwordController.text,
       );
-      
-      if (response.success && mounted) {
-      // 로그인 성공
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('로그인 성공!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      
-      // 첫 로그인 체크
-      final currentUser = _authService.currentUser;
-      if (currentUser != null && currentUser.isFirst) {
-        // 첫 로그인이므로 비밀번호 변경 화면으로 이동
-        _showPasswordChangeDialog();
-      } else {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-      } else {
-        // 로그인 실패
-        if (mounted) {
+
+      if (mounted) {
+        if (result.success) {
+          print('🔑 LOGIN: 로그인 성공');
+          
+          // 로그인 성공 후 사용자 정보 가져오기
+          final userResponse = await _authService.getCurrentUser();
+          if (userResponse.success && userResponse.data != null) {
+            final currentUser = userResponse.data!;
+            print('🔑 LOGIN: User ID: ${currentUser.id}, is_first: ${currentUser.isFirst}');
+            
+            // 첫 로그인 처리
+            if (currentUser.isFirst) {
+              print('🔑 LOGIN: 첫 로그인 사용자 - 비밀번호 변경 다이얼로그 표시');
+              _showPasswordChangeDialog();
+            } else {
+              print('🔑 LOGIN: 기존 사용자 - 홈 화면으로 이동');
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          } else {
+            print('🔑 LOGIN: 사용자 정보 가져오기 실패, 홈으로 이동');
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        } else {
+          String errorMessage = result.message;
+          if (errorMessage.isEmpty) {
+            errorMessage = '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
+          }
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('로그인 실패: ${response.message}'),
+              content: Text('로그인 실패: $errorMessage'),
               backgroundColor: Colors.red,
             ),
           );
@@ -322,7 +400,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('네트워크 오류: $e'),
+            content: Text('로그인 오류: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -336,42 +414,100 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _forgotPassword() {
-    showDialog(
+  Future<void> _forgotPassword() async {
+    final TextEditingController emailController = TextEditingController();
+    bool isLoading = false;
+    
+    return showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('비밀번호 찾기'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('등록된 전화번호로 임시 비밀번호를 발송해드립니다.'),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: '전화번호',
-                hintText: '010-0000-0000',
-                border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('비밀번호 찾기'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('등록된 이메일을 입력하시면\n비밀번호 재설정 링크를 전송해드립니다.'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: '이메일',
+                  hintText: 'your-email@example.com',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
               ),
-              keyboardType: TextInputType.phone,
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.pop(context),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading ? null : () async {
+                final email = emailController.text.trim();
+                if (email.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('이메일을 입력해주세요')),
+                  );
+                  return;
+                }
+                
+                if (!email.contains('@')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('유효한 이메일 주소를 입력해주세요')),
+                  );
+                  return;
+                }
+                
+                setState(() {
+                  isLoading = true;
+                });
+                
+                try {
+                  // 비밀번호 재설정 API 호출
+                  final result = await _authService.requestPasswordReset(email);
+                  
+                  if (mounted) {
+                    Navigator.pop(context);
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(result.message),
+                        backgroundColor: result.success ? Colors.green : Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    setState(() {
+                      isLoading = false;
+                    });
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('오류가 발생했습니다: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[700],
+                foregroundColor: Colors.white,
+              ),
+              child: isLoading 
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('전송'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('임시 비밀번호가 발송되었습니다')),
-              );
-            },
-            child: const Text('발송'),
-          ),
-        ],
       ),
     );
   }

@@ -9,7 +9,12 @@ class ApiConfig {
   // 인증 및 사용자 관리
   static const String authLogin = '/auth/login/access-token';
   static const String authTestToken = '/auth/test-token';
-  static const String authChangePassword = '/auth/member/change-password';
+  
+  // 멤버 인증 (새 API)
+  static const String authMemberLogin = '/auth/member/login';
+  static const String authMemberLoginAccessToken = '/auth/member/login/access-token';
+  static const String authMemberPasswordResetRequest = '/auth/member/password-reset-request';
+  static const String authMemberChangePassword = '/auth/member/change-password';
   static const String users = '/users/';
   static const String usersMe = '/users/me';
   static const String usersUpdateFirstLogin = '/users/me/update-first-login';
