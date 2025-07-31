@@ -12,6 +12,7 @@ class QRService {
 
   // 교인의 QR 코드 생성
   Future<ApiResponse<QRCodeInfo>> generateQRCode(int memberId) async {
+    print('🔔 QR_SERVICE: generateQRCode 시작 - memberId: $memberId');
     try {
       final requestBody = {
         'member_id': memberId,
@@ -19,14 +20,24 @@ class QRService {
         'expires_at': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
       };
       
+      print('🔔 QR_SERVICE: 요청 데이터: $requestBody');
+      final url = '${ApiConfig.qrCodes}generate/$memberId';
+      print('🔔 QR_SERVICE: API URL: $url');
+      
       final response = await _apiService.post<QRCodeInfo>(
-        '${ApiConfig.qrCodes}generate/$memberId',
+        url,
         body: requestBody,
         fromJson: (json) => QRCodeInfo.fromJson(json),
       );
+      
+      print('🔔 QR_SERVICE: API 응답 - success: ${response.success}, message: ${response.message}');
+      if (response.data != null) {
+        print('🔔 QR_SERVICE: QR 코드 생성 성공 - code: ${response.data!.code}');
+      }
 
       return response;
     } catch (e) {
+      print('🔔 QR_SERVICE: generateQRCode 예외 - $e');
       return ApiResponse<QRCodeInfo>(
         success: false,
         message: 'QR 코드 생성 실패: ${e.toString()}',

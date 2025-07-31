@@ -108,18 +108,25 @@ class AuthService {
 
   // 현재 사용자 정보 조회
   Future<ApiResponse<User>> getCurrentUser() async {
+    print('💬 AUTH: getCurrentUser 시작');
     try {
+      print('💬 AUTH: API 요청 - ${ApiConfig.usersMe}');
       final response = await _apiService.get<User>(
         ApiConfig.usersMe,
         fromJson: (json) => User.fromJson(json),
       );
-
+      
+      print('💬 AUTH: API 응답 - success: ${response.success}');
       if (response.success && response.data != null) {
         _currentUser = response.data;
+        print('💬 AUTH: 사용자 정보 저장 성공 - ID: ${response.data!.id}');
+      } else {
+        print('💬 AUTH: 사용자 정보 없음 - message: ${response.message}');
       }
 
       return response;
     } catch (e) {
+      print('💬 AUTH: getCurrentUser 예외 - $e');
       return ApiResponse<User>(
         success: false,
         message: '사용자 정보 조회 실패: ${e.toString()}',

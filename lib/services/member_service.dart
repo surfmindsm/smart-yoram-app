@@ -59,7 +59,7 @@ class MemberService {
     }
   }
 
-  // 특정 교인 상세 조회
+  // 특정 교인 상세 조회 (member_id로)
   Future<ApiResponse<Member>> getMember(int memberId) async {
     try {
       final response = await _apiService.get<Member>(
@@ -72,6 +72,50 @@ class MemberService {
       return ApiResponse<Member>(
         success: false,
         message: '교인 정보 조회 실패: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // user_id로 교인 조회 (users-members 매핑)
+  Future<ApiResponse<Member>> getMemberByUserId(int userId) async {
+    print('🔍 MEMBER_SERVICE: user_id $userId로 member 조회 시작');
+    try {
+      // 전체 members 목록에서 user_id로 필터링하는 방식
+      // API에 /by-user 엔드포인트가 없어서 대안 방식 사용
+      print('🔍 MEMBER_SERVICE: 전체 members 목록에서 user_id $userId 검색');
+      
+      final response = await getMembers(limit: 1000); // 충분히 큰 limit
+      
+      if (response.success && response.data != null) {
+        // user_id가 일치하는 member 찾기
+        final members = response.data!;
+        print('🔍 MEMBER_SERVICE: 총 ${members.length}개 member 조회됨');
+        
+        final matchedMember = members.firstWhere(
+          (member) => member.userId == userId,
+          orElse: () => throw Exception('Member not found'),
+        );
+        
+        print('🔍 MEMBER_SERVICE: 성공! user_id $userId → member_id ${matchedMember.id}');
+        return ApiResponse<Member>(
+          success: true,
+          message: '매핑 성공',
+          data: matchedMember,
+        );
+      } else {
+        print('🔍 MEMBER_SERVICE: members 목록 조회 실패 - ${response.message}');
+        return ApiResponse<Member>(
+          success: false,
+          message: 'Members 목록 조회 실패: ${response.message}',
+          data: null,
+        );
+      }
+    } catch (e) {
+      print('🔍 MEMBER_SERVICE: 예외 발생 - $e');
+      return ApiResponse<Member>(
+        success: false,
+        message: 'user_id로 교인 조회 실패: ${e.toString()}',
         data: null,
       );
     }

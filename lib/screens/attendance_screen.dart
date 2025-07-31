@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter/services.dart';
 import '../models/attendance.dart';
+import '../models/qr_code.dart';
+import '../services/attendance_service.dart';
+import '../services/qr_service.dart';
+import '../services/auth_service.dart';
+import '../services/member_service.dart';
+
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
@@ -11,22 +18,31 @@ class AttendanceScreen extends StatefulWidget {
 
 class _AttendanceScreenState extends State<AttendanceScreen>
     with SingleTickerProviderStateMixin {
-  final supabase = Supabase.instance.client;
   late TabController _tabController;
   
-  String selectedServiceType = '주일예배';
-  DateTime selectedDate = DateTime.now();
-  List<Attendance> attendanceList = [];
-  AttendanceStats? stats;
-  bool isLoading = true;
+  // QR 코드 관련
+  QRCodeInfo? myQRCode;
+  bool isLoadingQR = false;
+  
+  // 출석 기록 관련
+  List<Attendance> myAttendanceHistory = [];
+  bool isLoadingHistory = false;
+  
+  // 출석 통계 관련
+  Map<String, dynamic> attendanceStats = {};
+  bool isLoadingStats = false;
+  
+  final AttendanceService _attendanceService = AttendanceService();
+  final QRService _qrService = QRService();
+  final AuthService _authService = AuthService();
+  final MemberService _memberService = MemberService();
 
-  final List<String> serviceTypes = ['주일예배', '수요예배', '새벽예배', '금요기도회'];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadAttendanceData();
+    _loadInitialData();
   }
 
   @override
@@ -35,79 +51,150 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     super.dispose();
   }
 
-  Future<void> _loadAttendanceData() async {
-    setState(() => isLoading = true);
-    
+  Future<void> _loadInitialData() async {
+    await Future.wait([
+      _loadMyQRCode(),
+      _loadMyAttendanceHistory(),
+      _loadAttendanceStats(),
+    ]);
+  }
+
+  // QR 코드 로드
+  Future<void> _loadMyQRCode() async {
+    print('🔍 QR_LOAD: QR 코드 로드 시작');
+    setState(() => isLoadingQR = true);
     try {
-      // 임시 출석 데이터 생성
-      attendanceList = _generateSampleAttendance();
-      stats = _generateSampleStats();
+      print('🔍 QR_LOAD: 사용자 정보 조회 시작');
+      final userResponse = await _authService.getCurrentUser();
+      print('🔍 QR_LOAD: 사용자 응답 - success: ${userResponse.success}, data: ${userResponse.data != null}');
       
-      setState(() => isLoading = false);
+      if (userResponse.success && userResponse.data != null) {
+        final userId = userResponse.data!.id;
+        print('🔍 QR_LOAD: 사용자 ID: $userId');
+        
+        // 올바른 매핑: user_id → member_id → QR 코드
+        print('🔍 QR_LOAD: members 테이블에서 user_id $userId로 member 조회');
+        final memberResponse = await _memberService.getMemberByUserId(userId);
+        
+        if (memberResponse.success && memberResponse.data != null) {
+          final memberId = memberResponse.data!.id;
+          print('🔍 QR_LOAD: 매핑 성공! user_id $userId → member_id $memberId');
+          
+          // member_id로 QR 코드 생성 (최신 QR 가져오기)
+          final qrResponse = await _qrService.generateQRCode(memberId);
+          
+          if (qrResponse.success && qrResponse.data != null) {
+            myQRCode = qrResponse.data;
+            print('🔍 QR_LOAD: QR 코드 로드 성공! code: ${myQRCode!.code}');
+          } else {
+            print('🔍 QR_LOAD: QR 코드 생성 실패 - ${qrResponse.message}');
+            await _createTemporaryQRCode();
+          }
+        } else {
+          print('🔍 QR_LOAD: user_id $userId에 해당하는 member를 찾을 수 없음');
+          print('🔍 QR_LOAD: 오류: ${memberResponse.message}');
+          await _createTemporaryQRCode();
+        }
+        
+        if (myQRCode == null) {
+          print('🔍 QR_LOAD: 모든 member_id 시도 실패, 임시 QR 코드 생성');
+          await _createTemporaryQRCode();
+        }
+      } else {
+        print('🔍 QR_LOAD: 사용자 정보 조회 실패 - message: ${userResponse.message}');
+      }
     } catch (e) {
-      setState(() => isLoading = false);
+      print('🔍 QR_LOAD: 예외 발생 - $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('출석 정보 로드 실패: $e')),
+          SnackBar(content: Text('QR 코드 로드 실패: $e')),
         );
       }
+    } finally {
+      setState(() => isLoadingQR = false);
+      print('🔍 QR_LOAD: QR 코드 로드 완료');
+    }
+  }
+  
+
+  // 임시 QR 코드 생성 (Member가 없는 경우)
+  Future<void> _createTemporaryQRCode() async {
+    print('🔍 QR_LOAD: 임시 QR 코드 생성 시작');
+    
+    // 임시 QR 코드 데이터 생성
+    myQRCode = QRCodeInfo(
+      id: 999,
+      code: 'TEMP_QR_${DateTime.now().millisecondsSinceEpoch}',
+      memberId: 999,
+      memberName: '임시 사용자',
+      isActive: true,
+      createdAt: DateTime.now(),
+    );
+    
+    print('🔍 QR_LOAD: 임시 QR 코드 생성 완료 - code: ${myQRCode!.code}');
+  }
+
+  // 출석 기록 로드
+  Future<void> _loadMyAttendanceHistory() async {
+    setState(() => isLoadingHistory = true);
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      if (userResponse.success && userResponse.data != null) {
+        myAttendanceHistory = await _attendanceService.getAttendanceHistory(userResponse.data!.id.toString());
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('출석 기록 로드 실패: $e')),
+        );
+      }
+    } finally {
+      setState(() => isLoadingHistory = false);
     }
   }
 
-  List<Attendance> _generateSampleAttendance() {
-    return [
-      Attendance(
-        id: '1',
-        memberId: '1',
-        memberName: '김목사',
-        serviceDate: selectedDate,
-        serviceType: selectedServiceType,
-        present: true,
-      ),
-      Attendance(
-        id: '2',
-        memberId: '2',
-        memberName: '이장로',
-        serviceDate: selectedDate,
-        serviceType: selectedServiceType,
-        present: true,
-      ),
-      Attendance(
-        id: '3',
-        memberId: '3',
-        memberName: '박권사',
-        serviceDate: selectedDate,
-        serviceType: selectedServiceType,
-        present: false,
-      ),
-      Attendance(
-        id: '4',
-        memberId: '4',
-        memberName: '최집사',
-        serviceDate: selectedDate,
-        serviceType: selectedServiceType,
-        present: true,
-      ),
-      Attendance(
-        id: '5',
-        memberId: '5',
-        memberName: '정성도',
-        serviceDate: selectedDate,
-        serviceType: selectedServiceType,
-        present: true,
-      ),
-    ];
+  // 출석 통계 로드
+  Future<void> _loadAttendanceStats() async {
+    setState(() => isLoadingStats = true);
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      if (userResponse.success && userResponse.data != null) {
+        attendanceStats = await _attendanceService.getMyAttendanceStats(userResponse.data!.id.toString());
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('출석 통계 로드 실패: $e')),
+        );
+      }
+    } finally {
+      setState(() => isLoadingStats = false);
+    }
   }
 
-  AttendanceStats _generateSampleStats() {
-    int presentCount = attendanceList.where((a) => a.present).length;
-    return AttendanceStats(
-      totalMembers: attendanceList.length,
-      presentMembers: presentCount,
-      attendanceRate: (presentCount / attendanceList.length * 100),
-      byDistrict: {'1구역': 2, '2구역': 1, '3구역': 1},
-      byPosition: {'교역자': 1, '장로': 1, '권사': 0, '집사': 1, '성도': 1},
-    );
+  // QR 코드 새로고침
+  Future<void> _refreshQRCode() async {
+    setState(() => isLoadingQR = true);
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      if (userResponse.success && userResponse.data != null) {
+        final qrResponse = await _qrService.generateQRCode(userResponse.data!.id);
+        if (qrResponse.success && qrResponse.data != null) {
+          myQRCode = qrResponse.data;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('QR 코드가 새로 생성되었습니다')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('QR 코드 생성 실패: $e')),
+        );
+      }
+    } finally {
+      setState(() => isLoadingQR = false);
+    }
   }
 
   @override
@@ -122,326 +209,348 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: const [
-            Tab(text: '출석 체크'),
-            Tab(text: '내 출석 기록'),
-            Tab(text: '통계'),
+            Tab(icon: Icon(Icons.qr_code), text: '내 QR 코드'),
+            Tab(icon: Icon(Icons.history), text: '출석 기록'),
+            Tab(icon: Icon(Icons.analytics), text: '내 출석률'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildAttendanceCheckTab(),
-          _buildAttendanceStatusTab(),
-          _buildAttendanceStatsTab(),
+          _buildMyQRCodeTab(),
+          _buildAttendanceHistoryTab(),
+          _buildMyStatsTab(),
         ],
       ),
     );
   }
 
-  Widget _buildAttendanceCheckTab() {
-    return Column(
-      children: [
-        // 날짜 및 예배 선택
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.grey[50],
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: _selectDate,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.calendar_today, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${selectedDate.year}.${selectedDate.month.toString().padLeft(2, '0')}.${selectedDate.day.toString().padLeft(2, '0')}',
-                            ),
-                          ],
-                        ),
+  // 내 QR 코드 탭
+  Widget _buildMyQRCodeTab() {
+    return RefreshIndicator(
+      onRefresh: _loadMyQRCode,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 설명 카드
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: Colors.blue,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '출석 확인 방법',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: selectedServiceType,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                      items: serviceTypes.map((type) {
-                        return DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            selectedServiceType = value;
-                          });
-                          _loadAttendanceData();
-                        }
-                      },
+                    const SizedBox(height: 8),
+                    const Text(
+                      '아래 QR 코드를 교회의 출석 체크 스캐너에 스캔해주세요.\n예배 시작 전후에 출석 확인이 가능합니다.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              
-              // QR 출석 체크 버튼
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _showQRScanner,
-                  icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('QR로 출석 체크'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-        
-        // 내 출석 내역 보기 버튼
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: ElevatedButton.icon(
-            onPressed: _showMyAttendanceHistory,
-            icon: const Icon(Icons.history),
-            label: const Text('내 출석 내역 보기'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green[600],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
-          ),
-        ),
-        
-        // 오늘 출석 현황
-        Expanded(
-          child: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildTodayAttendanceList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTodayAttendanceList() {
-    if (stats == null) return const SizedBox();
-    
-    return Column(
-      children: [
-        // 출석 요약
-        Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.blue[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.blue[200]!),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
+            const SizedBox(height: 20),
+            
+            // QR 코드 표시
+            if (isLoadingQR)
+              const Center(
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('QR 코드 로딩 중...'),
+                  ],
+                ),
+              )
+            else if (myQRCode != null)
               Column(
                 children: [
-                  Text(
-                    '${stats!.presentMembers}',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        QrImageView(
+                          data: myQRCode!.code,
+                          version: QrVersions.auto,
+                          size: 200.0,
+                          backgroundColor: Colors.white,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '교인 ID: ${myQRCode!.memberId}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '생성일: ${_formatDateTime(myQRCode!.createdAt)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const Text('출석'),
+                  const SizedBox(height: 20),
+                  
+                  // QR 코드 새로고침 버튼
+                  ElevatedButton.icon(
+                    onPressed: isLoadingQR ? null : _refreshQRCode,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('QR 코드 새로고침'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
                 ],
-              ),
+              )
+            else
               Column(
                 children: [
-                  Text(
-                    '${stats!.totalMembers - stats!.presentMembers}',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'QR 코드를 불러올 수 없습니다',
+                    style: TextStyle(
+                      fontSize: 16,
                       color: Colors.red,
                     ),
                   ),
-                  const Text('결석'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadMyQRCode,
+                    child: const Text('다시 시도'),
+                  ),
                 ],
               ),
-              Column(
-                children: [
-                  Text(
-                    '${stats!.attendanceRate.toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const Text('출석률'),
-                ],
-              ),
-            ],
-          ),
+          ],
         ),
-        
-        // 출석자 목록
-        Expanded(
-          child: ListView.builder(
-            itemCount: attendanceList.length,
-            itemBuilder: (context, index) {
-              final attendance = attendanceList[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: attendance.present ? Colors.green : Colors.red,
-                  child: Icon(
-                    attendance.present ? Icons.check : Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-                title: Text(attendance.memberName),
-                subtitle: Text(attendance.present ? '출석' : '결석'),
-                trailing: Switch(
-                  value: attendance.present,
-                  onChanged: (value) {
-                    _toggleAttendance(attendance, value);
-                  },
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAttendanceStatusTab() {
-    return const Center(
-      child: Text(
-        '출석 현황 탭\n(구현 예정)',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 16),
       ),
     );
   }
 
-  Widget _buildAttendanceStatsTab() {
-    if (stats == null) {
-      return const Center(child: Text('통계 데이터가 없습니다.'));
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+  // 출석 기록 탭
+  Widget _buildAttendanceHistoryTab() {
+    return RefreshIndicator(
+      onRefresh: _loadMyAttendanceHistory,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 전체 통계
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '전체 출석 통계',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          // 헤더
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.grey[50],
+            child: Row(
+              children: [
+                const Icon(Icons.history, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  '내 출석 기록',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatItem('전체 교인', '${stats!.totalMembers}명'),
-                      _buildStatItem('출석자', '${stats!.presentMembers}명'),
-                      _buildStatItem('출석률', '${stats!.attendanceRate.toStringAsFixed(1)}%'),
-                    ],
+                ),
+                const Spacer(),
+                Text(
+                  '총 ${myAttendanceHistory.length}건',
+                  style: TextStyle(
+                    color: Colors.grey[600],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           
-          const SizedBox(height: 16),
-          
-          // 구역별 출석
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '구역별 출석 현황',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  ...stats!.byDistrict.entries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(entry.key),
-                          Text('${entry.value}명'),
-                        ],
+          // 출석 기록 리스트
+          Expanded(
+            child: isLoadingHistory
+                ? const Center(child: CircularProgressIndicator())
+                : myAttendanceHistory.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.event_busy,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              '출석 기록이 없습니다',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: myAttendanceHistory.length,
+                        itemBuilder: (context, index) {
+                          final attendance = myAttendanceHistory[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: attendance.present
+                                    ? Colors.green
+                                    : Colors.red,
+                                child: Icon(
+                                  attendance.present
+                                      ? Icons.check
+                                      : Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              title: Text(
+                                attendance.serviceType,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                _formatDate(attendance.serviceDate),
+                              ),
+                              trailing: Text(
+                                attendance.present ? '출석' : '결석',
+                                style: TextStyle(
+                                  color: attendance.present
+                                      ? Colors.green
+                                      : Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  }).toList(),
-                ],
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // 직분별 출석
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '직분별 출석 현황',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  ...stats!.byPosition.entries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(entry.key),
-                          Text('${entry.value}명'),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ],
-              ),
-            ),
           ),
         ],
+      ),
+    );
+  }
+
+  // 내 출석률 탭
+  Widget _buildMyStatsTab() {
+    return RefreshIndicator(
+      onRefresh: _loadAttendanceStats,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: isLoadingStats
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  // 전체 출석률 카드
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          const Text(
+                            '전체 출석률',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            '${attendanceStats['overall_rate']?.toStringAsFixed(1) ?? '0.0'}%',
+                            style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: _getAttendanceRateColor(
+                                attendanceStats['overall_rate']?.toDouble() ?? 0.0,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '총 ${attendanceStats['total_services'] ?? 0}회 중 ${attendanceStats['attended_services'] ?? 0}회 출석',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // 간단한 통계 카드
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          const Text(
+                            '이번 달 출석 현황',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildStatItem('주일예배', '4/4'),
+                              _buildStatItem('수요예배', '3/4'),
+                              _buildStatItem('새벽예배', '12/16'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -457,112 +566,26 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             color: Colors.blue,
           ),
         ),
-        Text(title),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 12),
+        ),
       ],
     );
   }
 
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
-      _loadAttendanceData();
-    }
+  Color _getAttendanceRateColor(double rate) {
+    if (rate >= 90) return Colors.green;
+    if (rate >= 70) return Colors.orange;
+    return Colors.red;
   }
 
-  void _showQRScanner() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('QR 출석 체크'),
-        content: const Text('QR 스캐너 기능은 준비 중입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
-    );
+  String _formatDate(DateTime date) {
+    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
   }
 
-  void _showMyAttendanceHistory() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('내 출석 내역'),
-        content: SizedBox(
-          height: 300,
-          width: 300,
-          child: ListView(
-            children: const [
-              ListTile(
-                leading: Icon(Icons.check_circle, color: Colors.green),
-                title: Text('2024.01.28 주일예배'),
-                subtitle: Text('출석'),
-              ),
-              ListTile(
-                leading: Icon(Icons.check_circle, color: Colors.green),
-                title: Text('2024.01.24 수요예배'),
-                subtitle: Text('출석'),
-              ),
-              ListTile(
-                leading: Icon(Icons.check_circle, color: Colors.green),
-                title: Text('2024.01.21 주일예배'),
-                subtitle: Text('출석'),
-              ),
-              ListTile(
-                leading: Icon(Icons.cancel, color: Colors.red),
-                title: Text('2024.01.17 수요예배'),
-                subtitle: Text('결석'),
-              ),
-              ListTile(
-                leading: Icon(Icons.check_circle, color: Colors.green),
-                title: Text('2024.01.14 주일예배'),
-                subtitle: Text('출석'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _toggleAttendance(Attendance attendance, bool isPresent) {
-    setState(() {
-      final index = attendanceList.indexWhere((a) => a.id == attendance.id);
-      if (index != -1) {
-        attendanceList[index] = Attendance(
-          id: attendance.id,
-          memberId: attendance.memberId,
-          memberName: attendance.memberName,
-          serviceDate: attendance.serviceDate,
-          serviceType: attendance.serviceType,
-          present: isPresent,
-          notes: attendance.notes,
-        );
-      }
-      stats = _generateSampleStats();
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${attendance.memberName}의 출석 상태가 변경되었습니다.'),
-      ),
-    );
+  String _formatDateTime(DateTime dateTime) {
+    return '${_formatDate(dateTime)} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 }

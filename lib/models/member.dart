@@ -18,6 +18,7 @@ class Member {
   final String? memo;
   final bool invitationSent;
   final DateTime? invitationSentAt;
+  final int? userId; // user_id 매핑 필드 추가
 
   Member({
     required this.id,
@@ -39,6 +40,7 @@ class Member {
     this.memo,
     this.invitationSent = false,
     this.invitationSentAt,
+    this.userId, // user_id 매핑 필드 추가
   });
 
   factory Member.fromJson(Map<String, dynamic> json) {
@@ -72,6 +74,7 @@ class Member {
       invitationSentAt: json['invitation_sent_at'] != null 
           ? DateTime.parse(json['invitation_sent_at']) 
           : null,
+      userId: json['user_id'], // user_id 매핑 필드 추가
     );
   }
 
@@ -96,6 +99,7 @@ class Member {
       'memo': memo,
       'invitation_sent': invitationSent,
       'invitation_sent_at': invitationSentAt?.toIso8601String(),
+      'user_id': userId, // user_id 매핑 필드 추가
     };
   }
 
@@ -120,7 +124,7 @@ class Member {
 
   @override
   String toString() {
-    return 'Member(id: $id, name: $name, phone: $phone, memberStatus: $memberStatus)';
+    return 'Member(id: $id, name: $name, phone: $phone, memberStatus: $memberStatus, userId: $userId)';
   }
 }
 
