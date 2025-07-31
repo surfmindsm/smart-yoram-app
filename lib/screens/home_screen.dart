@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widget/widgets.dart';
+import '../services/auth_service.dart';
 import 'calendar_screen.dart';
 import 'prayer_screen.dart';
 import 'settings_screen.dart';
@@ -17,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final supabase = Supabase.instance.client;
+  final AuthService _authService = AuthService();
   Map<String, dynamic>? churchInfo;
   Map<String, dynamic>? userStats;
   bool isLoading = true;
@@ -73,6 +73,12 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: CommonAppBar(
         title: churchInfo?['name'] ?? '스마트 교회요람',
         actions: [
+          // 개발용 로그아웃 버튼 (테스트 목적)
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            tooltip: '개발용 로그아웃',
+            onPressed: () => _showDevLogoutDialog(),
+          ),
           IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {
@@ -413,5 +419,103 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
     );
+  }
+
+  // 개발용 로그아웃 다이얼로그
+  void _showDevLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('개발용 로그아웃'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('로그인 화면 테스트를 위한 개발용 기능입니다.'),
+            SizedBox(height: 8),
+            Text('선택하신 옵션:'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _logoutOnly();
+            },
+            child: const Text('로그아웃만'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _logoutAndDisableAutoLogin();
+            },
+            child: const Text('로그아웃 + 자동로그인 비활성화'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 로그아웃만 수행
+  Future<void> _logoutOnly() async {
+    try {
+      await _authService.logout();
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/login',
+          (route) => false,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('로그아웃되었습니다. 다음 앱 시작 시 자동 로그인됩니다.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('로그아웃 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 로그아웃 + 자동 로그인 비활성화
+  Future<void> _logoutAndDisableAutoLogin() async {
+    try {
+      await _authService.logout();
+      await _authService.setAutoLoginEnabled(false);
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/login',
+          (route) => false,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('로그아웃되었고 자동 로그인이 비활성화되었습니다.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('로그아웃 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

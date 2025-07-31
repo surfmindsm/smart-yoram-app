@@ -150,20 +150,66 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 
                 const SizedBox(height: 16),
-                
-                // 비밀번호 찾기
-                Center(
-                  child: TextButton(
-                    onPressed: _forgotPassword,
-                    child: Text(
-                      '비밀번호를 잊으셨나요?',
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
+              
+              // 개발자 옵션: 자동 로그인 상태 표시 및 활성화
+              FutureBuilder<bool>(
+                future: _authService.isAutoLoginDisabled,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data == true) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange[200]!),
                       ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_amber, 
+                            color: Colors.orange[700], size: 20),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              '개발 모드: 자동 로그인 비활성화됨',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _enableAutoLogin,
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            ),
+                            child: Text(
+                              '활성화',
+                              style: TextStyle(
+                                color: Colors.orange[700],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              
+              // 비밀번호 찾기
+              Center(
+                child: TextButton(
+                  onPressed: _forgotPassword,
+                  child: Text(
+                    '비밀번호를 잊으셨나요?',
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
+              ),
                 
                 const SizedBox(height: 40),
                 
@@ -375,5 +421,30 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
+  }
+
+  // 개발용: 자동 로그인 활성화
+  Future<void> _enableAutoLogin() async {
+    try {
+      await _authService.setAutoLoginEnabled(true);
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('자동 로그인이 활성화되었습니다.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('설정 변경 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

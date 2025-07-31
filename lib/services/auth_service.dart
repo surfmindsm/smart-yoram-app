@@ -14,13 +14,32 @@ class AuthService {
   
   static const String _tokenKey = 'access_token';
   static const String _userKey = 'user_data';
+  static const String _devModeKey = 'dev_mode_disable_auto_login';
 
   User? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null && _apiService.isAuthenticated;
+  
+  // 개발 모드: 자동 로그인 비활성화 플래그
+  Future<bool> get isAutoLoginDisabled async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_devModeKey) ?? false;
+  }
+  
+  // 개발 모드: 자동 로그인 활성화/비활성화
+  Future<void> setAutoLoginEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_devModeKey, !enabled);
+  }
 
   // 앱 시작 시 저장된 인증 정보 로드
   Future<bool> loadStoredAuth() async {
     try {
+      // 개발 모드에서 자동 로그인이 비활성화되어 있으면 건너뛰기
+      if (await isAutoLoginDisabled) {
+        print('개발 모드: 자동 로그인이 비활성화되어 있습니다.');
+        return false;
+      }
+      
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(_tokenKey);
       final userData = prefs.getString(_userKey);
