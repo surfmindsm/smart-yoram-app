@@ -11,6 +11,7 @@ import '../services/church_service.dart';
 import '../services/announcement_service.dart';
 import '../services/daily_verse_service.dart';
 import '../services/worship_service.dart';
+import '../services/fcm_service.dart';
 
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
@@ -69,8 +70,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _initializeFCM();
     _loadDashboardData();
     _loadTodaysVerse();
+  }
+
+  // FCM 초기화
+  Future<void> _initializeFCM() async {
+    try {
+      await FCMService.instance.initialize();
+      print('✅ FCM 초기화 완료');
+    } catch (e) {
+      print('❌ FCM 초기화 실패: $e');
+    }
   }
 
   Future<void> _loadDashboardData() async {

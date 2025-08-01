@@ -94,6 +94,19 @@ class ApiConfig {
   // 예배 서비스
   static const String worshipServices = '/worship/services';
 
+  // 푸시 알림 관리
+  static const String notifications = '/notifications/';
+  static const String notificationsDevicesRegister = '/notifications/devices/register';
+  static const String notificationsDevicesUnregister = '/notifications/devices/unregister';
+  static const String notificationsDevices = '/notifications/devices';
+  static const String notificationsSend = '/notifications/send';
+  static const String notificationsSendBatch = '/notifications/send-batch';
+  static const String notificationsSendToChurch = '/notifications/send-to-church';
+  static const String notificationsHistory = '/notifications/history';
+  static const String notificationsMyNotifications = '/notifications/my-notifications';
+  static const String notificationsMarkAsRead = '/notifications/mark-as-read';
+  static const String notificationsPreferences = '/notifications/preferences';
+
   // HTTP 헤더들
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

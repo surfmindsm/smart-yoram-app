@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'screens/main_navigation.dart';
 import 'screens/login_screen.dart';
@@ -16,9 +17,16 @@ import 'screens/calendar_screen.dart';
 import 'screens/prayer_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/auth_service.dart';
+import 'services/fcm_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Firebase 초기화
+  await Firebase.initializeApp();
+  
+  // FCM 서비스 초기화
+  await FCMService.instance.initialize();
   
   // Supabase 초기화 (오류 방지용)
   await Supabase.initialize(

@@ -11,6 +11,26 @@ class ApiResponse<T> {
     this.statusCode,
   });
 
+  // 성공 응답 생성자
+  factory ApiResponse.success(T? data, {String? message}) {
+    return ApiResponse<T>(
+      success: true,
+      message: message ?? '성공',
+      data: data,
+      statusCode: 200,
+    );
+  }
+
+  // 에러 응답 생성자
+  factory ApiResponse.error(String message, {int? statusCode}) {
+    return ApiResponse<T>(
+      success: false,
+      message: message,
+      data: null,
+      statusCode: statusCode ?? 400,
+    );
+  }
+
   factory ApiResponse.fromJson(
     Map<String, dynamic> json,
     T Function(dynamic)? fromJsonT,

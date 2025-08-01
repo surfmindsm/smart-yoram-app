@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "755597165514",
+    "project_id": "smart-yoram",
+    "storage_bucket": "smart-yoram.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:755597165514:android:fa9ac8105b62f8a2abc533",
+        "android_client_info": {
+          "package_name": "com.surfmind.yoram"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDRvHSqoLHnwuNOVAk7s6ClWI-jjhGbJA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
