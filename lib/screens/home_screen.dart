@@ -170,6 +170,75 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  // 헤더 위젯 빌드
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      decoration: BoxDecoration(
+        color: AppColor.secondary01, // 파란색 배경
+        borderRadius: BorderRadius.all(Radius.circular(20.r)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '안녕하세요',
+                style: AppTextStyle(
+                  color: AppColor.secondary06,
+                ).b4(),
+              ),
+              Text(
+                '${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
+                style: AppTextStyle(
+                  color: AppColor.secondary07,
+                ).h1(),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: AppColor.primary900.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const NotificationCenterScreen()),
+                    );
+                  },
+                  child: const Icon(
+                    Icons.notifications_outlined,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -182,89 +251,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: AppColor.background,
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
-        child: Column(
-          children: [
-            // 상단 안전 영역 추가 (SafeArea 영역 위의 여백)
-            SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
-            //헤더 영역
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-              margin: EdgeInsets.symmetric(horizontal: 16.w),
-              decoration: BoxDecoration(
-                color: AppColor.secondary01, // 파란색 배경
-                borderRadius: BorderRadius.all(Radius.circular(20.r)),
-                // boxShadow: [
-                //   BoxShadow(
-                //     color: Colors.black.withOpacity(0.05),
-                //     spreadRadius: 1,
-                //     blurRadius: 10,
-                //     offset: const Offset(0, 3),
-                //   ),
-                // ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '안녕하세요',
-                        style: AppTextStyle(
-                          color: AppColor.secondary06,
-                        ).b4(),
-                      ),
-                      Text(
-                        '${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
-                        style: AppTextStyle(
-                          color: AppColor.secondary07,
-                        ).h1(),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(8.r),
-                        decoration: BoxDecoration(
-                          color: AppColor.primary900.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(20.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              spreadRadius: 1,
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const NotificationCenterScreen()),
-                            );
-                          },
-                          child: const Icon(
-                            Icons.notifications_outlined,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // 스크롤 가능한 본문 영역
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 상단 안전 영역 추가
+              SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+
+              // 헤더 영역
+              _buildHeader(),
+              const SizedBox(height: 16),
+
+              // 본문 내용
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -294,8 +295,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1087,8 +1088,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFEFF6FF), // blue-50
-            Color(0xFFF3E8FF), // purple-50
+            Color.fromARGB(255, 230, 238, 249), // blue-50
+            Color.fromARGB(255, 235, 216, 255), // purple-50
           ],
         ),
         border: Border.all(
