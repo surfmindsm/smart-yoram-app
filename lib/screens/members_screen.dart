@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/member_service.dart';
 import '../models/member.dart';
+import '../resource/color_style.dart';
+import '../resource/text_style.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -15,7 +18,7 @@ class _MembersScreenState extends State<MembersScreen>
   final MemberService _memberService = MemberService();
   final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
-  
+
   List<Member> allMembers = [];
   List<Member> filteredMembers = [];
   bool isLoading = true;
@@ -40,7 +43,7 @@ class _MembersScreenState extends State<MembersScreen>
   Future<void> _loadMembers({String? search}) async {
     print('📁 MEMBERS_SCREEN: _loadMembers 시작');
     setState(() => isLoading = true);
-    
+
     try {
       // 백엔드 API에서 교인 목록 가져오기
       print('📁 MEMBERS_SCREEN: getMembers API 호출 시작');
@@ -48,26 +51,27 @@ class _MembersScreenState extends State<MembersScreen>
         search: search?.isNotEmpty == true ? search : null,
         limit: 1000,
       );
-      
+
       print('📁 MEMBERS_SCREEN: API 응답 - success: ${response.success}');
       print('📁 MEMBERS_SCREEN: API 응답 - message: "${response.message}"');
-      
+
       if (response.success && response.data != null) {
         allMembers = response.data!;
         print('📁 MEMBERS_SCREEN: 받은 교인 수: ${allMembers.length}');
-        
+
         // 처음 5명 상세 정보 로그
         for (int i = 0; i < allMembers.length && i < 5; i++) {
           final member = allMembers[i];
-          print('📁 MEMBERS_SCREEN: [$i] ID: ${member.id}, 이름: ${member.name}, 전화: ${member.phone}');
+          print(
+              '📁 MEMBERS_SCREEN: [$i] ID: ${member.id}, 이름: ${member.name}, 전화: ${member.phone}');
         }
-        
+
         _filterMembers();
       } else {
         print('📁 MEMBERS_SCREEN: API 응답 실패 - ${response.message}');
         throw Exception(response.message);
       }
-      
+
       setState(() => isLoading = false);
       print('📁 MEMBERS_SCREEN: _loadMembers 완료');
     } catch (e) {
@@ -84,15 +88,13 @@ class _MembersScreenState extends State<MembersScreen>
     }
   }
 
-
-
   void _filterMembers() {
     String query = _searchController.text.toLowerCase();
     int currentTab = _tabController.index;
-    
+
     setState(() {
       List<Member> baseList = allMembers;
-      
+
       // 탭에 따른 필터링
       switch (currentTab) {
         case 0: // 전체
@@ -108,16 +110,18 @@ class _MembersScreenState extends State<MembersScreen>
           baseList = allMembers.where((m) => m.position == '권사').toList();
           break;
         case 4: // 집사
-          baseList = allMembers.where((m) => m.position?.contains('집사') == true).toList();
+          baseList = allMembers
+              .where((m) => m.position?.contains('집사') == true)
+              .toList();
           break;
       }
-      
+
       // 검색 필터링
       if (query.isNotEmpty) {
         filteredMembers = baseList.where((member) {
           return member.name.toLowerCase().contains(query) ||
-                 member.phone.contains(query) ||
-                 (member.position?.toLowerCase().contains(query) ?? false);
+              member.phone.contains(query) ||
+              (member.position?.toLowerCase().contains(query) ?? false);
         }).toList();
       } else {
         filteredMembers = List.from(baseList);
@@ -128,24 +132,24 @@ class _MembersScreenState extends State<MembersScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('교인 관리'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _showAddMemberDialog,
-          ),
-        ],
-      ),
+      backgroundColor: AppColor.background,
+      // appBar: AppBar(
+      //   title: Text('주소록'),
+      //   titleTextStyle: AppTextStyle(
+      //     color: Colors.black,
+      //   ).h1(),
+      //   backgroundColor: Colors.white,
+      //   foregroundColor: Colors.black,
+      //   elevation: 0,
+      // ),backgroundColor: AppColor.background,
+
       body: Column(
         children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
           // 검색창
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.white,
+            padding: EdgeInsets.all(16.r),
+            color: AppColor.transparent,
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -157,14 +161,15 @@ class _MembersScreenState extends State<MembersScreen>
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
           ),
-          
+
           // 탭바
           Container(
-            color: Colors.white,
+            color: AppColor.background,
             child: TabBar(
               controller: _tabController,
               labelColor: Colors.blue,
@@ -174,12 +179,13 @@ class _MembersScreenState extends State<MembersScreen>
               tabs: tabs.map((tab) => Tab(text: tab)).toList(),
             ),
           ),
-          
+
           // 교인 목록
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: List.generate(tabs.length, (index) => _buildMemberList()),
+              children:
+                  List.generate(tabs.length, (index) => _buildMemberList()),
             ),
           ),
         ],
@@ -191,7 +197,7 @@ class _MembersScreenState extends State<MembersScreen>
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    
+
     if (filteredMembers.isEmpty) {
       return const Center(
         child: Text(
@@ -243,7 +249,7 @@ class _MembersScreenState extends State<MembersScreen>
             ),
           ),
           const SizedBox(width: 16),
-          
+
           // 정보 영역
           Expanded(
             child: Column(
@@ -275,7 +281,7 @@ class _MembersScreenState extends State<MembersScreen>
               ],
             ),
           ),
-          
+
           // 액션 버튼들
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -314,12 +320,6 @@ class _MembersScreenState extends State<MembersScreen>
     );
   }
 
-
-
-
-
-
-
   void _showAddMemberDialog() {
     // 교인 추가 다이얼로그
     showDialog(
@@ -336,8 +336,6 @@ class _MembersScreenState extends State<MembersScreen>
       ),
     );
   }
-
-
 
   Future<void> _makePhoneCall(String? phone) async {
     if (phone != null) {
