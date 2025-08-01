@@ -147,59 +147,195 @@ class PushNotificationModel {
   }
 }
 
-/// 백엔드 API 요청을 위한 모델들
+/// 백엔드 API 요청/응답을 위한 모델들
+
+/// 기기 등록 요청
 class DeviceRegistrationRequest {
-  final String token;
+  final String deviceToken;
   final String platform;
-  final String? deviceId;
+  final String? deviceModel;
   final String? appVersion;
   
   const DeviceRegistrationRequest({
-    required this.token,
+    required this.deviceToken,
     required this.platform,
-    this.deviceId,
+    this.deviceModel,
     this.appVersion,
   });
   
   Map<String, dynamic> toJson() {
     return {
-      'token': token,
+      'device_token': deviceToken,
       'platform': platform,
-      if (deviceId != null) 'device_id': deviceId,
+      if (deviceModel != null) 'device_model': deviceModel,
       if (appVersion != null) 'app_version': appVersion,
     };
   }
 }
 
+/// 기기 등록 응답
+class DeviceRegistrationResponse {
+  final int id;
+  final int userId;
+  final String deviceToken;
+  final String platform;
+  final String? deviceModel;
+  final String? appVersion;
+  final bool isActive;
+  final DateTime? lastUsedAt;
+  final DateTime createdAt;
+  
+  const DeviceRegistrationResponse({
+    required this.id,
+    required this.userId,
+    required this.deviceToken,
+    required this.platform,
+    this.deviceModel,
+    this.appVersion,
+    required this.isActive,
+    this.lastUsedAt,
+    required this.createdAt,
+  });
+  
+  factory DeviceRegistrationResponse.fromJson(Map<String, dynamic> json) {
+    return DeviceRegistrationResponse(
+      id: json['id'],
+      userId: json['user_id'],
+      deviceToken: json['device_token'],
+      platform: json['platform'],
+      deviceModel: json['device_model'],
+      appVersion: json['app_version'],
+      isActive: json['is_active'] ?? true,
+      lastUsedAt: json['last_used_at'] != null 
+          ? DateTime.parse(json['last_used_at'])
+          : null,
+      createdAt: DateTime.parse(json['created_at']),
+    );
+  }
+}
+
+/// 개별 알림 발송 요청
 class SendNotificationRequest {
+  final int userId;
   final String title;
   final String body;
-  final String notificationType;
+  final String? type;
   final Map<String, dynamic>? data;
   final String? imageUrl;
-  final List<int>? userIds;
-  final int? churchId;
   
   const SendNotificationRequest({
+    required this.userId,
     required this.title,
     required this.body,
-    required this.notificationType,
+    this.type,
     this.data,
     this.imageUrl,
-    this.userIds,
-    this.churchId,
+  });
+  
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': userId,
+      'title': title,
+      'body': body,
+      if (type != null) 'type': type,
+      if (data != null) 'data': data,
+      if (imageUrl != null) 'image_url': imageUrl,
+    };
+  }
+}
+
+/// 다중 사용자 알림 발송 요청
+class SendBatchNotificationRequest {
+  final List<int> userIds;
+  final String title;
+  final String body;
+  final String? type;
+  final Map<String, dynamic>? data;
+  final String? imageUrl;
+  
+  const SendBatchNotificationRequest({
+    required this.userIds,
+    required this.title,
+    required this.body,
+    this.type,
+    this.data,
+    this.imageUrl,
+  });
+  
+  Map<String, dynamic> toJson() {
+    return {
+      'user_ids': userIds,
+      'title': title,
+      'body': body,
+      if (type != null) 'type': type,
+      if (data != null) 'data': data,
+      if (imageUrl != null) 'image_url': imageUrl,
+    };
+  }
+}
+
+/// 교회 전체 알림 발송 요청
+class SendChurchNotificationRequest {
+  final String title;
+  final String body;
+  final String? type;
+  final Map<String, dynamic>? data;
+  final String? imageUrl;
+  
+  const SendChurchNotificationRequest({
+    required this.title,
+    required this.body,
+    this.type,
+    this.data,
+    this.imageUrl,
   });
   
   Map<String, dynamic> toJson() {
     return {
       'title': title,
       'body': body,
-      'notification_type': notificationType,
+      if (type != null) 'type': type,
       if (data != null) 'data': data,
       if (imageUrl != null) 'image_url': imageUrl,
-      if (userIds != null) 'user_ids': userIds,
-      if (churchId != null) 'church_id': churchId,
     };
+  }
+}
+
+/// 알림 발송 응답
+class SendNotificationResponse {
+  final bool success;
+  final String message;
+  final int? notificationId;
+  final int? sentCount;
+  final int? failedCount;
+  final int? noDeviceCount;
+  final int? totalUsers;
+  final List<int>? noDeviceUsers;
+  
+  const SendNotificationResponse({
+    required this.success,
+    required this.message,
+    this.notificationId,
+    this.sentCount,
+    this.failedCount,
+    this.noDeviceCount,
+    this.totalUsers,
+    this.noDeviceUsers,
+  });
+  
+  factory SendNotificationResponse.fromJson(Map<String, dynamic> json) {
+    return SendNotificationResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      notificationId: json['notification_id'],
+      sentCount: json['sent_count'],
+      failedCount: json['failed_count'],
+      noDeviceCount: json['no_device_count'],
+      totalUsers: json['total_users'],
+      noDeviceUsers: json['no_device_users'] != null
+          ? List<int>.from(json['no_device_users'])
+          : null,
+    );
   }
 }
 
@@ -268,16 +404,16 @@ class NotificationPreferences {
   
   factory NotificationPreferences.fromJson(Map<String, dynamic> json) {
     return NotificationPreferences(
-      announcements: json['announcements'] ?? true,
-      worshipReminders: json['worship_reminders'] ?? true,
-      attendanceNotifications: json['attendance_notifications'] ?? true,
-      birthdayNotifications: json['birthday_notifications'] ?? true,
-      prayerRequests: json['prayer_requests'] ?? true,
-      systemNotifications: json['system_notifications'] ?? true,
-      customNotifications: json['custom_notifications'] ?? true,
-      quietHoursStart: json['quiet_hours_start'] ?? '22:00',
-      quietHoursEnd: json['quiet_hours_end'] ?? '08:00',
-      enableQuietHours: json['enable_quiet_hours'] ?? false,
+      announcements: json['announcements'] as bool? ?? true,
+      worshipReminders: json['worship_reminders'] as bool? ?? true,
+      attendanceNotifications: json['attendance_notifications'] as bool? ?? true,
+      birthdayNotifications: json['birthday_notifications'] as bool? ?? true,
+      prayerRequests: json['prayer_requests'] as bool? ?? true,
+      systemNotifications: json['system_notifications'] as bool? ?? true,
+      customNotifications: json['custom_notifications'] as bool? ?? true,
+      quietHoursStart: json['quiet_hours_start'] as String? ?? '22:00',
+      quietHoursEnd: json['quiet_hours_end'] as String? ?? '08:00',
+      enableQuietHours: json['enable_quiet_hours'] as bool? ?? false,
     );
   }
   
@@ -319,6 +455,93 @@ class NotificationPreferences {
       quietHoursStart: quietHoursStart ?? this.quietHoursStart,
       quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,
       enableQuietHours: enableQuietHours ?? this.enableQuietHours,
+    );
+  }
+}
+
+/// 내가 받은 알림 모델
+class MyNotification {
+  final int id;
+  final int notificationId;
+  final int userId;
+  final String title;
+  final String body;
+  final String type;
+  final Map<String, dynamic>? data;
+  final String? imageUrl;
+  final bool isRead;
+  final DateTime? readAt;
+  final DateTime receivedAt;
+  final DateTime createdAt;
+  
+  const MyNotification({
+    required this.id,
+    required this.notificationId,
+    required this.userId,
+    required this.title,
+    required this.body,
+    required this.type,
+    this.data,
+    this.imageUrl,
+    required this.isRead,
+    this.readAt,
+    required this.receivedAt,
+    required this.createdAt,
+  });
+  
+  factory MyNotification.fromJson(Map<String, dynamic> json) {
+    return MyNotification(
+      id: json['id'],
+      notificationId: json['notification_id'],
+      userId: json['user_id'],
+      title: json['title'],
+      body: json['body'],
+      type: json['type'] ?? 'custom',
+      data: json['data'],
+      imageUrl: json['image_url'],
+      isRead: json['is_read'] ?? false,
+      readAt: json['read_at'] != null
+          ? DateTime.parse(json['read_at'])
+          : null,
+      receivedAt: DateTime.parse(json['received_at']),
+      createdAt: DateTime.parse(json['created_at']),
+    );
+  }
+  
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'notification_id': notificationId,
+      'user_id': userId,
+      'title': title,
+      'body': body,
+      'type': type,
+      'data': data,
+      'image_url': imageUrl,
+      'is_read': isRead,
+      'read_at': readAt?.toIso8601String(),
+      'received_at': receivedAt.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+  
+  MyNotification copyWith({
+    bool? isRead,
+    DateTime? readAt,
+  }) {
+    return MyNotification(
+      id: id,
+      notificationId: notificationId,
+      userId: userId,
+      title: title,
+      body: body,
+      type: type,
+      data: data,
+      imageUrl: imageUrl,
+      isRead: isRead ?? this.isRead,
+      readAt: readAt ?? this.readAt,
+      receivedAt: receivedAt,
+      createdAt: createdAt,
     );
   }
 }

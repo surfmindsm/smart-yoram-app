@@ -94,18 +94,23 @@ class ApiConfig {
   // 예배 서비스
   static const String worshipServices = '/worship/services';
 
-  // 푸시 알림 관리
+  // 푸시 알림 관리 (API v1.0)
   static const String notifications = '/notifications/';
-  static const String notificationsDevicesRegister = '/notifications/devices/register';
-  static const String notificationsDevicesUnregister = '/notifications/devices/unregister';
-  static const String notificationsDevices = '/notifications/devices';
-  static const String notificationsSend = '/notifications/send';
-  static const String notificationsSendBatch = '/notifications/send-batch';
-  static const String notificationsSendToChurch = '/notifications/send-to-church';
-  static const String notificationsHistory = '/notifications/history';
-  static const String notificationsMyNotifications = '/notifications/my-notifications';
-  static const String notificationsMarkAsRead = '/notifications/mark-as-read';
-  static const String notificationsPreferences = '/notifications/preferences';
+  static const String notificationsDevices = '/notifications/devices'; // POST: 기기 등록, GET: 기기 목록
+  static const String notificationsDevicesRegister = '/notifications/devices/register'; // POST: 기기 등록
+  static const String notificationsDevicesUnregister = '/notifications/devices/unregister'; // DELETE
+  static const String notificationsSend = '/notifications/send'; // POST: 개별 발송
+  static const String notificationsSendBatch = '/notifications/send-batch'; // POST: 다중 발송
+  static const String notificationsSendChurch = '/notifications/send-church'; // POST: 교회 전체 발송
+  static const String notificationsSendToChurch = '/notifications/send-church'; // POST: 교회 전체 발송 (별명)
+  static const String notificationsHistory = '/notifications/history'; // GET: 발송 이력
+  static const String notificationsMy = '/notifications/my'; // GET: 내 알림 목록
+  static const String notificationsMyNotifications = '/notifications/my'; // GET: 내 알림 목록 (별명)
+  static const String notificationsRead = '/notifications/{id}/read'; // PUT: 읽음 처리
+  static const String notificationsMarkAsRead = '/notifications'; // PUT: 읽음 처리 (별명)
+  static const String notificationsPreferences = '/notifications/preferences'; // GET/PUT: 알림 설정
+  static const String notificationsTemplates = '/notifications/templates'; // GET: 알림 템플릿
+  static const String notificationsStats = '/notifications/stats'; // GET: 알림 통계
 
   // HTTP 헤더들
   static const Map<String, String> defaultHeaders = {

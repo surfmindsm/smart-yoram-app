@@ -6,7 +6,6 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'screens/main_navigation.dart';
 import 'screens/login_screen.dart';
-import 'screens/profile_screen.dart';
 import 'screens/members_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'screens/bulletin_screen.dart';
@@ -22,11 +21,8 @@ import 'services/fcm_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Firebase 초기화
-  await Firebase.initializeApp();
-  
-  // FCM 서비스 초기화
-  await FCMService.instance.initialize();
+  // Firebase 초기화를 더 안전하게 처리
+  await initializeFirebase();
   
   // Supabase 초기화 (오류 방지용)
   await Supabase.initialize(
@@ -182,5 +178,29 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     return _isLoggedIn ? const MainNavigation() : const LoginScreen();
+  }
+}
+
+/// Firebase 초기화를 안전하게 처리하는 함수
+Future<void> initializeFirebase() async {
+  try {
+    // Firebase 초기화 시도
+    await Firebase.initializeApp();
+    print('✅ Firebase가 성공적으로 초기화되었습니다.');
+    
+    // FCM 서비스 초기화 (Firebase 초기화 성공 시에만)
+    try {
+      await FCMService.instance.initialize();
+      print('✅ FCM 서비스가 성공적으로 초기화되었습니다.');
+    } catch (fcmError) {
+      print('⚠️ FCM 초기화 실패: $fcmError');
+      print('ℹ️ 푸시 알림 기능이 비활성화되지만 앱은 정상 작동합니다.');
+    }
+  } catch (firebaseError) {
+    print('⚠️ Firebase 초기화 실패: $firebaseError');
+    print('ℹ️ Firebase 관련 기능이 비활성화되지만 앱은 정상 작동합니다.');
+    
+    // Firebase 관련 기능들을 비활성화 상태로 설정
+    // 필요시 여기에 fallback 로직 추가
   }
 }

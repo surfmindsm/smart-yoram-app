@@ -7,7 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../config/fcm_config.dart';
 import '../models/push_notification.dart';
+import '../models/push_notification_enhanced.dart';
 import 'notification_service.dart';
+import 'notification_service_enhanced.dart';
+import 'auth_service.dart';
 
 /// FCM 백그라운드 메시지 핸들러 (top-level function)
 @pragma('vm:entry-point')
@@ -30,11 +33,13 @@ class FCMService {
   late FlutterLocalNotificationsPlugin _localNotifications;
   String? _currentToken;
   
-  /// FCM 초기화
+  /// FCM 초기화 (안전 모드)
   Future<void> initialize() async {
     try {
-      // Firebase 앱 초기화
-      await Firebase.initializeApp();
+      // Firebase 앱 상태 확인
+      if (Firebase.apps.isEmpty) {
+        throw Exception('Firebase가 초기화되지 않았습니다.');
+      }
       
       // Firebase Messaging 인스턴스 초기화
       _messaging = FirebaseMessaging.instance;
@@ -163,16 +168,37 @@ class FCMService {
     }
   }
   
-  /// 토큰을 백엔드에 등록
+  /// 토큰을 백엔드에 등록 (새로운 API 사용)
   Future<void> _registerTokenToBackend(String token) async {
     try {
-      await NotificationService.instance.registerDevice(
+      // 새로운 향상된 서비스 사용
+      final result = await NotificationServiceEnhanced.instance.registerDevice(
         token: token,
         platform: Platform.isIOS ? 'ios' : 'android',
+        deviceId: await _getDeviceId(),
+        appVersion: await _getAppVersion(),
       );
-      developer.log('토큰 백엔드 등록 완료', name: 'FCM');
+      
+      if (result.isSuccess) {
+        developer.log('✅ 디바이스 토큰 등록 성공', name: 'FCM');
+      } else {
+        developer.log('❌ 디바이스 토큰 등록 실패: ${result.message}', name: 'FCM_ERROR');
+      }
+      
+      // 새로운 API를 사용한 기기 등록
+      try {
+        final deviceResult = await NotificationService.instance.registerDevice(token);
+        if (deviceResult.isSuccess) {
+          developer.log('✅ 새로운 API 기기 등록 성공', name: 'FCM');
+        } else {
+          developer.log('❌ 새로운 API 기기 등록 실패: ${deviceResult.message}', name: 'FCM_ERROR');
+        }
+      } catch (apiError) {
+        developer.log('❌ 새로운 API 등록 오류: $apiError', name: 'FCM_ERROR');
+      }
+      
     } catch (e) {
-      developer.log('토큰 백엔드 등록 실패: $e', name: 'FCM_ERROR');
+      developer.log('❌ 토큰 백엔드 등록 중 오류: $e', name: 'FCM_ERROR');
     }
   }
   
@@ -290,6 +316,31 @@ class FCMService {
     // TODO: 실제 화면 이동 로직 구현
     // 예: Navigator.pushNamed(), context 사용 시 전역 네비게이터 키 필요
     developer.log('화면 이동: ${notification.type?.displayName ?? '기본'}', name: 'FCM');
+  }
+  
+  /// 디바이스 ID 가져오기
+  Future<String> _getDeviceId() async {
+    try {
+      if (Platform.isIOS) {
+        return 'ios_${DateTime.now().millisecondsSinceEpoch}';
+      } else {
+        return 'android_${DateTime.now().millisecondsSinceEpoch}';
+      }
+    } catch (e) {
+      developer.log('디바이스 ID 생성 실패: $e', name: 'FCM_WARNING');
+      return 'unknown_device_${DateTime.now().millisecondsSinceEpoch}';
+    }
+  }
+  
+  /// 앱 버전 가져오기
+  Future<String> _getAppVersion() async {
+    try {
+      // TODO: package_info_plus 패키지를 사용하여 실제 버전 가져오기
+      return '1.0.0';
+    } catch (e) {
+      developer.log('앱 버전 가져오기 실패: $e', name: 'FCM_WARNING');
+      return '1.0.0';
+    }
   }
   
   /// 현재 FCM 토큰 반환

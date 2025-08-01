@@ -54,6 +54,11 @@ class ApiResponse<T> {
     };
   }
 
+  // 편의 getter
+  bool get isSuccess => success;
+  bool get isError => !success;
+  bool get hasData => data != null;
+
   @override
   String toString() {
     return 'ApiResponse(success: $success, message: $message, data: $data)';

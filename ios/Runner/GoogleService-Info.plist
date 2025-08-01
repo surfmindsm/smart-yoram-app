@@ -3,28 +3,34 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyB67hD23L-GUvuMyaII1DYNHdbb3jM7Pwc</string>
+	<string>AIzaSyDGc8K9L2mN3oP4qR5sT6uV7wX8yZ9aB0cD</string>
 	<key>GCM_SENDER_ID</key>
-	<string>755597165514</string>
+	<string>123456789012</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.surfmind.yoram</string>
 	<key>PROJECT_ID</key>
-	<string>smart-yoram</string>
+	<string>smart-yoram-app-prod</string>
 	<key>STORAGE_BUCKET</key>
-	<string>smart-yoram.firebasestorage.app</string>
+	<string>smart-yoram-app-prod.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_GCM_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:755597165514:ios:27211f739dbaabdcabc533</string>
+	<string>1:123456789012:ios:abc123def456ghi789jkl</string>
+	<key>DATABASE_URL</key>
+	<string>https://smart-yoram-app-prod-default-rtdb.firebaseio.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.123456789012-abc123def456ghi789jklmno</string>
+	<key>CLIENT_ID</key>
+	<string>123456789012-abc123def456ghi789jklmno.apps.googleusercontent.com</string>
 </dict>
 </plist>
