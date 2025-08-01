@@ -87,6 +87,10 @@ class ApiConfig {
       '/statistics/members/demographics';
   static const String statisticsMembersGrowth = '/statistics/members/growth';
 
+  // 오늘의 말씀
+  static const String dailyVerses = '/daily-verses/';
+  static const String dailyVersesRandom = '/daily-verses/random';
+
   // HTTP 헤더들
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

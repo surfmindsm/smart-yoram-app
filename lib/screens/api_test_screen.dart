@@ -25,6 +25,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   final UserService _userService = UserService();
   final MemberCardService _memberCardService = MemberCardService();
   final AnnouncementService _announcementService = AnnouncementService();
+  final DailyVerseService _dailyVerseService = DailyVerseService();
 
   final Map<String, String> _testResults = {};
   final Map<String, bool> _testingStatus = {};
@@ -134,6 +135,9 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
               _buildTestButton('공지사항 생성', 'announcement_create', testAnnouncementCreate),
               _buildTestButton('공지사항 상세', 'announcement_detail', testAnnouncementDetail),
               _buildTestButton('공지사항 고정 토글', 'announcement_toggle_pin', testAnnouncementTogglePin),
+            ]),
+            _buildSection('오늘의 말씀', [
+              _buildTestButton('랜덤 말씀 조회', 'daily_verse_random', testDailyVerseRandom),
             ]),
             const SizedBox(height: 32),
             Row(
@@ -1420,6 +1424,34 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     }
   }
 
+  Future<void> testDailyVerseRandom() async {
+    if (!_checkAuthRequired('daily_verse_random')) return;
+    
+    _startTest('daily_verse_random');
+    
+    try {
+      _addDebugLog('📖 [daily_verse_random] 랜덤 말씀 조회 시작');
+      
+      final dailyVerse = await _dailyVerseService.getRandomVerse();
+      
+      if (dailyVerse != null) {
+        _addDebugLog('📖 [daily_verse_random] 말씀 ID: ${dailyVerse.id}');
+        _addDebugLog('📖 [daily_verse_random] 말씀 내용: ${dailyVerse.verse.length > 50 ? dailyVerse.verse.substring(0, 50) + '...' : dailyVerse.verse}');
+        _addDebugLog('📖 [daily_verse_random] 참조: ${dailyVerse.reference}');
+        _addDebugLog('📖 [daily_verse_random] 활성상태: ${dailyVerse.isActive}');
+        _addDebugLog('📖 [daily_verse_random] 생성일: ${dailyVerse.createdAt}');
+        
+        _updateResult('daily_verse_random', '성공: 말씀 조회 완료 (${dailyVerse.reference})');
+      } else {
+        _addDebugLog('❌ [daily_verse_random] 말씀 데이터가 null입니다');
+        _updateResult('daily_verse_random', '실패: 말씀 데이터가 null');
+      }
+    } catch (e) {
+      _addDebugLog('❌ [daily_verse_random] 예외 발생: $e');
+      _updateResult('daily_verse_random', '오류: $e');
+    }
+  }
+
   Future<void> _runAllTests() async {
     // 테스트 시작 전 상태 리셋
     _resetTestState();
@@ -1460,6 +1492,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
       ('공지사항 생성', testAnnouncementCreate),
       ('공지사항 상세', testAnnouncementDetail),
       ('공지사항 고정', testAnnouncementTogglePin),
+      ('오늘의 말씀', testDailyVerseRandom),
     ];
 
     setState(() {

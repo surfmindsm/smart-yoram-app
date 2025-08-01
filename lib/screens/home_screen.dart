@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:math';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
 import '../widget/widgets.dart';
@@ -10,11 +9,13 @@ import '../services/user_service.dart';
 import '../services/member_service.dart';
 import '../services/church_service.dart';
 import '../services/announcement_service.dart';
+import '../services/daily_verse_service.dart';
 
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
 import '../models/church.dart';
 import '../models/announcement.dart';
+import '../models/daily_verse.dart';
 
 import 'calendar_screen.dart';
 import 'prayer_screen.dart';
@@ -38,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final MemberService _memberService = MemberService();
   final ChurchService _churchService = ChurchService();
   final AnnouncementService _announcementService = AnnouncementService();
+  final DailyVerseService _dailyVerseService = DailyVerseService();
 
   app_user.User? currentUser;
   Member? currentMember;
@@ -52,36 +54,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isLoadingAnnouncements = false;
 
   // 오늘의 말씀 관련 상태 변수
-  int _currentVerseIndex = 0;
+  DailyVerse? _currentVerse;
   bool _isRefreshingVerse = false;
-
-  // 말씀 목업 데이터
-  final List<Map<String, String>> _verses = [
-    {'verse': '여호와는 나의 목자시니 내게 부족함이 없으리로다', 'reference': '시편 23:1'},
-    {'verse': '내가 산을 향하여 눈을 들리라 나의 도움이 어디서 올꼬', 'reference': '시편 121:1'},
-    {
-      'verse': '수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라',
-      'reference': '마태복음 11:28'
-    },
-    {
-      'verse': '하늘이 하나님의 영광을 선포하고 궁창이 그의 손으로 하신 일을 나타내는도다',
-      'reference': '시편 19:1'
-    },
-    {
-      'verse': '오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리의 날개치며 올라감 같을 것이요',
-      'reference': '이사야 40:31'
-    },
-    {'verse': '너는 마음을 다하여 여호와를 신뢰하고 네 명철을 의지하지 말라', 'reference': '잠언 3:5'},
-    {
-      'verse': '너희는 먼저 그의 나라와 그의 의를 구하라 그리하면 이 모든 것을 너희에게 더하시리라',
-      'reference': '마태복음 6:33'
-    },
-  ];
+  bool _isLoadingVerse = true;
 
   @override
   void initState() {
     super.initState();
     _loadDashboardData();
+    _loadTodaysVerse();
   }
 
   Future<void> _loadDashboardData() async {
@@ -170,6 +151,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  /// 오늘의 말씀 로드
+  Future<void> _loadTodaysVerse() async {
+    try {
+      setState(() {
+        _isLoadingVerse = true;
+      });
+
+      final verse = await _dailyVerseService.getRandomVerse();
+      setState(() {
+        _currentVerse = verse;
+        _isLoadingVerse = false;
+      });
+      print('🙏 HOME_SCREEN: 오늘의 말씀 로드 성공: ${verse?.reference}');
+    } catch (e) {
+      setState(() {
+        _currentVerse = null;
+        _isLoadingVerse = false;
+      });
+      print('🙏 HOME_SCREEN: 오늘의 말씀 로드 오류: $e');
+    }
+  }
+
   // 헤더 위젯 빌드
   Widget _buildHeader() {
     return Container(
@@ -205,16 +208,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Container(
                 padding: EdgeInsets.all(8.r),
                 decoration: BoxDecoration(
-                  color: AppColor.primary900.withOpacity(0.6),
+                  color: AppColor.primary900.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(20.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
                 ),
                 child: InkWell(
                   onTap: () {
@@ -261,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
               // 헤더 영역
               _buildHeader(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
               // 본문 내용
               Padding(
@@ -271,26 +266,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   children: [
                     // 교회 정보 카드
                     _buildChurchInfoCard(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
                     // 오늘의 말씀
                     _buildTodaysVerse(),
                     const SizedBox(height: 24),
 
                     // 최근 공지사항
-                    _buildRecentNotices(),
-                    const SizedBox(height: 24),
-
-                    // // 내 통계
-                    // _buildMyStats(),
-                    // const SizedBox(height: 24),
-
-                    // 빠른 메뉴
-                    _buildQuickMenus(),
-                    const SizedBox(height: 24),
-
-                    // 더 많은 기능
-                    _buildMoreFeaturesSection(),
+                    _buildRecentAnnouncements(),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -610,50 +593,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildMyStats() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: '내 정보'),
-        const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 1.5,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          children: [
-            _buildStatCard(
-              '내 출석률',
-              '${userStats?['myAttendanceRate'] ?? 0}%',
-              Icons.check_circle,
-              Colors.green,
-            ),
-            _buildStatCard(
-              '이번달 출석',
-              '${userStats?['monthlyAttendance'] ?? 0}회',
-              Icons.calendar_today,
-              Colors.blue,
-            ),
-            _buildStatCard(
-              '다가오는 생일',
-              '${userStats?['upcomingBirthdays'] ?? 0}명',
-              Icons.cake,
-              Colors.orange,
-            ),
-            _buildStatCard(
-              '읽지 않은 공지',
-              '${userStats?['unreadNotices'] ?? 0}건',
-              Icons.notifications,
-              Colors.red,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildStatCard(
       String title, String value, IconData icon, Color color) {
     return Card(
@@ -848,88 +787,165 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildRecentNotices() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            SectionHeader(title: '최근 공지사항'),
-            CommonButton(
-              text: '더보기',
-              type: ButtonType.text,
-              onPressed: () {
-                Navigator.pushNamed(context, '/notices');
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _isLoadingAnnouncements
-            ? Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Center(
-                    child: CircularProgressIndicator(),
+  // 최근 공지사항 위젯
+  Widget _buildRecentAnnouncements() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        children: [
+          // 헤더
+          Padding(
+            padding: EdgeInsets.all(20.r),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.forum,
+                      size: 20.r,
+                      color: AppColor.primary900,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '교회 소식',
+                      style: AppTextStyle(
+                        color: AppColor.secondary07,
+                      ).h2(),
+                    ),
+                  ],
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/notices');
+                  },
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
+                    child: Text(
+                      '더보기',
+                      style: AppTextStyle(
+                        color: AppColor.primary900,
+                      ).buttonSmall(),
+                    ),
                   ),
                 ),
-              )
-            : recentAnnouncements.isEmpty
-                ? Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Center(
-                        child: Text(
-                          '공지사항이 없습니다',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
+              ],
+            ),
+          ),
+          // 컨텐츠
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+            child: _isLoadingAnnouncements
+                ? Container(
+                    height: 100.h,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.blue[500]!,
                         ),
                       ),
                     ),
                   )
-                : Card(
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: recentAnnouncements.length,
-                      separatorBuilder: (context, index) =>
-                          const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final announcement = recentAnnouncements[index];
-                        return ListTile(
-                          leading: Icon(
-                            announcement.isPinned
-                                ? Icons.push_pin
-                                : Icons.announcement,
-                            size: 20,
-                            color: announcement.isPinned
-                                ? Colors.red
-                                : Colors.blue,
+                : recentAnnouncements.isEmpty
+                    ? Container(
+                        height: 100.h,
+                        child: Center(
+                          child: Text(
+                            '공지사항이 없습니다',
+                            style: AppTextStyle(
+                              color: Colors.grey[600]!,
+                            ).b2(),
                           ),
-                          title: Text(
-                            announcement.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            announcement.formattedDate,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            _navigateToAnnouncementDetail(announcement);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-      ],
+                        ),
+                      )
+                    : Column(
+                        children: recentAnnouncements
+                            .map(
+                              (announcement) => InkWell(
+                                onTap: () {
+                                  _navigateToAnnouncementDetail(announcement);
+                                },
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: Container(
+                                  padding: EdgeInsets.all(12.r),
+                                  margin: EdgeInsets.only(bottom: 8.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // 왼쪽: 새 알림 표시 및 제목
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            // 새 알림 표시
+                                            if (announcement.isPinned)
+                                              Container(
+                                                width: 8.r,
+                                                height: 8.r,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.blue[500],
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                            if (announcement.isPinned)
+                                              SizedBox(width: 8.w),
+                                            // 제목
+                                            Expanded(
+                                              child: Text(
+                                                announcement.title,
+                                                style: AppTextStyle(
+                                                  color: AppColor.secondary07,
+                                                ).b2(),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // 오른쪽: 시간 및 화살표
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time,
+                                            size: 12.r,
+                                            color: Colors.grey[500],
+                                          ),
+                                          SizedBox(width: 4.w),
+                                          Text(
+                                            announcement.formattedDate,
+                                            style: AppTextStyle(
+                                              color: Colors.grey[500]!,
+                                            ).b3(),
+                                          ),
+                                          SizedBox(width: 8.w),
+                                          Icon(
+                                            Icons.chevron_right,
+                                            size: 16.r,
+                                            color: Colors.grey[400],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1051,32 +1067,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _isRefreshingVerse = true;
     });
 
-    // 애니메이션 지연
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    // 랜덤한 말씀 선택
-    final random = Random();
-    int newIndex;
-    do {
-      newIndex = random.nextInt(_verses.length);
-    } while (newIndex == _currentVerseIndex && _verses.length > 1);
-
-    setState(() {
-      _currentVerseIndex = newIndex;
-      _isRefreshingVerse = false;
-    });
+    try {
+      // 새로운 랜덤 말씀 가져오기
+      final verse = await _dailyVerseService.getRandomVerse();
+      setState(() {
+        _currentVerse = verse;
+        _isRefreshingVerse = false;
+      });
+      print('🔄 HOME_SCREEN: 말씀 새로고침 성공: ${verse?.reference}');
+    } catch (e) {
+      setState(() {
+        _isRefreshingVerse = false;
+      });
+      print('🔄 HOME_SCREEN: 말씀 새로고침 오류: $e');
+    }
   }
 
   // 말씀 공유하기 기능
   void _shareVerse() {
-    final currentVerse = _verses[_currentVerseIndex];
-    final shareText =
-        '${currentVerse['verse']}\n\n${currentVerse['reference']}\n\n공유: 스마트 교회요람 앱';
+    if (_currentVerse != null) {
+      final shareText =
+          '${_currentVerse!.content}\n\n${_currentVerse!.reference}\n\n공유: 스마트 교회요람 앱';
 
-    Share.share(
-      shareText,
-      subject: '오늘의 말씀',
-    );
+      Share.share(
+        shareText,
+        subject: '오늘의 말씀',
+      );
+    }
   }
 
   // 오늘의 말씀 섹션
@@ -1173,29 +1190,47 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 600),
-                    child: Text(
-                      _verses[_currentVerseIndex]['verse']!,
-                      key: ValueKey(_currentVerseIndex),
-                      style: AppTextStyle(color: AppColor.secondary06)
-                          .b2()
-                          .copyWith(),
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 600),
-                    child: Text(
-                      _verses[_currentVerseIndex]['reference']!,
-                      key: ValueKey('${_currentVerseIndex}_ref'),
-                      style: AppTextStyle(color: AppColor.primary600)
-                          .c1()
-                          .copyWith(
-                            fontWeight: FontWeight.w600,
+                  _isLoadingVerse
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColor.primary600,
+                            ),
                           ),
-                    ),
-                  ),
+                        )
+                      : _currentVerse != null
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 600),
+                                  child: Text(
+                                    _currentVerse!.verse,
+                                    key: ValueKey(_currentVerse!.id),
+                                    style: AppTextStyle(
+                                            color: AppColor.secondary06)
+                                        .b2()
+                                        .copyWith(),
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 600),
+                                  child: Text(
+                                    _currentVerse!.reference,
+                                    key: ValueKey('${_currentVerse!.id}_ref'),
+                                    style: AppTextStyle(
+                                            color: AppColor.secondary06)
+                                        .b4(),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              '말씀을 불러오는 중입니다...',
+                              style: AppTextStyle(color: AppColor.secondary04)
+                                  .b3(),
+                            ),
                 ],
               ),
             ),
