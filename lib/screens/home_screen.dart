@@ -1046,7 +1046,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           duration: const Duration(milliseconds: 800),
                           child: Icon(
                             Icons.refresh,
-                            color: AppColor.primary900,
+                            color: AppColor.secondary04,
                             size: 20.r,
                           ),
                         ),
@@ -1061,7 +1061,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         padding: EdgeInsets.all(8.r),
                         child: Icon(
                           Icons.share,
-                          color: AppColor.primary900,
+                          color: AppColor.secondary04,
                           size: 20.r,
                         ),
                       ),
