@@ -246,12 +246,21 @@ class _MembersScreenState extends State<MembersScreen>
           CircleAvatar(
             radius: 24,
             backgroundColor: Colors.blue,
-            child: Text(
-              member.name.isNotEmpty ? member.name[0] : '?',
-              style: AppTextStyle(color: Colors.white).b2(),
-            ),
+            backgroundImage: member.profilePhotoUrl != null &&
+                    member.profilePhotoUrl!.isNotEmpty
+                ? NetworkImage(member.profilePhotoUrl!)
+                : null,
+            child: member.profilePhotoUrl == null ||
+                    member.profilePhotoUrl!.isEmpty
+                ? Text(
+                    member.name.isNotEmpty ? member.name[0] : '?',
+                    style: AppTextStyle(color: Colors.white).b2().copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  )
+                : null,
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
 
           // 정보 영역
           Expanded(
@@ -260,26 +269,17 @@ class _MembersScreenState extends State<MembersScreen>
               children: [
                 Text(
                   member.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: AppTextStyle(color: AppColor.secondary07).b2(),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   member.phone,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: AppTextStyle(color: AppColor.secondary04).b3(),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   member.position ?? '성도',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: AppTextStyle(color: AppColor.secondary04).b3(),
                 ),
               ],
             ),
@@ -302,7 +302,7 @@ class _MembersScreenState extends State<MembersScreen>
                   padding: EdgeInsets.zero,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Container(
                 width: 40,
                 height: 40,
