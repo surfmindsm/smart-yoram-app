@@ -149,7 +149,7 @@ class WorshipService {
 
   String get dayOfWeekName {
     // 백엔드 정의: 0=월요일, 1=화요일, 2=수요일, 3=목요일, 4=금요일, 5=토요일, 6=일요일
-    const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+    const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '주일'];
     return days[dayOfWeek % 7];
   }
 
