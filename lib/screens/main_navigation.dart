@@ -39,7 +39,7 @@ class _MainNavigationState extends State<MainNavigation> {
     ),
     const BottomNavigationBarItem(
       icon: Icon(Icons.announcement),
-      label: '공지',
+      label: '교회소식',
     ),
     const BottomNavigationBarItem(
       icon: Icon(Icons.settings),

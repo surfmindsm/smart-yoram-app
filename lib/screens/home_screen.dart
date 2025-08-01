@@ -116,43 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColor.background,
-      // 기존 앱바 주석 처리
-      // appBar: CommonAppBar(
-      //   title:
-      //       '안녕하세요, ${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
-      //   titleStyle: AppTextStyle(color: AppColor.secondary05).h1(),
-      //   scrolledUnderElevation: 0,
-      //   elevation: 0,
-      //   // shadowColor: Colors.transparent,
-      //   // surfaceTintColor: Colors.transparent,
-      //   actions: [
-      //     // 개발용 로그아웃 버튼 (테스트 목적)
-      //     // IconButton(
-      //     //   icon: const Icon(Icons.logout, color: Colors.red),
-      //     //   tooltip: '개발용 로그아웃',
-      //     //   onPressed: () => _showDevLogoutDialog(),
-      //     // ),
-      //     IconButton(
-      //       icon: const Icon(Icons.notifications),
-      //       onPressed: () {
-      //         Navigator.push(
-      //           context,
-      //           MaterialPageRoute(
-      //               builder: (context) => const NotificationCenterScreen()),
-      //         );
-      //       },
-      //     ),
-      //     IconButton(
-      //       icon: const Icon(Icons.settings),
-      //       onPressed: () {
-      //         Navigator.push(
-      //           context,
-      //           MaterialPageRoute(builder: (context) => const SettingsScreen()),
-      //         );
-      //       },
-      //     ),
-      //   ],
-      // ),
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: Column(
@@ -228,28 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      // 설정 버튼 주석 처리
-                      // const SizedBox(width: 12),
-                      // Container(
-                      //   padding: const EdgeInsets.all(8),
-                      //   decoration: BoxDecoration(
-                      //     color: Colors.white.withOpacity(0.1),
-                      //     borderRadius: BorderRadius.circular(20),
-                      //   ),
-                      //   child: InkWell(
-                      //     onTap: () {
-                      //       Navigator.push(
-                      //         context,
-                      //         MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                      //       );
-                      //     },
-                      //     child: const Icon(
-                      //       Icons.settings,
-                      //       color: Colors.white,
-                      //       size: 20,
-                      //     ),
-                      //   ),
-                      // ),
                     ],
                   ),
                 ],
@@ -266,6 +207,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     // 교회 정보 카드
                     _buildChurchInfoCard(),
                     const SizedBox(height: 16),
+
+                    // 오늘의 말씀
+                    _buildTodaysVerse(),
+                    const SizedBox(height: 24),
 
                     // 내 통계
                     _buildMyStats(),
@@ -947,5 +892,78 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     }
+  }
+
+  // 오늘의 말씀 섹션
+  Widget _buildTodaysVerse() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFEFF6FF), // blue-50
+            Color(0xFFF3E8FF), // purple-50
+          ],
+        ),
+        border: Border.all(
+          color: const Color(0xFFDEEEFF), // blue-100
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 헤더
+            Row(
+              children: [
+                Icon(
+                  Icons.menu_book,
+                  color: AppColor.primary900,
+                  size: 20.r,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  '오늘의 말씀',
+                  style: AppTextStyle(
+                    color: AppColor.secondary07,
+                  ).h2(),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            // 말씀 내용
+            Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '"여호와는 나의 목자시니 내게 부족함이 없으리로다"',
+                    style: AppTextStyle(color: AppColor.secondary06).b2(),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '시편 23:1',
+                    style:
+                        AppTextStyle(color: AppColor.primary600).c1().copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
