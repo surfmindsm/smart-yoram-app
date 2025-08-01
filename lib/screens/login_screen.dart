@@ -85,6 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -101,16 +102,21 @@ class _LoginScreenState extends State<LoginScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: ClampingScrollPhysics(),
                   padding: EdgeInsets.symmetric(
                     horizontal: constraints.maxWidth > 600 ? 60.w : 24.w,
                     vertical: 8.h,
                   ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                         SizedBox(
                             height: constraints.maxWidth > 600 ? 80.h : 60.h),
 
@@ -511,7 +517,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         //     ],
                         //   ),
                         // ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 );
