@@ -51,16 +51,27 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: constraints.maxWidth > 600 ? 60.w : 24.w,
-                vertical: 24.h,
-              ),
-              child: Form(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/back_image.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Container(
+          // 이미지 위에 반투명 오버레이 추가
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+          ),
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: constraints.maxWidth > 600 ? 60.w : 24.w,
+                    vertical: 24.h,
+                  ),
+                  child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,8 +86,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: constraints.maxWidth > 600 ? 120.w : 100.w,
                             height: constraints.maxWidth > 600 ? 120.w : 100.w,
                             decoration: BoxDecoration(
-                              color: AppColor.primary2,
+                              color: Colors.white.withOpacity(0.9),
                               shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  spreadRadius: 2,
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Icon(
                               Icons.church,
@@ -87,14 +106,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           SizedBox(height: 24.h),
                           Text(
                             '스마트 교회요람',
-                            style: AppTextStyle(color: AppColor.secondary07)
+                            style: AppTextStyle(color: Colors.white)
                                 .title1(),
                           ),
                           SizedBox(height: 8.h),
                           Text(
                             '교회 생활의 새로운 시작',
                             style:
-                                AppTextStyle(color: AppColor.secondary07).b2(),
+                                AppTextStyle(color: Colors.white).b2(),
                           ),
                         ],
                       ),
@@ -409,6 +428,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           },
+        ),
+      ),
         ),
       ),
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:smart_yoram_app/resource/color_style.dart';
+import 'package:smart_yoram_app/resource/text_style.dart';
 import '../widget/widgets.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
@@ -30,7 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final MemberService _memberService = MemberService();
   final ChurchService _churchService = ChurchService();
 
-  
   app_user.User? currentUser;
   Member? currentMember;
   Church? currentChurch;
@@ -50,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final userResponse = await _userService.getCurrentUser();
       if (userResponse.success && userResponse.data != null) {
         currentUser = userResponse.data!;
-        
+
         // 현재 사용자의 교인 정보 조회
         final membersResponse = await _memberService.getMembers(limit: 1000);
         if (membersResponse.success && membersResponse.data != null) {
@@ -113,21 +114,29 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
+      backgroundColor: AppColor.background,
       appBar: CommonAppBar(
-        title: '안녕하세요, ${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
+        title:
+            '안녕하세요, ${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
+        titleStyle: AppTextStyle(color: AppColor.secondary05).h1(),
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        // shadowColor: Colors.transparent,
+        // surfaceTintColor: Colors.transparent,
         actions: [
           // 개발용 로그아웃 버튼 (테스트 목적)
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.red),
-            tooltip: '개발용 로그아웃',
-            onPressed: () => _showDevLogoutDialog(),
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.logout, color: Colors.red),
+          //   tooltip: '개발용 로그아웃',
+          //   onPressed: () => _showDevLogoutDialog(),
+          // ),
           IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NotificationCenterScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const NotificationCenterScreen()),
               );
             },
           ),
@@ -153,19 +162,19 @@ class _HomeScreenState extends State<HomeScreen> {
               // 교회 정보 카드
               _buildChurchInfoCard(),
               const SizedBox(height: 16),
-              
+
               // 내 통계
               _buildMyStats(),
               const SizedBox(height: 24),
-              
+
               // 빠른 메뉴
               _buildQuickMenus(),
               const SizedBox(height: 24),
-              
+
               // 더 많은 기능
               _buildMoreFeaturesSection(),
               const SizedBox(height: 24),
-              
+
               // 최근 공지사항
               _buildRecentNotices(),
             ],
@@ -248,7 +257,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Card(
       elevation: 1,
       child: Padding(
@@ -259,7 +269,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(icon, size: 28, color: color), // 아이콘 크기 약간 줄임
             const SizedBox(height: 6), // 간격 약간 줄임
-            Flexible( // 텍스트 오버플로우 방지
+            Flexible(
+              // 텍스트 오버플로우 방지
               child: Text(
                 value,
                 style: TextStyle(
@@ -270,7 +281,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Flexible( // 텍스트 오버플로우 방지
+            Flexible(
+              // 텍스트 오버플로우 방지
               child: Text(
                 title,
                 style: const TextStyle(
@@ -309,7 +321,8 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CalendarScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const CalendarScreen()),
                 );
               },
             ),
@@ -392,7 +405,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const StaffDirectoryScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const StaffDirectoryScreen()),
                   );
                 },
               ),
@@ -410,7 +424,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const AdminDashboardScreen()),
                   );
                 },
               ),
@@ -424,7 +439,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const SettingsScreen()),
                   );
                 },
               ),
@@ -574,6 +590,4 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
-
-
 }
