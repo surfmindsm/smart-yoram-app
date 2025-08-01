@@ -23,12 +23,13 @@ class _MembersScreenState extends State<MembersScreen>
   List<Member> filteredMembers = [];
   bool isLoading = true;
 
-  final List<String> tabs = ['전체', '교역자', '장로', '권사', '집사'];
+  final List<String> tabs = ['전체', '교역자', '장로', '권사', '집사', '성도'];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: tabs.length, vsync: this);
+    _tabController.addListener(_filterMembers); // 탭 변경 시 필터링
     _loadMembers();
     _searchController.addListener(_filterMembers);
   }
@@ -93,12 +94,18 @@ class _MembersScreenState extends State<MembersScreen>
     int currentTab = _tabController.index;
 
     setState(() {
+      // allMembers가 비어있는 경우 빈 리스트 반환
+      if (allMembers.isEmpty) {
+        filteredMembers = [];
+        return;
+      }
+
       List<Member> baseList = allMembers;
 
       // 탭에 따른 필터링
       switch (currentTab) {
         case 0: // 전체
-          baseList = allMembers;
+          baseList = List.from(allMembers);
           break;
         case 1: // 교역자
           baseList = allMembers.where((m) => m.position == '교역자').toList();
@@ -112,6 +119,11 @@ class _MembersScreenState extends State<MembersScreen>
         case 4: // 집사
           baseList = allMembers
               .where((m) => m.position?.contains('집사') == true)
+              .toList();
+          break;
+        case 5: // 성도
+          baseList = allMembers
+              .where((m) => m.position?.contains('성도') == true)
               .toList();
           break;
       }
@@ -191,8 +203,9 @@ class _MembersScreenState extends State<MembersScreen>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children:
-                  List.generate(tabs.length, (index) => _buildMemberList()),
+              children: List.generate(tabs.length, (tabIndex) {
+                return _buildMemberList();
+              }),
             ),
           ),
         ],
@@ -219,6 +232,10 @@ class _MembersScreenState extends State<MembersScreen>
       itemCount: filteredMembers.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
+        // 안전한 인덱스 체크 추가
+        if (index >= filteredMembers.length) {
+          return const SizedBox.shrink();
+        }
         final member = filteredMembers[index];
         return _buildMemberCard(member);
       },
@@ -260,7 +277,7 @@ class _MembersScreenState extends State<MembersScreen>
                   )
                 : null,
           ),
-          SizedBox(width: 16),
+          SizedBox(width: 16.w),
 
           // 정보 영역
           Expanded(

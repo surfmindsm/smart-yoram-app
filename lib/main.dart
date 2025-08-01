@@ -11,7 +11,6 @@ import 'screens/attendance_screen.dart';
 import 'screens/bulletin_screen.dart';
 import 'screens/notices_screen.dart';
 import 'screens/member_card_screen.dart';
-import 'screens/contacts_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/prayer_screen.dart';
 import 'screens/settings_screen.dart';
@@ -20,16 +19,17 @@ import 'services/fcm_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Firebase 초기화를 더 안전하게 처리
   await initializeFirebase();
-  
+
   // Supabase 초기화 (오류 방지용)
   await Supabase.initialize(
     url: 'https://dummy.supabase.co', // 더미 URL
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1bW15IiwiYXVkIjoiYXV0aGVudGljYXRlZCIsImV4cCI6MTk5MzQwODAwMCwiaWF0IjoxNjk0NDY0MDAwLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7fSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTY5NDQ2NDAwMH1dLCJzZXNzaW9uX2lkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIn0.dummy_signature', // 더미 키
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1bW15IiwiYXVkIjoiYXV0aGVudGljYXRlZCIsImV4cCI6MTk5MzQwODAwMCwiaWF0IjoxNjk0NDY0MDAwLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7fSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTY5NDQ2NDAwMH1dLCJzZXNzaW9uX2lkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIn0.dummy_signature', // 더미 키
   );
-  
+
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -67,7 +67,6 @@ class MyApp extends ConsumerWidget {
             '/bulletin': (context) => const BulletinScreen(),
             '/notices': (context) => const NoticesScreen(),
             '/member-card': (context) => const MemberCardScreen(),
-            '/contacts': (context) => const ContactsScreen(),
             '/calendar': (context) => const CalendarScreen(),
             '/prayer': (context) => const PrayerScreen(),
             '/settings': (context) => const SettingsScreen(),
@@ -111,7 +110,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
         return;
       }
-      
+
       final hasStoredAuth = await _authService.loadStoredAuth();
       if (mounted) {
         setState(() {
@@ -187,7 +186,7 @@ Future<void> initializeFirebase() async {
     // Firebase 초기화 시도
     await Firebase.initializeApp();
     print('✅ Firebase가 성공적으로 초기화되었습니다.');
-    
+
     // FCM 서비스 초기화 (Firebase 초기화 성공 시에만)
     try {
       await FCMService.instance.initialize();
@@ -199,7 +198,7 @@ Future<void> initializeFirebase() async {
   } catch (firebaseError) {
     print('⚠️ Firebase 초기화 실패: $firebaseError');
     print('ℹ️ Firebase 관련 기능이 비활성화되지만 앱은 정상 작동합니다.');
-    
+
     // Firebase 관련 기능들을 비활성화 상태로 설정
     // 필요시 여기에 fallback 로직 추가
   }
