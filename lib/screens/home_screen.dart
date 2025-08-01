@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final services = await _worshipServiceApi.getWorshipServices(
         isActive: true,
       );
-      
+
       setState(() {
         worshipServices = services;
         _isLoadingWorshipServices = false;
@@ -1118,8 +1118,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-
-
   // 말씀 공유하기 기능
   void _shareVerse() {
     if (_currentVerse != null) {
@@ -1287,7 +1285,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           end: Alignment.bottomRight,
           colors: [
             Color(0xFF374151), // gray-700
-            Color(0xFF1F2937), // gray-800
+            Color.fromARGB(255, 21, 28, 38), // gray-800
           ],
         ),
         borderRadius: BorderRadius.circular(16.r),
@@ -1347,33 +1345,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 worship.name,
                                 style: AppTextStyle(
                                   color: Colors.white,
-                                ).b2(),
+                                ).b3(),
                                 overflow: TextOverflow.ellipsis,
-                              ),
-                              SizedBox(height: 2.h),
-                              Text(
-                                worship.dayOfWeekName,
-                                style: AppTextStyle(
-                                  color: Colors.grey[400]!,
-                                ).c1(),
                               ),
                             ],
                           ),
                         ),
                         // 점선
                         Expanded(
-                          flex: 2,
+                          flex: 1,
                           child: Container(
                             height: 1.h,
                             margin: EdgeInsets.symmetric(horizontal: 4.w),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                ...List.generate(15, (index) => 
-                                  Container(
+                                ...List.generate(
+                                  5,
+                                  (index) => Container(
                                     width: 2.w,
                                     height: 1.h,
-                                    margin: EdgeInsets.symmetric(horizontal: 0.5.w),
+                                    margin:
+                                        EdgeInsets.symmetric(horizontal: 0.5.w),
                                     color: Colors.grey.withOpacity(0.5),
                                   ),
                                 ),
@@ -1385,7 +1378,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Expanded(
                           flex: 3,
                           child: Text(
-                            worship.locationWithOnlineStatus,
+                            worship.location,
                             style: AppTextStyle(
                               color: Colors.grey[300]!,
                             ).b3(),
@@ -1397,13 +1390,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         // 시간
                         Expanded(
                           flex: 3,
-                          child: Text(
-                            worship.formattedStartTime,
-                            style: AppTextStyle(
-                              color: Colors.white,
-                            ).b2(),
-                            textAlign: TextAlign.end,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                worship.dayOfWeekName,
+                                style: AppTextStyle(
+                                  color: Colors.grey[400]!,
+                                ).c1(),
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                worship.formattedStartTime,
+                                style: AppTextStyle(
+                                  color: Colors.white,
+                                ).b3(),
+                                textAlign: TextAlign.end,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
                       ],

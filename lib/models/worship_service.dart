@@ -61,18 +61,20 @@ class WorshipService {
       if (timeString.contains('T') || timeString.contains('-')) {
         return DateTime.parse(timeString);
       }
-      
+
       // HH:mm:ss 형식인 경우 오늘 날짜와 결합
       final today = DateTime.now();
       final timeParts = timeString.split(':');
       if (timeParts.length >= 2) {
         final hour = int.tryParse(timeParts[0]) ?? 0;
         final minute = int.tryParse(timeParts[1]) ?? 0;
-        final second = timeParts.length >= 3 ? (int.tryParse(timeParts[2]) ?? 0) : 0;
-        
-        return DateTime(today.year, today.month, today.day, hour, minute, second);
+        final second =
+            timeParts.length >= 3 ? (int.tryParse(timeParts[2]) ?? 0) : 0;
+
+        return DateTime(
+            today.year, today.month, today.day, hour, minute, second);
       }
-      
+
       // 파싱 실패 시 현재 시간 반환
       return DateTime.now();
     } catch (e) {
@@ -120,7 +122,7 @@ class WorshipService {
     final minute = startTime.minute;
     final period = hour < 12 ? '오전' : '오후';
     final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-    
+
     if (minute == 0) {
       return '$period ${displayHour}시';
     } else {
@@ -137,7 +139,7 @@ class WorshipService {
     final minute = time.minute;
     final period = hour < 12 ? '오전' : '오후';
     final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-    
+
     if (minute == 0) {
       return '$period ${displayHour}시';
     } else {
@@ -155,10 +157,5 @@ class WorshipService {
   String get dayOfWeekShort {
     const days = ['월', '화', '수', '목', '금', '토', '일'];
     return days[dayOfWeek % 7];
-  }
-
-  // 온라인/오프라인 표시
-  String get locationWithOnlineStatus {
-    return isOnline ? '$location (온라인)' : location;
   }
 }
