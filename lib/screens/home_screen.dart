@@ -131,11 +131,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       setState(() {
         isLoading = false;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('데이터 로드 실패: $e')),
-        );
-      }
+      // 스낵바 제거됨
     }
   }
 
@@ -634,200 +630,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildStatCard(
-      String title, String value, IconData icon, Color color) {
-    return Card(
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12), // 패딩 약간 줄임
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min, // 필요한 최소 공간만 사용
-          children: [
-            Icon(icon, size: 28, color: color), // 아이콘 크기 약간 줄임
-            const SizedBox(height: 6), // 간격 약간 줄임
-            Flexible(
-              // 텍스트 오버플로우 방지
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 18, // 폰트 크기 약간 줄임
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Flexible(
-              // 텍스트 오버플로우 방지
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 11, // 폰트 크기 약간 줄임
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickMenus() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: '빠른 메뉴'),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            QuickMenuItem(
-              title: '출석체크',
-              icon: Icons.check_circle,
-              onTap: () {
-                Navigator.pushNamed(context, '/attendance');
-              },
-            ),
-            QuickMenuItem(
-              title: '일정',
-              icon: Icons.calendar_today,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CalendarScreen()),
-                );
-              },
-            ),
-            QuickMenuItem(
-              title: '기도요청',
-              icon: Icons.favorite,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const PrayerScreen()),
-                );
-              },
-            ),
-            QuickMenuItem(
-              title: 'QR체크',
-              icon: Icons.qr_code,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const QRScanScreen()),
-                );
-              },
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMoreFeaturesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: '더 많은 기능'),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: FeatureCard(
-                title: '교회 소식',
-                icon: Icons.announcement,
-                description: '공지사항과 교회 소식을 확인하세요',
-                onTap: () {
-                  Navigator.pushNamed(context, '/notices');
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FeatureCard(
-                title: '교인 명단',
-                icon: Icons.people,
-                description: '교인들의 연락처를 찾아보세요',
-                onTap: () {
-                  Navigator.pushNamed(context, '/members');
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: FeatureCard(
-                title: '주보',
-                icon: Icons.book,
-                description: '이번 주 주보를 확인하세요',
-                onTap: () {
-                  Navigator.pushNamed(context, '/bulletin');
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FeatureCard(
-                title: '교역자 명단',
-                icon: Icons.people,
-                description: '교역자와 임직자 연락처를 확인하세요',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const StaffDirectoryScreen()),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: FeatureCard(
-                title: '관리자',
-                icon: Icons.admin_panel_settings,
-                description: '교회 관리 및 시스템 설정',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const AdminDashboardScreen()),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FeatureCard(
-                title: '설정',
-                icon: Icons.settings,
-                description: '앱 설정과 개인정보를 관리하세요',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SettingsScreen()),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   // 최근 공지사항 위젯
   Widget _buildRecentAnnouncements() {
     return Container(
@@ -1051,12 +853,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           '/login',
           (route) => false,
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('로그아웃되었습니다. 다음 앱 시작 시 자동 로그인됩니다.'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // 스낵바 제거됨
       }
     } catch (e) {
       if (mounted) {
@@ -1218,6 +1015,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             SizedBox(height: 16.h),
             // 말씀 내용
             Container(
+              width: double.infinity,
               padding: EdgeInsets.all(12.r),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.7),
@@ -1236,7 +1034,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         )
                       : _currentVerse != null
                           ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 AnimatedSwitcher(
                                   duration: const Duration(milliseconds: 600),
@@ -1364,88 +1162,88 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     )
                   else
                     ...worshipServices.map((worship) => Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: Row(
-                      children: [
-                        // 예배명 + 요일
-                        Expanded(
-                          flex: 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          padding: EdgeInsets.only(bottom: 16.h),
+                          child: Row(
                             children: [
-                              Text(
-                                worship.name,
-                                style: AppTextStyle(
-                                  color: Colors.white,
-                                ).b3(),
-                                overflow: TextOverflow.ellipsis,
+                              // 예배명 + 요일
+                              Expanded(
+                                flex: 3,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      worship.name,
+                                      style: AppTextStyle(
+                                        color: Colors.white,
+                                      ).b3(),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
-                        ),
-                        // 점선
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            height: 1.h,
-                            margin: EdgeInsets.symmetric(horizontal: 4.w),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ...List.generate(
-                                  5,
-                                  (index) => Container(
-                                    width: 2.w,
-                                    height: 1.h,
-                                    margin:
-                                        EdgeInsets.symmetric(horizontal: 0.5.w),
-                                    color: Colors.grey.withOpacity(0.5),
+                              // 점선
+                              Expanded(
+                                flex: 1,
+                                child: Container(
+                                  height: 1.h,
+                                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ...List.generate(
+                                        5,
+                                        (index) => Container(
+                                          width: 2.w,
+                                          height: 1.h,
+                                          margin: EdgeInsets.symmetric(
+                                              horizontal: 0.5.w),
+                                          color: Colors.grey.withOpacity(0.5),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // 장소
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            worship.location,
-                            style: AppTextStyle(
-                              color: Colors.grey[300]!,
-                            ).b3(),
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        // 시간
-                        Expanded(
-                          flex: 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                worship.dayOfWeekName,
-                                style: AppTextStyle(
-                                  color: Colors.grey[400]!,
-                                ).c1(),
                               ),
-                              SizedBox(height: 2.h),
-                              Text(
-                                worship.formattedStartTime,
-                                style: AppTextStyle(
-                                  color: Colors.white,
-                                ).b3(),
-                                textAlign: TextAlign.end,
-                                overflow: TextOverflow.ellipsis,
+                              // 장소
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  worship.location,
+                                  style: AppTextStyle(
+                                    color: Colors.grey[300]!,
+                                  ).b3(),
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
+                              // 시간
+                              Expanded(
+                                flex: 3,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      worship.dayOfWeekName,
+                                      style: AppTextStyle(
+                                        color: Colors.grey[400]!,
+                                      ).c1(),
+                                    ),
+                                    SizedBox(height: 2.h),
+                                    Text(
+                                      worship.formattedStartTime,
+                                      style: AppTextStyle(
+                                        color: Colors.white,
+                                      ).b3(),
+                                      textAlign: TextAlign.end,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                   )),
+                        )),
                 ],
               ),
               secondChild: const SizedBox(),

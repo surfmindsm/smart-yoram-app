@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_yoram_app/resource/color_style.dart';
 import 'home_screen.dart';
 import 'contacts_screen.dart';
 import 'bulletin_screen.dart';
@@ -50,6 +51,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.background,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
