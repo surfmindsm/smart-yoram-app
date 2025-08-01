@@ -315,9 +315,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: Colors.white,
                           ).buttonLarge(),
                           style: ButtonStyle(
-                            backgroundColor: WidgetStatePropertyAll(
-                              AppColor.secondary07,
-                            ),
+                            backgroundColor:
+                                WidgetStatePropertyAll(AppColor.secondary07),
                           ),
                           type: ButtonType.primary,
                           width: double.infinity,

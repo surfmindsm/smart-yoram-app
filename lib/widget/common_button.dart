@@ -57,19 +57,25 @@ class CommonButton extends StatelessWidget {
 
     switch (type) {
       case ButtonType.primary:
+        // 사용자가 제공한 backgroundColor 추출
+        final customBackgroundColor = style?.backgroundColor?.resolve({});
+        final customForegroundColor = style?.foregroundColor?.resolve({});
+        final customPadding = style?.padding?.resolve({});
+        final customShape = style?.shape?.resolve({});
+        final customElevation = style?.elevation?.resolve({});
+        
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
-          style: style ??
-              ElevatedButton.styleFrom(
-                backgroundColor: AppColor.primary900,
-                foregroundColor: Colors.white,
-                padding: padding ??
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                elevation: 0.0,
-              ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: customBackgroundColor ?? AppColor.primary900,
+            foregroundColor: customForegroundColor ?? Colors.white,
+            padding: customPadding ?? padding ??
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            shape: customShape ?? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            elevation: customElevation ?? 0.0,
+          ),
           child: child,
         );
         break;
@@ -85,7 +91,7 @@ class CommonButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(12.0),
             ),
             elevation: 0.0,
-          ),
+          ).merge(style),
           child: child,
         );
         break;
@@ -100,7 +106,7 @@ class CommonButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(8.0),
             ),
             elevation: 0.0,
-          ),
+          ).merge(style),
           child: child,
         );
         break;
@@ -116,7 +122,7 @@ class CommonButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(12.0),
             ),
             elevation: 0.0,
-          ),
+          ).merge(style),
           child: child,
         );
         break;
