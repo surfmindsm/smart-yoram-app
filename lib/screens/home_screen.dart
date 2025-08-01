@@ -292,33 +292,282 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildChurchInfoCard() {
-    return InfoCardWidget(
-      title: '교회 정보',
-      icon: Icons.church,
-      backgroundColor: AppColor.white,
-      elevation: 0,
-      items: [
-        InfoItem(
-          label: '교회명',
-          value: currentChurch?.name ?? '스마트 요람교회',
-          icon: Icons.home,
-        ),
-        InfoItem(
-          label: '담임목사',
-          value: currentChurch?.pastorName ?? '김요람 목사',
-          icon: Icons.person,
-        ),
-        InfoItem(
-          label: '전화번호',
-          value: currentChurch?.phone ?? '02-1234-5678',
-          icon: Icons.phone,
-        ),
-        InfoItem(
-          label: '주소',
-          value: currentChurch?.address ?? '서울시 강남구 요람로 123',
-          icon: Icons.location_on,
-        ),
-      ],
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(16.r),
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.black.withOpacity(0.05),
+        //     spreadRadius: 1,
+        //     blurRadius: 10,
+        //     offset: const Offset(0, 2),
+        //   ),
+        // ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 헤더: 교회 아이콘과 교회명
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: AppColor.blue100,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Container(
+                  width: 24.w,
+                  height: 24.h,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColor.primary600,
+                        AppColor.primary8,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: Icon(
+                    Icons.church,
+                    color: AppColor.white,
+                    size: 14.sp,
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    currentChurch?.name ?? '성암교회',
+                    style: AppTextStyle(
+                      color: AppColor.secondary07,
+                    ).h2(),
+                  ),
+                  Text(
+                    'Community Church',
+                    style: AppTextStyle(
+                      color: AppColor.secondary04,
+                    ).b4(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+
+          // 담임목사 정보
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColor.background,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(6.r),
+                  decoration: BoxDecoration(
+                    color: AppColor.blue200,
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    color: AppColor.primary600,
+                    size: 16,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '담임목사',
+                        style: AppTextStyle(
+                          color: AppColor.secondary04,
+                        ).c1(),
+                      ),
+                      Text(
+                        currentChurch?.pastorName ?? '안영목 목사',
+                        style: AppTextStyle(
+                          color: AppColor.secondary07,
+                        ).b2(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // 전화번호와 위치 (2열 그리드)
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.all(12.r),
+                  decoration: BoxDecoration(
+                    color: AppColor.background,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(6.r),
+                        decoration: BoxDecoration(
+                          color: AppColor.green200,
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Icon(
+                          Icons.phone,
+                          color: AppColor.green600,
+                          size: 16,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '전화',
+                              style: AppTextStyle(
+                                color: AppColor.secondary04,
+                              ).c1(),
+                            ),
+                            Text(
+                              currentChurch?.phone ?? '031-563-5210',
+                              style: AppTextStyle(
+                                color: AppColor.secondary07,
+                              ).b3(),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.all(12.r),
+                  decoration: BoxDecoration(
+                    color: AppColor.background,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(6.r),
+                        decoration: BoxDecoration(
+                          color: AppColor.orange200,
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Icon(
+                          Icons.location_on,
+                          color: AppColor.orange600,
+                          size: 16,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '위치',
+                              style: AppTextStyle(
+                                color: AppColor.secondary04,
+                              ).c1(),
+                            ),
+                            Text(
+                              '구리시',
+                              style: AppTextStyle(
+                                color: AppColor.secondary07,
+                              ).b3(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+
+          // 교회 주소 (파란색 배경)
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColor.background,
+              borderRadius: BorderRadius.circular(12.r),
+              // border: Border.all(
+              //   color: AppColor.blue200,
+              //   width: 1,
+              // ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 2.h),
+                  child: Icon(
+                    Icons.location_on,
+                    color: AppColor.primary600,
+                    size: 16,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '교회 주소',
+                        style: AppTextStyle(
+                          color: AppColor.primary600,
+                        ).c1(),
+                      ),
+                      SizedBox(height: 4.h),
+                      RichText(
+                        text: TextSpan(
+                          style: AppTextStyle(
+                            color: AppColor.secondary06,
+                          ).b3(),
+                          children: [
+                            TextSpan(
+                              text: currentChurch?.address ??
+                                  '경기도 구리시 검배로 136번길 32\n',
+                            ),
+                            TextSpan(
+                              text: '(토평동)',
+                              style: AppTextStyle(
+                                color: AppColor.secondary04,
+                              ).b4(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
