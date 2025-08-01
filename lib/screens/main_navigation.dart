@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'profile_screen.dart';
-import 'attendance_screen.dart';
+import 'contacts_screen.dart';
 import 'bulletin_screen.dart';
 import 'notices_screen.dart';
+import 'settings_screen.dart';
+import 'members_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -14,13 +15,13 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  
+
   final List<Widget> _screens = [
     const HomeScreen(),
-    const ProfileScreen(),
-    const AttendanceScreen(),
+    const MembersScreen(),
     const BulletinScreen(),
     const NoticesScreen(),
+    const SettingsScreen(),
   ];
 
   final List<BottomNavigationBarItem> _navItems = [
@@ -29,12 +30,8 @@ class _MainNavigationState extends State<MainNavigation> {
       label: '홈',
     ),
     const BottomNavigationBarItem(
-      icon: Icon(Icons.person),
-      label: '내 정보',
-    ),
-    const BottomNavigationBarItem(
-      icon: Icon(Icons.check_box),
-      label: '출석',
+      icon: Icon(Icons.contacts),
+      label: '주소록',
     ),
     const BottomNavigationBarItem(
       icon: Icon(Icons.book),
@@ -43,6 +40,10 @@ class _MainNavigationState extends State<MainNavigation> {
     const BottomNavigationBarItem(
       icon: Icon(Icons.announcement),
       label: '공지',
+    ),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.settings),
+      label: '설정',
     ),
   ];
 
