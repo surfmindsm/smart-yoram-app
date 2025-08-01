@@ -3,9 +3,11 @@ import '../widget/widgets.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../services/member_service.dart';
+import '../services/church_service.dart';
 
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
+import '../models/church.dart';
 
 import 'calendar_screen.dart';
 import 'prayer_screen.dart';
@@ -26,10 +28,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
   final MemberService _memberService = MemberService();
+  final ChurchService _churchService = ChurchService();
 
   
   app_user.User? currentUser;
   Member? currentMember;
+  Church? currentChurch;
   Map<String, dynamic>? churchInfo;
   Map<String, dynamic>? userStats;
   bool isLoading = true;
@@ -68,13 +72,14 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
 
-      // 교회 정보 로드 (현재는 임시 데이터, 추후 Church API 연동)
-      churchInfo = {
-        'name': '스마트 교회요람',
-        'pastor': '담임목사',
-        'phone': '031-123-4567',
-        'email': 'info@smartchurch.com',
-      };
+      // 교회 정보 로드
+      final churchResponse = await _churchService.getMyChurch();
+      if (churchResponse.success && churchResponse.data != null) {
+        currentChurch = churchResponse.data!;
+        print('🏦 HOME_SCREEN: 교회 정보 로드 성공: ${currentChurch!.name}');
+      } else {
+        print('🏦 HOME_SCREEN: 교회 정보 로드 실패, 샘플 데이터 사용');
+      }
 
       // 사용자 개인 통계 로드 (임시 데이터, 추후 실제 통계 API 연동)
       userStats = {
@@ -172,28 +177,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildChurchInfoCard() {
     return InfoCardWidget(
-      title: '내 정보',
-      icon: Icons.person_pin,
+      title: '교회 정보',
+      icon: Icons.church,
       items: [
         InfoItem(
-          label: '이름',
-          value: currentMember?.name ?? currentUser?.fullName ?? '이름 없음',
+          label: '교회명',
+          value: currentChurch?.name ?? '스마트 요람교회',
+          icon: Icons.home,
+        ),
+        InfoItem(
+          label: '담임목사',
+          value: currentChurch?.pastorName ?? '김요람 목사',
           icon: Icons.person,
         ),
         InfoItem(
           label: '전화번호',
-          value: currentMember?.phone ?? '전화번호 없음',
+          value: currentChurch?.phone ?? '02-1234-5678',
           icon: Icons.phone,
         ),
         InfoItem(
-          label: '이메일',
-          value: currentUser?.email ?? '이메일 없음',
-          icon: Icons.email,
-        ),
-        InfoItem(
-          label: '권한',
-          value: _getRoleDisplayName(currentUser?.role),
-          icon: Icons.security,
+          label: '주소',
+          value: currentChurch?.address ?? '서울시 강남구 요람로 123',
+          icon: Icons.location_on,
         ),
       ],
     );
@@ -570,16 +575,5 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String _getRoleDisplayName(String? role) {
-    switch (role) {
-      case 'admin':
-        return '관리자';
-      case 'pastor':
-        return '목회자';
-      case 'member':
-        return '교인';
-      default:
-        return '미정';
-    }
-  }
+
 }

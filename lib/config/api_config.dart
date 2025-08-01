@@ -24,6 +24,10 @@ class ApiConfig {
   static const String membersUploadPhoto = '/members/{member_id}/upload-photo';
   static const String membersDeletePhoto = '/members/{member_id}/delete-photo';
 
+  // 교회 관리
+  static const String churches = '/churches/';
+  static const String churchesMy = '/churches/my';
+
   // 출석 관리
   static const String attendances = '/attendances/';
 

@@ -3,6 +3,7 @@
 export 'api_service.dart';
 export 'auth_service.dart';
 export 'member_service.dart';
+export 'church_service.dart';
 export 'attendance_service.dart';
 export 'qr_service.dart';
 export 'sms_service.dart';

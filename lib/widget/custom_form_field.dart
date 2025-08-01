@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_yoram_app/resource/text_style.dart';
+import 'package:smart_yoram_app/resource/color_style.dart';
 
 /// 공통 폼 필드 위젯
 class CustomFormField extends StatelessWidget {
   final String label;
   final String? hintText;
   final TextStyle? hintStyle;
+  final TextStyle? labelStyle;
   final TextEditingController? controller;
   final String? initialValue;
   final ValueChanged<String>? onChanged;
@@ -16,12 +20,24 @@ class CustomFormField extends StatelessWidget {
   final Widget? suffixIcon;
   final Widget? prefixIcon;
   final bool required;
+  // InputDecoration 관련 속성들
+  final InputBorder? border;
+  final InputBorder? focusedBorder;
+  final InputBorder? enabledBorder;
+  final InputBorder? errorBorder;
+  final InputBorder? focusedErrorBorder;
+  final bool filled;
+  final Color? fillColor;
+  final EdgeInsetsGeometry? contentPadding;
+  final Color? prefixIconColor;
+  final Color? suffixIconColor;
 
   const CustomFormField({
     super.key,
     required this.label,
     this.hintText,
     this.hintStyle,
+    this.labelStyle,
     this.controller,
     this.initialValue,
     this.onChanged,
@@ -33,6 +49,17 @@ class CustomFormField extends StatelessWidget {
     this.suffixIcon,
     this.prefixIcon,
     this.required = false,
+    // InputDecoration 관련 속성들
+    this.border,
+    this.focusedBorder,
+    this.enabledBorder,
+    this.errorBorder,
+    this.focusedErrorBorder,
+    this.filled = false,
+    this.fillColor,
+    this.contentPadding,
+    this.prefixIconColor,
+    this.suffixIconColor,
   });
 
   @override
@@ -44,10 +71,11 @@ class CustomFormField extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: labelStyle ??
+                  const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
             if (required) ...[
               const SizedBox(width: 4),
@@ -80,17 +108,25 @@ class CustomFormField extends StatelessWidget {
           enabled: enabled,
           decoration: InputDecoration(
             hintText: hintText,
-            border: OutlineInputBorder(
+            hintStyle: hintStyle,
+            border: border ?? OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            focusedBorder: OutlineInputBorder(
+            focusedBorder: focusedBorder ?? OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.blue[700]!),
+              borderSide: BorderSide(color: AppColor.primary900),
             ),
+            enabledBorder: enabledBorder,
+            errorBorder: errorBorder,
+            focusedErrorBorder: focusedErrorBorder,
             suffixIcon: suffixIcon,
-            prefixIcon: prefixIcon,
-            filled: !enabled,
-            fillColor: enabled ? null : Colors.grey[100],
+            prefixIcon: prefixIcon != null ? IconTheme(
+              data: IconThemeData(color: prefixIconColor),
+              child: prefixIcon!,
+            ) : null,
+            filled: filled || !enabled,
+            fillColor: fillColor ?? (enabled ? null : Colors.grey[100]),
+            contentPadding: contentPadding,
           ),
         ),
       ],
@@ -106,6 +142,8 @@ class CustomDropdownField<T> extends StatelessWidget {
   final ValueChanged<T?>? onChanged;
   final FormFieldValidator<T>? validator;
   final String? hintText;
+  final TextStyle? hintStyle;
+  final TextStyle? labelStyle;
   final bool enabled;
   final bool required;
 
@@ -117,6 +155,8 @@ class CustomDropdownField<T> extends StatelessWidget {
     this.onChanged,
     this.validator,
     this.hintText,
+    this.hintStyle,
+    this.labelStyle,
     this.enabled = true,
     this.required = false,
   });
@@ -130,10 +170,11 @@ class CustomDropdownField<T> extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: labelStyle ??
+                  const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
             if (required) ...[
               const SizedBox(width: 4),
@@ -155,12 +196,13 @@ class CustomDropdownField<T> extends StatelessWidget {
           validator: validator,
           decoration: InputDecoration(
             hintText: hintText,
+            hintStyle: hintStyle,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.blue[700]!),
+              borderSide: BorderSide(color: AppColor.primary900),
             ),
             filled: !enabled,
             fillColor: enabled ? null : Colors.grey[100],

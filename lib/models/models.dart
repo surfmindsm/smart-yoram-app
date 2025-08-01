@@ -3,6 +3,7 @@
 export 'api_response.dart';
 export 'user.dart';
 export 'member.dart';
+export 'church.dart';
 export 'church_member.dart';
 export 'attendance.dart';
 export 'qr_code.dart';

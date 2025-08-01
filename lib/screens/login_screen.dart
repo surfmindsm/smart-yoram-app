@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
+import 'package:smart_yoram_app/resource/color_style.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
 import '../models/api_response.dart';
 import '../services/user_service.dart';
 import '../widget/widgets.dart';
-import '../resource/text_style.dart';
-import '../resource/color_style.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -173,13 +172,34 @@ class _LoginScreenState extends State<LoginScreen> {
                     // 사용자명/이메일/전화번호 입력
                     CustomFormField(
                       label: _loginType == 'email' ? '이메일' : '전화번호',
+                      labelStyle:
+                          AppTextStyle(color: AppColor.secondary07).b2(),
                       controller: _usernameController,
                       hintText: _loginType == 'email'
                           ? 'user@example.com'
                           : '01012345678',
+                      hintStyle: AppTextStyle(color: AppColor.secondary03).b2(),
                       prefixIcon: Icon(
                         _loginType == 'email' ? Icons.email : Icons.phone,
                       ),
+                      prefixIconColor: AppColor.secondary03,
+                      fillColor: AppColor.secondary01,
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColor.transparent),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide:
+                            BorderSide(color: AppColor.primary900, width: 1),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColor.transparent),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 16.h),
                       keyboardType: _loginType == 'email'
                           ? TextInputType.emailAddress
                           : TextInputType.phone,
@@ -203,10 +223,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     // 비밀번호 입력
                     CustomFormField(
                       label: '비밀번호',
+                      labelStyle:
+                          AppTextStyle(color: AppColor.secondary07).b2(),
                       controller: _passwordController,
                       hintText: '비밀번호를 입력하세요',
+                      hintStyle: AppTextStyle(color: AppColor.secondary03).b2(),
                       prefixIcon: const Icon(Icons.lock),
+                      prefixIconColor: AppColor.secondary03,
+                      fillColor: AppColor.secondary01,
+                      filled: true,
                       obscureText: obscurePassword,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColor.transparent),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide:
+                            BorderSide(color: AppColor.primary900, width: 1),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: AppColor.transparent),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 16.h),
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscurePassword
