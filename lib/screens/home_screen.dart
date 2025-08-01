@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
 import '../widget/widgets.dart';
@@ -115,70 +116,176 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColor.background,
-      appBar: CommonAppBar(
-        title:
-            '안녕하세요, ${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
-        titleStyle: AppTextStyle(color: AppColor.secondary05).h1(),
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        // shadowColor: Colors.transparent,
-        // surfaceTintColor: Colors.transparent,
-        actions: [
-          // 개발용 로그아웃 버튼 (테스트 목적)
-          // IconButton(
-          //   icon: const Icon(Icons.logout, color: Colors.red),
-          //   tooltip: '개발용 로그아웃',
-          //   onPressed: () => _showDevLogoutDialog(),
-          // ),
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const NotificationCenterScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
-        ],
-      ),
+      // 기존 앱바 주석 처리
+      // appBar: CommonAppBar(
+      //   title:
+      //       '안녕하세요, ${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
+      //   titleStyle: AppTextStyle(color: AppColor.secondary05).h1(),
+      //   scrolledUnderElevation: 0,
+      //   elevation: 0,
+      //   // shadowColor: Colors.transparent,
+      //   // surfaceTintColor: Colors.transparent,
+      //   actions: [
+      //     // 개발용 로그아웃 버튼 (테스트 목적)
+      //     // IconButton(
+      //     //   icon: const Icon(Icons.logout, color: Colors.red),
+      //     //   tooltip: '개발용 로그아웃',
+      //     //   onPressed: () => _showDevLogoutDialog(),
+      //     // ),
+      //     IconButton(
+      //       icon: const Icon(Icons.notifications),
+      //       onPressed: () {
+      //         Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //               builder: (context) => const NotificationCenterScreen()),
+      //         );
+      //       },
+      //     ),
+      //     IconButton(
+      //       icon: const Icon(Icons.settings),
+      //       onPressed: () {
+      //         Navigator.push(
+      //           context,
+      //           MaterialPageRoute(builder: (context) => const SettingsScreen()),
+      //         );
+      //       },
+      //     ),
+      //   ],
+      // ),
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 교회 정보 카드
-              _buildChurchInfoCard(),
-              const SizedBox(height: 16),
+        child: Column(
+          children: [
+            // 상단 안전 영역 추가 (SafeArea 영역 위의 여백)
+            SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+            //헤더 영역
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+              margin: EdgeInsets.symmetric(horizontal: 16.w),
+              decoration: BoxDecoration(
+                color: AppColor.secondary01, // 파란색 배경
+                borderRadius: BorderRadius.all(Radius.circular(20.r)),
+                // boxShadow: [
+                //   BoxShadow(
+                //     color: Colors.black.withOpacity(0.05),
+                //     spreadRadius: 1,
+                //     blurRadius: 10,
+                //     offset: const Offset(0, 3),
+                //   ),
+                // ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '안녕하세요',
+                        style: AppTextStyle(
+                          color: AppColor.secondary06,
+                        ).b4(),
+                      ),
+                      Text(
+                        '${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
+                        style: AppTextStyle(
+                          color: AppColor.secondary07,
+                        ).h1(),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8.r),
+                        decoration: BoxDecoration(
+                          color: AppColor.primary900.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(20.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NotificationCenterScreen()),
+                            );
+                          },
+                          child: const Icon(
+                            Icons.notifications_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      // 설정 버튼 주석 처리
+                      // const SizedBox(width: 12),
+                      // Container(
+                      //   padding: const EdgeInsets.all(8),
+                      //   decoration: BoxDecoration(
+                      //     color: Colors.white.withOpacity(0.1),
+                      //     borderRadius: BorderRadius.circular(20),
+                      //   ),
+                      //   child: InkWell(
+                      //     onTap: () {
+                      //       Navigator.push(
+                      //         context,
+                      //         MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                      //       );
+                      //     },
+                      //     child: const Icon(
+                      //       Icons.settings,
+                      //       color: Colors.white,
+                      //       size: 20,
+                      //     ),
+                      //   ),
+                      // ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // 스크롤 가능한 본문 영역
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 교회 정보 카드
+                    _buildChurchInfoCard(),
+                    const SizedBox(height: 16),
 
-              // 내 통계
-              _buildMyStats(),
-              const SizedBox(height: 24),
+                    // 내 통계
+                    _buildMyStats(),
+                    const SizedBox(height: 24),
 
-              // 빠른 메뉴
-              _buildQuickMenus(),
-              const SizedBox(height: 24),
+                    // 빠른 메뉴
+                    _buildQuickMenus(),
+                    const SizedBox(height: 24),
 
-              // 더 많은 기능
-              _buildMoreFeaturesSection(),
-              const SizedBox(height: 24),
+                    // 더 많은 기능
+                    _buildMoreFeaturesSection(),
+                    const SizedBox(height: 24),
 
-              // 최근 공지사항
-              _buildRecentNotices(),
-            ],
-          ),
+                    // 최근 공지사항
+                    _buildRecentNotices(),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -188,6 +295,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return InfoCardWidget(
       title: '교회 정보',
       icon: Icons.church,
+      backgroundColor: AppColor.white,
+      elevation: 0,
       items: [
         InfoItem(
           label: '교회명',

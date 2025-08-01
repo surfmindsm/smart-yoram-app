@@ -9,6 +9,8 @@ class InfoCardWidget extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? iconColor;
   final EdgeInsetsGeometry? padding;
+  final double? elevation;
+  final Color? backgroundColor;
 
   const InfoCardWidget({
     super.key,
@@ -19,12 +21,15 @@ class InfoCardWidget extends StatelessWidget {
     this.onTap,
     this.iconColor,
     this.padding,
+    this.elevation,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: elevation ?? 0,
+      color: backgroundColor,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -66,10 +71,10 @@ class InfoCardWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               if (items.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                
+
                 // 정보 아이템들
                 ...items.map((item) => _buildInfoItem(item)),
               ],
