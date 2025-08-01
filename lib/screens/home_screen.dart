@@ -58,6 +58,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isRefreshingVerse = false;
   bool _isLoadingVerse = true;
 
+  // 예배 일정 데이터
+  List<Map<String, String>> worshipSchedule = [
+    {
+      'name': '주일예배 1부',
+      'location': '예배실(본성전)',
+      'time': '오전 9시',
+    },
+    {
+      'name': '주일예배 2부',
+      'location': '예배실(본성전)',
+      'time': '오전 11시',
+    },
+    {
+      'name': '주일예배 3부',
+      'location': '예배실(본성전)',
+      'time': '오후 1시 30분',
+    },
+    {
+      'name': '새벽부',
+      'location': '새벽부실',
+      'time': '오전 11시',
+    },
+    {
+      'name': '어린이부',
+      'location': '어린이부실',
+      'time': '오전 11시',
+    },
+    {
+      'name': '청소년부',
+      'location': '별관(청년)',
+      'time': '오전 11시',
+    },
+    {
+      'name': '대학청년부',
+      'location': '시온성전',
+      'time': '오후 1시 30분',
+    },
+    {
+      'name': '수요 예배',
+      'location': '예배실(본성전)',
+      'time': '오후 8시',
+    },
+    {
+      'name': '새벽기도회(평일)',
+      'location': '온라인',
+      'time': '오전 5시 30분',
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -274,6 +323,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                     // 최근 공지사항
                     _buildRecentAnnouncements(),
+                    const SizedBox(height: 24),
+
+                    // 예배안내
+                    _buildWorshipSchedule(),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -1234,6 +1287,116 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 예배안내 위젯
+  Widget _buildWorshipSchedule() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF374151), // gray-700
+            Color(0xFF1F2937), // gray-800
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 헤더
+            Row(
+              children: [
+                Text(
+                  'Worship',
+                  style: AppTextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                  ).c1(),
+                ),
+              ],
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              '예배시간안내',
+              style: AppTextStyle(
+                color: Colors.white,
+              ).h2(),
+            ),
+            SizedBox(height: 20.h),
+            // 예배 시간 목록
+            ...worshipSchedule.map((worship) => Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: Row(
+                    children: [
+                      // 예배명
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          worship['name']!,
+                          style: AppTextStyle(
+                            color: Colors.white,
+                          ).b2(),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // 점선
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          height: 1.h,
+                          margin: EdgeInsets.symmetric(horizontal: 4.w),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ...List.generate(15, (index) => 
+                                Container(
+                                  width: 2.w,
+                                  height: 1.h,
+                                  margin: EdgeInsets.symmetric(horizontal: 0.5.w),
+                                  color: Colors.grey.withOpacity(0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // 장소
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          worship['location']!,
+                          style: AppTextStyle(
+                            color: Colors.grey[300]!,
+                          ).b3(),
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      // 시간
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          worship['time']!,
+                          style: AppTextStyle(
+                            color: Colors.white,
+                          ).b2(),
+                          textAlign: TextAlign.end,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
           ],
         ),
       ),
