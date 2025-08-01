@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Map<String, dynamic>? userStats;
   bool isLoading = true;
   bool _isChurchCardExpanded = true; // 교회 카드 펼침 상태
+  bool _isWorshipScheduleExpanded = true; // 예배시간 카드 펼침 상태
 
   // 최근 공지사항 관련 상태 변수
   List<Announcement> recentAnnouncements = [];
@@ -1295,43 +1296,74 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 헤더
-            Row(
-              children: [
-                Text(
-                  'Worship',
-                  style: AppTextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                  ).c1(),
-                ),
-              ],
+            // 헤더 (클릭하여 접고 펼치기)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isWorshipScheduleExpanded = !_isWorshipScheduleExpanded;
+                });
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Worship',
+                          style: AppTextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                          ).c1(),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          '예배시간안내',
+                          style: AppTextStyle(
+                            color: Colors.white,
+                          ).h2(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    turns: _isWorshipScheduleExpanded ? 0.5 : 0,
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.white.withOpacity(0.7),
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 4.h),
-            Text(
-              '예배시간안내',
-              style: AppTextStyle(
-                color: Colors.white,
-              ).h2(),
-            ),
-            SizedBox(height: 20.h),
-            // 예배 시간 목록
-            if (_isLoadingWorshipServices)
-              Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
-              )
-            else if (worshipServices.isEmpty)
-              Center(
-                child: Text(
-                  '예배 일정이 없습니다',
-                  style: AppTextStyle(
-                    color: Colors.grey[400]!,
-                  ).b3(),
-                ),
-              )
-            else
-              ...worshipServices.map((worship) => Padding(
+            // 예배 시간 목록 (접고 폼치기 가능)
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 300),
+              crossFadeState: _isWorshipScheduleExpanded
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              firstChild: Column(
+                children: [
+                  SizedBox(height: 20.h),
+                  // 예배 시간 목록
+                  if (_isLoadingWorshipServices)
+                    Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                    )
+                  else if (worshipServices.isEmpty)
+                    Center(
+                      child: Text(
+                        '예배 일정이 없습니다',
+                        style: AppTextStyle(
+                          color: Colors.grey[400]!,
+                        ).b3(),
+                      ),
+                    )
+                  else
+                    ...worshipServices.map((worship) => Padding(
                     padding: EdgeInsets.only(bottom: 16.h),
                     child: Row(
                       children: [
@@ -1413,7 +1445,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ],
                     ),
-                  )),
+                   )),
+                ],
+              ),
+              secondChild: const SizedBox(),
+            ),
           ],
         ),
       ),
