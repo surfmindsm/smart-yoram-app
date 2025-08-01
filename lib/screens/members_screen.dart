@@ -185,22 +185,24 @@ class _MembersScreenState extends State<MembersScreen>
             color: AppColor.background,
             child: TabBar(
               controller: _tabController,
-              isScrollable: true,
+              isScrollable: false,
               labelColor: AppColor.primary900,
               labelStyle:
                   AppTextStyle(color: AppColor.primary900).b2().copyWith(
                         fontWeight: FontWeight.w600,
                       ),
-              labelPadding: EdgeInsets.symmetric(horizontal: 18.w),
+              labelPadding: EdgeInsets.symmetric(horizontal: 14.w),
               unselectedLabelColor: AppColor.secondary04,
               unselectedLabelStyle:
                   AppTextStyle(color: AppColor.secondary04).b2(),
               indicatorColor: AppColor.primary900,
+              indicatorPadding: EdgeInsets.zero,
+              indicatorWeight: 1,
               dividerColor: Colors.grey.shade300, // 전체 하단선 색상
               dividerHeight: 0, // 전체 하단선 두께
               onTap: (_) => _filterMembers(),
               tabs: tabs.map((tab) => Tab(text: tab)).toList(),
-              tabAlignment: TabAlignment.start,
+              tabAlignment: TabAlignment.center,
               padding: EdgeInsets.symmetric(horizontal: 16.w),
             ),
           ),
