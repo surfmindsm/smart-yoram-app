@@ -23,6 +23,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool isLoading = false;
   bool obscurePassword = true;
+  bool _isEmailValid = false;
+  bool _isPasswordValid = false;
+  bool _isPhoneValid = false;
 
   // 로그인 방식
   String _loginType = 'email'; // 'email' 또는 'phone'
@@ -31,13 +34,37 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkExistingLogin();
+
+    // 텍스트 필드 리스너 추가
+    _usernameController.addListener(_validateInputs);
+    _passwordController.addListener(_validateInputs);
   }
 
   @override
   void dispose() {
+    _usernameController.removeListener(_validateInputs);
+    _passwordController.removeListener(_validateInputs);
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // 이메일과 비밀번호 유효성 검사
+  void _validateInputs() {
+    setState(() {
+      // 이메일 유효성 검사
+      _isEmailValid = _usernameController.text.isNotEmpty &&
+          RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+              .hasMatch(_usernameController.text);
+
+      // 전화번호 유효성 검사 (11자리)
+      _isPhoneValid = _usernameController.text.isNotEmpty &&
+          RegExp(r'^\d{9}$').hasMatch(_usernameController.text);
+
+      // 비밀번호 유효성 검사 (6자 이상)
+      _isPasswordValid = _passwordController.text.isNotEmpty &&
+          _passwordController.text.length >= 6;
+    });
   }
 
   // 기존 로그인 상태 확인
@@ -74,9 +101,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
+                  physics: NeverScrollableScrollPhysics(),
                   padding: EdgeInsets.symmetric(
                     horizontal: constraints.maxWidth > 600 ? 60.w : 24.w,
-                    vertical: 24.h,
+                    vertical: 8.h,
                   ),
                   child: Form(
                     key: _formKey,
@@ -316,12 +344,53 @@ class _LoginScreenState extends State<LoginScreen> {
                           ).buttonLarge(),
                           style: ButtonStyle(
                             backgroundColor:
-                                WidgetStatePropertyAll(AppColor.secondary07),
+                                MaterialStateProperty.resolveWith<Color>(
+                              (Set<MaterialState> states) {
+                                // 버튼이 비활성화 상태일 때
+                                if (states.contains(MaterialState.disabled)) {
+                                  return AppColor.secondary03
+                                      .withOpacity(0.5); // 비활성화 색상
+                                }
+
+                                // 활성화 상태일 때 조건에 따라 색상 결정
+                                bool isValid = (_loginType == 'email' &&
+                                        _isEmailValid &&
+                                        _isPasswordValid) ||
+                                    (_loginType == 'phone' &&
+                                        _isPhoneValid &&
+                                        _isPasswordValid);
+                                return isValid
+                                    ? AppColor.secondary07
+                                    : AppColor.secondary03.withOpacity(0.5);
+                              },
+                            ),
+                            // 비활성화 상태에서도 동일한 모양 유지
+                            shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0))),
+                            // 비활성화 상태에서 텍스트 색상 설정
+                            foregroundColor:
+                                MaterialStateProperty.resolveWith<Color>(
+                              (Set<MaterialState> states) {
+                                if (states.contains(MaterialState.disabled)) {
+                                  return Colors.white
+                                      .withOpacity(0.7); // 비활성화 텍스트 색상
+                                }
+                                return Colors.white; // 활성화 텍스트 색상
+                              },
+                            ),
                           ),
                           type: ButtonType.primary,
                           width: double.infinity,
                           isLoading: isLoading,
-                          onPressed: isLoading ? null : _login,
+                          onPressed: (isLoading ||
+                                  (_loginType == 'email' &&
+                                      (!_isEmailValid || !_isPasswordValid)) ||
+                                  (_loginType == 'phone' &&
+                                      (!_isPhoneValid || !_isPasswordValid)))
+                              ? null
+                              : _login,
                         ),
 
                         SizedBox(height: 20.h),
@@ -484,7 +553,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('로그인 오류: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Color.fromARGB(255, 191, 156, 163),
           ),
         );
       }
@@ -531,7 +600,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('로그인 실패: $errorMessage'),
-            backgroundColor: Colors.red,
+            backgroundColor: Color.fromARGB(255, 191, 156, 163),
           ),
         );
       }
@@ -616,7 +685,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('오류가 발생했습니다: $e'),
-                              backgroundColor: Colors.red,
+                              backgroundColor:
+                                  Color.fromARGB(255, 191, 156, 163),
                             ),
                           );
                         }
@@ -714,7 +784,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('설정 변경 실패: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Color.fromARGB(255, 191, 156, 163),
           ),
         );
       }

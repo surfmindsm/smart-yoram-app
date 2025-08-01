@@ -57,24 +57,44 @@ class CommonButton extends StatelessWidget {
 
     switch (type) {
       case ButtonType.primary:
-        // 사용자가 제공한 backgroundColor 추출
-        final customBackgroundColor = style?.backgroundColor?.resolve({});
-        final customForegroundColor = style?.foregroundColor?.resolve({});
+        // 사용자가 제공한 스타일 속성 추출
+        final customBackgroundColor = style?.backgroundColor;
+        final customForegroundColor = style?.foregroundColor;
         final customPadding = style?.padding?.resolve({});
         final customShape = style?.shape?.resolve({});
         final customElevation = style?.elevation?.resolve({});
         
+        // 비활성화 상태에서도 배경색이 적용되도록 MaterialStateProperty 사용
+        final backgroundColor = customBackgroundColor ?? 
+            MaterialStateProperty.resolveWith<Color>((states) {
+              return AppColor.primary900; // 항상 동일한 배경색 적용
+            });
+        
+        final foregroundColor = customForegroundColor ?? 
+            MaterialStateProperty.resolveWith<Color>((states) {
+              return Colors.white; // 항상 동일한 텍스트 색상 적용
+            });
+        
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: customBackgroundColor ?? AppColor.primary900,
-            foregroundColor: customForegroundColor ?? Colors.white,
-            padding: customPadding ?? padding ??
-                const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-            shape: customShape ?? RoundedRectangleBorder(
+          style: ButtonStyle(
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor,
+            padding: MaterialStateProperty.all(customPadding ?? padding ?? 
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 24)),
+            shape: MaterialStateProperty.all(customShape ?? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.0),
+            )),
+            elevation: MaterialStateProperty.all(customElevation ?? 0.0),
+            // 비활성화 상태에서도 동일한 스타일 유지
+            overlayColor: MaterialStateProperty.resolveWith<Color?>(
+              (Set<MaterialState> states) {
+                if (states.contains(MaterialState.pressed)) {
+                  return Colors.white.withOpacity(0.1);
+                }
+                return null;
+              },
             ),
-            elevation: customElevation ?? 0.0,
           ),
           child: child,
         );
