@@ -154,15 +154,16 @@ class _MembersScreenState extends State<MembersScreen>
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: '이름 또는 전화번호로 검색',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                hintStyle: AppTextStyle(color: AppColor.secondary03).b2(),
+                prefixIcon: Icon(Icons.search, color: AppColor.secondary03),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: AppColor.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
           ),
@@ -172,9 +173,15 @@ class _MembersScreenState extends State<MembersScreen>
             color: AppColor.background,
             child: TabBar(
               controller: _tabController,
-              labelColor: Colors.blue,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.blue,
+              labelColor: AppColor.primary900,
+              labelStyle:
+                  AppTextStyle(color: AppColor.primary900).b2().copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+              unselectedLabelColor: AppColor.secondary04,
+              unselectedLabelStyle:
+                  AppTextStyle(color: AppColor.secondary04).b2(),
+              indicatorColor: AppColor.primary900,
               onTap: (_) => _filterMembers(),
               tabs: tabs.map((tab) => Tab(text: tab)).toList(),
             ),
@@ -208,7 +215,7 @@ class _MembersScreenState extends State<MembersScreen>
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       itemCount: filteredMembers.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
@@ -220,18 +227,18 @@ class _MembersScreenState extends State<MembersScreen>
 
   Widget _buildMemberCard(Member member) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12.r),
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.grey.withOpacity(0.1),
+        //     spreadRadius: 1,
+        //     blurRadius: 4,
+        //     offset: const Offset(0, 2),
+        //   ),
+        // ],
       ),
       child: Row(
         children: [
@@ -241,11 +248,7 @@ class _MembersScreenState extends State<MembersScreen>
             backgroundColor: Colors.blue,
             child: Text(
               member.name.isNotEmpty ? member.name[0] : '?',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+              style: AppTextStyle(color: Colors.white).b2(),
             ),
           ),
           const SizedBox(width: 16),
