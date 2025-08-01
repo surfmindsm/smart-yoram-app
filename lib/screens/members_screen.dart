@@ -6,6 +6,7 @@ import '../services/member_service.dart';
 import '../models/member.dart';
 import '../resource/color_style.dart';
 import '../resource/text_style.dart';
+import '../widgets/member_detail_modal.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -252,22 +253,24 @@ class _MembersScreenState extends State<MembersScreen>
   }
 
   Widget _buildMemberCard(Member member) {
-    return Container(
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.grey.withOpacity(0.1),
-        //     spreadRadius: 1,
-        //     blurRadius: 4,
-        //     offset: const Offset(0, 2),
-        //   ),
-        // ],
-      ),
-      child: Row(
-        children: [
+    return GestureDetector(
+      onTap: () => _showMemberDetail(member),
+      child: Container(
+        padding: EdgeInsets.all(16.r),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: Colors.grey.withOpacity(0.1),
+          //     spreadRadius: 1,
+          //     blurRadius: 4,
+          //     offset: const Offset(0, 2),
+          //   ),
+          // ],
+        ),
+        child: Row(
+          children: [
           // 아바타
           CircleAvatar(
             radius: 24,
@@ -344,7 +347,8 @@ class _MembersScreenState extends State<MembersScreen>
               ),
             ],
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -458,5 +462,12 @@ class _MembersScreenState extends State<MembersScreen>
         );
       }
     }
+  }
+
+  void _showMemberDetail(Member member) {
+    showDialog(
+      context: context,
+      builder: (context) => MemberDetailModal(member: member),
+    );
   }
 }
