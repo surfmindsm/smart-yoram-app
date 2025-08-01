@@ -333,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ).h2(),
                       ),
                       Text(
-                        'Community Church',
+                        currentChurch?.englishName ?? 'Community Church',
                         style: AppTextStyle(
                           color: AppColor.secondary04,
                         ).b4(),
@@ -490,7 +490,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ).c1(),
                                   ),
                                   Text(
-                                    '구리시',
+                                    currentChurch?.city ?? '구리시',
                                     style: AppTextStyle(
                                       color: AppColor.secondary07,
                                     ).b3(),
@@ -549,12 +549,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     text: currentChurch?.address ??
                                         '경기도 구리시 검배로 136번길 32\n',
                                   ),
-                                  TextSpan(
-                                    text: '(토평동)',
-                                    style: AppTextStyle(
-                                      color: AppColor.secondary04,
-                                    ).b4(),
-                                  ),
+                                  if (currentChurch?.district != null)
+                                    TextSpan(
+                                      text: '(${currentChurch!.district})',
+                                      style: AppTextStyle(
+                                        color: AppColor.secondary04,
+                                      ).b4(),
+                                    ),
                                 ],
                               ),
                             ),

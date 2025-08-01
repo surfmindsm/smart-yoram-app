@@ -1,7 +1,10 @@
 class Church {
   final int id;
   final String name;
+  final String? englishName;  // 영문 교회명
   final String? address;
+  final String? city;         // 도시/지역
+  final String? district;     // 상세 지역 (예: 토평동)
   final String? phone;
   final String? email;
   final String? pastorName;
@@ -15,7 +18,10 @@ class Church {
   Church({
     required this.id,
     required this.name,
+    this.englishName,
     this.address,
+    this.city,
+    this.district,
     this.phone,
     this.email,
     this.pastorName,
@@ -31,7 +37,10 @@ class Church {
     return Church(
       id: json['id'] as int,
       name: json['name'] as String,
+      englishName: json['english_name'] as String?,
       address: json['address'] as String?,
+      city: json['city'] as String?,
+      district: json['district'] as String?,
       phone: json['phone'] as String?,
       email: json['email'] as String?,
       pastorName: json['pastor_name'] as String?,
@@ -52,7 +61,10 @@ class Church {
     return {
       'id': id,
       'name': name,
+      'english_name': englishName,
       'address': address,
+      'city': city,
+      'district': district,
       'phone': phone,
       'email': email,
       'pastor_name': pastorName,
@@ -67,13 +79,16 @@ class Church {
 
   @override
   String toString() {
-    return 'Church(id: $id, name: $name, pastorName: $pastorName, phone: $phone, address: $address)';
+    return 'Church(id: $id, name: $name, englishName: $englishName, city: $city, district: $district, pastorName: $pastorName, phone: $phone, address: $address)';
   }
 }
 
 class ChurchCreateRequest {
   final String name;
+  final String? englishName;
   final String? address;
+  final String? city;
+  final String? district;
   final String? phone;
   final String? email;
   final String? pastorName;
@@ -83,7 +98,10 @@ class ChurchCreateRequest {
 
   ChurchCreateRequest({
     required this.name,
+    this.englishName,
     this.address,
+    this.city,
+    this.district,
     this.phone,
     this.email,
     this.pastorName,
@@ -95,7 +113,10 @@ class ChurchCreateRequest {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
+      'english_name': englishName,
       'address': address,
+      'city': city,
+      'district': district,
       'phone': phone,
       'email': email,
       'pastor_name': pastorName,
@@ -108,7 +129,10 @@ class ChurchCreateRequest {
 
 class ChurchUpdateRequest {
   final String? name;
+  final String? englishName;
   final String? address;
+  final String? city;
+  final String? district;
   final String? phone;
   final String? email;
   final String? pastorName;
@@ -119,7 +143,10 @@ class ChurchUpdateRequest {
 
   ChurchUpdateRequest({
     this.name,
+    this.englishName,
     this.address,
+    this.city,
+    this.district,
     this.phone,
     this.email,
     this.pastorName,
@@ -132,7 +159,10 @@ class ChurchUpdateRequest {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
     if (name != null) data['name'] = name;
+    if (englishName != null) data['english_name'] = englishName;
     if (address != null) data['address'] = address;
+    if (city != null) data['city'] = city;
+    if (district != null) data['district'] = district;
     if (phone != null) data['phone'] = phone;
     if (email != null) data['email'] = email;
     if (pastorName != null) data['pastor_name'] = pastorName;
