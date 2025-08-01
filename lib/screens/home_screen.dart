@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:math';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
 import '../widget/widgets.dart';
@@ -39,6 +41,33 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? churchInfo;
   Map<String, dynamic>? userStats;
   bool isLoading = true;
+
+  // 오늘의 말씀 관련 상태 변수
+  int _currentVerseIndex = 0;
+  bool _isRefreshingVerse = false;
+
+  // 말씀 목업 데이터
+  final List<Map<String, String>> _verses = [
+    {'verse': '"여호와는 나의 목자시니 내게 부족함이 없으리로다"', 'reference': '시편 23:1'},
+    {'verse': '"내가 산을 향하여 눈을 들리리라 나의 도움이 어디서 올까"', 'reference': '시편 121:1'},
+    {
+      'verse': '"수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라"',
+      'reference': '마태복음 11:28'
+    },
+    {
+      'verse': '"하늘이 하나님의 영광을 선포하고 균창이 그의 손으로 하신 일을 나타내는도다"',
+      'reference': '시편 19:1'
+    },
+    {
+      'verse': '"그런즈 여호와를 의뢰하는 자는 새 힘을 얻으리니 독수리의 날개치며 올락같이 하리라"',
+      'reference': '이사야 40:31'
+    },
+    {'verse': '"여호와여 마음을 다하여 주를 신뢰하고 네 명철을 의지하지 말라"', 'reference': '잠언 3:5'},
+    {
+      'verse': '"너희는 먼저 그의 나라와 그의 의를 구하라 그리하면 이 모든 것을 너희에게 더하시리라"',
+      'reference': '마태복음 6:33'
+    },
+  ];
 
   @override
   void initState() {
@@ -894,6 +923,42 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // 말씀 새로고침 기능
+  Future<void> _refreshVerse() async {
+    if (_isRefreshingVerse) return;
+
+    setState(() {
+      _isRefreshingVerse = true;
+    });
+
+    // 애니메이션 지연
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    // 랜덤한 말씀 선택
+    final random = Random();
+    int newIndex;
+    do {
+      newIndex = random.nextInt(_verses.length);
+    } while (newIndex == _currentVerseIndex && _verses.length > 1);
+
+    setState(() {
+      _currentVerseIndex = newIndex;
+      _isRefreshingVerse = false;
+    });
+  }
+
+  // 말씀 공유하기 기능
+  void _shareVerse() {
+    final currentVerse = _verses[_currentVerseIndex];
+    final shareText =
+        '${currentVerse['verse']}\n\n${currentVerse['reference']}\n\n공유: 스마트 교회요람 앱';
+
+    Share.share(
+      shareText,
+      subject: '오늘의 말씀',
+    );
+  }
+
   // 오늘의 말씀 섹션
   Widget _buildTodaysVerse() {
     return Container(
@@ -920,18 +985,60 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // 헤더
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(
-                  Icons.menu_book,
-                  color: AppColor.primary900,
-                  size: 20.r,
+                // 왼쪽: 아이콘과 제목
+                Row(
+                  children: [
+                    Icon(
+                      Icons.menu_book,
+                      color: AppColor.primary900,
+                      size: 20.r,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '오늘의 말씀',
+                      style: AppTextStyle(
+                        color: AppColor.secondary07,
+                      ).h2(),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 8.w),
-                Text(
-                  '오늘의 말씀',
-                  style: AppTextStyle(
-                    color: AppColor.secondary07,
-                  ).h2(),
+                // 오른쪽: 버튼들
+                Row(
+                  children: [
+                    // 새로고침 버튼
+                    InkWell(
+                      onTap: _refreshVerse,
+                      borderRadius: BorderRadius.circular(20.r),
+                      child: Container(
+                        padding: EdgeInsets.all(8.r),
+                        child: AnimatedRotation(
+                          turns: _isRefreshingVerse ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 800),
+                          child: Icon(
+                            Icons.refresh,
+                            color: AppColor.primary900,
+                            size: 20.r,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    // 공유하기 버튼
+                    InkWell(
+                      onTap: _shareVerse,
+                      borderRadius: BorderRadius.circular(20.r),
+                      child: Container(
+                        padding: EdgeInsets.all(8.r),
+                        child: Icon(
+                          Icons.share,
+                          color: AppColor.primary900,
+                          size: 20.r,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -946,17 +1053,28 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '"여호와는 나의 목자시니 내게 부족함이 없으리로다"',
-                    style: AppTextStyle(color: AppColor.secondary06).b2(),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 600),
+                    child: Text(
+                      _verses[_currentVerseIndex]['verse']!,
+                      key: ValueKey(_currentVerseIndex),
+                      style: AppTextStyle(color: AppColor.secondary06)
+                          .b2()
+                          .copyWith(),
+                    ),
                   ),
                   SizedBox(height: 8.h),
-                  Text(
-                    '시편 23:1',
-                    style:
-                        AppTextStyle(color: AppColor.primary600).c1().copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 600),
+                    child: Text(
+                      _verses[_currentVerseIndex]['reference']!,
+                      key: ValueKey('${_currentVerseIndex}_ref'),
+                      style: AppTextStyle(color: AppColor.primary600)
+                          .c1()
+                          .copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
                   ),
                 ],
               ),
