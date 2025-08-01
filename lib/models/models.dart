@@ -17,3 +17,4 @@ export 'family_model.dart';
 export 'excel_model.dart';
 export 'statistics_model.dart';
 export 'member_card_model.dart';
+export 'worship_service.dart';

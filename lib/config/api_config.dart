@@ -91,6 +91,9 @@ class ApiConfig {
   static const String dailyVerses = '/daily-verses/';
   static const String dailyVersesRandom = '/daily-verses/random';
 
+  // 예배 서비스
+  static const String worshipServices = '/worship/services';
+
   // HTTP 헤더들
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

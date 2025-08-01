@@ -10,12 +10,14 @@ import '../services/member_service.dart';
 import '../services/church_service.dart';
 import '../services/announcement_service.dart';
 import '../services/daily_verse_service.dart';
+import '../services/worship_service.dart';
 
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
 import '../models/church.dart';
 import '../models/announcement.dart';
 import '../models/daily_verse.dart';
+import '../models/worship_service.dart';
 
 import 'calendar_screen.dart';
 import 'prayer_screen.dart';
@@ -40,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final ChurchService _churchService = ChurchService();
   final AnnouncementService _announcementService = AnnouncementService();
   final DailyVerseService _dailyVerseService = DailyVerseService();
+  final WorshipServiceApi _worshipServiceApi = WorshipServiceApi();
 
   app_user.User? currentUser;
   Member? currentMember;
@@ -58,54 +61,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isRefreshingVerse = false;
   bool _isLoadingVerse = true;
 
-  // 예배 일정 데이터
-  List<Map<String, String>> worshipSchedule = [
-    {
-      'name': '주일예배 1부',
-      'location': '예배실(본성전)',
-      'time': '오전 9시',
-    },
-    {
-      'name': '주일예배 2부',
-      'location': '예배실(본성전)',
-      'time': '오전 11시',
-    },
-    {
-      'name': '주일예배 3부',
-      'location': '예배실(본성전)',
-      'time': '오후 1시 30분',
-    },
-    {
-      'name': '새벽부',
-      'location': '새벽부실',
-      'time': '오전 11시',
-    },
-    {
-      'name': '어린이부',
-      'location': '어린이부실',
-      'time': '오전 11시',
-    },
-    {
-      'name': '청소년부',
-      'location': '별관(청년)',
-      'time': '오전 11시',
-    },
-    {
-      'name': '대학청년부',
-      'location': '시온성전',
-      'time': '오후 1시 30분',
-    },
-    {
-      'name': '수요 예배',
-      'location': '예배실(본성전)',
-      'time': '오후 8시',
-    },
-    {
-      'name': '새벽기도회(평일)',
-      'location': '온라인',
-      'time': '오전 5시 30분',
-    },
-  ];
+  // 예배 서비스 데이터 (실제 API 데이터)
+  List<WorshipService> worshipServices = [];
+  bool _isLoadingWorshipServices = false;
 
   @override
   void initState() {
@@ -162,6 +120,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // 최근 공지사항 로드 (최대 5개)
       await _loadRecentAnnouncements();
 
+      // 예배 서비스 로드
+      await _loadWorshipServices();
+
       setState(() {
         isLoading = false;
       });
@@ -197,6 +158,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _isLoadingAnnouncements = false;
       });
       print('📰 HOME_SCREEN: 최근 공지사항 로드 오류: $e');
+    }
+  }
+
+  // 예배 서비스 로드
+  Future<void> _loadWorshipServices() async {
+    try {
+      setState(() {
+        _isLoadingWorshipServices = true;
+      });
+
+      // 활성 상태의 예배 서비스만 로드
+      final services = await _worshipServiceApi.getWorshipServices(
+        isActive: true,
+      );
+      
+      setState(() {
+        worshipServices = services;
+        _isLoadingWorshipServices = false;
+      });
+      print('🛐 HOME_SCREEN: 예배 서비스 로드 성공: ${worshipServices.length}개');
+    } catch (e) {
+      setState(() {
+        worshipServices = [];
+        _isLoadingWorshipServices = false;
+      });
+      print('🛐 HOME_SCREEN: 예배 서비스 로드 오류: $e');
     }
   }
 
@@ -1121,20 +1108,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
 
     try {
-      // 새로운 랜덤 말씀 가져오기
-      final verse = await _dailyVerseService.getRandomVerse();
-      setState(() {
-        _currentVerse = verse;
-        _isRefreshingVerse = false;
-      });
-      print('🔄 HOME_SCREEN: 말씀 새로고침 성공: ${verse?.reference}');
+      await _loadTodaysVerse();
     } catch (e) {
+      print('😑 HOME_SCREEN: 오늘의 말씀 새로고침 오류: $e');
+    } finally {
       setState(() {
         _isRefreshingVerse = false;
       });
-      print('🔄 HOME_SCREEN: 말씀 새로고침 오류: $e');
     }
   }
+
+
 
   // 말씀 공유하기 기능
   void _shareVerse() {
@@ -1333,70 +1317,98 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             SizedBox(height: 20.h),
             // 예배 시간 목록
-            ...worshipSchedule.map((worship) => Padding(
-                  padding: EdgeInsets.only(bottom: 16.h),
-                  child: Row(
-                    children: [
-                      // 예배명
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          worship['name']!,
-                          style: AppTextStyle(
-                            color: Colors.white,
-                          ).b2(),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      // 점선
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          height: 1.h,
-                          margin: EdgeInsets.symmetric(horizontal: 4.w),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+            if (_isLoadingWorshipServices)
+              Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              )
+            else if (worshipServices.isEmpty)
+              Center(
+                child: Text(
+                  '예배 일정이 없습니다',
+                  style: AppTextStyle(
+                    color: Colors.grey[400]!,
+                  ).b3(),
+                ),
+              )
+            else
+              ...worshipServices.map((worship) => Padding(
+                    padding: EdgeInsets.only(bottom: 16.h),
+                    child: Row(
+                      children: [
+                        // 예배명 + 요일
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ...List.generate(15, (index) => 
-                                Container(
-                                  width: 2.w,
-                                  height: 1.h,
-                                  margin: EdgeInsets.symmetric(horizontal: 0.5.w),
-                                  color: Colors.grey.withOpacity(0.5),
-                                ),
+                              Text(
+                                worship.name,
+                                style: AppTextStyle(
+                                  color: Colors.white,
+                                ).b2(),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                worship.dayOfWeekName,
+                                style: AppTextStyle(
+                                  color: Colors.grey[400]!,
+                                ).c1(),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      // 장소
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          worship['location']!,
-                          style: AppTextStyle(
-                            color: Colors.grey[300]!,
-                          ).b3(),
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
+                        // 점선
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            height: 1.h,
+                            margin: EdgeInsets.symmetric(horizontal: 4.w),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ...List.generate(15, (index) => 
+                                  Container(
+                                    width: 2.w,
+                                    height: 1.h,
+                                    margin: EdgeInsets.symmetric(horizontal: 0.5.w),
+                                    color: Colors.grey.withOpacity(0.5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 8.w),
-                      // 시간
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          worship['time']!,
-                          style: AppTextStyle(
-                            color: Colors.white,
-                          ).b2(),
-                          textAlign: TextAlign.end,
-                          overflow: TextOverflow.ellipsis,
+                        // 장소
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            worship.locationWithOnlineStatus,
+                            style: AppTextStyle(
+                              color: Colors.grey[300]!,
+                            ).b3(),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                )),
+                        SizedBox(width: 8.w),
+                        // 시간
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            worship.formattedStartTime,
+                            style: AppTextStyle(
+                              color: Colors.white,
+                            ).b2(),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
           ],
         ),
       ),
