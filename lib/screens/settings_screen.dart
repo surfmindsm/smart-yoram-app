@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widget/widgets.dart';
 import '../config/api_config.dart';
+import '../services/auth_service.dart';
 import 'api_test_screen.dart';
 import 'users_management_screen.dart';
 import 'family_management_screen.dart';
@@ -16,7 +17,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // final AuthService _authService = AuthService(); // TODO: Implement auth service
+  final AuthService _authService = AuthService();
   
   // 설정 값들
   bool _pushNotifications = true;
@@ -656,8 +657,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(context);
               
               try {
-                // TODO: AuthService 구현 필요
-                // await _authService.logout();
+                // AuthService 로그아웃 호출
+                await _authService.logout();
+                print('설정 화면: 로그아웃 완료');
                 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

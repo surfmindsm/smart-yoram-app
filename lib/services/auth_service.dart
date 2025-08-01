@@ -93,6 +93,9 @@ class AuthService {
         if (userResponse.success && userResponse.data != null) {
           _currentUser = userResponse.data;
           await _saveUser(_currentUser!);
+          // 로그인 성공 시 자동 로그인 활성화
+          await setAutoLoginEnabled(true);
+          print('로그인 성공 - 자동 로그인 활성화됨');
         }
       }
 
@@ -130,6 +133,9 @@ class AuthService {
         if (loginData.user != null) {
           _currentUser = loginData.user;
           await _saveUser(_currentUser!);
+          // 로그인 성공 시 자동 로그인 활성화
+          await setAutoLoginEnabled(true);
+          print('로그인(사용자포함) 성공 - 자동 로그인 활성화됨');
         }
       }
 
@@ -250,6 +256,9 @@ class AuthService {
       _apiService.clearToken();
       _currentUser = null;
       await clearStoredAuth();
+      // 로그아웃 시 자동 로그인 비활성화
+      await setAutoLoginEnabled(false);
+      print('로그아웃 완료 - 자동 로그인 비활성화됨');
     } catch (e) {
       print('로그아웃 중 오류: $e');
     }

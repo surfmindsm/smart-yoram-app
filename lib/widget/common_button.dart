@@ -13,6 +13,7 @@ class CommonButton extends StatelessWidget {
   final double? width;
   final EdgeInsetsGeometry? padding;
   final TextStyle? fontStyle;
+  final ButtonStyle? style;
 
   const CommonButton({
     super.key,
@@ -24,6 +25,7 @@ class CommonButton extends StatelessWidget {
     this.width,
     this.padding,
     this.fontStyle,
+    this.style,
   });
 
   @override
@@ -57,16 +59,17 @@ class CommonButton extends StatelessWidget {
       case ButtonType.primary:
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColor.primary900,
-            foregroundColor: Colors.white,
-            padding: padding ??
-                const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            elevation: 0.0,
-          ),
+          style: style ??
+              ElevatedButton.styleFrom(
+                backgroundColor: AppColor.primary900,
+                foregroundColor: Colors.white,
+                padding: padding ??
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                elevation: 0.0,
+              ),
           child: child,
         );
         break;

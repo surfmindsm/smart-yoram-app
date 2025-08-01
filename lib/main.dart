@@ -95,6 +95,19 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Future<void> _checkAuthStatus() async {
     try {
+      // 자동 로그인이 비활성화되어 있으면 로그인 화면으로 이동
+      final isAutoLoginDisabled = await _authService.isAutoLoginDisabled;
+      if (isAutoLoginDisabled) {
+        print('AuthWrapper: 자동 로그인이 비활성화되어 있어 로그인 화면을 표시합니다.');
+        if (mounted) {
+          setState(() {
+            _isLoggedIn = false;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+      
       final hasStoredAuth = await _authService.loadStoredAuth();
       if (mounted) {
         setState(() {
