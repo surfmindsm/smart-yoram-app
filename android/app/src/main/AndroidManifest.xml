@@ -15,6 +15,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
+    <!-- 전화 관련 권한 -->
+    <uses-permission android:name="android.permission.CALL_PHONE" android:required="false" />
+    
     <!-- FCM 푸시 알림 권한 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />

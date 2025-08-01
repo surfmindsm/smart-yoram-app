@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/member_service.dart';
 import '../models/member.dart';
 import '../resource/color_style.dart';
@@ -366,47 +367,95 @@ class _MembersScreenState extends State<MembersScreen>
   }
 
   Future<void> _makePhoneCall(String? phone) async {
-    if (phone != null) {
-      final Uri phoneUri = Uri(scheme: 'tel', path: phone);
+    if (phone != null && phone.isNotEmpty) {
+      // 전화번호에서 하이픈, 공백 등 제거
+      String cleanedPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+      
+      if (cleanedPhone.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('유효하지 않은 전화번호입니다')),
+          );
+        }
+        return;
+      }
+      
+      // 전화 권한 확인 (선택적)
       try {
-        if (await canLaunchUrl(phoneUri)) {
+        PermissionStatus phonePermission = await Permission.phone.status;
+        if (phonePermission.isDenied) {
+          await Permission.phone.request();
+        }
+      } catch (e) {
+        // 권한 오류는 무시하고 계속 진행
+      }
+      
+      final Uri phoneUri = Uri(scheme: 'tel', path: cleanedPhone);
+      
+      try {
+        // 먼저 일반적인 방법 시도
+        bool canLaunch = await canLaunchUrl(phoneUri);
+        
+        if (canLaunch) {
           await launchUrl(phoneUri);
         } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('전화 앱을 열 수 없습니다')),
-            );
-          }
+          // canLaunchUrl이 false라도 LaunchMode.externalApplication으로 시도
+          await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('전화 걸기 오류: $e')),
+            const SnackBar(content: Text('전화 앱을 열 수 없습니다')),
           );
         }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('전화번호가 없습니다')),
+        );
       }
     }
   }
 
   Future<void> _sendMessage(String? phone) async {
-    if (phone != null) {
-      final Uri smsUri = Uri(scheme: 'sms', path: phone);
+    if (phone != null && phone.isNotEmpty) {
+      // 전화번호에서 하이픈, 공백 등 제거
+      String cleanedPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+      
+      if (cleanedPhone.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('유효하지 않은 전화번호입니다')),
+          );
+        }
+        return;
+      }
+      
+      final Uri smsUri = Uri(scheme: 'sms', path: cleanedPhone);
+      
       try {
-        if (await canLaunchUrl(smsUri)) {
+        // 먼저 일반적인 방법 시도
+        bool canLaunch = await canLaunchUrl(smsUri);
+        
+        if (canLaunch) {
           await launchUrl(smsUri);
         } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('메시지 앱을 열 수 없습니다')),
-            );
-          }
+          // canLaunchUrl이 false라도 LaunchMode.externalApplication으로 시도
+          await launchUrl(smsUri, mode: LaunchMode.externalApplication);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('메시지 보내기 오류: $e')),
+            const SnackBar(content: Text('메시지 앱을 열 수 없습니다')),
           );
         }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('전화번호가 없습니다')),
+        );
       }
     }
   }
