@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'home_screen.dart';
-import 'contacts_screen.dart';
+
 import 'bulletin_screen.dart';
 import 'notices_screen.dart';
 import 'settings_screen.dart';

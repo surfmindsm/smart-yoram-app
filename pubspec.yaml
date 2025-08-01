@@ -53,6 +53,9 @@ dependencies:
   # 공유 기능
   share_plus: ^10.1.1
   
+  # URL 실행 (전화, SMS 등)
+  url_launcher: ^6.2.2
+  
   # 이미지 선택
   image_picker: ^1.0.4
   
