@@ -9,15 +9,18 @@ import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../services/member_service.dart';
 import '../services/church_service.dart';
+import '../services/announcement_service.dart';
 
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
 import '../models/church.dart';
+import '../models/announcement.dart';
 
 import 'calendar_screen.dart';
 import 'prayer_screen.dart';
 import 'settings_screen.dart';
 import 'qr_scan_screen.dart';
+import 'notice_detail_screen.dart';
 import 'notification_center_screen.dart';
 import 'staff_directory_screen.dart';
 import 'admin_dashboard_screen.dart';
@@ -34,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final UserService _userService = UserService();
   final MemberService _memberService = MemberService();
   final ChurchService _churchService = ChurchService();
+  final AnnouncementService _announcementService = AnnouncementService();
 
   app_user.User? currentUser;
   Member? currentMember;
@@ -42,6 +46,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Map<String, dynamic>? userStats;
   bool isLoading = true;
   bool _isChurchCardExpanded = true; // 교회 카드 펼침 상태
+
+  // 최근 공지사항 관련 상태 변수
+  List<Announcement> recentAnnouncements = [];
+  bool _isLoadingAnnouncements = false;
 
   // 오늘의 말씀 관련 상태 변수
   int _currentVerseIndex = 0;
@@ -121,6 +129,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         'unreadNotices': 2,
       };
 
+      // 최근 공지사항 로드 (최대 5개)
+      await _loadRecentAnnouncements();
+
       setState(() {
         isLoading = false;
       });
@@ -133,6 +144,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           SnackBar(content: Text('데이터 로드 실패: $e')),
         );
       }
+    }
+  }
+
+  // 최근 공지사항 로드 (5개)
+  Future<void> _loadRecentAnnouncements() async {
+    try {
+      setState(() {
+        _isLoadingAnnouncements = true;
+      });
+
+      final announcements =
+          await _announcementService.getAnnouncements(limit: 5);
+      setState(() {
+        recentAnnouncements = announcements;
+        _isLoadingAnnouncements = false;
+      });
+      print('📰 HOME_SCREEN: 최근 공지사항 로드 성공: ${recentAnnouncements.length}개');
+    } catch (e) {
+      setState(() {
+        recentAnnouncements = [];
+        _isLoadingAnnouncements = false;
+      });
+      print('📰 HOME_SCREEN: 최근 공지사항 로드 오류: $e');
     }
   }
 
@@ -242,9 +276,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     _buildTodaysVerse(),
                     const SizedBox(height: 24),
 
-                    // 내 통계
-                    _buildMyStats(),
+                    // 최근 공지사항
+                    _buildRecentNotices(),
                     const SizedBox(height: 24),
+
+                    // // 내 통계
+                    // _buildMyStats(),
+                    // const SizedBox(height: 24),
 
                     // 빠른 메뉴
                     _buildQuickMenus(),
@@ -253,9 +291,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     // 더 많은 기능
                     _buildMoreFeaturesSection(),
                     const SizedBox(height: 24),
-
-                    // 최근 공지사항
-                    _buildRecentNotices(),
                   ],
                 ),
               ),
@@ -830,27 +865,82 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
         const SizedBox(height: 12),
-        Card(
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 3,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              // Notice 객체가 필요하므로 임시로 ListTile 사용
-              return ListTile(
-                leading: const Icon(Icons.announcement, size: 20),
-                title: Text('공지사항 제목 ${index + 1}'),
-                subtitle: Text('2024.01.${30 - index}'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  // 공지사항 상세로 이동
-                },
-              );
-            },
-          ),
-        ),
+        _isLoadingAnnouncements
+            ? Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              )
+            : recentAnnouncements.isEmpty
+                ? Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Center(
+                        child: Text(
+                          '공지사항이 없습니다',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Card(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: recentAnnouncements.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final announcement = recentAnnouncements[index];
+                        return ListTile(
+                          leading: Icon(
+                            announcement.isPinned
+                                ? Icons.push_pin
+                                : Icons.announcement,
+                            size: 20,
+                            color: announcement.isPinned
+                                ? Colors.red
+                                : Colors.blue,
+                          ),
+                          title: Text(
+                            announcement.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            announcement.formattedDate,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            _navigateToAnnouncementDetail(announcement);
+                          },
+                        );
+                      },
+                    ),
+                  ),
       ],
+    );
+  }
+
+  // 공지사항 상세 화면으로 이동
+  void _navigateToAnnouncementDetail(Announcement announcement) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AnnouncementDetailScreen(
+          announcement: announcement,
+        ),
+      ),
     );
   }
 
