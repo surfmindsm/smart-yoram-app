@@ -106,6 +106,9 @@ dependencies:
   cached_network_image: ^3.3.1
   photo_view: ^0.15.0
   webview_flutter: ^4.4.2
+  
+  # 커스텀 드롭다운
+  dropdown_button2: ^2.3.9
 
 dev_dependencies:
   flutter_test:

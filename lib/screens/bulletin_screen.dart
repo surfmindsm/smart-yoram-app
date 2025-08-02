@@ -6,6 +6,7 @@ import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import '../models/bulletin.dart';
 import '../services/bulletin_service.dart';
 import '../widget/widgets.dart';
@@ -243,33 +244,66 @@ class _BulletinScreenState extends State<BulletinScreen> {
                     // 연도 드롭다운
                     Container(
                       padding:
-                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 2.h),
+                          EdgeInsets.symmetric(horizontal: 2.w, vertical: 2.h),
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColor.secondary02),
                         borderRadius: BorderRadius.circular(8.r),
                         color: AppColor.white,
                       ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: selectedYear,
-                          icon: Icon(Icons.keyboard_arrow_down, size: 20.sp),
-                          style: AppTextStyle(
+                      child: DropdownButton2<int>(
+                        value: selectedYear,
+                        hint: Text('연도 선택'),
+                        items: availableYears.map((year) {
+                          return DropdownMenuItem<int>(
+                            value: year,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 0.w),
+                              child: Text(
+                                year == 0 ? '전체' : '${year}년',
+                                style: AppTextStyle(
+                                  color: AppColor.secondary06,
+                                ).buttonLarge(),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (int? newYear) {
+                          if (newYear != null) {
+                            setState(() {
+                              selectedYear = newYear;
+                            });
+                            _filterBulletins();
+                          }
+                        },
+                        iconStyleData: IconStyleData(
+                          icon: Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 20.sp,
                             color: AppColor.secondary06,
-                          ).buttonLarge(),
-                          items: availableYears.map((year) {
-                            return DropdownMenuItem<int>(
-                              value: year,
-                              child: Text(year == 0 ? '전체' : '${year}년'),
-                            );
-                          }).toList(),
-                          onChanged: (int? newYear) {
-                            if (newYear != null) {
-                              setState(() {
-                                selectedYear = newYear;
-                              });
-                              _filterBulletins();
-                            }
-                          },
+                          ),
+                        ),
+                        dropdownStyleData: DropdownStyleData(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8.r),
+                            color: AppColor.white,
+                            border: Border.all(
+                              color: AppColor.secondary02,
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColor.secondary02.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          elevation: 0,
+                          maxHeight: 200.h,
+                        ),
+                        menuItemStyleData: MenuItemStyleData(
+                          height: 40.h,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
                         ),
                       ),
                     ),
@@ -277,35 +311,71 @@ class _BulletinScreenState extends State<BulletinScreen> {
                     // 월 드롭다운
                     Container(
                       padding:
-                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 2.h),
+                          EdgeInsets.symmetric(horizontal: 2.w, vertical: 2.h),
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColor.secondary02),
                         borderRadius: BorderRadius.circular(8.r),
                         color: AppColor.white,
                       ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: selectedMonth,
-                          icon: Icon(Icons.keyboard_arrow_down, size: 20.sp),
-                          style: AppTextStyle(
+                      child: DropdownButton2<int>(
+                        value: selectedMonth,
+                        hint: Text('월 선택'),
+                        style: AppTextStyle(
+                          color: AppColor.secondary06,
+                        ).buttonLarge(),
+                        items: availableMonths.map((month) {
+                          return DropdownMenuItem<int>(
+                            value: month,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 0.w),
+                              child: Text(
+                                month < monthNames.length
+                                    ? monthNames[month]
+                                    : '오류(${month})',
+                                style: AppTextStyle(
+                                  color: AppColor.secondary06,
+                                ).buttonLarge(),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (int? newMonth) {
+                          if (newMonth != null) {
+                            setState(() {
+                              selectedMonth = newMonth;
+                            });
+                            _filterBulletins();
+                          }
+                        },
+                        iconStyleData: IconStyleData(
+                          icon: Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 20.sp,
                             color: AppColor.secondary06,
-                          ).buttonLarge(),
-                          items: availableMonths.map((month) {
-                            return DropdownMenuItem<int>(
-                              value: month,
-                              child: Text(month < monthNames.length
-                                  ? monthNames[month]
-                                  : '오류(${month})'),
-                            );
-                          }).toList(),
-                          onChanged: (int? newMonth) {
-                            if (newMonth != null) {
-                              setState(() {
-                                selectedMonth = newMonth;
-                              });
-                              _filterBulletins();
-                            }
-                          },
+                          ),
+                        ),
+                        dropdownStyleData: DropdownStyleData(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8.r),
+                            color: AppColor.white,
+                            border: Border.all(
+                              color: AppColor.secondary02,
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColor.secondary02.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          elevation: 0,
+                          maxHeight: 200.h,
+                        ),
+                        menuItemStyleData: MenuItemStyleData(
+                          height: 40.h,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
                         ),
                       ),
                     ),
