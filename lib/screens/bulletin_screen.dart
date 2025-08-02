@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/bulletin.dart';
 import '../services/bulletin_service.dart';
 import '../widget/widgets.dart';
+import 'bulletin_modal.dart';
 
 class BulletinScreen extends StatefulWidget {
   const BulletinScreen({super.key});
@@ -371,53 +372,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
   void _viewBulletin(Bulletin bulletin) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(bulletin.title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('날짜: ${_formatDate(bulletin.date)}'),
-            if (bulletin.description != null) ...[
-              const SizedBox(height: 8),
-              Text('설명: ${bulletin.description}'),
-            ],
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.picture_as_pdf, size: 48, color: Colors.grey),
-                    SizedBox(height: 8),
-                    Text('주보 미리보기'),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _downloadBulletin(bulletin);
-            },
-            child: const Text('다운로드'),
-          ),
-        ],
-      ),
+      builder: (context) => BulletinModal(bulletin: bulletin),
     );
   }
 
