@@ -278,7 +278,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                         dropdownStyleData: DropdownStyleData(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8.r),
-                            color: AppColor.white.withOpacity(0.8),
+                            color: AppColor.white,
                             border: Border.all(
                               color: AppColor.secondary02,
                               width: 0,
@@ -350,7 +350,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                         dropdownStyleData: DropdownStyleData(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8.r),
-                            color: AppColor.white.withOpacity(0.8),
+                            color: AppColor.white,
                             border: Border.all(
                               color: AppColor.secondary02,
                               width: 0,
