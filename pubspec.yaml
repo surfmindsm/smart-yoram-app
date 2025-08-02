@@ -96,7 +96,6 @@ dependencies:
   fl_chart: ^0.66.2
   
   # 이미지 뷰어 및 갤러리 저장
-  image_gallery_saver: ^2.0.3
   saver_gallery: ^4.0.1  # Android & iOS 통합
   
   # 엑셀 파일 처리
