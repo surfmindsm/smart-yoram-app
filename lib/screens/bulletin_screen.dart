@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_yoram_app/resource/color_style.dart';
 import '../models/bulletin.dart';
 import '../services/bulletin_service.dart';
 import '../widget/widgets.dart';
@@ -14,16 +16,58 @@ class BulletinScreen extends StatefulWidget {
 class _BulletinScreenState extends State<BulletinScreen> {
   final BulletinService _bulletinService = BulletinService();
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<Bulletin> allBulletins = [];
   List<Bulletin> filteredBulletins = [];
   bool isLoading = true;
 
+  // 필터링 변수 (0은 전체를 의미)
+  int selectedYear = 0; // 전체로 초기화
+  int selectedMonth = 0; // 전체로 초기화
+
+  // 연도 목록 (과거 5년 + 현재년도, 미래 없음)
+  late List<int> availableYears;
+
+  // 월 목록 (0은 전체, 1-12는 실제 월)
+  final List<int> availableMonths = [
+    0,
+    ...List.generate(12, (index) => index + 1)
+  ];
+
+  final List<String> monthNames = [
+    '전체', // 0
+    '1월', // 1
+    '2월', // 2
+    '3월', // 3
+    '4월', // 4
+    '5월', // 5
+    '6월', // 6
+    '7월', // 7
+    '8월', // 8
+    '9월', // 9
+    '10월', // 10
+    '11월', // 11
+    '12월', // 12
+  ];
+
   @override
   void initState() {
     super.initState();
+    // 연도 목록 초기화 (전체 + 과거 5년 + 현재년도, 미래 없음)
+    int currentYear = DateTime.now().year;
+    availableYears = [
+      0,
+      ...List.generate(6, (index) => currentYear - 5 + index)
+    ];
+
+    // 디버깅: 배열 크기 확인
+    print('📰 BULLETIN_SCREEN: availableMonths 배열: $availableMonths');
+    print('📰 BULLETIN_SCREEN: monthNames 배열 크기: ${monthNames.length}');
+    print('📰 BULLETIN_SCREEN: monthNames 배열: $monthNames');
+
     print('📰 BULLETIN_SCREEN: initState 시작 - 주보 화면 진입');
-    print('📰 BULLETIN_SCREEN: BulletinService 인스턴스: ${_bulletinService.toString()}');
+    print(
+        '📰 BULLETIN_SCREEN: BulletinService 인스턴스: ${_bulletinService.toString()}');
     print('📰 BULLETIN_SCREEN: 검색 컨트롤러 설정');
     _searchController.addListener(_filterBulletins);
     print('📰 BULLETIN_SCREEN: _loadBulletins 호출 예정');
@@ -44,55 +88,60 @@ class _BulletinScreenState extends State<BulletinScreen> {
     print('📰 BULLETIN_SCREEN: _loadBulletins 시작');
     print('📰 BULLETIN_SCREEN: 현재 상태 - isLoading: $isLoading');
     print('📰 BULLETIN_SCREEN: 현재 주보 수 - allBulletins: ${allBulletins.length}');
-    
+
     setState(() {
       isLoading = true;
       print('📰 BULLETIN_SCREEN: 로딩 상태를 true로 변경');
     });
-    
+
     try {
       print('📰 BULLETIN_SCREEN: BulletinService.getBulletins 호출 시작');
       print('📰 BULLETIN_SCREEN: 요청 파라미터 - limit: 50');
-      
+
       final response = await _bulletinService.getBulletins(limit: 50);
-      
+
       print('📰 BULLETIN_SCREEN: BulletinService 응답 받음');
       print('📰 BULLETIN_SCREEN: 응답 success: ${response.success}');
       print('📰 BULLETIN_SCREEN: 응답 message: "${response.message}"');
       print('📰 BULLETIN_SCREEN: 응답 data null 여부: ${response.data == null}');
-      
+
       if (response.success && response.data != null) {
         final dataLength = response.data!.length;
         print('📰 BULLETIN_SCREEN: 성공! 받은 주보 데이터 수: $dataLength');
-        
+
         if (dataLength > 0) {
           print('📰 BULLETIN_SCREEN: 주보 상세 정보:');
           for (int i = 0; i < dataLength; i++) {
             final bulletin = response.data![i];
-            print('📰 BULLETIN_SCREEN: [$i] ID=${bulletin.id}, 제목="${bulletin.title}"');
-            print('📰 BULLETIN_SCREEN: [$i] 날짜=${bulletin.date}, 설명="${bulletin.description}"');
+            print(
+                '📰 BULLETIN_SCREEN: [$i] ID=${bulletin.id}, 제목="${bulletin.title}"');
+            print(
+                '📰 BULLETIN_SCREEN: [$i] 날짜=${bulletin.date}, 설명="${bulletin.description}"');
           }
         } else {
           print('📰 BULLETIN_SCREEN: 응답은 성공이지만 주보 데이터가 비어있음');
         }
-        
-        print('📰 BULLETIN_SCREEN: allBulletins 업데이트 (${allBulletins.length} → $dataLength)');
+
+        print(
+            '📰 BULLETIN_SCREEN: allBulletins 업데이트 (${allBulletins.length} → $dataLength)');
         allBulletins = response.data!;
-        print('📰 BULLETIN_SCREEN: filteredBulletins 업데이트');
-        filteredBulletins = List.from(allBulletins);
-        
-        print('📰 BULLETIN_SCREEN: 최종 상태 - allBulletins: ${allBulletins.length}, filtered: ${filteredBulletins.length}');
+        print('📰 BULLETIN_SCREEN: filteredBulletins 업데이트 - 필터링 적용');
+        // 초기 로딩 시에도 필터링 적용
+        _filterBullettinsWithoutSetState();
+
+        print(
+            '📰 BULLETIN_SCREEN: 최종 상태 - allBulletins: ${allBulletins.length}, filtered: ${filteredBulletins.length}');
       } else {
         print('📰 BULLETIN_SCREEN: ❌ API 호출 실패 또는 null 데이터');
         print('📰 BULLETIN_SCREEN: 실패 세부사항:');
         print('📰 BULLETIN_SCREEN: - success: ${response.success}');
         print('📰 BULLETIN_SCREEN: - data == null: ${response.data == null}');
         print('📰 BULLETIN_SCREEN: - message: "${response.message}"');
-        
+
         allBulletins = [];
         filteredBulletins = [];
         print('📰 BULLETIN_SCREEN: 빈 목록으로 초기화');
-        
+
         if (mounted) {
           print('📰 BULLETIN_SCREEN: 사용자에게 오류 메시지 표시');
           ScaffoldMessenger.of(context).showSnackBar(
@@ -100,60 +149,180 @@ class _BulletinScreenState extends State<BulletinScreen> {
           );
         }
       }
-      
+
       print('📰 BULLETIN_SCREEN: setState로 화면 갱신 준비');
       setState(() {
         isLoading = false;
         print('📰 BULLETIN_SCREEN: 로딩 상태를 false로 변경 완료');
       });
-      
     } catch (e, stackTrace) {
       print('📰 BULLETIN_SCREEN: ❌ 예외 발생!');
       print('📰 BULLETIN_SCREEN: 예외 메시지: $e');
       print('📰 BULLETIN_SCREEN: 스택 트레이스: $stackTrace');
-      
+
       setState(() => isLoading = false);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('주보 정보 로드 실패: $e')),
         );
       }
     }
-    
+
     print('📰 BULLETIN_SCREEN: _loadBulletins 완료');
     print('📰 BULLETIN_SCREEN: =================');
   }
 
+  // setState 없이 필터링하는 메서드 (초기 로딩 시 사용)
+  void _filterBullettinsWithoutSetState() {
+    String query = _searchController.text.toLowerCase();
 
+    filteredBulletins = allBulletins.where((bulletin) {
+      // 검색어 필터링
+      bool matchesQuery = query.isEmpty ||
+          bulletin.title.toLowerCase().contains(query) ||
+          (bulletin.description?.toLowerCase().contains(query) ?? false);
+
+      // 날짜 필터링
+      bool matchesDate = true;
+      // 0은 전체를 의미하므로 필터링 제외
+      if (selectedYear != 0) {
+        matchesDate = matchesDate && (bulletin.date.year == selectedYear);
+      }
+      if (selectedMonth != 0) {
+        matchesDate = matchesDate && (bulletin.date.month == selectedMonth);
+      }
+
+      return matchesQuery && matchesDate;
+    }).toList();
+  }
 
   void _filterBulletins() {
-    String query = _searchController.text.toLowerCase();
-    
     setState(() {
-      filteredBulletins = allBulletins.where((bulletin) {
-        return bulletin.title.toLowerCase().contains(query) ||
-               (bulletin.description?.toLowerCase().contains(query) ?? false);
-      }).toList();
+      _filterBullettinsWithoutSetState();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(
-        title: '주보',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              _showSearchDialog();
-            },
-          ),
-        ],
-      ),
+      // appBar: CommonAppBar(
+      //   title: '주보',
+      //   actions: [
+      //     IconButton(
+      //       icon: const Icon(Icons.search),
+      //       onPressed: () {
+      //         _showSearchDialog();
+      //       },
+      //     ),
+      //   ],
+      // ),
       body: Column(
         children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+
+          // 연도/월 필터 헤더
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: AppColor.transparent,
+              border: Border(
+                bottom: BorderSide(
+                    color: AppColor.secondary02.withOpacity(0.3), width: 1),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                Row(
+                  children: [
+                    // 연도 드롭다운
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8.r),
+                        color: Colors.grey[50],
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          value: selectedYear,
+                          icon: Icon(Icons.keyboard_arrow_down, size: 16.sp),
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                          items: availableYears.map((year) {
+                            return DropdownMenuItem<int>(
+                              value: year,
+                              child: Text(year == 0 ? '전체' : '${year}년'),
+                            );
+                          }).toList(),
+                          onChanged: (int? newYear) {
+                            if (newYear != null) {
+                              setState(() {
+                                selectedYear = newYear;
+                              });
+                              _filterBulletins();
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    // 월 드롭다운
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8.r),
+                        color: Colors.grey[50],
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          value: selectedMonth,
+                          icon: Icon(Icons.keyboard_arrow_down, size: 16.sp),
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                          items: availableMonths.map((month) {
+                            return DropdownMenuItem<int>(
+                              value: month,
+                              child: Text(month < monthNames.length
+                                  ? monthNames[month]
+                                  : '오류(${month})'),
+                            );
+                          }).toList(),
+                          onChanged: (int? newMonth) {
+                            if (newMonth != null) {
+                              setState(() {
+                                selectedMonth = newMonth;
+                              });
+                              _filterBulletins();
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
           // 검색창
           if (_searchController.text.isNotEmpty)
             Container(
@@ -177,7 +346,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                 ),
               ),
             ),
-          
+
           // 주보 목록
           Expanded(
             child: isLoading
@@ -236,7 +405,8 @@ class _BulletinScreenState extends State<BulletinScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(4),
@@ -253,9 +423,9 @@ class _BulletinScreenState extends State<BulletinScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               // 설명
               if (bulletin.description != null)
                 Text(
@@ -267,14 +437,16 @@ class _BulletinScreenState extends State<BulletinScreen> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-              
+
               const SizedBox(height: 12),
-              
+
               // 파일 정보 및 액션 버튼
               Row(
                 children: [
                   Icon(
-                    bulletin.fileType == 'pdf' ? Icons.picture_as_pdf : Icons.image,
+                    bulletin.fileType == 'pdf'
+                        ? Icons.picture_as_pdf
+                        : Icons.image,
                     size: 16,
                     color: Colors.grey,
                   ),
@@ -296,9 +468,9 @@ class _BulletinScreenState extends State<BulletinScreen> {
                       ),
                     ),
                   ],
-                  
+
                   const Spacer(),
-                  
+
                   // 액션 버튼들
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -388,8 +560,9 @@ class _BulletinScreenState extends State<BulletinScreen> {
         ),
       );
 
-      final response = await _bulletinService.downloadBulletin(bulletin.id.toString());
-      
+      final response =
+          await _bulletinService.downloadBulletin(bulletin.id.toString());
+
       if (response.success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
