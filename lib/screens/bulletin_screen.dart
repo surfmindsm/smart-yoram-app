@@ -325,30 +325,6 @@ class _BulletinScreenState extends State<BulletinScreen> {
             ),
           ),
 
-          // 검색창
-          // if (_searchController.text.isNotEmpty)
-          //   Container(
-          //     padding: const EdgeInsets.all(16),
-          //     color: Colors.grey[50],
-          //     child: TextField(
-          //       controller: _searchController,
-          //       decoration: InputDecoration(
-          //         hintText: '주보 제목이나 내용을 검색하세요',
-          //         prefixIcon: const Icon(Icons.search),
-          //         suffixIcon: IconButton(
-          //           icon: const Icon(Icons.clear),
-          //           onPressed: () {
-          //             _searchController.clear();
-          //           },
-          //         ),
-          //         border: OutlineInputBorder(
-          //           borderRadius: BorderRadius.circular(8),
-          //         ),
-          //         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          //       ),
-          //     ),
-          //   ),
-
           // 주보 목록
           Expanded(
             child: isLoading
@@ -441,7 +417,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                     child: Container(
                       padding: EdgeInsets.all(6.w),
                       decoration: BoxDecoration(
-                        color: Colors.black54,
+                        color: AppColor.secondary07.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Icon(
@@ -454,7 +430,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                 ],
               ),
             ),
-            
+
             // 콘텐츠 영역
             Padding(
               padding: EdgeInsets.all(16.w),
@@ -477,107 +453,10 @@ class _BulletinScreenState extends State<BulletinScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w, 
-                          vertical: 4.h
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(6.r),
-                          border: Border.all(color: Colors.blue[200]!),
-                        ),
-                        child: Text(
-                          _formatDate(bulletin.date),
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
-                  
+
                   SizedBox(height: 8.h),
-                  
-                  // 설명 (있는 경우)
-                  if (bulletin.content != null && bulletin.content!.isNotEmpty)
-                    Text(
-                      bulletin.content!,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.grey[600],
-                        height: 1.3,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  
-                  SizedBox(height: 12.h),
-                  
-                  // 하단 액션
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // 파일 타입 표시
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w, 
-                          vertical: 4.h
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _getFileTypeIcon(bulletin.fileUrl),
-                              size: 14.sp,
-                              color: Colors.grey[600],
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              _getFileTypeText(bulletin.fileUrl),
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // 빠른 액션 버튼들
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed: () => _downloadBulletin(bulletin),
-                            icon: Icon(
-                              Icons.download_outlined,
-                              size: 20.sp,
-                              color: Colors.grey[600],
-                            ),
-                            tooltip: '다운로드',
-                          ),
-                          IconButton(
-                            onPressed: () => _shareBulletin(bulletin),
-                            icon: Icon(
-                              Icons.share_outlined,
-                              size: 20.sp,
-                              color: Colors.grey[600],
-                            ),
-                            tooltip: '공유',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -638,7 +517,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
       ),
     );
   }
-  
+
   // 미리보기 위젯 빌드
   Widget _buildPreviewWidget(Bulletin bulletin) {
     if (bulletin.fileUrl == null) {
@@ -746,16 +625,16 @@ class _BulletinScreenState extends State<BulletinScreen> {
   bool _isImageFile(String url) {
     final lowercaseUrl = url.toLowerCase();
     return lowercaseUrl.endsWith('.jpg') ||
-           lowercaseUrl.endsWith('.jpeg') ||
-           lowercaseUrl.endsWith('.png') ||
-           lowercaseUrl.endsWith('.gif') ||
-           lowercaseUrl.endsWith('.webp');
+        lowercaseUrl.endsWith('.jpeg') ||
+        lowercaseUrl.endsWith('.png') ||
+        lowercaseUrl.endsWith('.gif') ||
+        lowercaseUrl.endsWith('.webp');
   }
 
   // 파일 타입 아이콘 반환
   IconData _getFileTypeIcon(String? fileUrl) {
     if (fileUrl == null) return Icons.description_outlined;
-    
+
     if (_isImageFile(fileUrl)) {
       return Icons.image_outlined;
     } else {
@@ -766,7 +645,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
   // 파일 타입 텍스트 반환
   String _getFileTypeText(String? fileUrl) {
     if (fileUrl == null) return 'FILE';
-    
+
     if (_isImageFile(fileUrl)) {
       return 'IMAGE';
     } else {
@@ -777,7 +656,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
   // FileType enum 반환
   FileType _getFileType(String? fileUrl) {
     if (fileUrl == null) return FileType.unknown;
-    
+
     if (_isImageFile(fileUrl)) {
       return FileType.image;
     } else {
