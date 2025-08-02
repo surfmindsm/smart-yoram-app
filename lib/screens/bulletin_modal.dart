@@ -9,6 +9,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../models/bulletin.dart';
 import '../services/bulletin_service.dart';
 import '../widget/widgets.dart';
+import 'bulletin_fullscreen_viewer.dart';
 
 class BulletinModal extends StatefulWidget {
   final Bulletin bulletin;
@@ -354,6 +355,23 @@ class _BulletinModalState extends State<BulletinModal> {
                       ],
                     ),
                   ),
+                  // 크게 보기 버튼
+                  IconButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => BulletinFullscreenViewer(
+                            bulletin: widget.bulletin,
+                            localPath: localPath,
+                            fileType: fileType,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.fullscreen, color: Colors.white),
+                    splashRadius: 20,
+                    tooltip: '크게 보기',
+                  ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close, color: Colors.white),
@@ -379,6 +397,28 @@ class _BulletinModalState extends State<BulletinModal> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => BulletinFullscreenViewer(
+                              bulletin: widget.bulletin,
+                              localPath: localPath,
+                              fileType: fileType,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.fullscreen),
+                      label: const Text('크게 보기'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        foregroundColor: Colors.blue[700],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
                       onPressed: isLoading ? null : _downloadFile,
                       icon: isLoading
                           ? const SizedBox(
@@ -393,7 +433,7 @@ class _BulletinModalState extends State<BulletinModal> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
