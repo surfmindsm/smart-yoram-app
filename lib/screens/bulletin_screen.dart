@@ -216,11 +216,11 @@ class _BulletinScreenState extends State<BulletinScreen> {
       backgroundColor: AppColor.background,
       body: Column(
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+          SizedBox(height: MediaQuery.of(context).padding.top + 5.h),
 
           // 연도/월 필터 헤더
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),
             decoration: BoxDecoration(
               color: AppColor.transparent,
               border: Border(
@@ -384,7 +384,6 @@ class _BulletinScreenState extends State<BulletinScreen> {
               ],
             ),
           ),
-
           // 주보 목록
           Expanded(
             child: isLoading
@@ -465,9 +464,9 @@ class _BulletinScreenState extends State<BulletinScreen> {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.3),
-                          ],
-                        ),
+                            Colors.black.withOpacity(0.3)
+                          ]
+                        )
                       ),
                     ),
                   ),
