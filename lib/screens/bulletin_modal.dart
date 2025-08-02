@@ -5,10 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:pdfx/pdfx.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import '../models/bulletin.dart';
 import '../services/bulletin_service.dart';
-import '../widget/widgets.dart';
 import 'bulletin_fullscreen_viewer.dart';
 
 class BulletinModal extends StatefulWidget {
@@ -138,6 +136,18 @@ class _BulletinModalState extends State<BulletinModal> {
     }
   }
 
+  void _navigateToFullscreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BulletinFullscreenViewer(
+          bulletin: widget.bulletin,
+          localPath: localPath,
+          fileType: fileType,
+        ),
+      ),
+    );
+  }
+
   Widget _buildFilePreview() {
     if (isLoading) {
       return const SizedBox(
@@ -198,68 +208,134 @@ class _BulletinModalState extends State<BulletinModal> {
       );
     }
 
-    return Container(
-      height: 500,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: PdfView(
-          controller: pdfController!,
-          onDocumentError: (error) {
-            setState(() {
-              errorMessage = 'PDF 로딩 오류: $error';
-            });
-          },
-          onPageChanged: (page) {
-            // 페이지 변경 시 처리
-          },
-          backgroundDecoration: BoxDecoration(
-            color: Colors.grey[100],
-          ),
+    return GestureDetector(
+      onTap: _navigateToFullscreen,
+      child: Container(
+        height: 500,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: PdfView(
+                controller: pdfController!,
+                onDocumentError: (error) {
+                  setState(() {
+                    errorMessage = 'PDF 로딩 오류: $error';
+                  });
+                },
+                onPageChanged: (page) {
+                  // 페이지 변경 시 처리
+                },
+                backgroundDecoration: BoxDecoration(
+                  color: Colors.grey[100],
+                ),
+              ),
+            ),
+            // 터치 안내 오버레이
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.fullscreen, color: Colors.white, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      '터치하여 크게 보기',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildImagePreview() {
-    return Container(
-      height: 500,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: PhotoView(
-          imageProvider: CachedNetworkImageProvider(widget.bulletin.fileUrl!),
-          backgroundDecoration: BoxDecoration(
-            color: Colors.grey[100],
-          ),
-          minScale: PhotoViewComputedScale.contained,
-          maxScale: PhotoViewComputedScale.covered * 2.0,
-          loadingBuilder: (context, event) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    '이미지를 불러올 수 없습니다.',
-                    style: TextStyle(color: Colors.red[600]),
-                  ),
-                ],
+    return GestureDetector(
+      onTap: _navigateToFullscreen,
+      child: Container(
+        height: 500,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: PhotoView(
+                imageProvider: CachedNetworkImageProvider(widget.bulletin.fileUrl!),
+                backgroundDecoration: BoxDecoration(
+                  color: Colors.grey[100],
+                ),
+                minScale: PhotoViewComputedScale.contained,
+                maxScale: PhotoViewComputedScale.covered * 2.0,
+                loadingBuilder: (context, event) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          '이미지를 불러올 수 없습니다.',
+                          style: TextStyle(color: Colors.red[600]),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            );
-          },
+            ),
+            // 터치 안내 오버레이
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.fullscreen, color: Colors.white, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      '터치하여 크게 보기',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
