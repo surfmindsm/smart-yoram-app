@@ -285,21 +285,21 @@ class _BulletinScreenState extends State<BulletinScreen> {
                         dropdownStyleData: DropdownStyleData(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8.r),
-                            color: AppColor.white,
+                            color: AppColor.white.withOpacity(0.8),
                             border: Border.all(
                               color: AppColor.secondary02,
-                              width: 1,
+                              width: 0,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColor.secondary02.withOpacity(0.1),
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                            // boxShadow: [
+                            //   BoxShadow(
+                            //     color: AppColor.secondary02.withOpacity(0.1),
+                            //     blurRadius: 4,
+                            //     offset: Offset(0, 2),
+                            //   ),
+                            // ],
                           ),
                           elevation: 0,
-                          maxHeight: 200.h,
+                          maxHeight: 260.h,
                         ),
                         menuItemStyleData: MenuItemStyleData(
                           height: 40.h,
@@ -357,10 +357,10 @@ class _BulletinScreenState extends State<BulletinScreen> {
                         dropdownStyleData: DropdownStyleData(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8.r),
-                            color: AppColor.white,
+                            color: AppColor.white.withOpacity(0.8),
                             border: Border.all(
                               color: AppColor.secondary02,
-                              width: 1,
+                              width: 0,
                             ),
                             boxShadow: [
                               BoxShadow(
@@ -371,7 +371,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                             ],
                           ),
                           elevation: 0,
-                          maxHeight: 200.h,
+                          maxHeight: 260.h,
                         ),
                         menuItemStyleData: MenuItemStyleData(
                           height: 40.h,
