@@ -215,30 +215,23 @@ class _BulletinScreenState extends State<BulletinScreen> {
     return Scaffold(
       backgroundColor: AppColor.background,
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top + 5.h),
+          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
 
           // 연도/월 필터 헤더
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
               color: AppColor.transparent,
-              border: Border(
-                bottom: BorderSide(
-                    color: AppColor.secondary02.withOpacity(0.3), width: 1),
-              ),
+              // border: Border(
+              //   bottom: BorderSide(
+              //       color: AppColor.secondary02.withOpacity(0.3), width: 1),
+              // ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  '',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
-                  ),
-                ),
                 Row(
                   children: [
                     // 연도 드롭다운
@@ -362,13 +355,6 @@ class _BulletinScreenState extends State<BulletinScreen> {
                               color: AppColor.secondary02,
                               width: 0,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColor.secondary02.withOpacity(0.1),
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
                           ),
                           elevation: 0,
                           maxHeight: 260.h,
@@ -386,24 +372,28 @@ class _BulletinScreenState extends State<BulletinScreen> {
           ),
           // 주보 목록
           Expanded(
-            child: isLoading
-                ? const LoadingWidget()
-                : filteredBulletins.isEmpty
-                    ? const EmptyStateWidget(
-                        icon: Icons.description_outlined,
-                        title: '주보가 없습니다',
-                        subtitle: '아직 등록된 주보가 없습니다',
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadBulletins,
-                        child: ListView.builder(
-                          itemCount: filteredBulletins.length,
-                          itemBuilder: (context, index) {
-                            final bulletin = filteredBulletins[index];
-                            return _buildBulletinCard(bulletin);
-                          },
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: isLoading
+                  ? const LoadingWidget()
+                  : filteredBulletins.isEmpty
+                      ? const EmptyStateWidget(
+                          icon: Icons.description_outlined,
+                          title: '주보가 없습니다',
+                          subtitle: '아직 등록된 주보가 없습니다',
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _loadBulletins,
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: filteredBulletins.length,
+                            itemBuilder: (context, index) {
+                              final bulletin = filteredBulletins[index];
+                              return _buildBulletinCard(bulletin);
+                            },
+                          ),
                         ),
-                      ),
+            ),
           ),
         ],
       ),
@@ -459,15 +449,13 @@ class _BulletinScreenState extends State<BulletinScreen> {
                     child: Container(
                       height: 60.h,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
+                          gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
                             Colors.transparent,
                             Colors.black.withOpacity(0.3)
-                          ]
-                        )
-                      ),
+                          ])),
                     ),
                   ),
                   // 전체화면 아이콘
