@@ -2,17 +2,18 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pdfx/pdfx.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:saver_gallery/saver_gallery.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:saver_gallery/saver_gallery.dart';
 import '../models/bulletin.dart';
-import 'bulletin_modal.dart';
+import '../models/file_type.dart';
 import '../resource/color_style.dart';
 import '../resource/text_style.dart';
+import '../utils/pdf_platform_util.dart';
 
 class BulletinFullscreenViewer extends StatefulWidget {
   final Bulletin bulletin;
@@ -32,9 +33,10 @@ class BulletinFullscreenViewer extends StatefulWidget {
 }
 
 class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
-  PdfController? pdfController;
   int currentPage = 1;
   int totalPages = 1;
+  String? pdfPath;
+  dynamic pdfController; // pdfx.PdfController 또는 null
 
   @override
   void initState() {
@@ -44,40 +46,31 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
 
   @override
   void dispose() {
-    pdfController?.dispose();
     super.dispose();
   }
 
   Future<void> _initializePdf() async {
     if (widget.fileType == FileType.pdf) {
       try {
-        // 로컬 파일이 있으면 로컬 파일을 사용, 없으면 URL에서 로드
+        // 로컬 파일이 있으면 로컬 파일을 사용
         if (widget.localPath != null) {
-          pdfController = PdfController(
-            document: PdfDocument.openFile(widget.localPath!),
-          );
-
-          final document = await PdfDocument.openFile(widget.localPath!);
-          final pageCount = document.pagesCount;
+          pdfPath = widget.localPath;
           setState(() {
-            totalPages = pageCount;
+            // 플랫폼별 PDF 뷰어에서 totalPages는 콜백으로 처리됨
           });
         } else if (widget.bulletin.fileUrl != null) {
-          // URL에서 PDF 로드
+          // URL에서 PDF 다운로드 후 임시 파일로 저장
           final data = await _downloadFile(widget.bulletin.fileUrl!);
-          pdfController = PdfController(
-            document: PdfDocument.openData(data),
-          );
-
-          final document = await PdfDocument.openData(data);
-          final pageCount = document.pagesCount;
+          final tempDir = await getTemporaryDirectory();
+          final tempFile = File('${tempDir.path}/temp_pdf_${DateTime.now().millisecondsSinceEpoch}.pdf');
+          await tempFile.writeAsBytes(data);
+          pdfPath = tempFile.path;
           setState(() {
-            totalPages = pageCount;
+            // 플랫폼별 PDF 뷰어에서 totalPages는 콜백으로 처리됨
           });
         }
       } catch (e) {
-        print('PDF 컨트롤러 초기화 실패: $e');
-        // PDF 로드 실패 시 에러 상태로 설정
+        print('PDF 초기화 실패: $e');
         setState(() {
           totalPages = 0;
         });
@@ -289,15 +282,19 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
 
     return Stack(
       children: [
-        PdfView(
-          controller: pdfController!,
-          onPageChanged: (page) {
+        PdfPlatformUtil.buildPdfViewer(
+          localPath: pdfPath,
+          onPageChanged: (page, total) {
             setState(() {
               currentPage = page;
+              totalPages = total;
             });
           },
-          scrollDirection: Axis.vertical,
-          physics: const BouncingScrollPhysics(),
+          onDocumentLoaded: (total) {
+            setState(() {
+              totalPages = total;
+            });
+          },
         ),
         // 페이지 정보 표시
         Positioned(

@@ -1,17 +1,15 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:pdfx/pdfx.dart';
+
 import 'package:smart_yoram_app/resource/text_style.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../models/bulletin.dart';
+import '../models/file_type.dart';
 import '../services/bulletin_service.dart';
 import '../widget/widgets.dart';
 import 'bulletin_fullscreen_viewer.dart';
-import 'bulletin_modal.dart' show FileType;
 
 class BulletinScreen extends StatefulWidget {
   const BulletinScreen({super.key});
@@ -564,6 +562,11 @@ class _BulletinScreenState extends State<BulletinScreen> {
     );
   }
 
+  // FileType 반환
+  FileType _getFileType(String? fileUrl) {
+    return FileTypeHelper.getFileType(fileUrl);
+  }
+
   // 미리보기 위젯 빌드
   Widget _buildPreviewWidget(Bulletin bulletin) {
     print('미리보기 위젯 빌드 - fileUrl: ${bulletin.fileUrl}');
@@ -733,49 +736,33 @@ class _BulletinScreenState extends State<BulletinScreen> {
   // PDF 첫 페이지 미리보기 빌드
   Future<Widget> _buildPdfPreview(String pdfUrl) async {
     try {
-      print('PDF 미리보기 시작: $pdfUrl');
+      print('PDF 미리보기: $pdfUrl');
 
-      // PDF 파일 다운로드
-      final response = await HttpClient().getUrl(Uri.parse(pdfUrl));
-      final request = await response.close();
-      final bytes = await request
-          .fold<List<int>>(<int>[], (prev, element) => prev..addAll(element));
-      final pdfData = Uint8List.fromList(bytes);
-
-      print('PDF 데이터 다운로드 완료: ${pdfData.length} bytes');
-
-      // PDF 문서 열기
-      final document = await PdfDocument.openData(pdfData);
-      final page = await document.getPage(1); // 첫 번째 페이지
-
-      print('PDF 첫 페이지 로드 완료');
-
-      // 페이지를 이미지로 렌더링 (미리보기용 크기)
-      final pageImage = await page.render(
-        width: 300, // 미리보기용 작은 크기
-        height: 400,
-        format: PdfPageImageFormat.png,
+      // PDF 파일의 경우 간단한 PDF 아이콘으로 대체
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.red[50],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.picture_as_pdf,
+              size: 48.sp,
+              color: Colors.red[400],
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'PDF 파일',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.red[400],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       );
-
-      print('PDF 페이지 렌더링 완료');
-
-      // 리소스 정리
-      page.close();
-      document.close();
-
-      // 이미진쇄 위젯 반환
-      if (pageImage != null && pageImage.bytes.isNotEmpty) {
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          child: Image.memory(
-            pageImage.bytes,
-            fit: BoxFit.cover,
-          ),
-        );
-      } else {
-        throw Exception('PDF 페이지 렌더링 실패: pageImage가 null이거나 비어있음');
-      }
     } catch (e) {
       print('PDF 미리보기 오류: $e');
       // 오류 발생 시 기본 PDF 아이콘 표시
@@ -843,17 +830,6 @@ class _BulletinScreenState extends State<BulletinScreen> {
       return 'IMAGE';
     } else {
       return 'PDF';
-    }
-  }
-
-  // FileType enum 반환
-  FileType _getFileType(String? fileUrl) {
-    if (fileUrl == null) return FileType.unknown;
-
-    if (_isImageFile(fileUrl)) {
-      return FileType.image;
-    } else {
-      return FileType.pdf;
     }
   }
 
