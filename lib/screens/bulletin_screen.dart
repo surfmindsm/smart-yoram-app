@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/bulletin.dart';
 import '../services/bulletin_service.dart';
 import '../widget/widgets.dart';
-import 'bulletin_modal.dart';
+import 'bulletin_fullscreen_viewer.dart';
+import 'bulletin_modal.dart' show FileType;
 
 class BulletinScreen extends StatefulWidget {
   const BulletinScreen({super.key});
@@ -324,28 +326,28 @@ class _BulletinScreenState extends State<BulletinScreen> {
           ),
 
           // 검색창
-          if (_searchController.text.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.grey[50],
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: '주보 제목이나 내용을 검색하세요',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                    },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-              ),
-            ),
+          // if (_searchController.text.isNotEmpty)
+          //   Container(
+          //     padding: const EdgeInsets.all(16),
+          //     color: Colors.grey[50],
+          //     child: TextField(
+          //       controller: _searchController,
+          //       decoration: InputDecoration(
+          //         hintText: '주보 제목이나 내용을 검색하세요',
+          //         prefixIcon: const Icon(Icons.search),
+          //         suffixIcon: IconButton(
+          //           icon: const Icon(Icons.clear),
+          //           onPressed: () {
+          //             _searchController.clear();
+          //           },
+          //         ),
+          //         border: OutlineInputBorder(
+          //           borderRadius: BorderRadius.circular(8),
+          //         ),
+          //         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          //       ),
+          //     ),
+          //   ),
 
           // 주보 목록
           Expanded(
@@ -381,121 +383,205 @@ class _BulletinScreenState extends State<BulletinScreen> {
 
   Widget _buildBulletinCard(Bulletin bulletin) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
       child: InkWell(
-        onTap: () => _viewBulletin(bulletin),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 제목과 날짜
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        onTap: () => _navigateToFullscreen(bulletin),
+        borderRadius: BorderRadius.circular(12.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 미리보기 영역
+            Container(
+              height: 200.h,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12.r),
+                  topRight: Radius.circular(12.r),
+                ),
+                color: Colors.grey[100],
+              ),
+              child: Stack(
                 children: [
-                  Expanded(
-                    child: Text(
-                      bulletin.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                  // 미리보기 이미지/PDF
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12.r),
+                      topRight: Radius.circular(12.r),
+                    ),
+                    child: _buildPreviewWidget(bulletin),
+                  ),
+                  // 그라디언트 오버레이 (가독성을 위해)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 60.h,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.3),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.blue[200]!),
-                    ),
-                    child: Text(
-                      _formatDate(bulletin.date),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.bold,
+                  // 전체화면 아이콘
+                  Positioned(
+                    top: 8.h,
+                    right: 8.w,
+                    child: Container(
+                      padding: EdgeInsets.all(6.w),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Icon(
+                        Icons.fullscreen,
+                        color: Colors.white,
+                        size: 18.sp,
                       ),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 8),
-
-              // 설명
-              if (bulletin.description != null)
-                Text(
-                  bulletin.description!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-              const SizedBox(height: 12),
-
-              // 파일 정보 및 액션 버튼
-              Row(
+            ),
+            
+            // 콘텐츠 영역
+            Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    bulletin.fileType == 'pdf'
-                        ? Icons.picture_as_pdf
-                        : Icons.image,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    bulletin.fileType.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  if (bulletin.fileSize != null) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      _formatFileSize(bulletin.fileSize!),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-
-                  const Spacer(),
-
-                  // 액션 버튼들
+                  // 제목과 날짜
                   Row(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.visibility, size: 20),
-                        onPressed: () => _viewBulletin(bulletin),
-                        tooltip: '보기',
+                      Expanded(
+                        child: Text(
+                          bulletin.title,
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.download, size: 20),
-                        onPressed: () => _downloadBulletin(bulletin),
-                        tooltip: '다운로드',
+                      SizedBox(width: 8.w),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w, 
+                          vertical: 4.h
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6.r),
+                          border: Border.all(color: Colors.blue[200]!),
+                        ),
+                        child: Text(
+                          _formatDate(bulletin.date),
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.share, size: 20),
-                        onPressed: () => _shareBulletin(bulletin),
-                        tooltip: '공유',
+                    ],
+                  ),
+                  
+                  SizedBox(height: 8.h),
+                  
+                  // 설명 (있는 경우)
+                  if (bulletin.content != null && bulletin.content!.isNotEmpty)
+                    Text(
+                      bulletin.content!,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: Colors.grey[600],
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  
+                  SizedBox(height: 12.h),
+                  
+                  // 하단 액션
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // 파일 타입 표시
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w, 
+                          vertical: 4.h
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _getFileTypeIcon(bulletin.fileUrl),
+                              size: 14.sp,
+                              color: Colors.grey[600],
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              _getFileTypeText(bulletin.fileUrl),
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // 빠른 액션 버튼들
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () => _downloadBulletin(bulletin),
+                            icon: Icon(
+                              Icons.download_outlined,
+                              size: 20.sp,
+                              color: Colors.grey[600],
+                            ),
+                            tooltip: '다운로드',
+                          ),
+                          IconButton(
+                            onPressed: () => _shareBulletin(bulletin),
+                            icon: Icon(
+                              Icons.share_outlined,
+                              size: 20.sp,
+                              color: Colors.grey[600],
+                            ),
+                            tooltip: '공유',
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -541,11 +627,162 @@ class _BulletinScreenState extends State<BulletinScreen> {
     );
   }
 
-  void _viewBulletin(Bulletin bulletin) {
-    showDialog(
-      context: context,
-      builder: (context) => BulletinModal(bulletin: bulletin),
+  void _navigateToFullscreen(Bulletin bulletin) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BulletinFullscreenViewer(
+          bulletin: bulletin,
+          localPath: null, // 초기에는 null로 설정
+          fileType: _getFileType(bulletin.fileUrl),
+        ),
+      ),
     );
+  }
+  
+  // 미리보기 위젯 빌드
+  Widget _buildPreviewWidget(Bulletin bulletin) {
+    if (bulletin.fileUrl == null) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.grey[200],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.description_outlined,
+              size: 48.sp,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '미리보기 없음',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 이미지 파일인 경우
+    if (_isImageFile(bulletin.fileUrl!)) {
+      return CachedNetworkImage(
+        imageUrl: bulletin.fileUrl!,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: Colors.grey[200],
+          child: Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.grey[400],
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          color: Colors.grey[200],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.broken_image_outlined,
+                size: 48.sp,
+                color: Colors.grey[400],
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                '이미지 로드 실패',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // PDF 파일인 경우
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.grey[200],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.picture_as_pdf_outlined,
+            size: 48.sp,
+            color: Colors.red[300],
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'PDF 파일',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            '터치하여 보기',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 파일 타입 확인
+  bool _isImageFile(String url) {
+    final lowercaseUrl = url.toLowerCase();
+    return lowercaseUrl.endsWith('.jpg') ||
+           lowercaseUrl.endsWith('.jpeg') ||
+           lowercaseUrl.endsWith('.png') ||
+           lowercaseUrl.endsWith('.gif') ||
+           lowercaseUrl.endsWith('.webp');
+  }
+
+  // 파일 타입 아이콘 반환
+  IconData _getFileTypeIcon(String? fileUrl) {
+    if (fileUrl == null) return Icons.description_outlined;
+    
+    if (_isImageFile(fileUrl)) {
+      return Icons.image_outlined;
+    } else {
+      return Icons.picture_as_pdf_outlined;
+    }
+  }
+
+  // 파일 타입 텍스트 반환
+  String _getFileTypeText(String? fileUrl) {
+    if (fileUrl == null) return 'FILE';
+    
+    if (_isImageFile(fileUrl)) {
+      return 'IMAGE';
+    } else {
+      return 'PDF';
+    }
+  }
+
+  // FileType enum 반환
+  FileType _getFileType(String? fileUrl) {
+    if (fileUrl == null) return FileType.unknown;
+    
+    if (_isImageFile(fileUrl)) {
+      return FileType.image;
+    } else {
+      return FileType.pdf;
+    }
   }
 
   Future<void> _downloadBulletin(Bulletin bulletin) async {

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -40,27 +41,95 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   }
 
   Future<void> _initializePdf() async {
-    if (widget.fileType == FileType.pdf && widget.localPath != null) {
+    if (widget.fileType == FileType.pdf) {
       try {
-        pdfController = PdfController(
-          document: PdfDocument.openFile(widget.localPath!),
-        );
-        
-        // PDF 페이지 수 가져오기
-        final document = await PdfDocument.openFile(widget.localPath!);
-        final pageCount = document.pagesCount;
-        setState(() {
-          totalPages = pageCount;
-        });
+        // 로컬 파일이 있으면 로컬 파일을 사용, 없으면 URL에서 로드
+        if (widget.localPath != null) {
+          pdfController = PdfController(
+            document: PdfDocument.openFile(widget.localPath!),
+          );
+          
+          final document = await PdfDocument.openFile(widget.localPath!);
+          final pageCount = document.pagesCount;
+          setState(() {
+            totalPages = pageCount;
+          });
+        } else if (widget.bulletin.fileUrl != null) {
+          // URL에서 PDF 로드
+          final data = await _downloadFile(widget.bulletin.fileUrl!);
+          pdfController = PdfController(
+            document: PdfDocument.openData(data),
+          );
+          
+          final document = await PdfDocument.openData(data);
+          final pageCount = document.pagesCount;
+          setState(() {
+            totalPages = pageCount;
+          });
+        }
       } catch (e) {
         print('PDF 컨트롤러 초기화 실패: $e');
+        // PDF 로드 실패 시 에러 상태로 설정
+        setState(() {
+          totalPages = 0;
+        });
       }
+    }
+  }
+  
+  Future<Uint8List> _downloadFile(String url) async {
+    try {
+      final response = await HttpClient().getUrl(Uri.parse(url));
+      final request = await response.close();
+      final bytes = await request.fold<List<int>>(<int>[], (prev, element) => prev..addAll(element));
+      return Uint8List.fromList(bytes);
+    } catch (e) {
+      print('파일 다운로드 실패: $e');
+      rethrow;
     }
   }
 
   Widget _buildPdfViewer() {
     if (pdfController == null) {
-      return const Center(child: CircularProgressIndicator());
+      // totalPages가 0이면 에러 상태, 아니면 로딩 중
+      if (totalPages == 0) {
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.white54,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'PDF를 불러올 수 없습니다',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Colors.white),
+            SizedBox(height: 16),
+            Text(
+              'PDF를 불러오는 중...',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return Stack(
