@@ -2,18 +2,17 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pdfx/pdfx.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:saver_gallery/saver_gallery.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../models/bulletin.dart';
 import '../models/file_type.dart';
 import '../resource/color_style.dart';
 import '../resource/text_style.dart';
-import '../utils/pdf_platform_util.dart';
 
 class BulletinFullscreenViewer extends StatefulWidget {
   final Bulletin bulletin;
@@ -35,8 +34,7 @@ class BulletinFullscreenViewer extends StatefulWidget {
 class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   int currentPage = 1;
   int totalPages = 1;
-  String? pdfPath;
-  dynamic pdfController; // pdfx.PdfController 또는 null
+  PdfController? pdfController;
 
   @override
   void initState() {
@@ -46,31 +44,42 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
 
   @override
   void dispose() {
+    pdfController?.dispose();
     super.dispose();
   }
 
   Future<void> _initializePdf() async {
     if (widget.fileType == FileType.pdf) {
       try {
-        // 로컬 파일이 있으면 로컬 파일을 사용
+        // 로컬 파일이 있으면 로컬 파일을 사용, 없으면 URL에서 로드
         if (widget.localPath != null) {
-          pdfPath = widget.localPath;
+          pdfController = PdfController(
+            document: PdfDocument.openFile(widget.localPath!),
+          );
+
+          final document = await PdfDocument.openFile(widget.localPath!);
+          final pageCount = document.pagesCount;
           setState(() {
-            // 플랫폼별 PDF 뷰어에서 totalPages는 콜백으로 처리됨
+            totalPages = pageCount;
           });
         } else if (widget.bulletin.fileUrl != null) {
-          // URL에서 PDF 다운로드 후 임시 파일로 저장
-          final data = await _downloadFile(widget.bulletin.fileUrl!);
-          final tempDir = await getTemporaryDirectory();
-          final tempFile = File('${tempDir.path}/temp_pdf_${DateTime.now().millisecondsSinceEpoch}.pdf');
-          await tempFile.writeAsBytes(data);
-          pdfPath = tempFile.path;
+          // URL에서 PDF 로드
+          final cleanedUrl = FileTypeHelper.cleanUrl(widget.bulletin.fileUrl!);
+          print('PDF URL 정리: ${widget.bulletin.fileUrl} -> $cleanedUrl');
+          final data = await _downloadFile(cleanedUrl);
+          pdfController = PdfController(
+            document: PdfDocument.openData(data),
+          );
+
+          final document = await PdfDocument.openData(data);
+          final pageCount = document.pagesCount;
           setState(() {
-            // 플랫폼별 PDF 뷰어에서 totalPages는 콜백으로 처리됨
+            totalPages = pageCount;
           });
         }
       } catch (e) {
-        print('PDF 초기화 실패: $e');
+        print('PDF 컸트롤러 초기화 실패: $e');
+        // PDF 로드 실패 시 에러 상태로 설정
         setState(() {
           totalPages = 0;
         });
@@ -116,7 +125,9 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
         fileBytes = await file.readAsBytes();
       } else if (widget.bulletin.fileUrl != null) {
         // URL에서 다운로드
-        fileBytes = await _downloadFile(widget.bulletin.fileUrl!);
+        final cleanedUrl = FileTypeHelper.cleanUrl(widget.bulletin.fileUrl!);
+        print('다운로드 URL 정리: ${widget.bulletin.fileUrl} -> $cleanedUrl');
+        fileBytes = await _downloadFile(cleanedUrl);
       } else {
         _showErrorSnackBar('다운로드할 파일을 찾을 수 없습니다');
         return;
@@ -166,7 +177,9 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
         final tempFile = File(
             '${tempDir.path}/${widget.bulletin.title}_${DateTime.now().millisecondsSinceEpoch}${widget.fileType == FileType.pdf ? '.pdf' : '.jpg'}');
 
-        final fileBytes = await _downloadFile(widget.bulletin.fileUrl!);
+        final cleanedUrl = FileTypeHelper.cleanUrl(widget.bulletin.fileUrl!);
+        print('공유 URL 정리: ${widget.bulletin.fileUrl} -> $cleanedUrl');
+        final fileBytes = await _downloadFile(cleanedUrl);
         await tempFile.writeAsBytes(fileBytes);
 
         await Share.shareXFiles(
@@ -282,19 +295,15 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
 
     return Stack(
       children: [
-        PdfPlatformUtil.buildPdfViewer(
-          localPath: pdfPath,
-          onPageChanged: (page, total) {
+        PdfView(
+          controller: pdfController!,
+          onPageChanged: (page) {
             setState(() {
               currentPage = page;
-              totalPages = total;
             });
           },
-          onDocumentLoaded: (total) {
-            setState(() {
-              totalPages = total;
-            });
-          },
+          scrollDirection: Axis.vertical,
+          physics: const BouncingScrollPhysics(),
         ),
         // 페이지 정보 표시
         Positioned(
@@ -331,8 +340,10 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
         backgroundDecoration: const BoxDecoration(color: Colors.black),
       );
     } else if (widget.bulletin.fileUrl != null) {
+      final cleanedUrl = FileTypeHelper.cleanUrl(widget.bulletin.fileUrl!);
+      print('이미지 URL 정리: ${widget.bulletin.fileUrl} -> $cleanedUrl');
       return PhotoView(
-        imageProvider: CachedNetworkImageProvider(widget.bulletin.fileUrl!),
+        imageProvider: CachedNetworkImageProvider(cleanedUrl),
         minScale: PhotoViewComputedScale.contained,
         maxScale: PhotoViewComputedScale.covered * 3.0,
         initialScale: PhotoViewComputedScale.contained,
