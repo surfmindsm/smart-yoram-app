@@ -2,12 +2,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pdfx/pdfx.dart';
+// import 'package:pdfx/pdfx.dart'; // 안드로이드 빌드 오류로 인해 주석처리
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:saver_gallery/saver_gallery.dart';
+import '../utils/pdf_platform_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/bulletin.dart';
 import '../models/file_type.dart';
@@ -34,7 +35,8 @@ class BulletinFullscreenViewer extends StatefulWidget {
 class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   int currentPage = 1;
   int totalPages = 1;
-  PdfController? pdfController;
+  bool isLoading = true;
+  bool hasError = false;
 
   @override
   void initState() {
@@ -44,46 +46,15 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
 
   @override
   void dispose() {
-    pdfController?.dispose();
     super.dispose();
   }
 
   Future<void> _initializePdf() async {
     if (widget.fileType == FileType.pdf) {
-      try {
-        // 로컬 파일이 있으면 로컬 파일을 사용, 없으면 URL에서 로드
-        if (widget.localPath != null) {
-          pdfController = PdfController(
-            document: PdfDocument.openFile(widget.localPath!),
-          );
-
-          final document = await PdfDocument.openFile(widget.localPath!);
-          final pageCount = document.pagesCount;
-          setState(() {
-            totalPages = pageCount;
-          });
-        } else if (widget.bulletin.fileUrl != null) {
-          // URL에서 PDF 로드
-          final cleanedUrl = FileTypeHelper.cleanUrl(widget.bulletin.fileUrl!);
-          print('PDF URL 정리: ${widget.bulletin.fileUrl} -> $cleanedUrl');
-          final data = await _downloadFile(cleanedUrl);
-          pdfController = PdfController(
-            document: PdfDocument.openData(data),
-          );
-
-          final document = await PdfDocument.openData(data);
-          final pageCount = document.pagesCount;
-          setState(() {
-            totalPages = pageCount;
-          });
-        }
-      } catch (e) {
-        print('PDF 컸트롤러 초기화 실패: $e');
-        // PDF 로드 실패 시 에러 상태로 설정
-        setState(() {
-          totalPages = 0;
-        });
-      }
+      setState(() {
+        isLoading = false;
+        hasError = false;
+      });
     }
   }
 
@@ -251,30 +222,30 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   }
 
   Widget _buildPdfViewer() {
-    if (pdfController == null) {
-      // totalPages가 0이면 에러 상태, 아니면 로딩 중
-      if (totalPages == 0) {
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.white54,
+    if (hasError) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.white54,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'PDF를 불러올 수 없습니다',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
               ),
-              SizedBox(height: 16),
-              Text(
-                'PDF를 불러올 수 없습니다',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        );
-      }
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (isLoading) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -293,17 +264,22 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
       );
     }
 
+    // 플랫폼별 PDF 뷰어 사용
     return Stack(
       children: [
-        PdfView(
-          controller: pdfController!,
-          onPageChanged: (page) {
+        PdfPlatformUtil.buildPdfViewer(
+          localPath: widget.localPath,
+          onPageChanged: (page, total) {
             setState(() {
               currentPage = page;
+              totalPages = total;
             });
           },
-          scrollDirection: Axis.vertical,
-          physics: const BouncingScrollPhysics(),
+          onDocumentLoaded: (total) {
+            setState(() {
+              totalPages = total;
+            });
+          },
         ),
         // 페이지 정보 표시
         Positioned(
