@@ -737,70 +737,88 @@ class _BulletinScreenState extends State<BulletinScreen> {
     );
   }
 
-  // PDF 아이콘 표시 (pdfx 제거로 인해 미리보기 불가)
+  // PDF 첫 페이지 미리보기 렌더링
   Future<Widget> _buildPdfPreview(String pdfUrl) async {
-    // PDF 파일의 미리보기를 위한 더 나은 UI 제공
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.red[50]!,
-            Colors.red[100]!,
-          ],
-        ),
-        border: Border.all(
-          color: Colors.red[200]!,
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(8.r),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
+    try {
+      print('PDF 미리보기 시작: $pdfUrl');
+
+      // PDF 파일 다운로드
+      final response = await HttpClient().getUrl(Uri.parse(pdfUrl));
+      final request = await response.close();
+      final bytes = await request
+          .fold<List<int>>(<int>[], (prev, element) => prev..addAll(element));
+      final pdfData = Uint8List.fromList(bytes);
+
+      print('PDF 데이터 다운로드 완료: ${pdfData.length} bytes');
+
+      // PDF 문서 열기
+      final document = await PdfDocument.openData(pdfData);
+      final page = await document.getPage(1); // 첫 번째 페이지
+
+      print('PDF 첫 페이지 로드 완료');
+
+      // 페이지를 이미지로 렌더링 (미리보기용 크기)
+      final pageImage = await page.render(
+        width: 300, // 미리보기용 작은 크기
+        height: 400,
+        format: PdfPageImageFormat.png,
+      );
+
+      print('PDF 페이지 렌더링 완료');
+
+      // 리소스 정리
+      page.close();
+      document.close();
+
+      // 이미지 위젯 반환
+      if (pageImage != null && pageImage.bytes.isNotEmpty) {
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          child: Image.memory(
+            pageImage.bytes,
+            fit: BoxFit.cover,
+          ),
+        );
+      } else {
+        throw Exception('PDF 페이지 렌더링 실패: pageImage가 null이거나 비어있음');
+      }
+    } catch (e) {
+      print('PDF 미리보기 오류: $e');
+      // 오류 발생 시 기본 PDF 아이콘 표시
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.grey[200],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.picture_as_pdf_outlined,
+              size: 48.sp,
               color: Colors.red[300],
-              shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.picture_as_pdf,
-              size: 32.sp,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            'PDF 문서',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.red[700],
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: Colors.red[200],
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Text(
-              '터치하여 열기',
+            SizedBox(height: 8.h),
+            Text(
+              'PDF 파일',
               style: TextStyle(
-                fontSize: 11.sp,
-                color: Colors.red[800],
+                fontSize: 14.sp,
+                color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-        ],
-      ),
-    );
+            SizedBox(height: 4.h),
+            Text(
+              '터치하여 보기',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   // 파일 타입 확인
