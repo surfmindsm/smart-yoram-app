@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../models/bulletin.dart';
 import '../models/file_type.dart';
@@ -51,8 +52,6 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
     return Uint8List.fromList(bytes);
   }
 
-
-
   Future<void> _saveToGallery() async {
     if (widget.fileType == FileType.pdf) {
       _showErrorSnackBar('PDF 파일은 갤러리에 저장할 수 없습니다');
@@ -76,7 +75,8 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
         final result = await SaverGallery.saveImage(
           fileBytes,
           quality: 100,
-          fileName: '주보_${widget.bulletin.title}_${DateTime.now().millisecondsSinceEpoch}',
+          fileName:
+              '주보_${widget.bulletin.title}_${DateTime.now().millisecondsSinceEpoch}',
           skipIfExists: false,
         );
 
@@ -120,10 +120,10 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
 
   Widget _buildPdfViewer() {
     if (widget.bulletin.fileUrl == null) {
-      return const Center(
+      return Center(
         child: Text(
           'PDF 파일을 불러올 수 없습니다',
-          style: TextStyle(color: Colors.white),
+          style: AppTextStyle(color: AppColor.white).b2(),
         ),
       );
     }
@@ -131,7 +131,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
     final cleanedUrl = FileTypeHelper.cleanUrl(widget.bulletin.fileUrl!);
 
     return Container(
-      color: Colors.white,
+      color: AppColor.background,
       child: SfPdfViewer.network(
         cleanedUrl,
         onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
@@ -231,14 +231,14 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColor.background,
       appBar: AppBar(
-        backgroundColor: Colors.black.withOpacity(0.5),
+        backgroundColor: AppColor.secondary07,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           widget.bulletin.title,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: AppTextStyle(color: AppColor.white).b2(),
         ),
         actions: [
           if (widget.fileType == FileType.image)
