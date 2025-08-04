@@ -111,9 +111,6 @@ dependencies:
   # 플랫폼별 PDF 뷰어 (iOS용)
   pdfx: ^2.6.0
   
-  # Android용 PDF 뷰어
-  flutter_pdfview: ^1.3.2
-  
   # 커스텀 드롭다운
   dropdown_button2: ^2.3.9
 

@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:pdfx/pdfx.dart';
+// 플랫폼별 PDF 패키지 import
+import 'package:pdfx/pdfx.dart'; // iOS용
 import 'package:smart_yoram_app/resource/text_style.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../models/bulletin.dart';
@@ -737,10 +739,19 @@ class _BulletinScreenState extends State<BulletinScreen> {
     );
   }
 
-  // PDF 첫 페이지 미리보기 렌더링
+  // PDF 첫 페이지 미리보기 렌더링 (플랫폼별)
   Future<Widget> _buildPdfPreview(String pdfUrl) async {
+    if (Platform.isIOS) {
+      return _buildIosPdfPreview(pdfUrl);
+    } else {
+      return _buildAndroidPdfPreview(pdfUrl);
+    }
+  }
+
+  // iOS용 PDF 미리보기 (pdfx 패키지 사용)
+  Future<Widget> _buildIosPdfPreview(String pdfUrl) async {
     try {
-      print('PDF 미리보기 시작: $pdfUrl');
+      print('iOS PDF 미리보기 시작: $pdfUrl');
 
       // PDF 파일 다운로드
       final response = await HttpClient().getUrl(Uri.parse(pdfUrl));
@@ -784,41 +795,67 @@ class _BulletinScreenState extends State<BulletinScreen> {
         throw Exception('PDF 페이지 렌더링 실패: pageImage가 null이거나 비어있음');
       }
     } catch (e) {
-      print('PDF 미리보기 오류: $e');
-      // 오류 발생 시 기본 PDF 아이콘 표시
-      return Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: Colors.grey[200],
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.picture_as_pdf_outlined,
-              size: 48.sp,
-              color: Colors.red[300],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'PDF 파일',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              '터치하여 보기',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.grey[500],
-              ),
-            ),
+      print('iOS PDF 미리보기 오류: $e');
+      return _buildPdfPlaceholder();
+    }
+  }
+
+  // Android용 PDF 미리보기 (간단한 플레이스홀더)
+  Future<Widget> _buildAndroidPdfPreview(String pdfUrl) async {
+    print('Android PDF 플레이스홀더 표시: $pdfUrl');
+    return _buildPdfPlaceholder();
+  }
+
+  // PDF 플레이스홀더 위젯
+  Widget _buildPdfPlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.red[50]!,
+            Colors.red[100]!,
           ],
         ),
-      );
-    }
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.red[300],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.picture_as_pdf,
+              size: 32.sp,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'PDF 파일',
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: Colors.red[700],
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            '터치하여 열기',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.red[500],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // 파일 타입 확인
@@ -890,19 +927,5 @@ class _BulletinScreenState extends State<BulletinScreen> {
     }
   }
 
-  void _showAddBulletinDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('주보 추가'),
-        content: const Text('주보 추가 기능은 관리자 권한이 필요합니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
-  }
+
 }
