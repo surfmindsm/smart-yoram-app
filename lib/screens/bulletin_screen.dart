@@ -425,7 +425,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
           children: [
             // 미리보기 영역
             Container(
-              height: 250.h,
+              height: 320.h,  // 미리보기 영역 크기 증가
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
@@ -756,35 +756,53 @@ class _BulletinScreenState extends State<BulletinScreen> {
       // iOS에서만 실제 PDF 미리보기 생성
       if (Platform.isIOS) {
         final cleanedUrl = FileTypeHelper.cleanUrl(pdfUrl);
+        print('PDF URL 정리: $pdfUrl -> $cleanedUrl');
+        
         final fileBytes = await _downloadFile(cleanedUrl);
+        print('PDF 파일 다운로드 완료: ${fileBytes.length} bytes');
+        
         final document = await PdfDocument.openData(fileBytes);
+        print('PDF 문서 열기 성공, 페이지 수: ${document.pagesCount}');
+        
         final page = await document.getPage(1);
+        print('PDF 페이지 1 가져오기 성공');
+        
         final pageImage = await page.render(
-          width: 120,
-          height: 160,
+          width: 300,  // 고해상도 렌더링
+          height: 400, // 고해상도 렌더링
           format: PdfPageImageFormat.png,
         );
+        print('PDF 페이지 렌더링 완료');
+        
         await page.close();
         await document.close();
         
         if (pageImage?.bytes != null) {
+          print('PDF 이미지 데이터 생성 성공: ${pageImage!.bytes.length} bytes');
           return ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.memory(
-              pageImage!.bytes,
-              width: 120,
-              height: 160,
+              pageImage.bytes,
+              width: double.infinity,  // 전체 폭 사용
+              height: double.infinity, // 전체 높이 사용
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                print('Image.memory 오류: $error');
+                return _buildPdfPlaceholder();
+              },
             ),
           );
         } else {
+          print('PDF 이미지 데이터가 null입니다');
           return _buildPdfPlaceholder();
         }
       } else {
+        print('Android 플랫폼이므로 플레이스홀더 표시');
         return _buildPdfPlaceholder();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('PDF 미리보기 오류: $e');
+      print('스택 트레이스: $stackTrace');
       return _buildPdfPlaceholder();
     }
   }
