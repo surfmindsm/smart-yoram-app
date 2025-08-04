@@ -2,7 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pdfx/pdfx.dart';
+// import 'package:pdfx/pdfx.dart'; // Android 호환성 문제로 비활성화
+import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
@@ -38,7 +39,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   bool isLoading = true;
   bool hasError = false;
   String? _localPdfPath; // 로컬에 다운로드된 PDF 파일 경로
-  PdfController? pdfController; // pdfx 컨트롤러
+  // PdfController? pdfController; // pdfx 컨트롤러 (iOS용) - Android 호환성 문제로 비활성화
 
   @override
   void initState() {
@@ -48,7 +49,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
 
   @override
   void dispose() {
-    pdfController?.dispose();
+    // pdfController?.dispose(); // PDF 컨트롤러 비활성화
     super.dispose();
   }
 
@@ -94,9 +95,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
       }
 
       if (pdfPath != null && File(pdfPath).existsSync()) {
-        pdfController = PdfController(
-          document: PdfDocument.openFile(pdfPath),
-        );
+        // PDF 컸트롤러 비활성화로 인한 수정
         setState(() {
           isLoading = false;
           hasError = false;
@@ -282,105 +281,67 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   }
 
   Widget _buildPdfViewer() {
-    if (hasError) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.white54,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'PDF를 불러올 수 없습니다',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (isLoading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Colors.white),
-            SizedBox(height: 16),
-            Text(
-              'PDF를 불러오는 중...',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (pdfController == null) {
-      // totalPages가 0이면 에러 상태, 아니면 로딩 중
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Colors.white),
-            SizedBox(height: 16),
-            Text(
-              'PDF를 불러오는 중...',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Stack(
-      children: [
-        PdfView(
-          controller: pdfController!,
-          scrollDirection: Axis.vertical,
-          onDocumentLoaded: (document) {
-            setState(() {
-              totalPages = document.pagesCount;
-            });
-          },
-          onPageChanged: (page) {
-            setState(() {
-              currentPage = page;
-            });
-          },
-        ),
-        // 페이지 정보 표시
-        Positioned(
-          bottom: 100,
-          right: 20,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    // Android 호환성 문제로 인해 외부 PDF 뷰어로 열기
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(20),
+              color: Colors.black26,
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(
-              '$currentPage / $totalPages',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.picture_as_pdf,
+                  size: 64,
+                  color: Colors.white70,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'PDF 문서',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '아래 버튼을 눌러 외부 앱에서 PDF를 열어보세요',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final url = widget.localPath ?? widget.bulletin.fileUrl!;
+                    final uri = Uri.parse(url);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('외부 앱에서 열기'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -6,7 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 // 플랫폼별 PDF 패키지 import
-import 'package:pdfx/pdfx.dart'; // iOS용
+// import 'package:pdfx/pdfx.dart'; // iOS용 - Android 호환성 문제로 비활성화
+import 'package:url_launcher/url_launcher.dart'; // 외부 PDF 뷰어용
 import 'package:smart_yoram_app/resource/text_style.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../models/bulletin.dart';
@@ -748,54 +749,14 @@ class _BulletinScreenState extends State<BulletinScreen> {
     }
   }
 
-  // iOS용 PDF 미리보기 (pdfx 패키지 사용)
+  // PDF 미리보기 (플랫폼 공통 플레이스홀더)
   Future<Widget> _buildIosPdfPreview(String pdfUrl) async {
     try {
-      print('iOS PDF 미리보기 시작: $pdfUrl');
-
-      // PDF 파일 다운로드
-      final response = await HttpClient().getUrl(Uri.parse(pdfUrl));
-      final request = await response.close();
-      final bytes = await request
-          .fold<List<int>>(<int>[], (prev, element) => prev..addAll(element));
-      final pdfData = Uint8List.fromList(bytes);
-
-      print('PDF 데이터 다운로드 완료: ${pdfData.length} bytes');
-
-      // PDF 문서 열기
-      final document = await PdfDocument.openData(pdfData);
-      final page = await document.getPage(1); // 첫 번째 페이지
-
-      print('PDF 첫 페이지 로드 완료');
-
-      // 페이지를 이미지로 렌더링 (미리보기용 크기)
-      final pageImage = await page.render(
-        width: 300, // 미리보기용 작은 크기
-        height: 400,
-        format: PdfPageImageFormat.png,
-      );
-
-      print('PDF 페이지 렌더링 완료');
-
-      // 리소스 정리
-      page.close();
-      document.close();
-
-      // 이미지 위젯 반환
-      if (pageImage != null && pageImage.bytes.isNotEmpty) {
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          child: Image.memory(
-            pageImage.bytes,
-            fit: BoxFit.cover,
-          ),
-        );
-      } else {
-        throw Exception('PDF 페이지 렌더링 실패: pageImage가 null이거나 비어있음');
-      }
+      print('PDF 미리보기 시작: $pdfUrl');
+      // Android 호환성 문제로 인해 모든 플랫폼에서 플레이스홀더 사용
+      return _buildPdfPlaceholder();
     } catch (e) {
-      print('iOS PDF 미리보기 오류: $e');
+      print('PDF 미리보기 오류: $e');
       return _buildPdfPlaceholder();
     }
   }
