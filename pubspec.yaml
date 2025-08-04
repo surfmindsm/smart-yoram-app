@@ -106,10 +106,9 @@ dependencies:
   # PDF 뷰어 및 이미지 관련
   cached_network_image: ^3.3.1
   photo_view: ^0.15.0
-  webview_flutter: ^4.4.2
   
   # 플랫폼별 PDF 뷰어 (iOS용)
-  pdfx: ^2.6.0
+  pdfx: ^2.9.2
   
   # 커스텀 드롭다운
   dropdown_button2: ^2.3.9
