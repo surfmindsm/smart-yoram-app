@@ -2,13 +2,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:pdfx/pdfx.dart'; // 안드로이드 빌드 오류로 인해 주석처리
+import 'package:pdfx/pdfx.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:saver_gallery/saver_gallery.dart';
-import '../utils/pdf_platform_util.dart';
+
 import 'package:permission_handler/permission_handler.dart';
 import '../models/bulletin.dart';
 import '../models/file_type.dart';
@@ -37,6 +37,8 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   int totalPages = 1;
   bool isLoading = true;
   bool hasError = false;
+  String? _localPdfPath; // 로컬에 다운로드된 PDF 파일 경로
+  PdfController? pdfController; // pdfx 컨트롤러
 
   @override
   void initState() {
@@ -46,14 +48,72 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
 
   @override
   void dispose() {
+    pdfController?.dispose();
     super.dispose();
   }
 
   Future<void> _initializePdf() async {
-    if (widget.fileType == FileType.pdf) {
+    if (widget.fileType != FileType.pdf) {
       setState(() {
         isLoading = false;
         hasError = false;
+      });
+      return;
+    }
+
+    try {
+      setState(() {
+        isLoading = true;
+        hasError = false;
+      });
+
+      String? pdfPath;
+
+      if (widget.localPath != null) {
+        // 이미 로컬 파일이 있는 경우
+        pdfPath = widget.localPath;
+        _localPdfPath = pdfPath;
+        print('📱 PDF: 로컬 파일 사용 - $pdfPath');
+      } else if (widget.bulletin.fileUrl != null) {
+        // 네트워크에서 다운로드 후 로컬에 저장
+        final cleanedUrl = FileTypeHelper.cleanUrl(widget.bulletin.fileUrl!);
+        print('📱 PDF: URL에서 다운로드 시작 - $cleanedUrl');
+        
+        // 임시 디렉토리 얻기
+        final tempDir = await getTemporaryDirectory();
+        final fileName = 'bulletin_${widget.bulletin.id}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        final localFile = File('${tempDir.path}/$fileName');
+        
+        // PDF 파일 다운로드
+        final bytes = await _downloadFile(cleanedUrl);
+        await localFile.writeAsBytes(bytes);
+        
+        pdfPath = localFile.path;
+        _localPdfPath = pdfPath;
+        print('📱 PDF: 다운로드 완료 - $pdfPath');
+      }
+
+      if (pdfPath != null && File(pdfPath).existsSync()) {
+        pdfController = PdfController(
+          document: PdfDocument.openFile(pdfPath),
+        );
+        setState(() {
+          isLoading = false;
+          hasError = false;
+        });
+        print('📱 PDF: 초기화 완료');
+      } else {
+        setState(() {
+          isLoading = false;
+          hasError = true;
+        });
+        print('📱 PDF: 파일을 찾을 수 없음');
+      }
+    } catch (e) {
+      print('📱 PDF: 초기화 오류 - $e');
+      setState(() {
+        isLoading = false;
+        hasError = true;
       });
     }
   }
@@ -264,20 +324,39 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
       );
     }
 
-    // 플랫폼별 PDF 뷰어 사용
+    if (pdfController == null) {
+      // totalPages가 0이면 에러 상태, 아니면 로딩 중
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Colors.white),
+            SizedBox(height: 16),
+            Text(
+              'PDF를 불러오는 중...',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Stack(
       children: [
-        PdfPlatformUtil.buildPdfViewer(
-          localPath: widget.localPath,
-          onPageChanged: (page, total) {
+        PdfView(
+          controller: pdfController!,
+          scrollDirection: Axis.vertical,
+          onDocumentLoaded: (document) {
             setState(() {
-              currentPage = page;
-              totalPages = total;
+              totalPages = document.pagesCount;
             });
           },
-          onDocumentLoaded: (total) {
+          onPageChanged: (page) {
             setState(() {
-              totalPages = total;
+              currentPage = page;
             });
           },
         ),

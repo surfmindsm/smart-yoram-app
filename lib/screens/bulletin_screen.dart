@@ -1,10 +1,10 @@
-// import 'dart:io'; // pdfx 사용 중단으로 비활성화
-// import 'dart:typed_data'; // pdfx 사용 중단으로 비활성화
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-// import 'package:pdfx/pdfx.dart'; // 안드로이드 빌드 오류로 인해 주석처리
+import 'package:pdfx/pdfx.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../models/bulletin.dart';
@@ -739,33 +739,63 @@ class _BulletinScreenState extends State<BulletinScreen> {
 
   // PDF 아이콘 표시 (pdfx 제거로 인해 미리보기 불가)
   Future<Widget> _buildPdfPreview(String pdfUrl) async {
+    // PDF 파일의 미리보기를 위한 더 나은 UI 제공
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: Colors.grey[200],
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.red[50]!,
+            Colors.red[100]!,
+          ],
+        ),
+        border: Border.all(
+          color: Colors.red[200]!,
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.picture_as_pdf_outlined,
-            size: 48.sp,
-            color: Colors.red[300],
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: Colors.red[300],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.picture_as_pdf,
+              size: 32.sp,
+              color: Colors.white,
+            ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 12.h),
           Text(
-            'PDF 파일',
+            'PDF 문서',
             style: TextStyle(
               fontSize: 14.sp,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+              color: Colors.red[700],
+              fontWeight: FontWeight.w600,
             ),
           ),
           SizedBox(height: 4.h),
-          Text(
-            '터치하여 보기',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey[500],
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+            decoration: BoxDecoration(
+              color: Colors.red[200],
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Text(
+              '터치하여 열기',
+              style: TextStyle(
+                fontSize: 11.sp,
+                color: Colors.red[800],
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
