@@ -1,13 +1,8 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-// 플랫폼별 PDF 패키지 import
-import 'package:pdfx/pdfx.dart'; // iOS용 PDF 뷰어
-import 'package:url_launcher/url_launcher.dart'; // Android용 외부 PDF 뷰어
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../models/bulletin.dart';
@@ -425,7 +420,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
           children: [
             // 미리보기 영역
             Container(
-              height: 320.h,  // 미리보기 영역 크기 증가
+              height: 320.h, // 미리보기 영역 크기 증가
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
@@ -661,223 +656,41 @@ class _BulletinScreenState extends State<BulletinScreen> {
 
     // PDF 파일인 경우 - 첫 페이지 미리보기
     print('PDF 파일로 인식됨: ${bulletin.fileUrl}');
-    return FutureBuilder<Widget>(
-      future: _buildPdfPreview(bulletin.fileUrl!),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.grey[200],
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'PDF 미리보기 로딩 중...',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          print('PDF 미리보기 오류: ${snapshot.error}');
-          return Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.grey[200],
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.picture_as_pdf_outlined,
-                  size: 48.sp,
-                  color: Colors.red[300],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'PDF 파일',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '터치하여 보기',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return snapshot.data ??
-            Container(
-              color: Colors.grey[200],
-              child: Center(
-                child: Icon(
-                  Icons.picture_as_pdf_outlined,
-                  size: 48.sp,
-                  color: Colors.red[300],
-                ),
-              ),
-            );
-      },
-    );
+    return _buildPdfPreview(bulletin.fileUrl!);
   }
 
-  // PDF 첫 페이지 미리보기 렌더링 (플랫폼별)
-  Future<Widget> _buildPdfPreview(String pdfUrl) async {
-    if (Platform.isIOS) {
-      return _buildIosPdfPreview(pdfUrl);
-    } else {
-      return _buildAndroidPdfPreview(pdfUrl);
-    }
-  }
-
-  // iOS PDF 미리보기
-  Future<Widget> _buildIosPdfPreview(String pdfUrl) async {
-    try {
-      print('PDF 미리보기 시작: $pdfUrl');
-      // iOS에서만 실제 PDF 미리보기 생성
-      if (Platform.isIOS) {
-        final cleanedUrl = FileTypeHelper.cleanUrl(pdfUrl);
-        print('PDF URL 정리: $pdfUrl -> $cleanedUrl');
-        
-        final fileBytes = await _downloadFile(cleanedUrl);
-        print('PDF 파일 다운로드 완료: ${fileBytes.length} bytes');
-        
-        final document = await PdfDocument.openData(fileBytes);
-        print('PDF 문서 열기 성공, 페이지 수: ${document.pagesCount}');
-        
-        final page = await document.getPage(1);
-        print('PDF 페이지 1 가져오기 성공');
-        
-        final pageImage = await page.render(
-          width: 300,  // 고해상도 렌더링
-          height: 400, // 고해상도 렌더링
-          format: PdfPageImageFormat.png,
-        );
-        print('PDF 페이지 렌더링 완료');
-        
-        await page.close();
-        await document.close();
-        
-        if (pageImage?.bytes != null) {
-          print('PDF 이미지 데이터 생성 성공: ${pageImage!.bytes.length} bytes');
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.memory(
-              pageImage.bytes,
-              width: double.infinity,  // 전체 폭 사용
-              height: double.infinity, // 전체 높이 사용
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                print('Image.memory 오류: $error');
-                return _buildPdfPlaceholder();
-              },
-            ),
-          );
-        } else {
-          print('PDF 이미지 데이터가 null입니다');
-          return _buildPdfPlaceholder();
-        }
-      } else {
-        print('Android 플랫폼이므로 플레이스홀더 표시');
-        return _buildPdfPlaceholder();
-      }
-    } catch (e, stackTrace) {
-      print('PDF 미리보기 오류: $e');
-      print('스택 트레이스: $stackTrace');
-      return _buildPdfPlaceholder();
-    }
-  }
-
-  // 파일 다운로드 유틸리티 메서드
-  Future<Uint8List> _downloadFile(String url) async {
-    try {
-      final response = await HttpClient().getUrl(Uri.parse(url));
-      final request = await response.close();
-      final bytes = await request
-          .fold<List<int>>(<int>[], (prev, element) => prev..addAll(element));
-      return Uint8List.fromList(bytes);
-    } catch (e) {
-      print('파일 다운로드 실패: $e');
-      rethrow;
-    }
-  }
-
-  // Android용 PDF 미리보기 (간단한 플레이스홀더)
-  Future<Widget> _buildAndroidPdfPreview(String pdfUrl) async {
-    print('Android PDF 플레이스홀더 표시: $pdfUrl');
-    return _buildPdfPlaceholder();
-  }
-
-  // PDF 플레이스홀더 위젯
-  Widget _buildPdfPlaceholder() {
+  // PDF 첫 페이지 미리보기 렌더링
+  Widget _buildPdfPreview(String pdfUrl) {
+    final cleanedUrl = FileTypeHelper.cleanUrl(pdfUrl);
+    
     return Container(
       width: double.infinity,
-      height: double.infinity,
+      height: 120, // 미리보기 높이 제한
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.red[50]!,
-            Colors.red[100]!,
-          ],
-        ),
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.red[300],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.picture_as_pdf,
-              size: 32.sp,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'PDF 파일',
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: Colors.red[700],
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            '터치하여 열기',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.red[500],
-            ),
-          ),
-        ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SfPdfViewer.network(
+          cleanedUrl,
+          pageLayoutMode: PdfPageLayoutMode.single,
+          scrollDirection: PdfScrollDirection.horizontal,
+          enableDoubleTapZooming: false,
+          enableTextSelection: false,
+          canShowScrollHead: false,
+          canShowScrollStatus: false,
+          canShowPaginationDialog: false,
+          onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
+            print('PDF 로드 실패: ${details.error}');
+          },
+        ),
       ),
     );
   }
+
+
 
   // 파일 타입 확인
   bool _isImageFile(String url) {
@@ -947,6 +760,4 @@ class _BulletinScreenState extends State<BulletinScreen> {
       }
     }
   }
-
-
 }
