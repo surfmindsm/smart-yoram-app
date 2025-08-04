@@ -1,9 +1,9 @@
 class ApiConfig {
   // 백엔드 API 설정
   static const String baseUrl =
-      'https://packs-holds-marc-extended.trycloudflare.com/api/v1';
+      'https://api.surfmind-team.com/api/v1';
   static const String swaggerDocsUrl =
-      'https://packs-holds-marc-extended.trycloudflare.com/docs#/';
+      'https://api.surfmind-team.com/docs';
 
   // API 엔드포인트 경로
   // 인증 및 사용자 관리
