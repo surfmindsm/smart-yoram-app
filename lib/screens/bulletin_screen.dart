@@ -6,8 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 // 플랫폼별 PDF 패키지 import
-// import 'package:pdfx/pdfx.dart'; // iOS용 - Android 호환성 문제로 비활성화
-import 'package:url_launcher/url_launcher.dart'; // 외부 PDF 뷰어용
+import 'package:pdfx/pdfx.dart'; // iOS용 PDF 뷰어
+import 'package:url_launcher/url_launcher.dart'; // Android용 외부 PDF 뷰어
 import 'package:smart_yoram_app/resource/text_style.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../models/bulletin.dart';
@@ -749,15 +749,57 @@ class _BulletinScreenState extends State<BulletinScreen> {
     }
   }
 
-  // PDF 미리보기 (플랫폼 공통 플레이스홀더)
+  // iOS PDF 미리보기
   Future<Widget> _buildIosPdfPreview(String pdfUrl) async {
     try {
       print('PDF 미리보기 시작: $pdfUrl');
-      // Android 호환성 문제로 인해 모든 플랫폼에서 플레이스홀더 사용
-      return _buildPdfPlaceholder();
+      // iOS에서만 실제 PDF 미리보기 생성
+      if (Platform.isIOS) {
+        final cleanedUrl = FileTypeHelper.cleanUrl(pdfUrl);
+        final fileBytes = await _downloadFile(cleanedUrl);
+        final document = await PdfDocument.openData(fileBytes);
+        final page = await document.getPage(1);
+        final pageImage = await page.render(
+          width: 120,
+          height: 160,
+          format: PdfPageImageFormat.png,
+        );
+        await page.close();
+        await document.close();
+        
+        if (pageImage?.bytes != null) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.memory(
+              pageImage!.bytes,
+              width: 120,
+              height: 160,
+              fit: BoxFit.cover,
+            ),
+          );
+        } else {
+          return _buildPdfPlaceholder();
+        }
+      } else {
+        return _buildPdfPlaceholder();
+      }
     } catch (e) {
       print('PDF 미리보기 오류: $e');
       return _buildPdfPlaceholder();
+    }
+  }
+
+  // 파일 다운로드 유틸리티 메서드
+  Future<Uint8List> _downloadFile(String url) async {
+    try {
+      final response = await HttpClient().getUrl(Uri.parse(url));
+      final request = await response.close();
+      final bytes = await request
+          .fold<List<int>>(<int>[], (prev, element) => prev..addAll(element));
+      return Uint8List.fromList(bytes);
+    } catch (e) {
+      print('파일 다운로드 실패: $e');
+      rethrow;
     }
   }
 

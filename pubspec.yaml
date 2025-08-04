@@ -107,8 +107,8 @@ dependencies:
   cached_network_image: ^3.3.1
   photo_view: ^0.15.0
   
-  # 플랫폼별 PDF 뷰어 - 현재 Android 호환성 문제로 비활성화
-  # pdfx: ^2.9.2  # iOS용 PDF 뷰어 (Android 호환성 이슈로 임시 비활성화)
+  # 플랫폼별 PDF 뷰어
+  pdfx: ^2.9.2  # iOS용 PDF 뷰어
   
   # 커스텀 드롭다운
   dropdown_button2: ^2.3.9

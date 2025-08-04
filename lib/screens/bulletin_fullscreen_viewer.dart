@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:pdfx/pdfx.dart'; // Android 호환성 문제로 비활성화
-import 'package:url_launcher/url_launcher.dart';
+import 'package:pdfx/pdfx.dart'; // iOS용 PDF 뷰어
+import 'package:url_launcher/url_launcher.dart'; // Android용 외부 PDF 뷰어
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
@@ -39,7 +39,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   bool isLoading = true;
   bool hasError = false;
   String? _localPdfPath; // 로컬에 다운로드된 PDF 파일 경로
-  // PdfController? pdfController; // pdfx 컨트롤러 (iOS용) - Android 호환성 문제로 비활성화
+  PdfController? pdfController; // iOS용 PDF 컨트롤러
 
   @override
   void initState() {
@@ -95,7 +95,12 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
       }
 
       if (pdfPath != null && File(pdfPath).existsSync()) {
-        // PDF 컸트롤러 비활성화로 인한 수정
+        // iOS에서만 PDF 컸트롤러 초기화
+        if (Platform.isIOS) {
+          pdfController = PdfController(
+            document: PdfDocument.openFile(pdfPath),
+          );
+        }
         setState(() {
           isLoading = false;
           hasError = false;
@@ -281,68 +286,89 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   }
 
   Widget _buildPdfViewer() {
-    // Android 호환성 문제로 인해 외부 PDF 뷰어로 열기
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.picture_as_pdf,
-                  size: 64,
-                  color: Colors.white70,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'PDF 문서',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '아래 버튼을 눌러 외부 앱에서 PDF를 열어보세요',
-                  style: TextStyle(
+    // 플랫폼별 PDF 뷰어 구현
+    if (Platform.isIOS && pdfController != null) {
+      // iOS: 실제 PDF 뷰어 표시
+      return PdfView(
+        controller: pdfController!,
+        onDocumentLoaded: (document) {
+          setState(() {
+            totalPages = document.pagesCount;
+            isLoading = false;
+          });
+        },
+        onPageChanged: (page) {
+          setState(() {
+            currentPage = page;
+          });
+        },
+      );
+    } else {
+      // Android 또는 PDF 컨트롤러가 없는 경우: 외부 앱으로 열기
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.picture_as_pdf,
+                    size: 64,
                     color: Colors.white70,
-                    fontSize: 14,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final url = widget.localPath ?? widget.bulletin.fileUrl!;
-                    final uri = Uri.parse(url);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                  icon: const Icon(Icons.open_in_new),
-                  label: const Text('외부 앱에서 열기'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+                  const SizedBox(height: 16),
+                  const Text(
+                    'PDF 문서',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    Platform.isAndroid 
+                        ? '아래 버튼을 눌러 외부 앱에서 PDF를 열어보세요'
+                        : 'PDF를 로딩 중입니다...',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final url = widget.localPath ?? widget.bulletin.fileUrl!;
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: const Icon(Icons.open_in_new),
+                    label: const Text('외부 앱에서 열기'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildImageViewer() {
