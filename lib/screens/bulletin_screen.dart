@@ -420,7 +420,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
           children: [
             // 미리보기 영역
             Container(
-              height: 320.h, // 미리보기 영역 크기 증가
+              height: 260.h, // 미리보기 영역 크기 증가
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
@@ -662,10 +662,10 @@ class _BulletinScreenState extends State<BulletinScreen> {
   // PDF 첫 페이지 미리보기 렌더링
   Widget _buildPdfPreview(String pdfUrl) {
     final cleanedUrl = FileTypeHelper.cleanUrl(pdfUrl);
-    
+
     return Container(
       width: double.infinity,
-      height: 120, // 미리보기 높이 제한
+      height: 260.h, // 미리보기 높이 제한
       decoration: BoxDecoration(
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
@@ -689,8 +689,6 @@ class _BulletinScreenState extends State<BulletinScreen> {
       ),
     );
   }
-
-
 
   // 파일 타입 확인
   bool _isImageFile(String url) {
