@@ -9,6 +9,7 @@ import 'family_management_screen.dart';
 import 'sms_management_screen.dart';
 import 'excel_management_screen.dart';
 import 'statistics_dashboard_screen.dart';
+import 'privacy_policy_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -518,10 +519,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showPrivacyPolicy() {
-    // TODO: PrivacyPolicyScreen 구현 필요
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('개인정보처리방침 화면 구현 예정'),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PrivacyPolicyScreen(),
       ),
     );
   }
