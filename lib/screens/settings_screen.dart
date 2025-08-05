@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widget/widgets.dart';
 import '../config/api_config.dart';
 import '../services/auth_service.dart';
@@ -18,7 +19,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
-  
+
   // 설정 값들
   bool _pushNotifications = true;
   bool _attendanceReminder = true;
@@ -31,11 +32,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(
-        title: '설정',
-      ),
+      // appBar: CommonAppBar(
+      //   title: '설정',
+      // ),
       body: ListView(
+        padding: EdgeInsets.zero,
         children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
           // 계정 섹션
           SectionHeader(title: '계정'),
           CustomListTile(
@@ -58,9 +61,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: '가족 구성원 추가/수정',
             onTap: _manageFamilyMembers,
           ),
-          
+
           const Divider(height: 32),
-          
+
           // 알림 섹션
           SectionHeader(title: '알림 설정'),
           CustomListTile(
@@ -87,7 +90,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: '교인 생일 알림',
             trailing: Switch(
               value: _birthdayNotifications,
-              onChanged: (value) => setState(() => _birthdayNotifications = value),
+              onChanged: (value) =>
+                  setState(() => _birthdayNotifications = value),
             ),
           ),
           CustomListTile(
@@ -99,9 +103,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) => setState(() => _churchNotices = value),
             ),
           ),
-          
+
           const Divider(height: 32),
-          
+
           // 앱 설정 섹션
           SectionHeader(title: '앱 설정'),
           CustomListTile(
@@ -120,7 +124,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: DropdownButton<String>(
               value: _fontSize,
               items: ['작게', '보통', '크게']
-                  .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                  .map(
+                      (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
                   .toList(),
               onChanged: (value) => setState(() => _fontSize = value!),
               underline: Container(),
@@ -133,15 +138,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: DropdownButton<String>(
               value: _language,
               items: ['한국어', 'English']
-                  .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                  .map(
+                      (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
                   .toList(),
               onChanged: (value) => setState(() => _language = value!),
               underline: Container(),
             ),
           ),
-          
+
           const Divider(height: 32),
-          
+
           // 교회 정보 섹션
           SectionHeader(title: '교회 정보'),
           CustomListTile(
@@ -162,9 +168,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: '서울시 강남구',
             onTap: _showChurchLocation,
           ),
-          
+
           const Divider(height: 32),
-          
+
           // 도움말 섹션
           SectionHeader(title: '도움말'),
           CustomListTile(
@@ -190,78 +196,83 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
-            
-            // 관리 메뉴 섹션
-            const SizedBox(height: 20),
-            const Text(
-              '관리 메뉴',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
+
+          // 관리 메뉴 섹션
+          const SizedBox(height: 20),
+          const Text(
+            '관리 메뉴',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
             ),
-            const SizedBox(height: 8),
-            
-            CustomListTile(
-              icon: Icons.people,
-              title: '사용자 관리',
-              subtitle: '사용자 계정 및 권한 관리',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const UsersManagementScreen()),
-                );
-              },
-            ),
-            
-            CustomListTile(
-              icon: Icons.family_restroom,
-              title: '가족 관계 관리',
-              subtitle: '교인 가족 관계 설정 및 관리',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FamilyManagementScreen()),
-                );
-              },
-            ),
-            
-            CustomListTile(
-              icon: Icons.sms,
-              title: 'SMS 관리',
-              subtitle: 'SMS 발송 관리 및 내역 확인',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SmsManagementScreen()),
-                );
-              },
-            ),
-            
-            CustomListTile(
-              icon: Icons.file_upload,
-              title: 'Excel 파일 관리',
-              subtitle: 'Excel 업로드/다운로드 및 템플릿 관리',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ExcelManagementScreen()),
-                );
-              },
-            ),
-            
-            CustomListTile(
-              icon: Icons.bar_chart,
-              title: '통계 대시보드',
-              subtitle: '출석, 교인 현황 및 성장 통계',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const StatisticsDashboardScreen()),
-                );
-              },
-            ),
+          ),
+          const SizedBox(height: 8),
+
+          CustomListTile(
+            icon: Icons.people,
+            title: '사용자 관리',
+            subtitle: '사용자 계정 및 권한 관리',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const UsersManagementScreen()),
+              );
+            },
+          ),
+
+          CustomListTile(
+            icon: Icons.family_restroom,
+            title: '가족 관계 관리',
+            subtitle: '교인 가족 관계 설정 및 관리',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const FamilyManagementScreen()),
+              );
+            },
+          ),
+
+          CustomListTile(
+            icon: Icons.sms,
+            title: 'SMS 관리',
+            subtitle: 'SMS 발송 관리 및 내역 확인',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SmsManagementScreen()),
+              );
+            },
+          ),
+
+          CustomListTile(
+            icon: Icons.file_upload,
+            title: 'Excel 파일 관리',
+            subtitle: 'Excel 업로드/다운로드 및 템플릿 관리',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ExcelManagementScreen()),
+              );
+            },
+          ),
+
+          CustomListTile(
+            icon: Icons.bar_chart,
+            title: '통계 대시보드',
+            subtitle: '출석, 교인 현황 및 성장 통계',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const StatisticsDashboardScreen()),
+              );
+            },
+          ),
           CustomListTile(
             icon: Icons.info,
             title: '앱 정보',
@@ -287,14 +298,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _logout,
             textColor: Colors.red,
           ),
-          
+
           const SizedBox(height: 32),
         ],
       ),
     );
   }
-
-
 
   void _changePassword() {
     showDialog(
@@ -511,7 +520,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text('홈 화면의 "출석 체크" 버튼을 누르거나, 출석 탭에서 QR 코드를 스캔하여 출석을 체크할 수 있습니다.'),
+                    child: Text(
+                        '홈 화면의 "출석 체크" 버튼을 누르거나, 출석 탭에서 QR 코드를 스캔하여 출석을 체크할 수 있습니다.'),
                   ),
                 ],
               ),
@@ -520,7 +530,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text('홈 화면의 "교인증" 버튼을 누르면 QR 코드가 포함된 교인증을 확인할 수 있습니다. 이를 교회 행사나 출석 체크 시 사용하세요.'),
+                    child: Text(
+                        '홈 화면의 "교인증" 버튼을 누르면 QR 코드가 포함된 교인증을 확인할 수 있습니다. 이를 교회 행사나 출석 체크 시 사용하세요.'),
                   ),
                 ],
               ),
@@ -529,7 +540,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text('설정 > 알림 설정에서 원하는 알림을 켜주세요. 또한 기기 설정에서 앱 알림이 허용되어 있는지 확인해주세요.'),
+                    child: Text(
+                        '설정 > 알림 설정에서 원하는 알림을 켜주세요. 또한 기기 설정에서 앱 알림이 허용되어 있는지 확인해주세요.'),
                   ),
                 ],
               ),
@@ -655,12 +667,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              
+
               try {
                 // AuthService 로그아웃 호출
                 await _authService.logout();
                 print('설정 화면: 로그아웃 완료');
-                
+
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -668,7 +680,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       backgroundColor: Colors.green,
                     ),
                   );
-                  
+
                   // 로그인 화면으로 이동
                   Navigator.pushNamedAndRemoveUntil(
                     context,
