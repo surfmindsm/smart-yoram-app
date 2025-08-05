@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart' as provider;
 
 import 'screens/main_navigation.dart';
 import 'screens/login_screen.dart';
@@ -16,12 +17,16 @@ import 'screens/prayer_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/auth_service.dart';
 import 'services/fcm_service.dart';
+import 'services/font_settings_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Firebase 초기화를 더 안전하게 처리
   await initializeFirebase();
+
+  // 글꼴 설정 서비스 초기화
+  await FontSettingsService().initialize();
 
   // Supabase 초기화 (오류 방지용)
   await Supabase.initialize(
@@ -31,8 +36,11 @@ void main() async {
   );
 
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      child: provider.ChangeNotifierProvider(
+        create: (context) => FontSettingsService(),
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -42,34 +50,44 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ScreenUtilInit(
-      designSize: const Size(390, 844), // iPhone 12 기준 사이즈
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return MaterialApp(
-          title: 'Smart Yoram App',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-              brightness: Brightness.light,
-            ),
-            useMaterial3: true,
-            fontFamily: 'Pretendard', // Google Fonts로 나중에 설정 가능
-          ),
-          home: const AuthWrapper(),
-          routes: {
-            '/login': (context) => const LoginScreen(),
-            '/home': (context) => const MainNavigation(),
-            '/members': (context) => const MembersScreen(),
-            '/attendance': (context) => const AttendanceScreen(),
-            '/bulletin': (context) => const BulletinScreen(),
-            '/notices': (context) => const NoticesScreen(),
-            '/member-card': (context) => const MemberCardScreen(),
-            '/calendar': (context) => const CalendarScreen(),
-            '/prayer': (context) => const PrayerScreen(),
-            '/settings': (context) => const SettingsScreen(),
+    return provider.Consumer<FontSettingsService>(
+      builder: (context, fontSettings, child) {
+        return ScreenUtilInit(
+          designSize: const Size(390, 844), // iPhone 12 기준 사이즈
+          minTextAdapt: true,
+          splitScreenMode: true,
+          builder: (context, child) {
+            // MediaQuery를 사용하여 전체 앱에 글꼴 크기 적용
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaleFactor: fontSettings.textScaleFactor,
+              ),
+              child: MaterialApp(
+                title: 'Smart Yoram App',
+                debugShowCheckedModeBanner: false,
+                theme: ThemeData(
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: Colors.blue,
+                    brightness: Brightness.light,
+                  ),
+                  useMaterial3: true,
+                  fontFamily: 'Pretendard', // Google Fonts로 나중에 설정 가능
+                ),
+                home: const AuthWrapper(),
+                routes: {
+                  '/login': (context) => const LoginScreen(),
+                  '/home': (context) => const MainNavigation(),
+                  '/members': (context) => const MembersScreen(),
+                  '/attendance': (context) => const AttendanceScreen(),
+                  '/bulletin': (context) => const BulletinScreen(),
+                  '/notices': (context) => const NoticesScreen(),
+                  '/member-card': (context) => const MemberCardScreen(),
+                  '/calendar': (context) => const CalendarScreen(),
+                  '/prayer': (context) => const PrayerScreen(),
+                  '/settings': (context) => const SettingsScreen(),
+                },
+              ),
+            );
           },
         );
       },

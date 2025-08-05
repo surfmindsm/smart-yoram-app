@@ -30,37 +30,9 @@ class TermsOfServiceScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 헤더 정보
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Smart Yoram 서비스 이용약관',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '시행일자: 2024년 1월 1일',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+
             const SizedBox(height: 20),
-            
+
             // 본문 내용
             Text(
               _getTermsOfServiceText(),
@@ -70,9 +42,9 @@ class TermsOfServiceScreen extends StatelessWidget {
                 color: Colors.black87,
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // 연락처 정보
             Container(
               padding: const EdgeInsets.all(16),

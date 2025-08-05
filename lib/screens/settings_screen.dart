@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import '../widget/widgets.dart';
 import '../config/api_config.dart';
 import '../services/auth_service.dart';
+import '../services/font_settings_service.dart';
 import 'api_test_screen.dart';
 import 'users_management_screen.dart';
 import 'family_management_screen.dart';
@@ -28,8 +30,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _birthdayNotifications = true;
   bool _churchNotices = true;
   bool _darkMode = false;
-  String _fontSize = '보통';
   String _language = '한국어';
+
+  @override
+  void initState() {
+    super.initState();
+    // 초기에 글꼴 설정 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Provider를 통해 현재 글꼴 크기 가져오기
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,19 +112,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
           //     onChanged: (value) => setState(() => _darkMode = value),
           //   ),
           // ),
-          CustomListTile(
-            icon: Icons.text_fields,
-            title: '글꼴 크기',
-            subtitle: _fontSize,
-            trailing: DropdownButton<String>(
-              value: _fontSize,
-              items: ['작게', '보통', '크게']
-                  .map(
-                      (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
-                  .toList(),
-              onChanged: (value) => setState(() => _fontSize = value!),
-              underline: Container(),
-            ),
+          Consumer<FontSettingsService>(
+            builder: (context, fontSettings, child) {
+              return CustomListTile(
+                icon: Icons.text_fields,
+                title: '글꼴 크기',
+                subtitle: '${fontSettings.fontSize} (${FontSettingsService.getFontSizeDescription(fontSettings.fontSize)})',
+                trailing: DropdownButton<String>(
+                  value: fontSettings.fontSize,
+                  items: FontSettingsService.fontSizeOptions
+                      .map((size) => DropdownMenuItem<String>(
+                            value: size,
+                            child: Text(size),
+                          ))
+                      .toList(),
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await fontSettings.setFontSize(value);
+                      if (mounted) {
+                        // 사용자에게 변경 알림
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('글꼴 크기가 "$value"로 변경되었습니다.'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  underline: Container(),
+                ),
+              );
+            },
           ),
           // CustomListTile(
           //   icon: Icons.language,
