@@ -148,18 +148,6 @@ class _NoticesScreenState extends State<NoticesScreen>
               bottom: false,
               child: Column(
                 children: [
-                  // 제목
-                  // Padding(
-                  //   padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  //   child: Text(
-                  //     '공지사항',
-                  //     style: TextStyle(
-                  //       fontSize: 20.sp,
-                  //       fontWeight: FontWeight.bold,
-                  //       color: Colors.white,
-                  //     ),
-                  //   ),
-                  // ),
                   // 탭바
                   TabBar(
                     controller: _tabController,
