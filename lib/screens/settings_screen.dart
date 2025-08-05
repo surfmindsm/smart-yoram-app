@@ -138,18 +138,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: '우리 교회',
             subtitle: '새생명교회',
             onTap: _showChurchInfo,
+            showArrow: false,
           ),
           CustomListTile(
             icon: Icons.contact_phone,
             title: '교회 연락처',
             subtitle: '02-123-4567',
             onTap: _showChurchContact,
+            showArrow: false,
           ),
           CustomListTile(
             icon: Icons.location_on,
             title: '교회 위치',
             subtitle: '서울시 강남구',
             onTap: _showChurchLocation,
+            showArrow: false,
           ),
 
           const Divider(height: 32),
@@ -180,82 +183,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
-          // 관리 메뉴 섹션
-          const SizedBox(height: 20),
-          const Text(
-            '관리 메뉴',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          CustomListTile(
-            icon: Icons.people,
-            title: '사용자 관리',
-            subtitle: '사용자 계정 및 권한 관리',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const UsersManagementScreen()),
-              );
-            },
-          ),
-
-          CustomListTile(
-            icon: Icons.family_restroom,
-            title: '가족 관계 관리',
-            subtitle: '교인 가족 관계 설정 및 관리',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const FamilyManagementScreen()),
-              );
-            },
-          ),
-
-          CustomListTile(
-            icon: Icons.sms,
-            title: 'SMS 관리',
-            subtitle: 'SMS 발송 관리 및 내역 확인',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const SmsManagementScreen()),
-              );
-            },
-          ),
-
-          CustomListTile(
-            icon: Icons.file_upload,
-            title: 'Excel 파일 관리',
-            subtitle: 'Excel 업로드/다운로드 및 템플릿 관리',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ExcelManagementScreen()),
-              );
-            },
-          ),
-
-          CustomListTile(
-            icon: Icons.bar_chart,
-            title: '통계 대시보드',
-            subtitle: '출석, 교인 현황 및 성장 통계',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const StatisticsDashboardScreen()),
-              );
-            },
-          ),
           CustomListTile(
             icon: Icons.info,
             title: '앱 정보',
