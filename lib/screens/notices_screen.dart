@@ -4,6 +4,7 @@ import 'package:smart_yoram_app/resource/color_style.dart';
 import '../models/announcement.dart';
 import '../services/announcement_service.dart';
 import '../utils/announcement_categories.dart';
+import '../utils/date_filter.dart';
 
 class NoticesScreen extends StatefulWidget {
   const NoticesScreen({super.key});
@@ -19,10 +20,14 @@ class _NoticesScreenState extends State<NoticesScreen>
   List<Announcement> announcements = [];
   bool isLoading = true;
   String selectedCategory = 'all';
+  String selectedDateFilter = 'latest';
+  DateTime? customStartDate;
+  DateTime? customEndDate;
   late TabController _tabController;
 
   final List<Map<String, String>> tabCategories =
       AnnouncementCategories.getTabCategories();
+  final List<DateFilter> dateFilters = DateFilter.getFilterOptions();
 
   @override
   void initState() {
@@ -49,19 +54,80 @@ class _NoticesScreenState extends State<NoticesScreen>
     }
   }
 
+  void _onDateFilterChanged(String filterKey) {
+    if (filterKey == 'custom') {
+      _showDatePicker();
+    } else {
+      setState(() {
+        selectedDateFilter = filterKey;
+        customStartDate = null;
+        customEndDate = null;
+      });
+      _loadAnnouncements();
+    }
+  }
+
+  Future<void> _showDatePicker() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: customStartDate != null && customEndDate != null
+          ? DateTimeRange(start: customStartDate!, end: customEndDate!)
+          : null,
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedDateFilter = 'custom';
+        customStartDate = picked.start;
+        customEndDate = picked.end;
+      });
+      _loadAnnouncements();
+    }
+  }
+
+  String _getFilterDisplayText() {
+    switch (selectedDateFilter) {
+      case 'oldest':
+        return '정렬';
+      case 'this_month':
+        return '이번 달';
+      case 'custom':
+        if (customStartDate != null && customEndDate != null) {
+          return '${customStartDate!.month}/${customStartDate!.day}~${customEndDate!.month}/${customEndDate!.day}';
+        }
+        return '날짜 선택';
+      default:
+        return '필터';
+    }
+  }
+
   Future<void> _loadAnnouncements() async {
-    print('🔄 공지사항 로드 시작 - 카테고리: $selectedCategory');
+    print('🔄 공지사항 로드 시작 - 카테고리: $selectedCategory, 날짜필터: $selectedDateFilter');
     setState(() => isLoading = true);
 
     try {
       final apiCategory = selectedCategory == 'all' ? null : selectedCategory;
 
-      print('📞 API 호출 중... 카테고리: $apiCategory');
+      // 날짜 필터 설정
+      final dateRange = DateFilter.getDateRange(
+        selectedDateFilter,
+        customStart: customStartDate,
+        customEnd: customEndDate,
+      );
+      final sortOrder = DateFilter.getSortOrder(selectedDateFilter);
+
+      print(
+          '📞 API 호출 중... 카테고리: $apiCategory, 날짜: ${dateRange['startDate']} ~ ${dateRange['endDate']}, 정렬: $sortOrder');
       final announcementList = await _announcementService.getAnnouncements(
         skip: 0,
         limit: 100,
         category: apiCategory,
         isActive: true,
+        startDate: dateRange['startDate'],
+        endDate: dateRange['endDate'],
+        sortOrder: sortOrder,
       );
 
       print('✅ API 호출 성공: ${announcementList.length}개 공지사항');
@@ -102,74 +168,160 @@ class _NoticesScreenState extends State<NoticesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      // appBar: AppBar(
-      //   title: const Text(
-      //     '공지사항',
-      //     style: TextStyle(
-      //       fontWeight: FontWeight.bold,
-      //       color: Colors.white,
-      //     ),
-      //   ),
-      //   backgroundColor: AppColor.primary600,
-      //   elevation: 0,
-      //   centerTitle: true,
-      //   bottom: PreferredSize(
-      //     preferredSize: const Size.fromHeight(48.0),
-      //     child: Container(
-      //       color: AppColor.primary600,
-      //       child: TabBar(
-      //         controller: _tabController,
-      //         isScrollable: false,
-      //         indicatorColor: Colors.white,
-      //         indicatorWeight: 3,
-      //         labelColor: Colors.white,
-      //         unselectedLabelColor: Colors.white70,
-      //         labelStyle: const TextStyle(
-      //           fontWeight: FontWeight.bold,
-      //           fontSize: 14,
-      //         ),
-      //         unselectedLabelStyle: const TextStyle(
-      //           fontWeight: FontWeight.normal,
-      //           fontSize: 14,
-      //         ),
-      //         tabs: tabCategories
-      //             .map((category) => Tab(text: category['label']))
-      //             .toList(),
-      //       ),
-      //     ),
-      //   ),
-      // ),
       body: Column(
         children: [
-          // SafeArea와 탭바 추가
+          // 카테고리 탭바
           Container(
             color: AppColor.primary600,
             child: SafeArea(
               bottom: false,
-              child: Column(
-                children: [
-                  // 탭바
-                  TabBar(
-                    controller: _tabController,
-                    isScrollable: false,
-                    indicatorColor: Colors.white,
-                    indicatorWeight: 3,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white70,
-                    labelStyle: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14.sp,
-                    ),
-                    unselectedLabelStyle: TextStyle(
-                      fontWeight: FontWeight.normal,
-                      fontSize: 14.sp,
-                    ),
-                    tabs: tabCategories
-                        .map((category) => Tab(text: category['label']))
-                        .toList(),
-                  ),
-                ],
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: false,
+                indicatorColor: Colors.white,
+                indicatorWeight: 3,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                labelStyle: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.sp,
+                ),
+                unselectedLabelStyle: TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 14.sp,
+                ),
+                tabs: tabCategories
+                    .map((category) => Tab(text: category['label']))
+                    .toList(),
               ),
+            ),
+          ),
+          // 날짜 필터 바
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: _onDateFilterChanged,
+                  icon: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: AppColor.primary600,
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.filter_list,
+                          size: 16.sp,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          _getFilterDisplayText(),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          Icons.arrow_drop_down,
+                          size: 16.sp,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  ),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'latest',
+                      child: Row(
+                        children: [
+                          Icon(Icons.schedule),
+                          SizedBox(width: 8),
+                          Text('최신순'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'oldest',
+                      child: Row(
+                        children: [
+                          Icon(Icons.history),
+                          SizedBox(width: 8),
+                          Text('오래된순'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'week',
+                      child: Row(
+                        children: [
+                          Icon(Icons.date_range),
+                          SizedBox(width: 8),
+                          Text('최근 7일'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'month',
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today),
+                          SizedBox(width: 8),
+                          Text('최근 30일'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'this_month',
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_month),
+                          SizedBox(width: 8),
+                          Text('이번 달'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'custom',
+                      child: Row(
+                        children: [
+                          Icon(Icons.event),
+                          SizedBox(width: 8),
+                          Text('날짜 선택'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           // TabBarView를 Expanded로 감싸기
@@ -240,169 +392,179 @@ class _NoticesScreenState extends State<NoticesScreen>
   }
 
   Widget _buildAnnouncementCard(Announcement announcement) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12.0),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: InkWell(
-        onTap: () => _viewNoticeDetail(announcement),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 헤더 (제목, 고정, 카테고리)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 고정 아이콘
-                  if (announcement.isPinned)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.red[500],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        '고정',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _viewNoticeDetail(announcement),
+          borderRadius: BorderRadius.circular(12.r),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 태그 영역
+                Row(
+                  children: [
+                    // 고정 배지
+                    if (announcement.isPinned)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 3.h),
+                        margin: EdgeInsets.only(right: 8.w),
+                        decoration: BoxDecoration(
+                          color: Colors.red[500],
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Text(
+                          '고정',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  // 카테고리 태그
-                  if (announcement.category != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: _getCategoryColor(announcement.category!),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        AnnouncementCategories.getCategoryLabel(
-                            announcement.category),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                    // 카테고리 태그
+                    if (announcement.category != null)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10.w, vertical: 3.h),
+                        margin: EdgeInsets.only(right: 8.w),
+                        decoration: BoxDecoration(
+                          color: _getCategoryColor(announcement.category!),
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Text(
+                          AnnouncementCategories.getCategoryLabel(
+                              announcement.category),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  // 서브카테고리
-                  if (announcement.subcategory != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        AnnouncementCategories.getSubcategoryLabel(
-                            announcement.category, announcement.subcategory),
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
+                    // 서브카테고리
+                    if (announcement.subcategory != null)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 3.h),
+                        margin: EdgeInsets.only(right: 8.w),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Text(
+                          AnnouncementCategories.getSubcategoryLabel(
+                              announcement.category, announcement.subcategory),
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  const Spacer(),
-                  // 더보기 버튼
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'share') {
-                        _shareAnnouncement(announcement);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'share',
-                        child: Row(
-                          children: [
-                            Icon(Icons.share, size: 16),
-                            SizedBox(width: 8),
-                            Text('공유하기'),
-                          ],
+                    const Spacer(),
+                    // 더보기 버튼
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'share') {
+                          _shareAnnouncement(announcement);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'share',
+                          child: Row(
+                            children: [
+                              Icon(Icons.share, size: 16),
+                              SizedBox(width: 8),
+                              Text('공유하기'),
+                            ],
+                          ),
                         ),
+                      ],
+                      child: Icon(
+                        Icons.more_vert,
+                        color: Colors.grey[600],
+                        size: 20,
                       ),
-                    ],
-                    child: Icon(
-                      Icons.more_vert,
-                      color: Colors.grey[600],
-                      size: 20,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // 제목
-              Text(
-                announcement.title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  ],
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              // 내용 미리보기
-              Text(
-                announcement.content,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                  height: 1.4,
+                const SizedBox(height: 12),
+                // 제목
+                Text(
+                  announcement.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 12),
-              // 하단 정보 (작성자, 날짜)
-              Row(
-                children: [
-                  Icon(
-                    Icons.person_outline,
-                    size: 16,
-                    color: Colors.grey[500],
+                const SizedBox(height: 8),
+                // 내용 미리보기
+                Text(
+                  announcement.content,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    height: 1.4,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    announcement.authorName ?? '관리자',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                // 하단 정보 (작성자, 날짜)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: 16,
+                      color: Colors.grey[500],
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.schedule,
-                    size: 16,
-                    color: Colors.grey[500],
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDate(announcement.createdAt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                    const SizedBox(width: 4),
+                    Text(
+                      announcement.authorName ?? '관리자',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.schedule,
+                      size: 16,
+                      color: Colors.grey[500],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDate(announcement.createdAt),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -24,6 +24,9 @@ class AnnouncementService {
     int limit = 50,
     String? category,
     bool? isActive = true,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? sortOrder = 'desc', // 'desc' 또는 'asc'
   }) async {
     try {
       final headers = await _getHeaders();
@@ -32,6 +35,9 @@ class AnnouncementService {
         'limit': limit.toString(),
         if (isActive != null) 'is_active': isActive.toString(),
         if (category != null) 'category': category,
+        if (startDate != null) 'start_date': startDate.toIso8601String(),
+        if (endDate != null) 'end_date': endDate.toIso8601String(),
+        if (sortOrder != null) 'sort_order': sortOrder,
       };
       
       final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.announcements}')
