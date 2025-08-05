@@ -14,6 +14,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double? elevation;
   final Color? shadowColor;
   final Color? surfaceTintColor;
+  final Color? color;
 
   const CommonAppBar({
     super.key,
@@ -28,13 +29,14 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.elevation,
     this.shadowColor,
     this.surfaceTintColor,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(title, style: titleStyle),
-      backgroundColor: AppColor.background,
+      backgroundColor: color ?? AppColor.background,
       foregroundColor: AppColor.secondary05,
       actions: actions,
       leading: leading,
@@ -42,8 +44,8 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       bottom: bottom,
       scrolledUnderElevation: scrolledUnderElevation,
       elevation: elevation,
-      shadowColor: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
+      shadowColor: shadowColor ?? Colors.transparent,
+      surfaceTintColor: surfaceTintColor ?? Colors.transparent,
     );
   }
 

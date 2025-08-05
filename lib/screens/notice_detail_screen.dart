@@ -16,8 +16,10 @@ class AnnouncementDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.white,
       appBar: CommonAppBar(
-        title: '공지사항',
+        color: AppColor.transparent,
+        title: '',
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
@@ -107,17 +109,17 @@ class AnnouncementDetailScreen extends StatelessWidget {
 
             SizedBox(height: 32.h),
 
-            // 목록으로 돌아가기 버튼
-            SizedBox(
-              width: double.infinity,
-              child: CommonButton(
-                text: '목록으로 돌아가기',
-                type: ButtonType.primary,
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ),
+            // // 목록으로 돌아가기 버튼
+            // SizedBox(
+            //   width: double.infinity,
+            //   child: CommonButton(
+            //     text: '목록으로 돌아가기',
+            //     type: ButtonType.primary,
+            //     onPressed: () {
+            //       Navigator.pop(context);
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),

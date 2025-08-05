@@ -6,6 +6,7 @@ import '../models/announcement.dart';
 import '../services/announcement_service.dart';
 import '../utils/announcement_categories.dart';
 import '../utils/date_filter.dart';
+import 'notice_detail_screen.dart';
 
 class NoticesScreen extends StatefulWidget {
   const NoticesScreen({super.key});
@@ -591,161 +592,12 @@ class _NoticesScreenState extends State<NoticesScreen>
   }
 
   void _viewNoticeDetail(Announcement announcement) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            if (announcement.isPinned)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: Colors.red[500],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  '고정',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            Expanded(
-              child: Text(
-                announcement.title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AnnouncementDetailScreen(
+          announcement: announcement,
         ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 카테고리 정보
-              if (announcement.category != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(announcement.category!),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          AnnouncementCategories.getCategoryLabel(
-                              announcement.category),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      if (announcement.subcategory != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            AnnouncementCategories.getSubcategoryLabel(
-                                announcement.category,
-                                announcement.subcategory),
-                            style: TextStyle(
-                              color: Colors.grey[700],
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              // 내용
-              Text(
-                announcement.content,
-                style: const TextStyle(
-                  fontSize: 16,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // 작성자 및 날짜
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.person_outline,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      announcement.authorName ?? '관리자',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    const Spacer(),
-                    Icon(
-                      Icons.schedule,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${announcement.createdAt.year}.${announcement.createdAt.month.toString().padLeft(2, '0')}.${announcement.createdAt.day.toString().padLeft(2, '0')}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _shareAnnouncement(announcement);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColor.primary600,
-            ),
-            child: const Text(
-              '공유하기',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
       ),
     );
   }
