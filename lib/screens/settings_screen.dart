@@ -75,25 +75,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) => setState(() => _pushNotifications = value),
             ),
           ),
-          CustomListTile(
-            icon: Icons.schedule,
-            title: '출석 알림',
-            subtitle: '예배 시간 30분 전 알림',
-            trailing: Switch(
-              value: _attendanceReminder,
-              onChanged: (value) => setState(() => _attendanceReminder = value),
-            ),
-          ),
-          CustomListTile(
-            icon: Icons.cake,
-            title: '생일 알림',
-            subtitle: '교인 생일 알림',
-            trailing: Switch(
-              value: _birthdayNotifications,
-              onChanged: (value) =>
-                  setState(() => _birthdayNotifications = value),
-            ),
-          ),
+
+          // 생일 알림은 삭제
           CustomListTile(
             icon: Icons.campaign,
             title: '교회 공지',
@@ -108,15 +91,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // 앱 설정 섹션
           SectionHeader(title: '앱 설정'),
-          CustomListTile(
-            icon: Icons.dark_mode,
-            title: '다크 모드',
-            subtitle: '어두운 테마 사용',
-            trailing: Switch(
-              value: _darkMode,
-              onChanged: (value) => setState(() => _darkMode = value),
-            ),
-          ),
+          // CustomListTile(
+          //   icon: Icons.dark_mode,
+          //   title: '다크 모드',
+          //   subtitle: '어두운 테마 사용',
+          //   trailing: Switch(
+          //     value: _darkMode,
+          //     onChanged: (value) => setState(() => _darkMode = value),
+          //   ),
+          // ),
           CustomListTile(
             icon: Icons.text_fields,
             title: '글꼴 크기',
@@ -131,20 +114,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               underline: Container(),
             ),
           ),
-          CustomListTile(
-            icon: Icons.language,
-            title: '언어',
-            subtitle: _language,
-            trailing: DropdownButton<String>(
-              value: _language,
-              items: ['한국어', 'English']
-                  .map(
-                      (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
-                  .toList(),
-              onChanged: (value) => setState(() => _language = value!),
-              underline: Container(),
-            ),
-          ),
+          // CustomListTile(
+          //   icon: Icons.language,
+          //   title: '언어',
+          //   subtitle: _language,
+          //   trailing: DropdownButton<String>(
+          //     value: _language,
+          //     items: ['한국어', 'English']
+          //         .map(
+          //             (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+          //         .toList(),
+          //     onChanged: (value) => setState(() => _language = value!),
+          //     underline: Container(),
+          //   ),
+          // ),
 
           const Divider(height: 32),
 
