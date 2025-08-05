@@ -10,6 +10,7 @@ import 'sms_management_screen.dart';
 import 'excel_management_screen.dart';
 import 'statistics_dashboard_screen.dart';
 import 'privacy_policy_screen.dart';
+import 'terms_of_service_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -528,38 +529,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showTermsOfService() {
-    Navigator.of(context).push(
+    Navigator.push(
+      context,
       MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: const Text('이용약관'),
-            backgroundColor: Colors.blue[700],
-            foregroundColor: Colors.white,
-          ),
-          body: const SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              '이용약관\n\n'
-              '제1조 (목적)\n'
-              '본 약관은 스마트 교회요람 앱의 이용조건 및 절차, 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.\n\n'
-              '제2조 (정의)\n'
-              '1. "서비스"란 교회에서 제공하는 모든 앱 서비스를 의미합니다.\n'
-              '2. "회원"이란 교회에 등록된 교인을 의미합니다.\n\n'
-              '제3조 (약관의 효력 및 변경)\n'
-              '본 약관은 서비스 화면에 게시하거나 기타의 방법으로 공지함으로써 효력이 발생합니다.\n\n'
-              '제4조 (서비스의 제공)\n'
-              '교회는 다음과 같은 서비스를 제공합니다.\n'
-              '1. 교인 관리 서비스\n'
-              '2. 출석 관리 서비스\n'
-              '3. 공지사항 서비스\n'
-              '4. 기타 교회 관련 서비스\n\n'
-              '제5조 (회원의 의무)\n'
-              '회원은 서비스 이용 시 타인에게 피해를 주거나 공공질서를 해치는 행위를 하여서는 안 됩니다.\n\n'
-              '문의사항이 있으시면 교회 사무실로 연락해주세요.',
-              style: TextStyle(fontSize: 14, height: 1.5),
-            ),
-          ),
-        ),
+        builder: (context) => const TermsOfServiceScreen(),
       ),
     );
   }
