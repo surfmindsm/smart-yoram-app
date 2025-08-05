@@ -131,15 +131,40 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
     final cleanedUrl = FileTypeHelper.cleanUrl(widget.bulletin.fileUrl!);
 
     return Container(
-      color: AppColor.background,
-      child: SfPdfViewer.network(
-        cleanedUrl,
-        onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
-          print('PDF 로드 실패: ${details.error}');
-        },
-        onDocumentLoaded: (PdfDocumentLoadedDetails details) {
-          print('PDF 로드 성공: ${details.document.pages.count} 페이지');
-        },
+      color: Colors.black, // 전체 배경을 검은색으로 설정
+      child: Theme(
+        // PDF 뷰어의 내부 테마도 검은색으로 설정
+        data: ThemeData.dark().copyWith(
+          scaffoldBackgroundColor: Colors.black,
+          canvasColor: Colors.black,
+          cardColor: Colors.black,
+          dividerColor: Colors.black,
+        ),
+        child: SfPdfViewer.network(
+          cleanedUrl,
+          // 한 페이지씩 표시 모드
+          pageLayoutMode: PdfPageLayoutMode.single,
+          // 초기 확대 비율 설정
+          initialZoomLevel: 1,
+          // 좌우 스와이프로 페이지 넘김
+          scrollDirection: PdfScrollDirection.horizontal,
+          // 더블탭 확대/축소 활성화
+          enableDoubleTapZooming: true,
+          // 텍스트 선택 활성화
+          enableTextSelection: true,
+          // 스크롤 헤드 표시 (페이지 네비게이션)
+          canShowScrollHead: true,
+          // 스크롤 상태 표시
+          canShowScrollStatus: true,
+          // 페이지네이션 다이얼로그 표시
+          canShowPaginationDialog: true,
+          onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
+            print('PDF 로드 실패: ${details.error}');
+          },
+          onDocumentLoaded: (PdfDocumentLoadedDetails details) {
+            print('PDF 로드 성공: ${details.document.pages.count} 페이지');
+          },
+        ),
       ),
     );
   }
@@ -231,9 +256,9 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
+      backgroundColor: Colors.black, // 전체 배경을 검은색으로 설정
       appBar: AppBar(
-        backgroundColor: AppColor.secondary07,
+        backgroundColor: Colors.black, // 앱바도 검은색으로 설정
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
