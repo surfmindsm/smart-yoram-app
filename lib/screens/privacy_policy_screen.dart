@@ -30,38 +30,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 헤더 정보
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Smart Yoram 개인정보처리방침',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '최종 수정일: 2024년 7월 30일',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
+
             // 개인정보처리방침 본문
             Text(
               _getPrivacyPolicyText(),
@@ -71,9 +40,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 color: Colors.black87,
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // 연락처 정보
             Container(
               padding: const EdgeInsets.all(16),
