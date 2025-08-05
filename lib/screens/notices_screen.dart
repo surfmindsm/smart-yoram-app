@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
+import 'package:smart_yoram_app/resource/text_style.dart';
 import '../models/announcement.dart';
 import '../services/announcement_service.dart';
 import '../utils/announcement_categories.dart';
@@ -170,158 +171,148 @@ class _NoticesScreenState extends State<NoticesScreen>
       backgroundColor: Colors.grey[50],
       body: Column(
         children: [
-          // 카테고리 탭바
+          // 통합 탭바 (카테고리 + 필터)
           Container(
-            color: AppColor.primary600,
+            color: AppColor.transparent,
             child: SafeArea(
               bottom: false,
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: false,
-                indicatorColor: Colors.white,
-                indicatorWeight: 3,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                labelStyle: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
-                ),
-                unselectedLabelStyle: TextStyle(
-                  fontWeight: FontWeight.normal,
-                  fontSize: 14.sp,
-                ),
-                tabs: tabCategories
-                    .map((category) => Tab(text: category['label']))
-                    .toList(),
-              ),
-            ),
-          ),
-          // 날짜 필터 바
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  onSelected: _onDateFilterChanged,
-                  icon: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                    decoration: BoxDecoration(
-                      color: AppColor.primary600,
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.filter_list,
-                          size: 16.sp,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                child: Row(
+                  children: [
+                    // 카테고리 탭바
+                    Expanded(
+                      child: TabBar(
+                        dividerColor: Colors.transparent,
+                        controller: _tabController,
+                        isScrollable: false,
+                        indicatorColor: AppColor.secondary06,
+                        indicatorWeight: 1,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        labelColor: AppColor.secondary06,
+                        unselectedLabelColor:
+                            AppColor.secondary06.withOpacity(0.7),
+                        labelStyle: AppTextStyle(
                           color: Colors.white,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          _getFilterDisplayText(),
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
+                        ).b2(),
+                        unselectedLabelStyle: AppTextStyle(
+                          color: Colors.white70,
+                        ).b2(),
+                        indicatorPadding: EdgeInsets.symmetric(horizontal: 6.w),
+                        tabs: tabCategories
+                            .map((category) => Tab(text: category['label']))
+                            .toList(),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    // 필터 버튼
+                    PopupMenuButton<String>(
+                      onSelected: _onDateFilterChanged,
+                      icon: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10.w, vertical: 6.h),
+                        decoration: BoxDecoration(
+                          color: AppColor.secondary06.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(
+                            color: AppColor.secondary06.withValues(alpha: 0.3),
+                            width: 1,
                           ),
                         ),
-                        SizedBox(width: 4.w),
-                        Icon(
-                          Icons.arrow_drop_down,
-                          size: 16.sp,
-                          color: Colors.white,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.filter_list,
+                              size: 14.sp,
+                              color: AppColor.white,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              _getFilterDisplayText(),
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: AppColor.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(width: 2.w),
+                            Icon(
+                              Icons.arrow_drop_down,
+                              size: 14.sp,
+                              color: AppColor.white,
+                            ),
+                          ],
+                        ),
+                      ),
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'latest',
+                          child: Row(
+                            children: [
+                              Icon(Icons.schedule, size: 16),
+                              SizedBox(width: 8),
+                              Text('최신순'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'oldest',
+                          child: Row(
+                            children: [
+                              Icon(Icons.history, size: 16),
+                              SizedBox(width: 8),
+                              Text('오래된순'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value: 'week',
+                          child: Row(
+                            children: [
+                              Icon(Icons.date_range, size: 16),
+                              SizedBox(width: 8),
+                              Text('최근 7일'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'month',
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: 16),
+                              SizedBox(width: 8),
+                              Text('최근 30일'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'this_month',
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_month, size: 16),
+                              SizedBox(width: 8),
+                              Text('이번 달'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value: 'custom',
+                          child: Row(
+                            children: [
+                              Icon(Icons.event, size: 16),
+                              SizedBox(width: 8),
+                              Text('날짜 선택'),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'latest',
-                      child: Row(
-                        children: [
-                          Icon(Icons.schedule),
-                          SizedBox(width: 8),
-                          Text('최신순'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'oldest',
-                      child: Row(
-                        children: [
-                          Icon(Icons.history),
-                          SizedBox(width: 8),
-                          Text('오래된순'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'week',
-                      child: Row(
-                        children: [
-                          Icon(Icons.date_range),
-                          SizedBox(width: 8),
-                          Text('최근 7일'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'month',
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today),
-                          SizedBox(width: 8),
-                          Text('최근 30일'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'this_month',
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_month),
-                          SizedBox(width: 8),
-                          Text('이번 달'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'custom',
-                      child: Row(
-                        children: [
-                          Icon(Icons.event),
-                          SizedBox(width: 8),
-                          Text('날짜 선택'),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
           // TabBarView를 Expanded로 감싸기
