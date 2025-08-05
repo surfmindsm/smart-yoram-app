@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_yoram_app/resource/color_style.dart';
 import '../models/announcement.dart';
 import '../services/announcement_service.dart';
 
@@ -11,7 +13,7 @@ class NoticesScreen extends StatefulWidget {
 
 class _NoticesScreenState extends State<NoticesScreen> {
   final _announcementService = AnnouncementService();
-  
+
   List<Announcement> allAnnouncements = [];
   List<Announcement> filteredAnnouncements = [];
   bool isLoading = true;
@@ -28,7 +30,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
   Future<void> _loadAnnouncements() async {
     print('🔄 공지사항 로드 시작');
     setState(() => isLoading = true);
-    
+
     try {
       // AnnouncementService를 통해 실제 API 호출
       print('📞 API 호출 중...');
@@ -36,11 +38,11 @@ class _NoticesScreenState extends State<NoticesScreen> {
         skip: 0,
         limit: 100,
       );
-      
+
       print('✅ API 호출 성공: ${announcements.length}개 공지사항');
       allAnnouncements = announcements;
       _filterAnnouncements();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -49,16 +51,16 @@ class _NoticesScreenState extends State<NoticesScreen> {
           ),
         );
       }
-      
+
       setState(() => isLoading = false);
     } catch (e) {
       print('❌ API 호출 실패: $e');
       setState(() => isLoading = false);
-      
+
       // 실제 API에 공지사항이 없을 수 있으므로 빈 목록으로 설정
       allAnnouncements = [];
       _filterAnnouncements();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -71,18 +73,20 @@ class _NoticesScreenState extends State<NoticesScreen> {
     }
   }
 
-
-
   void _filterAnnouncements() {
     setState(() {
       if (selectedFilter == '전체') {
         filteredAnnouncements = List.from(allAnnouncements);
       } else if (selectedFilter == '고정') {
-        filteredAnnouncements = allAnnouncements.where((announcement) => announcement.isPinned).toList();
+        filteredAnnouncements = allAnnouncements
+            .where((announcement) => announcement.isPinned)
+            .toList();
       } else {
-        filteredAnnouncements = allAnnouncements.where((announcement) => !announcement.isPinned).toList();
+        filteredAnnouncements = allAnnouncements
+            .where((announcement) => !announcement.isPinned)
+            .toList();
       }
-      
+
       // 고정된 공지사항을 맨 위로 정렬
       filteredAnnouncements.sort((a, b) {
         if (a.isPinned && !b.isPinned) return -1;
@@ -91,7 +95,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
       });
     });
   }
-  
+
   void _onFilterChanged(String filter) {
     setState(() {
       selectedFilter = filter;
@@ -102,13 +106,15 @@ class _NoticesScreenState extends State<NoticesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('공지사항'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-      ),
+      // appBar: AppBar(
+      //   title: const Text('공지사항'),
+      //   backgroundColor: Colors.blue[700],
+      //   foregroundColor: Colors.white,
+      // ),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
           // 필터 탭
           Container(
             padding: const EdgeInsets.all(16),
@@ -129,7 +135,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
                           color: isSelected ? Colors.blue[700] : Colors.white,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: isSelected ? Colors.blue[700]! : Colors.grey[300]!,
+                            color: isSelected
+                                ? Colors.blue[700]!
+                                : Colors.grey[300]!,
                           ),
                         ),
                         child: Text(
@@ -137,7 +145,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.black,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                       ),
@@ -147,51 +157,55 @@ class _NoticesScreenState extends State<NoticesScreen> {
               }).toList(),
             ),
           ),
-          
+
           // 공지사항 목록
           Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredAnnouncements.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.announcement_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '공지사항이 없습니다',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredAnnouncements.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.announcement_outlined,
+                                size: 64,
+                                color: Colors.grey[400],
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '기다려주세요. 공지사항이 등록되는 대로\n여기에 표시됩니다.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
+                              const SizedBox(height: 16),
+                              Text(
+                                '공지사항이 없습니다',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                '기다려주세요. 공지사항이 등록되는 대로\n여기에 표시됩니다.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _loadAnnouncements,
+                          child: ListView.builder(
+                            itemCount: filteredAnnouncements.length,
+                            itemBuilder: (context, index) {
+                              return _buildAnnouncementCard(
+                                  filteredAnnouncements[index]);
+                            },
+                          ),
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadAnnouncements,
-                        child: ListView.builder(
-                          itemCount: filteredAnnouncements.length,
-                          itemBuilder: (context, index) {
-                            return _buildAnnouncementCard(filteredAnnouncements[index]);
-                          },
-                        ),
-                      ),
+            ),
           ),
         ],
       ),
@@ -200,8 +214,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
 
   Widget _buildAnnouncementCard(Announcement announcement) {
     return Card(
+      color: AppColor.white,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
+      elevation: 0,
       child: InkWell(
         onTap: () => _viewNoticeDetail(announcement),
         borderRadius: BorderRadius.circular(8),
@@ -216,7 +231,8 @@ class _NoticesScreenState extends State<NoticesScreen> {
                 children: [
                   if (announcement.isPinned) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(4),
@@ -243,9 +259,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               // 내용 미리보기
               Text(
                 announcement.truncatedContent,
@@ -256,9 +272,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // 작성자와 날짜
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -302,7 +318,8 @@ class _NoticesScreenState extends State<NoticesScreen> {
                 children: [
                   if (announcement.isPinned) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(4),
@@ -333,9 +350,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               // 작성자와 날짜
               Row(
                 children: [
@@ -356,9 +373,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   ),
                 ],
               ),
-              
+
               const Divider(height: 24),
-              
+
               // 내용
               Expanded(
                 child: SingleChildScrollView(
@@ -371,9 +388,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // 액션 버튼
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -402,8 +419,4 @@ class _NoticesScreenState extends State<NoticesScreen> {
       ),
     );
   }
-
-
-
-
 }
