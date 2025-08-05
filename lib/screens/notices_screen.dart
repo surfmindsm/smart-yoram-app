@@ -170,165 +170,125 @@ class _NoticesScreenState extends State<NoticesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: Column(
-        children: [
-          // 통합 탭바 (카테고리 + 필터)
-          Container(
-            color: AppColor.transparent,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      appBar: AppBar(
+        title: Text(
+          '교회소식',
+          style: AppTextStyle(
+            color: AppColor.secondary07,
+          ).h2(),
+        ),
+        backgroundColor: AppColor.secondary01,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: AppColor.secondary07,
+            size: 20.sp,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: _onDateFilterChanged,
+            icon: Icon(
+              Icons.filter_list,
+              color: AppColor.secondary07,
+              size: 24.sp,
+            ),
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'latest',
                 child: Row(
                   children: [
-                    // 카테고리 탭바
-                    Expanded(
-                      child: TabBar(
-                        dividerColor: Colors.transparent,
-                        controller: _tabController,
-                        isScrollable: false,
-                        indicatorColor: AppColor.secondary06,
-                        indicatorWeight: 1,
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        labelColor: AppColor.secondary06,
-                        unselectedLabelColor:
-                            AppColor.secondary06.withOpacity(0.7),
-                        labelStyle: AppTextStyle(
-                          color: Colors.white,
-                        ).b2(),
-                        unselectedLabelStyle: AppTextStyle(
-                          color: Colors.white70,
-                        ).b2(),
-                        indicatorPadding: EdgeInsets.symmetric(horizontal: 6.w),
-                        tabs: tabCategories
-                            .map((category) => Tab(text: category['label']))
-                            .toList(),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    // 필터 버튼
-                    PopupMenuButton<String>(
-                      onSelected: _onDateFilterChanged,
-                      icon: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 10.w, vertical: 6.h),
-                        decoration: BoxDecoration(
-                          color: AppColor.secondary06.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(
-                            color: AppColor.secondary06.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.filter_list,
-                              size: 14.sp,
-                              color: AppColor.white,
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              _getFilterDisplayText(),
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                color: AppColor.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(width: 2.w),
-                            Icon(
-                              Icons.arrow_drop_down,
-                              size: 14.sp,
-                              color: AppColor.white,
-                            ),
-                          ],
-                        ),
-                      ),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'latest',
-                          child: Row(
-                            children: [
-                              Icon(Icons.schedule, size: 16),
-                              SizedBox(width: 8),
-                              Text('최신순'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'oldest',
-                          child: Row(
-                            children: [
-                              Icon(Icons.history, size: 16),
-                              SizedBox(width: 8),
-                              Text('오래된순'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem(
-                          value: 'week',
-                          child: Row(
-                            children: [
-                              Icon(Icons.date_range, size: 16),
-                              SizedBox(width: 8),
-                              Text('최근 7일'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'month',
-                          child: Row(
-                            children: [
-                              Icon(Icons.calendar_today, size: 16),
-                              SizedBox(width: 8),
-                              Text('최근 30일'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'this_month',
-                          child: Row(
-                            children: [
-                              Icon(Icons.calendar_month, size: 16),
-                              SizedBox(width: 8),
-                              Text('이번 달'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem(
-                          value: 'custom',
-                          child: Row(
-                            children: [
-                              Icon(Icons.event, size: 16),
-                              SizedBox(width: 8),
-                              Text('날짜 선택'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    Icon(Icons.schedule, size: 16),
+                    SizedBox(width: 8),
+                    Text('최신순'),
                   ],
                 ),
               ),
-            ),
+              const PopupMenuItem(
+                value: 'oldest',
+                child: Row(
+                  children: [
+                    Icon(Icons.history, size: 16),
+                    SizedBox(width: 8),
+                    Text('오래된순'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'week',
+                child: Row(
+                  children: [
+                    Icon(Icons.date_range, size: 16),
+                    SizedBox(width: 8),
+                    Text('최근 7일'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'month',
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 16),
+                    SizedBox(width: 8),
+                    Text('최근 30일'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'this_month',
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_month, size: 16),
+                    SizedBox(width: 8),
+                    Text('이번 달'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'custom',
+                child: Row(
+                  children: [
+                    Icon(Icons.event, size: 16),
+                    SizedBox(width: 8),
+                    Text('날짜 선택'),
+                  ],
+                ),
+              ),
+            ],
           ),
-          // TabBarView를 Expanded로 감싸기
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: tabCategories.map((category) {
-                return RefreshIndicator(
-                  onRefresh: _loadAnnouncements,
-                  child: _buildAnnouncementList(),
-                );
-              }).toList(),
-            ),
-          ),
+          SizedBox(width: 8.w),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: AppColor.primary900,
+          unselectedLabelColor: AppColor.secondary05,
+          indicatorColor: AppColor.primary900,
+          indicatorWeight: 2.h,
+          labelStyle: AppTextStyle(
+            color: AppColor.primary900,
+          ).b1(),
+          unselectedLabelStyle: AppTextStyle(
+            color: AppColor.secondary05,
+          ).b2(),
+          tabs: tabCategories.map((category) {
+            return Tab(
+              text: category['name'],
+            );
+          }).toList(),
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: tabCategories.map((category) {
+          return RefreshIndicator(
+            onRefresh: _loadAnnouncements,
+            child: _buildAnnouncementList(),
+          );
+        }).toList(),
       ),
     );
   }
