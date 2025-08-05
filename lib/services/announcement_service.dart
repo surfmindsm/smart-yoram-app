@@ -22,14 +22,20 @@ class AnnouncementService {
   Future<List<Announcement>> getAnnouncements({
     int skip = 0,
     int limit = 50,
+    String? category,
+    bool? isActive = true,
   }) async {
     try {
       final headers = await _getHeaders();
-      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.announcements}')
-          .replace(queryParameters: {
+      final queryParams = <String, String>{
         'skip': skip.toString(),
         'limit': limit.toString(),
-      });
+        if (isActive != null) 'is_active': isActive.toString(),
+        if (category != null) 'category': category,
+      };
+      
+      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.announcements}')
+          .replace(queryParameters: queryParams);
 
       log('📢 공지사항 목록 조회: $uri');
 

@@ -6,6 +6,8 @@ class Announcement {
   final String? authorName;
   final bool isPinned;
   final String? targetAudience; // 대상 (전체, 임원진 등)
+  final String? category; // 카테고리 (worship, member_news, event)
+  final String? subcategory; // 서브카테고리
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -17,6 +19,8 @@ class Announcement {
     this.authorName,
     required this.isPinned,
     this.targetAudience,
+    this.category,
+    this.subcategory,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,6 +34,8 @@ class Announcement {
       authorName: json['author_name'],
       isPinned: json['is_pinned'] ?? false,
       targetAudience: json['target_audience'],
+      category: json['category'],
+      subcategory: json['subcategory'],
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : DateTime.now(),
@@ -48,6 +54,8 @@ class Announcement {
       'author_name': authorName,
       'is_pinned': isPinned,
       'target_audience': targetAudience,
+      'category': category,
+      'subcategory': subcategory,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

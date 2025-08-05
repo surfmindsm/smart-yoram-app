@@ -36,6 +36,7 @@ class ApiConfig {
 
   // 공지사항 관리
   static const String announcements = '/announcements/';
+  static const String announcementsCategories = '/announcements/categories';
   static const String announcementsTogglePin = '/announcements/{id}/toggle-pin';
 
   // QR 코드 관리
