@@ -333,21 +333,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildChurchInfoCard() {
     return Container(
-      padding: EdgeInsets.all(20.r),
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      decoration: BoxDecoration(
-        color: AppColor.white,
-        borderRadius: BorderRadius.circular(16.r),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black.withOpacity(0.05),
-        //     spreadRadius: 1,
-        //     blurRadius: 10,
-        //     offset: const Offset(0, 2),
-        //   ),
-        // ],
-      ),
-      child: Column(
+      child: AppCard(
+        backgroundColor: AppColor.white,
+        borderRadius: 16.r,
+        variant: CardVariant.elevated,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 헤더: 교회 아이콘과 교회명 + 화살표 버튼
@@ -635,6 +626,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             secondChild: const SizedBox.shrink(),
           ),
         ],
+      ),
       ),
     );
   }
@@ -952,7 +944,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
         border: Border.all(
-          color: const Color(0xFFDEEEFF), // blue-100
+          color: const Color(0xFFDEEEFF),
           width: 1,
         ),
         borderRadius: BorderRadius.circular(16.r),
@@ -1023,13 +1015,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             SizedBox(height: 16.h),
             // 말씀 내용
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(12.r),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
+            AppCard(
+              backgroundColor: Colors.white.withOpacity(0.7),
+              borderRadius: 12.r,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1070,9 +1058,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ],
                             )
                           : Text(
-                              '말씀을 불러오는 중입니다...',
-                              style: AppTextStyle(color: AppColor.secondary04)
-                                  .b3(),
+                              '말씀을 불러올 수 없습니다',
+                              style: AppTextStyle(
+                                color: AppColor.secondary04,
+                              ).b3(),
                             ),
                 ],
               ),
