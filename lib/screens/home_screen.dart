@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
 import '../widget/widgets.dart';
+import '../components/index.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../services/member_service.dart';
@@ -221,60 +222,56 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // 헤더 위젯 빌드
   Widget _buildHeader() {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
       margin: EdgeInsets.symmetric(horizontal: 16.w),
-      decoration: BoxDecoration(
-        color: AppColor.secondary01, // 파란색 배경
-        borderRadius: BorderRadius.all(Radius.circular(20.r)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '안녕하세요',
-                style: AppTextStyle(
-                  color: AppColor.secondary06,
-                ).b4(),
-              ),
-              Text(
-                '${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
-                style: AppTextStyle(
-                  color: AppColor.secondary07,
-                ).h1(),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Container(
+      child: AppCard(
+        backgroundColor: AppColor.secondary01,
+        borderRadius: 20.r,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '안녕하세요',
+                  style: AppTextStyle(
+                    color: AppColor.secondary06,
+                  ).b4(),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  '${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
+                  style: AppTextStyle(
+                    color: AppColor.secondary07,
+                  ).h1(),
+                ),
+              ],
+            ),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationCenterScreen(),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(20.r),
+              child: Container(
                 padding: EdgeInsets.all(8.r),
                 decoration: BoxDecoration(
                   color: AppColor.primary900.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const NotificationCenterScreen()),
-                    );
-                  },
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                child: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -674,23 +671,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-                InkWell(
-                  onTap: () {
+                SecondaryButton(
+                  text: '더보기',
+                  size: ButtonSize.sm,
+                  onPressed: () {
                     Navigator.pushNamed(context, '/notices');
                   },
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    child: Text(
-                      '더보기',
-                      style: AppTextStyle(
-                        color: AppColor.primary900,
-                      ).buttonSmall(),
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -699,15 +685,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Padding(
             padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
             child: _isLoadingAnnouncements
-                ? Container(
-                    height: 100.h,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.blue[500]!,
-                        ),
+                ? Column(
+                    children: [
+                      AppListItemSkeleton(
+                        showLeading: false,
+                        titleLines: 1,
+                        subtitleLines: 1,
                       ),
-                    ),
+                      SizedBox(height: 8.h),
+                      AppListItemSkeleton(
+                        showLeading: false,
+                        titleLines: 1,
+                        subtitleLines: 1,
+                      ),
+                      SizedBox(height: 8.h),
+                      AppListItemSkeleton(
+                        showLeading: false,
+                        titleLines: 1,
+                        subtitleLines: 1,
+                      ),
+                    ],
                   )
                 : recentAnnouncements.isEmpty
                     ? Container(

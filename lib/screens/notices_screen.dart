@@ -276,7 +276,7 @@ class _NoticesScreenState extends State<NoticesScreen>
           ).b2(),
           tabs: tabCategories.map((category) {
             return Tab(
-              text: category['name'],
+              text: category['label'],
             );
           }).toList(),
         ),
