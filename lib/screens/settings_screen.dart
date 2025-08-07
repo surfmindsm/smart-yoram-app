@@ -61,7 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // 계정 섹션
           _buildSectionHeader('계정'),
-          SizedBox(height: 12.h),
+          SizedBox(height: 8.h),
           AppCard(
             child: Column(
               children: [
@@ -82,11 +82,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
           // 알림 섹션
           _buildSectionHeader('알림 설정'),
-          SizedBox(height: 12.h),
+          SizedBox(height: 8.h),
           AppCard(
             child: Column(
               children: [
@@ -110,11 +110,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
           // 앱 설정 섹션
           _buildSectionHeader('앱 설정'),
-          SizedBox(height: 12.h),
+          SizedBox(height: 8.h),
           AppCard(
             child: Consumer<FontSettingsService>(
               builder: (context, fontSettings, child) {
@@ -144,11 +144,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
           // 교회 정보 섹션
           _buildSectionHeader('교회 정보'),
-          SizedBox(height: 12.h),
+          SizedBox(height: 8.h),
           AppCard(
             child: Column(
               children: [
@@ -173,11 +173,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
           // 도움말 및 지원
           _buildSectionHeader('도움말 및 지원'),
-          SizedBox(height: 12.h),
+          SizedBox(height: 8.h),
           AppCard(
             child: Column(
               children: [
@@ -214,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
           // 로그아웃
           AppButton(
@@ -253,7 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         child: Row(
           children: [
             Icon(
@@ -307,7 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required ValueChanged<bool> onChanged,
   }) {
     return Padding(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Row(
         children: [
           Icon(
@@ -358,7 +358,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required Widget child,
   }) {
     return Padding(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Row(
         children: [
           Icon(
