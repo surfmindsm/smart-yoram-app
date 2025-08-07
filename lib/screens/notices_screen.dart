@@ -6,6 +6,7 @@ import '../models/announcement.dart';
 import '../services/announcement_service.dart';
 import '../utils/announcement_categories.dart';
 import '../utils/date_filter.dart';
+import '../components/index.dart' hide IconButton;
 import 'notice_detail_screen.dart';
 
 class NoticesScreen extends StatefulWidget {
@@ -188,100 +189,85 @@ class _NoticesScreenState extends State<NoticesScreen>
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: _onDateFilterChanged,
-            icon: Icon(
-              Icons.filter_list,
-              color: AppColor.secondary07,
-              size: 24.sp,
-            ),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
+          AppDropdown<String>(
+            value: selectedDateFilter,
+            placeholder: _getFilterDisplayText(),
+            onChanged: (String? value) => value != null ? _onDateFilterChanged(value) : null,
+            prefixIcon: Icon(Icons.filter_list, size: 16, color: AppColor.secondary07),
+            items: [
+              AppDropdownMenuItem(
                 value: 'latest',
-                child: Row(
-                  children: [
-                    Icon(Icons.schedule, size: 16),
-                    SizedBox(width: 8),
-                    Text('최신순'),
-                  ],
-                ),
+                text: '최신순',
+                leading: Icon(Icons.schedule, size: 16, color: AppColor.secondary05),
               ),
-              const PopupMenuItem(
+              AppDropdownMenuItem(
                 value: 'oldest',
-                child: Row(
-                  children: [
-                    Icon(Icons.history, size: 16),
-                    SizedBox(width: 8),
-                    Text('오래된순'),
-                  ],
-                ),
+                text: '오래된순',
+                leading: Icon(Icons.history, size: 16, color: AppColor.secondary05),
               ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
+              AppDropdownMenuItem(
                 value: 'week',
-                child: Row(
-                  children: [
-                    Icon(Icons.date_range, size: 16),
-                    SizedBox(width: 8),
-                    Text('최근 7일'),
-                  ],
-                ),
+                text: '최근 7일',
+                leading: Icon(Icons.date_range, size: 16, color: AppColor.secondary05),
               ),
-              const PopupMenuItem(
+              AppDropdownMenuItem(
                 value: 'month',
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 16),
-                    SizedBox(width: 8),
-                    Text('최근 30일'),
-                  ],
-                ),
+                text: '최근 30일',
+                leading: Icon(Icons.calendar_today, size: 16, color: AppColor.secondary05),
               ),
-              const PopupMenuItem(
+              AppDropdownMenuItem(
                 value: 'this_month',
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_month, size: 16),
-                    SizedBox(width: 8),
-                    Text('이번 달'),
-                  ],
-                ),
+                text: '이번 달',
+                leading: Icon(Icons.calendar_month, size: 16, color: AppColor.secondary05),
               ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
+              AppDropdownMenuItem(
                 value: 'custom',
-                child: Row(
-                  children: [
-                    Icon(Icons.event, size: 16),
-                    SizedBox(width: 8),
-                    Text('날짜 선택'),
-                  ],
-                ),
+                text: '날짜 선택',
+                leading: Icon(Icons.event, size: 16, color: AppColor.secondary05),
               ),
             ],
           ),
-          SizedBox(width: 8.w),
+          SizedBox(width: 16.w),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColor.primary900,
-          unselectedLabelColor: AppColor.secondary05,
-          indicatorColor: AppColor.primary900,
-          indicatorWeight: 2.h,
-          labelStyle: AppTextStyle(
-            color: AppColor.primary900,
-          ).b1(),
-          unselectedLabelStyle: AppTextStyle(
-            color: AppColor.secondary05,
-          ).b2(),
-          tabs: tabCategories.map((category) {
-            return Tab(
-              text: category['label'],
-            );
-          }).toList(),
-        ),
+
       ),
-      body: TabBarView(
+      body: Column(
+        children: [
+          // 탭바
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: AppCard(
+              variant: CardVariant.elevated,
+              padding: EdgeInsets.zero,
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                labelColor: AppColor.primary900,
+                labelStyle:
+                    AppTextStyle(color: AppColor.primary900).b2().copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                labelPadding: EdgeInsets.symmetric(horizontal: 12.w),
+                unselectedLabelColor: AppColor.secondary04,
+                unselectedLabelStyle:
+                    AppTextStyle(color: AppColor.secondary04).b2(),
+                indicatorColor: AppColor.primary900,
+                indicatorPadding: EdgeInsets.zero,
+                indicatorWeight: 2.h,
+                dividerColor: Colors.transparent,
+                dividerHeight: 0,
+                tabs: tabCategories.map((category) {
+                  return Tab(text: category['label']);
+                }).toList(),
+                tabAlignment: TabAlignment.start,
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              ),
+            ),
+          ),
+
+          // 공지사항 목록
+          Expanded(
+            child: TabBarView(
         controller: _tabController,
         children: tabCategories.map((category) {
           return RefreshIndicator(
@@ -289,46 +275,71 @@ class _NoticesScreenState extends State<NoticesScreen>
             child: _buildAnnouncementList(),
           );
         }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildAnnouncementList() {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            child: AppCard(
+              variant: CardVariant.elevated,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      AppSkeleton(width: 40.w, height: 16.h, borderRadius: BorderRadius.circular(8)),
+                      SizedBox(width: 8.w),
+                      AppSkeleton(width: 60.w, height: 16.h, borderRadius: BorderRadius.circular(8)),
+                      const Spacer(),
+                      AppSkeleton(width: 20, height: 20, borderRadius: BorderRadius.circular(10)),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  AppSkeleton(width: double.infinity, height: 20.h),
+                  SizedBox(height: 8.h),
+                  AppSkeleton(width: 0.8.sw, height: 16.h),
+                  SizedBox(height: 8.h),
+                  AppSkeleton(width: 0.6.sw, height: 16.h),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      AppSkeleton(width: 16, height: 16, borderRadius: BorderRadius.circular(8)),
+                      SizedBox(width: 4.w),
+                      AppSkeleton(width: 80.w, height: 12.h),
+                      SizedBox(width: 16.w),
+                      AppSkeleton(width: 16, height: 16, borderRadius: BorderRadius.circular(8)),
+                      SizedBox(width: 4.w),
+                      AppSkeleton(width: 60.w, height: 12.h),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       );
     }
 
     if (announcements.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.announcement_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '공지사항이 없습니다',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '기다려주세요. 공지사항이 등록되는 대로\n여기에 표시됩니다.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: AppAlert(
+            type: AlertType.info,
+            title: '공지사항이 없습니다',
+            description: '기다려주세요. 공지사항이 등록되는 대로 여기에 표시됩니다.',
+            icon: Icon(Icons.announcement_outlined, size: 20),
+          ),
         ),
       );
     }
@@ -346,193 +357,148 @@ class _NoticesScreenState extends State<NoticesScreen>
   Widget _buildAnnouncementCard(Announcement announcement) {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            spreadRadius: 0,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _viewNoticeDetail(announcement),
-          borderRadius: BorderRadius.circular(12.r),
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: AppCard(
+        variant: CardVariant.elevated,
+        onTap: () => _viewNoticeDetail(announcement),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 태그 영역
+            Row(
               children: [
-                // 태그 영역
-                Row(
-                  children: [
-                    // 고정 배지
-                    if (announcement.isPinned)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 8.w, vertical: 3.h),
-                        margin: EdgeInsets.only(right: 8.w),
-                        decoration: BoxDecoration(
-                          color: Colors.red[500],
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          '고정',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    // 카테고리 태그
-                    if (announcement.category != null)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 10.w, vertical: 3.h),
-                        margin: EdgeInsets.only(right: 8.w),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(announcement.category!),
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          AnnouncementCategories.getCategoryLabel(
-                              announcement.category),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    // 서브카테고리
-                    if (announcement.subcategory != null)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 8.w, vertical: 3.h),
-                        margin: EdgeInsets.only(right: 8.w),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          AnnouncementCategories.getSubcategoryLabel(
-                              announcement.category, announcement.subcategory),
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    const Spacer(),
-                    // 더보기 버튼
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'share') {
-                          _shareAnnouncement(announcement);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'share',
-                          child: Row(
-                            children: [
-                              Icon(Icons.share, size: 16),
-                              SizedBox(width: 8),
-                              Text('공유하기'),
-                            ],
-                          ),
-                        ),
-                      ],
-                      child: Icon(
-                        Icons.more_vert,
-                        color: Colors.grey[600],
-                        size: 20,
+                // 고정 배지
+                if (announcement.isPinned)
+                  Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: AppBadge(
+                      text: '고정',
+                      variant: BadgeVariant.error,
+                      size: BadgeSize.sm,
+                    ),
+                  ),
+                // 카테고리 태그
+                if (announcement.category != null)
+                  Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: AppBadge(
+                      text: AnnouncementCategories.getCategoryLabel(
+                          announcement.category),
+                      variant: _getBadgeVariant(announcement.category!),
+                      size: BadgeSize.sm,
+                    ),
+                  ),
+                // 서브카테고리
+                if (announcement.subcategory != null)
+                  Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: AppBadge(
+                      text: AnnouncementCategories.getSubcategoryLabel(
+                          announcement.category, announcement.subcategory),
+                      variant: BadgeVariant.secondary,
+                      size: BadgeSize.sm,
+                    ),
+                  ),
+                const Spacer(),
+                // 더보기 버튼
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'share') {
+                      _shareAnnouncement(announcement);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'share',
+                      child: Row(
+                        children: [
+                          Icon(Icons.share, size: 16),
+                          SizedBox(width: 8),
+                          Text('공유하기'),
+                        ],
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 12),
-                // 제목
-                Text(
-                  announcement.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                // 내용 미리보기
-                Text(
-                  announcement.content,
-                  style: TextStyle(
-                    fontSize: 14,
+                  child: Icon(
+                    Icons.more_vert,
                     color: Colors.grey[600],
-                    height: 1.4,
+                    size: 20,
                   ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                // 하단 정보 (작성자, 날짜)
-                Row(
-                  children: [
-                    Icon(
-                      Icons.person_outline,
-                      size: 16,
-                      color: Colors.grey[500],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      announcement.authorName ?? '관리자',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(
-                      Icons.schedule,
-                      size: 16,
-                      color: Colors.grey[500],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatDate(announcement.createdAt),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 12),
+            // 제목
+            Text(
+              announcement.title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            // 내용 미리보기
+            Text(
+              announcement.content,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            // 하단 정보 (작성자, 날짜)
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 16,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  announcement.authorName ?? '관리자',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  Icons.schedule,
+                  size: 16,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDate(announcement.createdAt),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Color _getCategoryColor(String category) {
+  BadgeVariant _getBadgeVariant(String category) {
     switch (category) {
       case 'worship':
-        return Colors.blue[600]!;
+        return BadgeVariant.primary;
       case 'member_news':
-        return Colors.green[600]!;
+        return BadgeVariant.success;
       case 'event':
-        return Colors.orange[600]!;
+        return BadgeVariant.warning;
       default:
-        return Colors.grey[600]!;
+        return BadgeVariant.secondary;
     }
   }
 
@@ -564,11 +530,10 @@ class _NoticesScreenState extends State<NoticesScreen>
 
   void _shareAnnouncement(Announcement announcement) {
     // 공유 기능은 나중에 구현
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('공유 기능이 준비 중입니다'),
-        duration: Duration(seconds: 2),
-      ),
+    AppToast.show(
+      context,
+      '공유 기능이 준비 중입니다',
+      type: ToastType.info,
     );
   }
 }
