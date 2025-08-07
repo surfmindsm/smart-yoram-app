@@ -339,467 +339,293 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         borderRadius: 16.r,
         variant: CardVariant.elevated,
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 헤더: 교회 아이콘과 교회명 + 화살표 버튼
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _isChurchCardExpanded = !_isChurchCardExpanded;
-              });
-            },
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(8.r),
-                  decoration: BoxDecoration(
-                    color: AppColor.blue100,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Container(
-                    width: 24.w,
-                    height: 24.h,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 헤더: 교회 아이콘과 교회명 + 화살표 버튼
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isChurchCardExpanded = !_isChurchCardExpanded;
+                });
+              },
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.r),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColor.primary600,
-                          AppColor.primary8,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(6.r),
+                      color: AppColor.blue100,
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
-                    child: Icon(
-                      Icons.church,
-                      color: AppColor.white,
-                      size: 14.sp,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currentChurch?.name ?? '성암교회',
-                        style: AppTextStyle(
-                          color: AppColor.secondary07,
-                        ).h2(),
-                      ),
-                      Text(
-                        currentChurch?.englishName ?? 'Community Church',
-                        style: AppTextStyle(
-                          color: AppColor.secondary04,
-                        ).b4(),
-                      ),
-                    ],
-                  ),
-                ),
-                AnimatedRotation(
-                  duration: const Duration(milliseconds: 200),
-                  turns: _isChurchCardExpanded ? 0.5 : 0,
-                  child: Icon(
-                    Icons.keyboard_arrow_down,
-                    color: AppColor.secondary04,
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // 교회 세부 정보 (접고 펼치기 가능)
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 300),
-            crossFadeState: _isChurchCardExpanded
-                ? CrossFadeState.showFirst
-                : CrossFadeState.showSecond,
-            firstChild: Column(
-              children: [
-                SizedBox(height: 16.h),
-                // 담임목사 정보
-                Container(
-                  padding: EdgeInsets.all(12.r),
-                  decoration: BoxDecoration(
-                    color: AppColor.background,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(6.r),
-                        decoration: BoxDecoration(
-                          color: AppColor.blue200,
-                          borderRadius: BorderRadius.circular(6.r),
+                    child: Container(
+                      width: 24.w,
+                      height: 24.h,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColor.primary600,
+                            AppColor.primary8,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        child: Icon(
-                          Icons.person,
-                          color: AppColor.primary600,
-                          size: 16,
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Icon(
+                        Icons.church,
+                        color: AppColor.white,
+                        size: 14.sp,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          currentChurch?.name ?? '성암교회',
+                          style: AppTextStyle(
+                            color: AppColor.secondary07,
+                          ).h2(),
+                        ),
+                        Text(
+                          currentChurch?.englishName ?? 'Community Church',
+                          style: AppTextStyle(
+                            color: AppColor.secondary04,
+                          ).b4(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    turns: _isChurchCardExpanded ? 0.5 : 0,
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: AppColor.secondary04,
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 교회 세부 정보 (접고 펼치기 가능)
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 300),
+              crossFadeState: _isChurchCardExpanded
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              firstChild: Column(
+                children: [
+                  SizedBox(height: 16.h),
+                  // 담임목사 정보
+                  Container(
+                    padding: EdgeInsets.all(12.r),
+                    decoration: BoxDecoration(
+                      color: AppColor.background,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(6.r),
+                          decoration: BoxDecoration(
+                            color: AppColor.blue200,
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: Icon(
+                            Icons.person,
+                            color: AppColor.primary600,
+                            size: 16,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '담임목사',
+                                style: AppTextStyle(
+                                  color: AppColor.secondary04,
+                                ).c1(),
+                              ),
+                              Text(
+                                currentChurch?.pastorName ?? '안영목 목사',
+                                style: AppTextStyle(
+                                  color: AppColor.secondary07,
+                                ).b2(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  // 전화번호와 위치 (2열 그리드)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(12.r),
+                          decoration: BoxDecoration(
+                            color: AppColor.background,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(6.r),
+                                decoration: BoxDecoration(
+                                  color: AppColor.green200,
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Icon(
+                                  Icons.phone,
+                                  color: AppColor.green600,
+                                  size: 16,
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '전화',
+                                      style: AppTextStyle(
+                                        color: AppColor.secondary04,
+                                      ).c1(),
+                                    ),
+                                    Text(
+                                      currentChurch?.phone ?? '031-563-5210',
+                                      style: AppTextStyle(
+                                        color: AppColor.secondary07,
+                                      ).b3(),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       SizedBox(width: 12.w),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '담임목사',
-                              style: AppTextStyle(
-                                color: AppColor.secondary04,
-                              ).c1(),
-                            ),
-                            Text(
-                              currentChurch?.pastorName ?? '안영목 목사',
-                              style: AppTextStyle(
-                                color: AppColor.secondary07,
-                              ).b2(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                // 전화번호와 위치 (2열 그리드)
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.all(12.r),
-                        decoration: BoxDecoration(
-                          color: AppColor.background,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(6.r),
-                              decoration: BoxDecoration(
-                                color: AppColor.green200,
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                              child: Icon(
-                                Icons.phone,
-                                color: AppColor.green600,
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '전화',
-                                    style: AppTextStyle(
-                                      color: AppColor.secondary04,
-                                    ).c1(),
-                                  ),
-                                  Text(
-                                    currentChurch?.phone ?? '031-563-5210',
-                                    style: AppTextStyle(
-                                      color: AppColor.secondary07,
-                                    ).b3(),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.all(12.r),
-                        decoration: BoxDecoration(
-                          color: AppColor.background,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(6.r),
-                              decoration: BoxDecoration(
-                                color: AppColor.orange200,
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                              child: Icon(
-                                Icons.location_on,
-                                color: AppColor.orange600,
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '위치',
-                                    style: AppTextStyle(
-                                      color: AppColor.secondary04,
-                                    ).c1(),
-                                  ),
-                                  Text(
-                                    currentChurch?.city ?? '구리시',
-                                    style: AppTextStyle(
-                                      color: AppColor.secondary07,
-                                    ).b3(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                // 교회 주소 (파란색 배경)
-                Container(
-                  padding: EdgeInsets.all(12.r),
-                  decoration: BoxDecoration(
-                    color: AppColor.background,
-                    borderRadius: BorderRadius.circular(12.r),
-                    // border: Border.all(
-                    //   color: AppColor.blue200,
-                    //   width: 1,
-                    // ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(top: 2.h),
-                        child: Icon(
-                          Icons.location_on,
-                          color: AppColor.primary600,
-                          size: 16,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '교회 주소',
-                              style: AppTextStyle(
-                                color: AppColor.primary600,
-                              ).c1(),
-                            ),
-                            SizedBox(height: 4.h),
-                            RichText(
-                              text: TextSpan(
-                                style: AppTextStyle(
-                                  color: AppColor.secondary06,
-                                ).b3(),
-                                children: [
-                                  TextSpan(
-                                    text: currentChurch?.address ??
-                                        '경기도 구리시 검배로 136번길 32\n',
-                                  ),
-                                  if (currentChurch?.district != null)
-                                    TextSpan(
-                                      text: '(${currentChurch!.district})',
-                                      style: AppTextStyle(
-                                        color: AppColor.secondary04,
-                                      ).b4(),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            secondChild: const SizedBox.shrink(),
-          ),
-        ],
-      ),
-      ),
-    );
-  }
-
-  // 최근 공지사항 위젯
-  Widget _buildRecentAnnouncements() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      decoration: BoxDecoration(
-        color: AppColor.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Column(
-        children: [
-          // 헤더
-          Padding(
-            padding: EdgeInsets.all(20.r),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.forum,
-                      size: 20.r,
-                      color: AppColor.primary900,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '교회 소식',
-                      style: AppTextStyle(
-                        color: AppColor.secondary07,
-                      ).h2(),
-                    ),
-                  ],
-                ),
-                SecondaryButton(
-                  text: '더보기',
-                  size: ButtonSize.sm,
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/notices');
-                  },
-                ),
-              ],
-            ),
-          ),
-          // 컨텐츠
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-            child: _isLoadingAnnouncements
-                ? Column(
-                    children: [
-                      AppListItemSkeleton(
-                        showLeading: false,
-                        titleLines: 1,
-                        subtitleLines: 1,
-                      ),
-                      SizedBox(height: 8.h),
-                      AppListItemSkeleton(
-                        showLeading: false,
-                        titleLines: 1,
-                        subtitleLines: 1,
-                      ),
-                      SizedBox(height: 8.h),
-                      AppListItemSkeleton(
-                        showLeading: false,
-                        titleLines: 1,
-                        subtitleLines: 1,
-                      ),
-                    ],
-                  )
-                : recentAnnouncements.isEmpty
-                    ? Container(
-                        height: 100.h,
-                        child: Center(
-                          child: Text(
-                            '공지사항이 없습니다',
-                            style: AppTextStyle(
-                              color: Colors.grey[600]!,
-                            ).b2(),
+                        child: Container(
+                          padding: EdgeInsets.all(12.r),
+                          decoration: BoxDecoration(
+                            color: AppColor.background,
+                            borderRadius: BorderRadius.circular(12.r),
                           ),
-                        ),
-                      )
-                    : Column(
-                        children: recentAnnouncements
-                            .map(
-                              (announcement) => InkWell(
-                                onTap: () {
-                                  _navigateToAnnouncementDetail(announcement);
-                                },
-                                borderRadius: BorderRadius.circular(8.r),
-                                child: Container(
-                                  padding: EdgeInsets.all(12.r),
-                                  margin: EdgeInsets.only(bottom: 8.h),
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // 왼쪽: 새 알림 표시 및 제목
-                                      Expanded(
-                                        child: Row(
-                                          children: [
-                                            // 새 알림 표시
-                                            if (announcement.isPinned)
-                                              Container(
-                                                width: 8.r,
-                                                height: 8.r,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.blue[500],
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                            if (announcement.isPinned)
-                                              SizedBox(width: 8.w),
-                                            // 제목
-                                            Expanded(
-                                              child: Text(
-                                                announcement.title,
-                                                style: AppTextStyle(
-                                                  color: AppColor.secondary07,
-                                                ).b2(),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      // 오른쪽: 시간 및 화살표
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.access_time,
-                                            size: 12.r,
-                                            color: Colors.grey[500],
-                                          ),
-                                          SizedBox(width: 4.w),
-                                          Text(
-                                            announcement.formattedDate,
-                                            style: AppTextStyle(
-                                              color: Colors.grey[500]!,
-                                            ).b3(),
-                                          ),
-                                          SizedBox(width: 8.w),
-                                          Icon(
-                                            Icons.chevron_right,
-                                            size: 16.r,
-                                            color: Colors.grey[400],
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(6.r),
+                                decoration: BoxDecoration(
+                                  color: AppColor.orange200,
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Icon(
+                                  Icons.location_on,
+                                  color: AppColor.orange600,
+                                  size: 16,
                                 ),
                               ),
-                            )
-                            .toList(),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '위치',
+                                      style: AppTextStyle(
+                                        color: AppColor.secondary04,
+                                      ).c1(),
+                                    ),
+                                    Text(
+                                      currentChurch?.city ?? '구리시',
+                                      style: AppTextStyle(
+                                        color: AppColor.secondary07,
+                                      ).b3(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 공지사항 상세 화면으로 이동
-  void _navigateToAnnouncementDetail(Announcement announcement) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AnnouncementDetailScreen(
-          announcement: announcement,
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  // 교회 주소 (파란색 배경)
+                  Container(
+                    padding: EdgeInsets.all(12.r),
+                    decoration: BoxDecoration(
+                      color: AppColor.background,
+                      borderRadius: BorderRadius.circular(12.r),
+                      // border: Border.all(
+                      //   color: AppColor.blue200,
+                      //   width: 1,
+                      // ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(top: 2.h),
+                          child: Icon(
+                            Icons.location_on,
+                            color: AppColor.primary600,
+                            size: 16,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '교회 주소',
+                                style: AppTextStyle(
+                                  color: AppColor.primary600,
+                                ).c1(),
+                              ),
+                              SizedBox(height: 4.h),
+                              RichText(
+                                text: TextSpan(
+                                  style: AppTextStyle(
+                                    color: AppColor.secondary06,
+                                  ).b3(),
+                                  children: [
+                                    TextSpan(
+                                      text: currentChurch?.address ??
+                                          '경기도 구리시 검배로 136번길 32\n',
+                                    ),
+                                    if (currentChurch?.district != null)
+                                      TextSpan(
+                                        text: '(${currentChurch!.district})',
+                                        style: AppTextStyle(
+                                          color: AppColor.secondary04,
+                                        ).b4(),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              secondChild: const SizedBox.shrink(),
+            ),
+          ],
         ),
       ),
     );
@@ -934,7 +760,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildTodaysVerse() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      decoration: BoxDecoration(
+      child: AppCard(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -943,14 +769,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Color.fromARGB(255, 235, 216, 255), // purple-50
           ],
         ),
-        border: Border.all(
-          color: const Color(0xFFDEEEFF),
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(20.r),
+        borderColor: const Color(0xFFDEEEFF),
+        borderRadius: 16.r,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1016,7 +836,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             SizedBox(height: 16.h),
             // 말씀 내용
             AppCard(
-              backgroundColor: Colors.white.withOpacity(0.7),
+              backgroundColor: Colors.white,
               borderRadius: 12.r,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1072,11 +892,186 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  // 최근 공지사항 위젯
+  Widget _buildRecentAnnouncements() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      child: AppCard(
+        backgroundColor: AppColor.white,
+        borderRadius: 16.r,
+        variant: CardVariant.elevated,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 헤더
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.forum,
+                      size: 20.r,
+                      color: AppColor.primary900,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '교회 소식',
+                      style: AppTextStyle(
+                        color: AppColor.secondary07,
+                      ).h2(),
+                    ),
+                  ],
+                ),
+                SecondaryButton(
+                  text: '더보기',
+                  size: ButtonSize.sm,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/notices');
+                  },
+                ),
+              ],
+            ),
+
+            // 컨텐츠
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+              child: _isLoadingAnnouncements
+                  ? Column(
+                      children: [
+                        AppListItemSkeleton(
+                          showLeading: false,
+                          titleLines: 1,
+                          subtitleLines: 1,
+                        ),
+                        SizedBox(height: 8.h),
+                        AppListItemSkeleton(
+                          showLeading: false,
+                          titleLines: 1,
+                          subtitleLines: 1,
+                        ),
+                        SizedBox(height: 8.h),
+                        AppListItemSkeleton(
+                          showLeading: false,
+                          titleLines: 1,
+                          subtitleLines: 1,
+                        ),
+                      ],
+                    )
+                  : recentAnnouncements.isEmpty
+                      ? Container(
+                          height: 100.h,
+                          child: Center(
+                            child: Text(
+                              '공지사항이 없습니다',
+                              style: AppTextStyle(
+                                color: Colors.grey[600]!,
+                              ).b2(),
+                            ),
+                          ),
+                        )
+                      : Column(
+                          children: recentAnnouncements
+                              .map(
+                                (announcement) => InkWell(
+                                  onTap: () {
+                                    _navigateToAnnouncementDetail(announcement);
+                                  },
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  child: Container(
+                                    padding: EdgeInsets.all(12.r),
+                                    margin: EdgeInsets.only(bottom: 8.h),
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // 왼쪽: 새 알림 표시 및 제목
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              // 새 알림 표시
+                                              if (announcement.isPinned)
+                                                Container(
+                                                  width: 8.r,
+                                                  height: 8.r,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.blue[500],
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              if (announcement.isPinned)
+                                                SizedBox(width: 8.w),
+                                              // 제목
+                                              Expanded(
+                                                child: Text(
+                                                  announcement.title,
+                                                  style: AppTextStyle(
+                                                    color: AppColor.secondary07,
+                                                  ).b2(),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // 오른쪽: 시간 및 화살표
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.access_time,
+                                              size: 12.r,
+                                              color: Colors.grey[500],
+                                            ),
+                                            SizedBox(width: 4.w),
+                                            Text(
+                                              announcement.formattedDate,
+                                              style: AppTextStyle(
+                                                color: Colors.grey[500]!,
+                                              ).b3(),
+                                            ),
+                                            SizedBox(width: 8.w),
+                                            Icon(
+                                              Icons.chevron_right,
+                                              size: 16.r,
+                                              color: Colors.grey[400],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 공지사항 상세 화면으로 이동
+  void _navigateToAnnouncementDetail(Announcement announcement) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AnnouncementDetailScreen(
+          announcement: announcement,
+        ),
+      ),
+    );
+  }
+
   // 예배안내 위젯
   Widget _buildWorshipSchedule() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      decoration: BoxDecoration(
+      child: AppCard(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1085,10 +1080,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Color.fromARGB(255, 21, 28, 38), // gray-800
           ],
         ),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(20.r),
+        borderRadius: 16.r,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

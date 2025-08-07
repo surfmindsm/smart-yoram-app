@@ -15,6 +15,7 @@ class AppCard extends StatelessWidget {
   final EdgeInsets? margin;
   final VoidCallback? onTap;
   final Color? backgroundColor;
+  final Gradient? gradient;
   final Color? borderColor;
   final double borderRadius;
   final double? width;
@@ -29,6 +30,7 @@ class AppCard extends StatelessWidget {
     this.margin,
     this.onTap,
     this.backgroundColor,
+    this.gradient,
     this.borderColor,
     this.borderRadius = 12,
     this.width,
@@ -44,7 +46,8 @@ class AppCard extends StatelessWidget {
       height: height,
       margin: margin,
       decoration: BoxDecoration(
-        color: backgroundColor ?? cardTheme.backgroundColor,
+        color: gradient == null ? (backgroundColor ?? cardTheme.backgroundColor) : null,
+        gradient: gradient,
         borderRadius: BorderRadius.circular(borderRadius),
         border: cardTheme.borderWidth > 0
             ? Border.all(
