@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import '../widget/widgets.dart';
-import '../config/api_config.dart';
+import '../components/index.dart';
+import '../resource/color_style.dart';
 import '../services/auth_service.dart';
 import '../services/font_settings_service.dart';
 import 'api_test_screen.dart';
 import 'users_management_screen.dart';
-import 'family_management_screen.dart';
-import 'sms_management_screen.dart';
+
 import 'excel_management_screen.dart';
 import 'statistics_dashboard_screen.dart';
 import 'privacy_policy_screen.dart';
@@ -35,7 +34,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    // 초기에 글꼴 설정 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Provider를 통해 현재 글꼴 크기 가져오기
     });
@@ -44,204 +42,357 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: CommonAppBar(
-      //   title: '설정',
-      // ),
+      backgroundColor: AppColor.background,
+      appBar: AppBar(
+        title: Text(
+          '설정',
+          style: TextStyle(
+            color: AppColor.secondary07,
+            fontWeight: FontWeight.w600,
+            fontSize: 20.sp,
+          ),
+        ),
+        backgroundColor: AppColor.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColor.secondary07),
+      ),
       body: ListView(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.all(16.w),
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
           // 계정 섹션
-          SectionHeader(title: '계정'),
-          CustomListTile(
-            icon: Icons.person,
-            title: '개인정보 수정',
-            subtitle: '이름, 전화번호, 주소 등',
-            onTap: () {
-              Navigator.pushNamed(context, '/profile');
-            },
+          _buildSectionHeader('계정'),
+          SizedBox(height: 12.h),
+          AppCard(
+            child: Column(
+              children: [
+                _buildSettingItem(
+                  icon: Icons.person,
+                  title: '개인정보 수정',
+                  subtitle: '이름, 전화번호, 주소 등',
+                  onTap: () => Navigator.pushNamed(context, '/profile'),
+                ),
+                Divider(height: 1, color: AppColor.border1),
+                _buildSettingItem(
+                  icon: Icons.lock,
+                  title: '비밀번호 변경',
+                  subtitle: '로그인 비밀번호 변경',
+                  onTap: _changePassword,
+                ),
+              ],
+            ),
           ),
-          CustomListTile(
-            icon: Icons.lock,
-            title: '비밀번호 변경',
-            subtitle: '로그인 비밀번호 변경',
-            onTap: _changePassword,
-          ),
-          // CustomListTile(
-          //   icon: Icons.family_restroom,
-          //   title: '가족 관리',
-          //   subtitle: '가족 구성원 추가/수정',
-          //   onTap: _manageFamilyMembers,
-          // ),
 
-          const Divider(height: 32),
+          SizedBox(height: 24.h),
 
           // 알림 섹션
-          SectionHeader(title: '알림 설정'),
-          CustomListTile(
-            icon: Icons.notifications,
-            title: '푸시 알림',
-            subtitle: '모든 푸시 알림 수신',
-            trailing: Switch(
-              value: _pushNotifications,
-              onChanged: (value) => setState(() => _pushNotifications = value),
+          _buildSectionHeader('알림 설정'),
+          SizedBox(height: 12.h),
+          AppCard(
+            child: Column(
+              children: [
+                _buildSwitchItem(
+                  icon: Icons.notifications,
+                  title: '푸시 알림',
+                  subtitle: '모든 푸시 알림 수신',
+                  value: _pushNotifications,
+                  onChanged: (value) =>
+                      setState(() => _pushNotifications = value),
+                ),
+                Divider(height: 1, color: AppColor.border1),
+                _buildSwitchItem(
+                  icon: Icons.campaign,
+                  title: '교회 공지',
+                  subtitle: '새로운 공지사항 알림',
+                  value: _churchNotices,
+                  onChanged: (value) => setState(() => _churchNotices = value),
+                ),
+              ],
             ),
           ),
 
-          // 생일 알림은 삭제
-          CustomListTile(
-            icon: Icons.campaign,
-            title: '교회 공지',
-            subtitle: '새로운 공지사항 알림',
-            trailing: Switch(
-              value: _churchNotices,
-              onChanged: (value) => setState(() => _churchNotices = value),
-            ),
-          ),
-
-          const Divider(height: 32),
+          SizedBox(height: 24.h),
 
           // 앱 설정 섹션
-          SectionHeader(title: '앱 설정'),
-          // CustomListTile(
-          //   icon: Icons.dark_mode,
-          //   title: '다크 모드',
-          //   subtitle: '어두운 테마 사용',
-          //   trailing: Switch(
-          //     value: _darkMode,
-          //     onChanged: (value) => setState(() => _darkMode = value),
-          //   ),
-          // ),
-          Consumer<FontSettingsService>(
-            builder: (context, fontSettings, child) {
-              return CustomListTile(
-                icon: Icons.text_fields,
-                title: '글꼴 크기',
-                subtitle:
-                    '${fontSettings.fontSize} (${FontSettingsService.getFontSizeDescription(fontSettings.fontSize)})',
-                trailing: DropdownButton<String>(
-                  value: fontSettings.fontSize,
-                  items: FontSettingsService.fontSizeOptions
-                      .map((size) => DropdownMenuItem<String>(
-                            value: size,
-                            child: Text(size),
-                          ))
-                      .toList(),
-                  onChanged: (value) async {
-                    if (value != null) {
-                      await fontSettings.setFontSize(value);
-                      if (mounted) {
-                        // 사용자에게 변경 알림
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('글꼴 크기가 "$value"로 변경되었습니다.'),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
+          _buildSectionHeader('앱 설정'),
+          SizedBox(height: 12.h),
+          AppCard(
+            child: Consumer<FontSettingsService>(
+              builder: (context, fontSettings, child) {
+                return _buildDropdownItem(
+                  icon: Icons.text_fields,
+                  title: '글꼴 크기',
+                  subtitle:
+                      '${fontSettings.fontSize} (${FontSettingsService.getFontSizeDescription(fontSettings.fontSize)})',
+                  child: DropdownButton<String>(
+                    value: fontSettings.fontSize,
+                    onChanged: (value) {
+                      if (value != null) {
+                        fontSettings.setFontSize(value);
                       }
-                    }
-                  },
-                  underline: Container(),
-                ),
-              );
-            },
+                    },
+                    items: FontSettingsService.fontSizeOptions
+                        .map((size) => DropdownMenuItem(
+                              value: size,
+                              child: Text(
+                                  FontSettingsService.getFontSizeDescription(
+                                      size)),
+                            ))
+                        .toList(),
+                  ),
+                );
+              },
+            ),
           ),
-          // CustomListTile(
-          //   icon: Icons.language,
-          //   title: '언어',
-          //   subtitle: _language,
-          //   trailing: DropdownButton<String>(
-          //     value: _language,
-          //     items: ['한국어', 'English']
-          //         .map(
-          //             (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
-          //         .toList(),
-          //     onChanged: (value) => setState(() => _language = value!),
-          //     underline: Container(),
-          //   ),
-          // ),
 
-          const Divider(height: 32),
+          SizedBox(height: 24.h),
 
           // 교회 정보 섹션
-          SectionHeader(title: '교회 정보'),
-          CustomListTile(
-            icon: Icons.church,
-            title: '우리 교회',
-            subtitle: '새생명교회',
-            onTap: _showChurchInfo,
-            showArrow: false,
-          ),
-          CustomListTile(
-            icon: Icons.contact_phone,
-            title: '교회 연락처',
-            subtitle: '02-123-4567',
-            onTap: _showChurchContact,
-            showArrow: false,
-          ),
-          CustomListTile(
-            icon: Icons.location_on,
-            title: '교회 위치',
-            subtitle: '서울시 강남구',
-            onTap: _showChurchLocation,
-            showArrow: false,
-          ),
-
-          const Divider(height: 32),
-
-          // 도움말 섹션
-          SectionHeader(title: '도움말'),
-          CustomListTile(
-            icon: Icons.help,
-            title: '도움말',
-            subtitle: '자주 묻는 질문',
-            onTap: _showHelp,
-          ),
-          // CustomListTile(
-          //   icon: Icons.bug_report,
-          //   title: '버그 신고',
-          //   subtitle: '오류 또는 개선사항 신고',
-          //   onTap: _reportBug,
-          // ),
-          // CustomListTile(
-          //   icon: Icons.api,
-          //   title: 'API 테스트',
-          //   subtitle: 'API 연결 상태 확인',
-          //   onTap: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(builder: (context) => const ApiTestScreen()),
-          //     );
-          //   },
-          // ),
-
-          CustomListTile(
-            icon: Icons.info,
-            title: '앱 정보',
-            subtitle: '버전 및 담당자 정보',
-            onTap: _showAppInfo,
-          ),
-          CustomListTile(
-            icon: Icons.security,
-            title: '개인정보 처리방침',
-            subtitle: '개인정보 보호 정책',
-            onTap: _showPrivacyPolicy,
-          ),
-          CustomListTile(
-            icon: Icons.article,
-            title: '이용약관',
-            subtitle: '서비스 이용약관',
-            onTap: _showTermsOfService,
-          ),
-          CustomListTile(
-            icon: Icons.logout,
-            title: '로그아웃',
-            subtitle: '계정에서 로그아웃',
-            onTap: _logout,
-            textColor: Colors.red,
+          _buildSectionHeader('교회 정보'),
+          SizedBox(height: 12.h),
+          AppCard(
+            child: Column(
+              children: [
+                _buildSettingItem(
+                  icon: Icons.info,
+                  title: '교회 소개',
+                  onTap: _showChurchInfo,
+                ),
+                Divider(height: 1, color: AppColor.border1),
+                _buildSettingItem(
+                  icon: Icons.phone,
+                  title: '연락처',
+                  onTap: _showChurchContact,
+                ),
+                Divider(height: 1, color: AppColor.border1),
+                _buildSettingItem(
+                  icon: Icons.location_on,
+                  title: '위치',
+                  onTap: _showChurchLocation,
+                ),
+              ],
+            ),
           ),
 
-          const SizedBox(height: 32),
+          SizedBox(height: 24.h),
+
+          // 도움말 및 지원
+          _buildSectionHeader('도움말 및 지원'),
+          SizedBox(height: 12.h),
+          AppCard(
+            child: Column(
+              children: [
+                _buildSettingItem(
+                  icon: Icons.help,
+                  title: '도움말',
+                  onTap: _showHelp,
+                ),
+                Divider(height: 1, color: AppColor.border1),
+                _buildSettingItem(
+                  icon: Icons.bug_report,
+                  title: '문제 신고',
+                  onTap: _reportBug,
+                ),
+                Divider(height: 1, color: AppColor.border1),
+                _buildSettingItem(
+                  icon: Icons.info_outline,
+                  title: '앱 정보',
+                  onTap: _showAppInfo,
+                ),
+                Divider(height: 1, color: AppColor.border1),
+                _buildSettingItem(
+                  icon: Icons.privacy_tip,
+                  title: '개인정보처리방침',
+                  onTap: _showPrivacyPolicy,
+                ),
+                Divider(height: 1, color: AppColor.border1),
+                _buildSettingItem(
+                  icon: Icons.article,
+                  title: '서비스 이용약관',
+                  onTap: _showTermsOfService,
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 24.h),
+
+          // 로그아웃
+          AppButton(
+            onPressed: _logout,
+            variant: ButtonVariant.destructive,
+            child: Text('로그아웃'),
+          ),
+          SizedBox(height: 32.h),
+        ],
+      ),
+    );
+  }
+
+  // 섹션 헤더 위젯
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: EdgeInsets.only(left: 4.w, bottom: 4.h),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w600,
+          color: AppColor.secondary05,
+        ),
+      ),
+    );
+  }
+
+  // 설정 아이템 위젯
+  Widget _buildSettingItem({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 24.sp,
+              color: AppColor.primary600,
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColor.secondary07,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    SizedBox(height: 2.h),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColor.secondary05,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 20.sp,
+              color: AppColor.secondary05,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 스위치 아이템 위젯
+  Widget _buildSwitchItem({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 24.sp,
+            color: AppColor.primary600,
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColor.secondary07,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColor.secondary05,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          AppSwitch(
+            value: value,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 드롭다운 아이템 위젯
+  Widget _buildDropdownItem({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required Widget child,
+  }) {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 24.sp,
+            color: AppColor.primary600,
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColor.secondary07,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColor.secondary05,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          child,
         ],
       ),
     );
@@ -250,100 +401,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _changePassword() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('비밀번호 변경'),
+      builder: (context) => AppDialog(
+        title: '비밀번호 변경',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const TextField(
-              decoration: InputDecoration(
-                labelText: '현재 비밀번호',
-                border: OutlineInputBorder(),
-              ),
+            AppInput(
+              placeholder: '현재 비밀번호',
               obscureText: true,
             ),
-            const SizedBox(height: 16),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: '새 비밀번호',
-                border: OutlineInputBorder(),
-              ),
+            SizedBox(height: 16.h),
+            AppInput(
+              placeholder: '새 비밀번호',
               obscureText: true,
             ),
-            const SizedBox(height: 16),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: '새 비밀번호 확인',
-                border: OutlineInputBorder(),
-              ),
+            SizedBox(height: 16.h),
+            AppInput(
+              placeholder: '새 비밀번호 확인',
               obscureText: true,
             ),
           ],
         ),
         actions: [
-          TextButton(
+          AppButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            variant: ButtonVariant.ghost,
+            child: Text('취소'),
           ),
-          TextButton(
+          AppButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('비밀번호가 변경되었습니다')),
+              AppToast.show(
+                context,
+                '비밀번호가 성공적으로 변경되었습니다.',
+                type: ToastType.success,
               );
             },
-            child: const Text('변경'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _manageFamilyMembers() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('가족 관리'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('현재 등록된 가족:'),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.person, size: 16),
-                SizedBox(width: 8),
-                Text('김성도 (본인)'),
-              ],
-            ),
-            Row(
-              children: [
-                Icon(Icons.person, size: 16),
-                SizedBox(width: 8),
-                Text('이은혜 (배우자)'),
-              ],
-            ),
-            Row(
-              children: [
-                Icon(Icons.child_care, size: 16),
-                SizedBox(width: 8),
-                Text('김믿음 (자녀)'),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // 가족 추가 기능
-            },
-            child: const Text('가족 추가'),
+            child: Text('변경'),
           ),
         ],
       ),
@@ -353,29 +447,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showChurchInfo() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('교회 정보'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('교회명: 새생명교회'),
-            SizedBox(height: 8),
-            Text('담任목사: 김은혜 목사'),
-            SizedBox(height: 8),
-            Text('설립연도: 1995년'),
-            SizedBox(height: 8),
-            Text('교인수: 약 500명'),
-            SizedBox(height: 8),
-            Text('주일예배: 오전 9시, 11시'),
-            SizedBox(height: 8),
-            Text('수요예배: 오후 7시 30분'),
-          ],
+      builder: (context) => AppDialog(
+        title: '교회 소개',
+        content: SingleChildScrollView(
+          child: Text(
+            '우리 교회는 하나님의 사랑을 실천하며, 지역사회와 함께 성장하는 교회입니다.\n\n'
+            '설립년도: 1995년\n'
+            '담임목사: 김목사님\n'
+            '교인 수: 약 500명\n\n'
+            '우리의 비전은 모든 성도가 그리스도의 제자로 성장하여 세상의 빛과 소금이 되는 것입니다.',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: AppColor.secondary07,
+              height: 1.5,
+            ),
+          ),
         ),
         actions: [
-          TextButton(
+          AppButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
+            variant: ButtonVariant.ghost,
+            child: Text('닫기'),
           ),
         ],
       ),
@@ -385,25 +477,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showChurchContact() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('교회 연락처'),
-        content: const Column(
+      builder: (context) => AppDialog(
+        title: '연락처',
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('전화: 02-123-4567'),
-            SizedBox(height: 8),
-            Text('팩스: 02-123-4568'),
-            SizedBox(height: 8),
-            Text('이메일: info@newlife.church'),
-            SizedBox(height: 8),
-            Text('홈페이지: www.newlife.church'),
+            Text('전화: 02-1234-5678', style: TextStyle(fontSize: 14.sp)),
+            SizedBox(height: 8.h),
+            Text('팩스: 02-1234-5679', style: TextStyle(fontSize: 14.sp)),
+            SizedBox(height: 8.h),
+            Text('이메일: info@church.com', style: TextStyle(fontSize: 14.sp)),
           ],
         ),
         actions: [
-          TextButton(
+          AppButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
+            variant: ButtonVariant.ghost,
+            child: Text('닫기'),
           ),
         ],
       ),
@@ -413,32 +504,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showChurchLocation() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('교회 위치'),
-        content: const Column(
+      builder: (context) => AppDialog(
+        title: '교회 위치',
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('주소: 서울시 강남구 테헤란로 123'),
-            SizedBox(height: 8),
-            Text('지하철: 2호선 강남역 3번 출구'),
-            SizedBox(height: 8),
-            Text('버스: 146, 540, 강남01'),
-            SizedBox(height: 8),
-            Text('주차: 지하 1층 (50대)'),
+            Text(
+              '주소: 서울특별시 강남구 테헤란로 123\n교회건물 2층',
+              style: TextStyle(fontSize: 14.sp),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              '지하철: 2호선 강남역 3번 출구에서 도보 5분',
+              style: TextStyle(fontSize: 14.sp),
+            ),
           ],
         ),
         actions: [
-          TextButton(
+          AppButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // 지도 앱으로 연결
-            },
-            child: const Text('지도 보기'),
+            variant: ButtonVariant.ghost,
+            child: Text('닫기'),
           ),
         ],
       ),
@@ -446,50 +533,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showHelp() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: const Text('도움말'),
-            backgroundColor: Colors.blue[700],
-            foregroundColor: Colors.white,
-          ),
-          body: ListView(
-            padding: EdgeInsets.all(16),
+    showDialog(
+      context: context,
+      builder: (context) => AppDialog(
+        title: '도움말',
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ExpansionTile(
-                title: Text('출석 체크는 어떻게 하나요?'),
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                        '홈 화면의 "출석 체크" 버튼을 누르거나, 출석 탭에서 QR 코드를 스캔하여 출석을 체크할 수 있습니다.'),
-                  ),
-                ],
+              AppCard(
+                child: ExpansionTile(
+                  title: Text('로그인이 안돼요'),
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(16.w),
+                      child: Text(
+                        '이메일과 비밀번호를 다시 한번 확인해주세요. 비밀번호를 잊으셨다면 "비밀번호 찾기"를 이용해주세요.',
+                        style: TextStyle(fontSize: 14.sp),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              ExpansionTile(
-                title: Text('교인증은 어떻게 사용하나요?'),
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                        '홈 화면의 "교인증" 버튼을 누르면 QR 코드가 포함된 교인증을 확인할 수 있습니다. 이를 교회 행사나 출석 체크 시 사용하세요.'),
-                  ),
-                ],
-              ),
-              ExpansionTile(
-                title: Text('알림을 받지 못해요'),
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                        '설정 > 알림 설정에서 원하는 알림을 켜주세요. 또한 기기 설정에서 앱 알림이 허용되어 있는지 확인해주세요.'),
-                  ),
-                ],
+              SizedBox(height: 8.h),
+              AppCard(
+                child: ExpansionTile(
+                  title: Text('알림을 받지 못해요'),
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(16.w),
+                      child: Text(
+                        '설정 > 알림 설정에서 원하는 알림을 켜주세요. 또한 기기 설정에서 앱 알림이 허용되어 있는지 확인해주세요.',
+                        style: TextStyle(fontSize: 14.sp),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
+        actions: [
+          AppButton(
+            onPressed: () => Navigator.pop(context),
+            variant: ButtonVariant.ghost,
+            child: Text('닫기'),
+          ),
+        ],
       ),
     );
   }
@@ -497,40 +587,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _reportBug() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('문제 신고'),
-        content: const Column(
+      builder: (context) => AppDialog(
+        title: '문제 신고',
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: '문제 유형',
-                border: OutlineInputBorder(),
-              ),
+            AppInput(
+              placeholder: '문제 유형',
             ),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: '문제 설명',
-                border: OutlineInputBorder(),
-              ),
+            SizedBox(height: 16.h),
+            AppInput(
+              placeholder: '문제 설명',
               maxLines: 3,
             ),
           ],
         ),
         actions: [
-          TextButton(
+          AppButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            variant: ButtonVariant.ghost,
+            child: Text('취소'),
           ),
-          TextButton(
+          AppButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('문제 신고가 전송되었습니다')),
+              AppToast.show(
+                context,
+                '다운로드가 완료되었습니다.',
+                type: ToastType.success,
               );
             },
-            child: const Text('전송'),
+            child: Text('전송'),
           ),
         ],
       ),
@@ -538,14 +625,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showAppInfo() {
-    showAboutDialog(
+    showDialog(
       context: context,
-      applicationName: '스마트 교회요람',
-      applicationVersion: '1.0.0',
-      applicationLegalese: '© 2024 스마트 교회요람',
-      children: const [
-        Text('교회 생활을 더욱 편리하게 만들어주는 앱입니다.'),
-      ],
+      builder: (context) => AppDialog(
+        title: '앱 정보',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('스마트 교회요람',
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8.h),
+            Text('버전 1.0.0', style: TextStyle(fontSize: 14.sp)),
+            SizedBox(height: 16.h),
+            Text('© 2024 스마트 교회요람', style: TextStyle(fontSize: 12.sp)),
+            SizedBox(height: 8.h),
+            Text('교회 생활을 더욱 편리하게 만들어주는 앱입니다.',
+                style: TextStyle(fontSize: 14.sp)),
+          ],
+        ),
+        actions: [
+          AppButton(
+            onPressed: () => Navigator.pop(context),
+            variant: ButtonVariant.ghost,
+            child: Text('닫기'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -570,32 +675,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _logout() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('로그아웃'),
-        content: const Text('정말 로그아웃하시겠습니까?'),
+      builder: (context) => AppDialog(
+        title: '로그아웃',
+        content: Text('정말 로그아웃하시겠습니까?'),
         actions: [
-          TextButton(
+          AppButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            variant: ButtonVariant.ghost,
+            child: Text('취소'),
           ),
-          TextButton(
+          AppButton(
             onPressed: () async {
               Navigator.pop(context);
 
               try {
-                // AuthService 로그아웃 호출
                 await _authService.logout();
                 print('설정 화면: 로그아웃 완료');
 
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('로그아웃되었습니다'),
-                      backgroundColor: Colors.green,
-                    ),
+                  AppToast.show(
+                    context,
+                    '로그아웃되었습니다.',
+                    type: ToastType.success,
                   );
 
-                  // 로그인 화면으로 이동
                   Navigator.pushNamedAndRemoveUntil(
                     context,
                     '/login',
@@ -604,16 +707,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('로그아웃 오류: $e'),
-                      backgroundColor: Colors.red,
-                    ),
+                  AppToast.show(
+                    context,
+                    '로그아웃 오류: $e',
+                    type: ToastType.error,
                   );
                 }
               }
             },
-            child: const Text('로그아웃', style: TextStyle(color: Colors.red)),
+            variant: ButtonVariant.destructive,
+            child: Text('로그아웃'),
           ),
         ],
       ),

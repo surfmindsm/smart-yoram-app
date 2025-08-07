@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../widget/widgets.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../components/index.dart';
+import '../resource/color_style.dart';
 import '../config/api_config.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -87,71 +89,94 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(isEdit ? '사용자 수정' : '새 사용자 추가'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CustomFormField(
-                  controller: usernameController,
-                  label: '사용자명',
-                  prefixIcon: const Icon(Icons.person),
-                  enabled: !isEdit, // 수정 시 사용자명 변경 불가
-                ),
-                const SizedBox(height: 12),
-                CustomFormField(
-                  controller: emailController,
-                  label: '이메일',
-                  prefixIcon: const Icon(Icons.email),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 12),
-                CustomFormField(
-                  controller: fullNameController,
-                  label: '이름',
-                  prefixIcon: const Icon(Icons.badge),
-                ),
-                if (!isEdit) ...[
-                  const SizedBox(height: 12),
-                  CustomFormField(
-                    controller: passwordController,
-                    label: '비밀번호',
-                    prefixIcon: const Icon(Icons.lock),
-                    obscureText: true,
-                  ),
-                ],
-                const SizedBox(height: 12),
-                CustomDropdownField<String>(
-                  value: selectedRole,
-                  label: '권한',
-                  items: const [
-                    DropdownMenuItem(value: 'admin', child: Text('관리자')),
-                    DropdownMenuItem(value: 'pastor', child: Text('목회자')),
-                    DropdownMenuItem(value: 'member', child: Text('교인')),
-                  ],
-                  onChanged: (value) => setState(() {
-                    selectedRole = value!;
-                  }),
-                ),
-                const SizedBox(height: 12),
-                SwitchListTile(
-                  title: const Text('활성 상태'),
-                  value: isActive,
-                  onChanged: (value) => setState(() {
-                    isActive = value;
-                  }),
+        builder: (context, setState) => AppDialog(
+          title: isEdit ? '사용자 수정' : '새 사용자 추가',
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppInput(
+                controller: usernameController,
+                label: '사용자명',
+                prefixIcon: Icons.person,
+                disabled: isEdit, // 수정 시 사용자명 변경 불가
+              ),
+              SizedBox(height: 16.h),
+              AppInput(
+                controller: emailController,
+                label: '이메일',
+                prefixIcon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              SizedBox(height: 16.h),
+              AppInput(
+                controller: fullNameController,
+                label: '이름',
+                prefixIcon: Icons.badge,
+              ),
+              if (!isEdit) ...[
+                SizedBox(height: 16.h),
+                AppInput(
+                  label: '비밀번호',
+                  placeholder: '비밀번호를 입력하세요',
+                  controller: passwordController,
+                  obscureText: true,
                 ),
               ],
-            ),
+              SizedBox(height: 16.h),
+              AppDropdown<String>(
+                value: selectedRole,
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => selectedRole = value);
+                  }
+                },
+                items: const [
+                  AppDropdownMenuItem(value: 'admin', text: '관리자'),
+                  AppDropdownMenuItem(value: 'pastor', text: '목회자'),
+                  AppDropdownMenuItem(value: 'member', text: '교인'),
+                ],
+                placeholder: '역할 선택',
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Text(
+                    '활성 상태',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColor.secondary07,
+                    ),
+                  ),
+                  const Spacer(),
+                  AppSwitch(
+                    value: isActive,
+                    onChanged: (value) => setState(() => isActive = value),
+                  ),
+                ],
+              ),
+            ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('취소'),
+            AppButton(
+              onPressed: () => Navigator.of(context).pop(),
+              variant: ButtonVariant.ghost,
+              child: Text('취소'),
             ),
-            ElevatedButton(
+            AppButton(
               onPressed: () async {
+                if (usernameController.text.isEmpty ||
+                    emailController.text.isEmpty ||
+                    fullNameController.text.isEmpty ||
+                    (!isEdit && passwordController.text.isEmpty)) {
+                  AppToast.show(
+                    context,
+                    '모든 필수 항목을 입력해주세요',
+                    type: ToastType.error,
+                  );
+                  return;
+                }
+
                 await _saveUser(
                   isEdit: isEdit,
                   userId: user?['id'],
@@ -162,7 +187,8 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                   role: selectedRole,
                   isActive: isActive,
                 );
-                Navigator.pop(context);
+                
+                Navigator.of(context).pop();
               },
               child: Text(isEdit ? '수정' : '추가'),
             ),
@@ -184,8 +210,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   }) async {
     try {
       // TODO: 실제 API 연동
+      await Future.delayed(const Duration(seconds: 1));
+      
       if (isEdit) {
-        // PUT /users/{userId}
         final index = users.indexWhere((u) => u['id'] == userId);
         if (index != -1) {
           setState(() {
@@ -198,22 +225,28 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
             };
           });
         }
+        AppToast.show(
+          context,
+          '사용자 정보가 수정되었습니다.',
+          type: ToastType.success,
+        );
       } else {
-        // POST /users/
-        setState(() {
-          users.add({
-            'id': users.length + 1,
-            'username': username,
-            'email': email,
-            'full_name': fullName,
-            'role': role,
-            'is_active': isActive,
-            'created_at': DateTime.now().toString().split(' ')[0],
-          });
-        });
+        final newUser = {
+          'id': users.length + 1,
+          'username': username,
+          'email': email,
+          'full_name': fullName,
+          'role': role,
+          'is_active': isActive,
+          'created_at': DateTime.now().toString().split(' ')[0],
+        };
+        setState(() => users.add(newUser));
+        AppToast.show(
+          context,
+          '새 사용자가 등록되었습니다.',
+          type: ToastType.success,
+        );
       }
-      
-      _showSuccessSnackBar(isEdit ? '사용자가 수정되었습니다.' : '새 사용자가 추가되었습니다.');
     } catch (e) {
       _showErrorDialog('사용자 저장에 실패했습니다: $e');
     }
@@ -222,18 +255,19 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   Future<void> _deleteUser(Map<String, dynamic> user) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('사용자 삭제'),
-        content: Text('${user['full_name']}님을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'),
+      builder: (context) => AppDialog(
+        title: '사용자 삭제',
+        content: Text('${user['full_name']} 사용자를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+          AppButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            variant: ButtonVariant.ghost,
+            child: Text('취소'),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('삭제'),
+          AppButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            variant: ButtonVariant.destructive,
+            child: Text('삭제'),
           ),
         ],
       ),
@@ -241,11 +275,11 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
 
     if (confirmed == true) {
       try {
-        // TODO: DELETE /users/{userId} API 연동
-        setState(() {
-          users.removeWhere((u) => u['id'] == user['id']);
-        });
-        _showSuccessSnackBar('사용자가 삭제되었습니다.');
+        // TODO: 실제 API 연동
+        await Future.delayed(const Duration(seconds: 1));
+        
+        setState(() => users.removeWhere((u) => u['id'] == user['id']));
+        _showSuccessSnackBar('사용자가 삭제되었습니다');
       } catch (e) {
         _showErrorDialog('사용자 삭제에 실패했습니다: $e');
       }
@@ -254,40 +288,31 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
 
   Future<void> _toggleUserStatus(Map<String, dynamic> user) async {
     try {
-      final newStatus = !user['is_active'];
-      // TODO: PUT /users/{userId} API 연동
+      // TODO: 실제 API 연동
+      await Future.delayed(const Duration(seconds: 1));
       
-      setState(() {
-        final index = users.indexWhere((u) => u['id'] == user['id']);
-        if (index != -1) {
-          users[index]['is_active'] = newStatus;
-        }
-      });
-      
-      _showSuccessSnackBar(
-        newStatus ? '사용자가 활성화되었습니다.' : '사용자가 비활성화되었습니다.'
-      );
+      final index = users.indexWhere((u) => u['id'] == user['id']);
+      if (index != -1) {
+        setState(() {
+          users[index]['is_active'] = !users[index]['is_active'];
+        });
+        _showSuccessSnackBar('사용자 상태가 변경되었습니다');
+      }
     } catch (e) {
-      _showErrorDialog('사용자 상태 변경에 실패했습니다: $e');
+      _showErrorDialog('상태 변경에 실패했습니다: $e');
     }
   }
 
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.error, color: Colors.red),
-            SizedBox(width: 8),
-            Text('오류'),
-          ],
-        ),
+      builder: (context) => AppDialog(
+        title: '오류',
         content: Text(message),
         actions: [
-          TextButton(
+          AppButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('확인'),
+            child: Text('확인'),
           ),
         ],
       ),
@@ -298,7 +323,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.green,
+        backgroundColor: AppColor.primary600,
       ),
     );
   }
@@ -306,35 +331,51 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredUsers = users.where((user) {
-      if (searchQuery.isEmpty) return true;
       return user['full_name'].toString().toLowerCase().contains(searchQuery.toLowerCase()) ||
              user['email'].toString().toLowerCase().contains(searchQuery.toLowerCase()) ||
              user['username'].toString().toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
 
     return Scaffold(
-      appBar: CommonAppBar(
-        title: '사용자 관리',
+      backgroundColor: AppColor.background,
+      appBar: AppBar(
+        title: Text(
+          '사용자 관리',
+          style: TextStyle(
+            color: AppColor.secondary07,
+            fontWeight: FontWeight.w600,
+            fontSize: 20.sp,
+          ),
+        ),
+        backgroundColor: AppColor.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColor.secondary07),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadUsers,
+          Padding(
+            padding: EdgeInsets.only(right: 16.w),
+            child: AppButton(
+              onPressed: _createUser,
+              size: ButtonSize.sm,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, size: 16.sp),
+                  SizedBox(width: 4.w),
+                  Text('추가'),
+                ],
+              ),
+            ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: "users_fab",
-        onPressed: _createUser,
-        backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: Column(
         children: [
-          // 검색바
+          // 검색 바
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SearchBarWidget(
-              hintText: '사용자명, 이름, 이메일로 검색',
+            padding: EdgeInsets.all(16.w),
+            child: AppInput(
+              placeholder: '사용자 검색...',
+              prefixIcon: Icons.search,
               onChanged: (value) {
                 setState(() {
                   searchQuery = value;
@@ -343,167 +384,161 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
             ),
           ),
           
-          // 통계 카드
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: StatCard(
-                    icon: Icons.people,
-                    value: users.length.toString(),
-                    title: '전체 사용자',
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatCard(
-                    icon: Icons.check_circle,
-                    value: users.where((u) => u['is_active']).length.toString(),
-                    title: '활성 사용자',
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatCard(
-                    icon: Icons.admin_panel_settings,
-                    value: users.where((u) => u['role'] == 'admin').length.toString(),
-                    title: '관리자',
-                    color: Colors.red,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
           // 사용자 목록
           Expanded(
             child: isLoading
-                ? const LoadingWidget()
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: AppColor.primary600),
+                        SizedBox(height: 16.h),
+                        Text(
+                          '사용자 목록을 불러오는 중...',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColor.secondary05,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : filteredUsers.isEmpty
-                    ? const EmptyStateWidget(
-                        icon: Icons.people_outline,
-                        title: '사용자가 없습니다.',
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_off,
+                              size: 64.sp,
+                              color: AppColor.secondary03,
+                            ),
+                            SizedBox(height: 16.h),
+                            Text(
+                              searchQuery.isEmpty ? '등록된 사용자가 없습니다' : '검색 결과가 없습니다',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                color: AppColor.secondary05,
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
                         itemCount: filteredUsers.length,
                         itemBuilder: (context, index) {
                           final user = filteredUsers[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _getRoleColor(user['role']),
-                                child: Icon(
-                                  _getRoleIcon(user['role']),
-                                  color: Colors.white,
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 12.h),
+                            child: AppCard(
+                              child: ListTile(
+                                contentPadding: EdgeInsets.all(16.w),
+                                leading: CircleAvatar(
+                                  backgroundColor: _getRoleColor(user['role']),
+                                  child: Icon(
+                                    _getRoleIcon(user['role']),
+                                    color: Colors.white,
+                                    size: 20.sp,
+                                  ),
                                 ),
-                              ),
-                              title: Text(
-                                user['full_name'],
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('@${user['username']} • ${user['email']}'),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _getRoleColor(user['role']),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          _getRoleDisplayName(user['role']),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                          ),
-                                        ),
+                                title: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      user['full_name'],
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16.sp,
+                                        color: AppColor.secondary07,
                                       ),
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: user['is_active'] 
-                                              ? Colors.green 
-                                              : Colors.grey,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          user['is_active'] ? '활성' : '비활성',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                          ),
-                                        ),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      user['email'],
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: AppColor.secondary05,
                                       ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              trailing: PopupMenuButton(
-                                itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    value: 'edit',
-                                    child: const Row(
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 8.h),
+                                    Row(
                                       children: [
-                                        Icon(Icons.edit),
-                                        SizedBox(width: 8),
-                                        Text('수정'),
+                                        AppBadge(
+                                          text: _getRoleDisplayName(user['role']),
+                                          variant: user['role'] == 'admin' 
+                                              ? BadgeVariant.error
+                                              : user['role'] == 'pastor' 
+                                                  ? BadgeVariant.secondary
+                                                  : BadgeVariant.secondary,
+                                        ),
+                                        SizedBox(width: 8.w),
+                                        AppBadge(
+                                          text: user['is_active'] ? '활성' : '비활성',
+                                          variant: user['is_active'] 
+                                              ? BadgeVariant.success 
+                                              : BadgeVariant.outline,
+                                        ),
                                       ],
                                     ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'toggle_status',
-                                    child: Row(
-                                      children: [
-                                        Icon(user['is_active'] 
-                                            ? Icons.block 
-                                            : Icons.check_circle),
-                                        const SizedBox(width: 8),
-                                        Text(user['is_active'] ? '비활성화' : '활성화'),
-                                      ],
+                                  ],
+                                ),
+                                trailing: PopupMenuButton(
+                                  icon: Icon(Icons.more_vert, color: AppColor.secondary05),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.edit, color: AppColor.secondary07),
+                                          SizedBox(width: 8.w),
+                                          Text('수정'),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.delete, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('삭제', style: TextStyle(color: Colors.red)),
-                                      ],
+                                    PopupMenuItem(
+                                      value: 'toggle_status',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            user['is_active'] ? Icons.block : Icons.check_circle,
+                                            color: AppColor.secondary07,
+                                          ),
+                                          SizedBox(width: 8.w),
+                                          Text(user['is_active'] ? '비활성화' : '활성화'),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                                onSelected: (value) {
-                                  switch (value) {
-                                    case 'edit':
-                                      _editUser(user);
-                                      break;
-                                    case 'toggle_status':
-                                      _toggleUserStatus(user);
-                                      break;
-                                    case 'delete':
-                                      _deleteUser(user);
-                                      break;
-                                  }
-                                },
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete, color: AppColor.error),
+                                          SizedBox(width: 8.w),
+                                          Text('삭제', style: TextStyle(color: AppColor.error)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  onSelected: (value) {
+                                    switch (value) {
+                                      case 'edit':
+                                        _editUser(user);
+                                        break;
+                                      case 'toggle_status':
+                                        _toggleUserStatus(user);
+                                        break;
+                                      case 'delete':
+                                        _deleteUser(user);
+                                        break;
+                                    }
+                                  },
+                                ),
                               ),
                             ),
                           );
@@ -518,13 +553,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   Color _getRoleColor(String role) {
     switch (role) {
       case 'admin':
-        return Colors.red;
+        return AppColor.error;
       case 'pastor':
-        return Colors.purple;
+        return AppColor.primary600;
       case 'member':
-        return Colors.blue;
+        return AppColor.secondary05;
       default:
-        return Colors.grey;
+        return AppColor.secondary03;
     }
   }
 

@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import '../widget/widgets.dart';
+import 'package:flutter/material.dart' hide IconButton;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../components/index.dart';
+import '../resource/color_style.dart';
 import '../config/api_config.dart';
 
 class FamilyManagementScreen extends StatefulWidget {
@@ -350,189 +352,280 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
     }).toList();
 
     return Scaffold(
-      appBar: CommonAppBar(
-        title: '가족 관계 관리',
+      backgroundColor: AppColor.background,
+      appBar: AppBar(
+        title: Text(
+          '가족 관계 관리',
+          style: TextStyle(
+            color: AppColor.secondary07,
+            fontWeight: FontWeight.w600,
+            fontSize: 20.sp,
+          ),
+        ),
+        backgroundColor: AppColor.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColor.secondary07),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
+          InkWell(
+            onTap: _addRelationship,
+            borderRadius: BorderRadius.circular(20.r),
+            child: Padding(
+              padding: EdgeInsets.all(12.r),
+              child: Icon(Icons.add, color: AppColor.primary600),
+            ),
+          ),
+          InkWell(
+            onTap: _loadData,
+            borderRadius: BorderRadius.circular(20.r),
+            child: Padding(
+              padding: EdgeInsets.all(12.r),
+              child: Icon(Icons.refresh, color: AppColor.secondary05),
+            ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: "family_fab",
         onPressed: _addRelationship,
-        backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: AppColor.primary600,
+        child: Icon(Icons.add, color: Colors.white),
       ),
-      body: Column(
-        children: [
-          // 검색바
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SearchBarWidget(
-              hintText: '교인명, 관계로 검색',
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value;
-                });
-              },
-            ),
-          ),
-          
-          // 통계 카드
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
+      body: isLoading
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: AppColor.primary600),
+                  SizedBox(height: 16.h),
+                  Text(
+                    '가족 관계 데이터를 불러오는 중...',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: AppColor.secondary05,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Column(
               children: [
-                Expanded(
-                  child: StatCard(
-                    icon: Icons.family_restroom,
-                    value: relationships.length.toString(),
-                    title: '전체 관계',
-                    color: Colors.blue,
+                // 검색바
+                Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: AppInput(
+                    placeholder: '교인명, 관계로 검색',
+                    prefixIcon: Icons.search,
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatCard(
-                    title: '부부 관계',
-                    value: '${relationships.where((r) => r['relationship_type'] == '배우자').length}건',
-                    icon: Icons.people,
-                    color: Colors.green,
+          
+                // 통계 카드
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: AppCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '총 관계 수',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: AppColor.secondary05,
+                                    ),
+                                  ),
+                                  Icon(Icons.people, color: Colors.blue, size: 18.r),
+                                ],
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                '${relationships.length}건',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColor.secondary01,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: AppCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '부부 관계',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: AppColor.secondary05,
+                                    ),
+                                  ),
+                                  Icon(Icons.people, color: Colors.green, size: 18.r),
+                                ],
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                '${relationships.where((r) => r['relationship_type'] == '배우자').length}건',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColor.secondary01,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
+          
+                SizedBox(height: 16.h),
+                
+                // 관계 목록
                 Expanded(
-                  child: StatCard(
-                    title: '부모-자녀 관계',
-                    value: '${relationships.where((r) => r['relationship_type'] == '부모-자녀').length}건',
-                    icon: Icons.family_restroom,
-                    color: Colors.red,
-                  ),
+                  child: relationships.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.family_restroom,
+                                size: 48.r,
+                                color: AppColor.secondary04,
+                              ),
+                              SizedBox(height: 16.h),
+                              Text(
+                                '관계 데이터가 없습니다',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: AppColor.secondary05,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          itemCount: filteredRelationships.length,
+                          itemBuilder: (context, index) {
+                            final relationship = filteredRelationships[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: _getRelationshipColor(relationship['relationship_type']),
+                                  child: Icon(
+                                    _getRelationshipIcon(relationship['relationship_type']),
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                title: Row(
+                                  children: [
+                                    Text(
+                                      relationship['member_name'],
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _getRelationshipColor(relationship['relationship_type']),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        relationship['relationship_type'],
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      relationship['related_member_name'],
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Text(
+                                  '${relationship['member_name']}님의 ${relationship['relationship_type']}',
+                                ),
+                                trailing: PopupMenuButton(
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'family_tree',
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.account_tree),
+                                          SizedBox(width: 8),
+                                          Text('가족도 보기'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.edit),
+                                          SizedBox(width: 8),
+                                          Text('수정'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.delete, color: Colors.red),
+                                          SizedBox(width: 8),
+                                          Text('삭제', style: TextStyle(color: Colors.red)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  onSelected: (value) {
+                                    switch (value) {
+                                      case 'family_tree':
+                                        final member = members.firstWhere(
+                                          (m) => m['id'] == relationship['member_id']
+                                        );
+                                        _viewFamilyTree(member);
+                                        break;
+                                      case 'edit':
+                                        _editRelationship(relationship);
+                                        break;
+                                      case 'delete':
+                                        _deleteRelationship(relationship);
+                                        break;
+                                    }
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                 ),
               ],
             ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // 관계 목록
-          Expanded(
-            child: isLoading
-                ? const LoadingWidget()
-                : filteredRelationships.isEmpty
-                    ? EmptyStateWidget(
-                        icon: Icons.people_outline,
-                        title: '가족 관계가 없습니다.',
-                        subtitle: '새로운 가족 관계를 추가해보세요.',
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        itemCount: filteredRelationships.length,
-                        itemBuilder: (context, index) {
-                          final relationship = filteredRelationships[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _getRelationshipColor(relationship['relationship_type']),
-                                child: Icon(
-                                  _getRelationshipIcon(relationship['relationship_type']),
-                                  color: Colors.white,
-                                ),
-                              ),
-                              title: Row(
-                                children: [
-                                  Text(
-                                    relationship['member_name'],
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _getRelationshipColor(relationship['relationship_type']),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      relationship['relationship_type'],
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    relationship['related_member_name'],
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              subtitle: Text(
-                                '${relationship['member_name']}님의 ${relationship['relationship_type']}',
-                              ),
-                              trailing: PopupMenuButton(
-                                itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    value: 'family_tree',
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.account_tree),
-                                        SizedBox(width: 8),
-                                        Text('가족도 보기'),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'edit',
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.edit),
-                                        SizedBox(width: 8),
-                                        Text('수정'),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.delete, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('삭제', style: TextStyle(color: Colors.red)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                                onSelected: (value) {
-                                  switch (value) {
-                                    case 'family_tree':
-                                      final member = members.firstWhere(
-                                        (m) => m['id'] == relationship['member_id']
-                                      );
-                                      _viewFamilyTree(member);
-                                      break;
-                                    case 'edit':
-                                      _editRelationship(relationship);
-                                      break;
-                                    case 'delete':
-                                      _deleteRelationship(relationship);
-                                      break;
-                                  }
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -584,8 +677,10 @@ class FamilyTreeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(
-        title: '${member['name']}님 가족도',
+      appBar: AppBar(
+        title: Text('${member['name']}님 가족도'),
+        backgroundColor: AppColor.primary600,
+        foregroundColor: Colors.white,
       ),
       body: const Center(
         child: Column(

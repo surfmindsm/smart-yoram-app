@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide IconButton;
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../components/index.dart';
+import '../resource/color_style.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -7,70 +10,94 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.background,
       appBar: AppBar(
-        title: const Text('개인정보처리방침'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        title: Text(
+          '개인정보처리방침',
+          style: TextStyle(
+            color: AppColor.secondary07,
+            fontWeight: FontWeight.w600,
+            fontSize: 20.sp,
+          ),
+        ),
+        backgroundColor: AppColor.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColor.secondary07),
         actions: [
-          IconButton(
-            onPressed: () {
-              // 개인정보처리방침 텍스트 복사
-              Clipboard.setData(ClipboardData(text: _getPrivacyPolicyText()));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('개인정보처리방침이 클립보드에 복사되었습니다')),
-              );
-            },
-            icon: const Icon(Icons.copy),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20.r),
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: _getPrivacyPolicyText()));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('개인정보처리방침이 클립보드에 복사되었습니다'),
+                    backgroundColor: AppColor.primary600,
+                  ),
+                );
+              },
+              child: Padding(
+                padding: EdgeInsets.all(12.w),
+                child: Icon(Icons.copy, color: AppColor.secondary07, size: 24.sp),
+              ),
+            ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 헤더 정보
-
             // 개인정보처리방침 본문
-            Text(
-              _getPrivacyPolicyText(),
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.6,
-                color: Colors.black87,
+            AppCard(
+              child: Text(
+                _getPrivacyPolicyText(),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  height: 1.6,
+                  color: AppColor.secondary07,
+                ),
               ),
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 24.h),
 
             // 연락처 정보
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: const Column(
+            AppCard(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '개인정보보호 담당자',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
+                      color: AppColor.secondary07,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text('담당자: 개인정보보호 담당자'),
-                  Text('이메일: privacy@smartyoram.com'),
-                  Text('전화: 02-1234-5678'),
-                  SizedBox(height: 12),
+                  SizedBox(height: 12.h),
+                  Text(
+                    '담당자: 개인정보보호 담당자',
+                    style: TextStyle(fontSize: 14.sp, color: AppColor.secondary07),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    '이메일: privacy@smartyoram.com',
+                    style: TextStyle(fontSize: 14.sp, color: AppColor.secondary07),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    '전화: 02-1234-5678',
+                    style: TextStyle(fontSize: 14.sp, color: AppColor.secondary07),
+                  ),
+                  SizedBox(height: 12.h),
                   Text(
                     '개인정보와 관련한 문의사항이 있으시면 언제든지 연락주시기 바랍니다.',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
+                      fontSize: 12.sp,
+                      color: AppColor.secondary05,
                       fontStyle: FontStyle.italic,
                     ),
                   ),

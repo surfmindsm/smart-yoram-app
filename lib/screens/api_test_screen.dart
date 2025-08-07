@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../components/index.dart';
+import '../resource/color_style.dart';
 import '../config/api_config.dart';
 import '../services/services.dart';
 import '../models/announcement.dart';
@@ -61,22 +64,35 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.background,
       appBar: AppBar(
-        title: const Text('API 테스트'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        title: Text(
+          'API 테스트',
+          style: TextStyle(
+            color: AppColor.secondary07,
+            fontWeight: FontWeight.w600,
+            fontSize: 20.sp,
+          ),
+        ),
+        backgroundColor: AppColor.background,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColor.secondary07),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Smart Yoram App API 테스트',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColor.secondary07,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             // 로그인 상태 표시 및 로그인 폼
             _buildLoginSection(),
             // 테스트 결과 요약
