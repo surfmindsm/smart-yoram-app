@@ -67,12 +67,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: '로그인 비밀번호 변경',
             onTap: _changePassword,
           ),
-          CustomListTile(
-            icon: Icons.family_restroom,
-            title: '가족 관리',
-            subtitle: '가족 구성원 추가/수정',
-            onTap: _manageFamilyMembers,
-          ),
+          // CustomListTile(
+          //   icon: Icons.family_restroom,
+          //   title: '가족 관리',
+          //   subtitle: '가족 구성원 추가/수정',
+          //   onTap: _manageFamilyMembers,
+          // ),
 
           const Divider(height: 32),
 
@@ -117,7 +117,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               return CustomListTile(
                 icon: Icons.text_fields,
                 title: '글꼴 크기',
-                subtitle: '${fontSettings.fontSize} (${FontSettingsService.getFontSizeDescription(fontSettings.fontSize)})',
+                subtitle:
+                    '${fontSettings.fontSize} (${FontSettingsService.getFontSizeDescription(fontSettings.fontSize)})',
                 trailing: DropdownButton<String>(
                   value: fontSettings.fontSize,
                   items: FontSettingsService.fontSizeOptions
@@ -196,23 +197,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: '자주 묻는 질문',
             onTap: _showHelp,
           ),
-          CustomListTile(
-            icon: Icons.bug_report,
-            title: '버그 신고',
-            subtitle: '오류 또는 개선사항 신고',
-            onTap: _reportBug,
-          ),
-          CustomListTile(
-            icon: Icons.api,
-            title: 'API 테스트',
-            subtitle: 'API 연결 상태 확인',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ApiTestScreen()),
-              );
-            },
-          ),
+          // CustomListTile(
+          //   icon: Icons.bug_report,
+          //   title: '버그 신고',
+          //   subtitle: '오류 또는 개선사항 신고',
+          //   onTap: _reportBug,
+          // ),
+          // CustomListTile(
+          //   icon: Icons.api,
+          //   title: 'API 테스트',
+          //   subtitle: 'API 연결 상태 확인',
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (context) => const ApiTestScreen()),
+          //     );
+          //   },
+          // ),
 
           CustomListTile(
             icon: Icons.info,
