@@ -7,6 +7,7 @@ import '../models/member.dart';
 import '../resource/color_style.dart';
 import '../resource/text_style.dart';
 import '../widgets/member_detail_modal.dart';
+import '../components/index.dart' hide IconButton;
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -164,48 +165,41 @@ class _MembersScreenState extends State<MembersScreen>
           Container(
             padding: EdgeInsets.all(16.r),
             color: AppColor.transparent,
-            child: TextField(
+            child: AppInput(
               controller: _searchController,
-              decoration: InputDecoration(
-                hintText: '이름 또는 전화번호로 검색',
-                hintStyle: AppTextStyle(color: AppColor.secondary03).b2(),
-                prefixIcon: Icon(Icons.search, color: AppColor.secondary03),
-                filled: true,
-                fillColor: AppColor.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
+              placeholder: '이름 또는 전화번호로 검색',
+              prefixIcon: Icons.search,
             ),
           ),
 
           // 탭바
           Container(
-            color: AppColor.background,
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: false,
-              labelColor: AppColor.primary900,
-              labelStyle:
-                  AppTextStyle(color: AppColor.primary900).b2().copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-              labelPadding: EdgeInsets.symmetric(horizontal: 14.w),
-              unselectedLabelColor: AppColor.secondary04,
-              unselectedLabelStyle:
-                  AppTextStyle(color: AppColor.secondary04).b2(),
-              indicatorColor: AppColor.primary900,
-              indicatorPadding: EdgeInsets.zero,
-              indicatorWeight: 1,
-              dividerColor: Colors.grey.shade300, // 전체 하단선 색상
-              dividerHeight: 0, // 전체 하단선 두께
-              onTap: (_) => _filterMembers(),
-              tabs: tabs.map((tab) => Tab(text: tab)).toList(),
-              tabAlignment: TabAlignment.center,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: AppCard(
+              variant: CardVariant.elevated,
+              padding: EdgeInsets.zero,
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                labelColor: AppColor.primary900,
+                labelStyle:
+                    AppTextStyle(color: AppColor.primary900).b2().copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                labelPadding: EdgeInsets.symmetric(horizontal: 12.w),
+                unselectedLabelColor: AppColor.secondary04,
+                unselectedLabelStyle:
+                    AppTextStyle(color: AppColor.secondary04).b2(),
+                indicatorColor: AppColor.primary900,
+                indicatorPadding: EdgeInsets.zero,
+                indicatorWeight: 2.h,
+                dividerColor: Colors.transparent,
+                dividerHeight: 0,
+                onTap: (_) => _filterMembers(),
+                tabs: tabs.map((tab) => Tab(text: tab)).toList(),
+                tabAlignment: TabAlignment.start,
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              ),
             ),
           ),
 
@@ -225,22 +219,51 @@ class _MembersScreenState extends State<MembersScreen>
 
   Widget _buildMemberList() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppColor.primary900),
+            SizedBox(height: 16.h),
+            Text(
+              '교인 정보를 불러오는 중...',
+              style: AppTextStyle(color: AppColor.secondary04).b2(),
+            ),
+          ],
+        ),
+      );
     }
 
     if (filteredMembers.isEmpty) {
-      return const Center(
-        child: Text(
-          '교인 정보가 없습니다',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 64.sp,
+              color: AppColor.secondary03,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              '교인 정보가 없습니다',
+              style: AppTextStyle(color: AppColor.secondary04).h3(),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '다른 카테고리를 선택하거나 검색어를 변경해보세요',
+              style: AppTextStyle(color: AppColor.secondary03).b3(),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       );
     }
 
     return ListView.separated(
-      padding: EdgeInsets.all(16.r),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       itemCount: filteredMembers.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      separatorBuilder: (context, index) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
         // 안전한 인덱스 체크 추가
         if (index >= filteredMembers.length) {
@@ -255,26 +278,15 @@ class _MembersScreenState extends State<MembersScreen>
   Widget _buildMemberCard(Member member) {
     return GestureDetector(
       onTap: () => _showMemberDetail(member),
-      child: Container(
+      child: AppCard(
+        variant: CardVariant.elevated,
         padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          // boxShadow: [
-          //   BoxShadow(
-          //     color: Colors.grey.withOpacity(0.1),
-          //     spreadRadius: 1,
-          //     blurRadius: 4,
-          //     offset: const Offset(0, 2),
-          //   ),
-          // ],
-        ),
         child: Row(
           children: [
           // 아바타
           CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.blue,
+            radius: 24.r,
+            backgroundColor: AppColor.primary900,
             backgroundImage: member.profilePhotoUrl != null &&
                     member.profilePhotoUrl!.isNotEmpty
                 ? NetworkImage(member.profilePhotoUrl!)
@@ -283,7 +295,7 @@ class _MembersScreenState extends State<MembersScreen>
                     member.profilePhotoUrl!.isEmpty
                 ? Text(
                     member.name.isNotEmpty ? member.name[0] : '?',
-                    style: AppTextStyle(color: Colors.white).b2().copyWith(
+                    style: AppTextStyle(color: AppColor.white).b2().copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                   )
@@ -319,28 +331,28 @@ class _MembersScreenState extends State<MembersScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 40.w,
+                height: 40.w,
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.phone, color: Colors.green, size: 20),
+                  icon: Icon(Icons.phone, color: Colors.green, size: 20.sp),
                   onPressed: () => _makePhoneCall(member.phone),
                   padding: EdgeInsets.zero,
                 ),
               ),
               SizedBox(width: 8.w),
               Container(
-                width: 40,
-                height: 40,
+                width: 40.w,
+                height: 40.w,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColor.primary900.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.message, color: Colors.blue, size: 20),
+                  icon: Icon(Icons.message, color: AppColor.primary900, size: 20.sp),
                   onPressed: () => _sendMessage(member.phone),
                   padding: EdgeInsets.zero,
                 ),
@@ -361,8 +373,9 @@ class _MembersScreenState extends State<MembersScreen>
         title: const Text('교인 추가'),
         content: const Text('교인 추가 기능은 준비 중입니다.'),
         actions: [
-          TextButton(
+          AppButton(
             onPressed: () => Navigator.pop(context),
+            variant: ButtonVariant.ghost,
             child: const Text('닫기'),
           ),
         ],
