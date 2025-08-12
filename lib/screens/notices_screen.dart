@@ -10,7 +10,12 @@ import '../components/index.dart' hide IconButton;
 import 'notice_detail_screen.dart';
 
 class NoticesScreen extends StatefulWidget {
-  const NoticesScreen({super.key});
+  final bool showAppBar;
+  
+  const NoticesScreen({
+    super.key,
+    this.showAppBar = true, // 기본값은 true (홈에서 들어올 때)
+  });
 
   @override
   State<NoticesScreen> createState() => _NoticesScreenState();
@@ -171,75 +176,79 @@ class _NoticesScreenState extends State<NoticesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.background,
-      // appBar: AppBar(
-      //   title: Text(
-      //     '교회소식',
-      //     style: AppTextStyle(
-      //       color: AppColor.secondary07,
-      //     ).h2(),
-      //   ),
-      //   backgroundColor: AppColor.background,
-      //   elevation: 0,
-      //   leading: IconButton(
-      //     icon: Icon(
-      //       Icons.arrow_back_ios,
-      //       color: AppColor.secondary07,
-      //       size: 20.sp,
-      //     ),
-      //     onPressed: () => Navigator.pop(context),
-      //   ),
-      //   actions: [
-      //     AppDropdown<String>(
-      //       value: selectedDateFilter,
-      //       placeholder: _getFilterDisplayText(),
-      //       onChanged: (String? value) =>
-      //           value != null ? _onDateFilterChanged(value) : null,
-      //       prefixIcon:
-      //           Icon(Icons.filter_list, size: 16, color: AppColor.secondary07),
-      //       items: [
-      //         AppDropdownMenuItem(
-      //           value: 'latest',
-      //           text: '최신순',
-      //           leading:
-      //               Icon(Icons.schedule, size: 16, color: AppColor.secondary05),
-      //         ),
-      //         AppDropdownMenuItem(
-      //           value: 'oldest',
-      //           text: '오래된순',
-      //           leading:
-      //               Icon(Icons.history, size: 16, color: AppColor.secondary05),
-      //         ),
-      //         AppDropdownMenuItem(
-      //           value: 'week',
-      //           text: '최근 7일',
-      //           leading: Icon(Icons.date_range,
-      //               size: 16, color: AppColor.secondary05),
-      //         ),
-      //         AppDropdownMenuItem(
-      //           value: 'month',
-      //           text: '최근 30일',
-      //           leading: Icon(Icons.calendar_today,
-      //               size: 16, color: AppColor.secondary05),
-      //         ),
-      //         AppDropdownMenuItem(
-      //           value: 'this_month',
-      //           text: '이번 달',
-      //           leading: Icon(Icons.calendar_month,
-      //               size: 16, color: AppColor.secondary05),
-      //         ),
-      //         AppDropdownMenuItem(
-      //           value: 'custom',
-      //           text: '날짜 선택',
-      //           leading:
-      //               Icon(Icons.event, size: 16, color: AppColor.secondary05),
-      //         ),
-      //       ],
-      //     ),
-      //     SizedBox(width: 16.w),
-      //   ],
-      // ),
+      appBar: widget.showAppBar ? AppBar(
+        title: Text(
+          '교회소식',
+          style: AppTextStyle(
+            color: AppColor.secondary07,
+          ).h2(),
+        ),
+        backgroundColor: AppColor.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: AppColor.secondary07,
+            size: 20.sp,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          AppDropdown<String>(
+            value: selectedDateFilter,
+            placeholder: _getFilterDisplayText(),
+            onChanged: (String? value) =>
+                value != null ? _onDateFilterChanged(value) : null,
+            prefixIcon:
+                Icon(Icons.filter_list, size: 16, color: AppColor.secondary07),
+            items: [
+              AppDropdownMenuItem(
+                value: 'latest',
+                text: '최신순',
+                leading:
+                    Icon(Icons.schedule, size: 16, color: AppColor.secondary05),
+              ),
+              AppDropdownMenuItem(
+                value: 'oldest',
+                text: '오래된순',
+                leading:
+                    Icon(Icons.history, size: 16, color: AppColor.secondary05),
+              ),
+              AppDropdownMenuItem(
+                value: 'week',
+                text: '최근 7일',
+                leading: Icon(Icons.date_range,
+                    size: 16, color: AppColor.secondary05),
+              ),
+              AppDropdownMenuItem(
+                value: 'month',
+                text: '최근 30일',
+                leading: Icon(Icons.calendar_today,
+                    size: 16, color: AppColor.secondary05),
+              ),
+              AppDropdownMenuItem(
+                value: 'this_month',
+                text: '이번 달',
+                leading: Icon(Icons.calendar_month,
+                    size: 16, color: AppColor.secondary05),
+              ),
+              AppDropdownMenuItem(
+                value: 'custom',
+                text: '날짜 선택',
+                leading:
+                    Icon(Icons.event, size: 16, color: AppColor.secondary05),
+              ),
+            ],
+          ),
+          SizedBox(width: 16.w),
+        ],
+      ) : null,
       body: Column(
         children: [
+          // main navigation에서 들어올 때 상단 여백 추가
+          if (!widget.showAppBar)
+            SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+          
           // 탭바
           Container(
             margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),

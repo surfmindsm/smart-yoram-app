@@ -24,7 +24,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const HomeScreen(),
     const MembersScreen(),
     const BulletinScreen(),
-    const NoticesScreen(),
+    const NoticesScreen(showAppBar: false), // main navigation에서는 앱바 없음
     const SettingsScreen(),
   ];
 
