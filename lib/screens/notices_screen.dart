@@ -170,67 +170,74 @@ class _NoticesScreenState extends State<NoticesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          '교회소식',
-          style: AppTextStyle(
-            color: AppColor.secondary07,
-          ).h2(),
-        ),
-        backgroundColor: AppColor.secondary01,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: AppColor.secondary07,
-            size: 20.sp,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          AppDropdown<String>(
-            value: selectedDateFilter,
-            placeholder: _getFilterDisplayText(),
-            onChanged: (String? value) => value != null ? _onDateFilterChanged(value) : null,
-            prefixIcon: Icon(Icons.filter_list, size: 16, color: AppColor.secondary07),
-            items: [
-              AppDropdownMenuItem(
-                value: 'latest',
-                text: '최신순',
-                leading: Icon(Icons.schedule, size: 16, color: AppColor.secondary05),
-              ),
-              AppDropdownMenuItem(
-                value: 'oldest',
-                text: '오래된순',
-                leading: Icon(Icons.history, size: 16, color: AppColor.secondary05),
-              ),
-              AppDropdownMenuItem(
-                value: 'week',
-                text: '최근 7일',
-                leading: Icon(Icons.date_range, size: 16, color: AppColor.secondary05),
-              ),
-              AppDropdownMenuItem(
-                value: 'month',
-                text: '최근 30일',
-                leading: Icon(Icons.calendar_today, size: 16, color: AppColor.secondary05),
-              ),
-              AppDropdownMenuItem(
-                value: 'this_month',
-                text: '이번 달',
-                leading: Icon(Icons.calendar_month, size: 16, color: AppColor.secondary05),
-              ),
-              AppDropdownMenuItem(
-                value: 'custom',
-                text: '날짜 선택',
-                leading: Icon(Icons.event, size: 16, color: AppColor.secondary05),
-              ),
-            ],
-          ),
-          SizedBox(width: 16.w),
-        ],
-
-      ),
+      backgroundColor: AppColor.background,
+      // appBar: AppBar(
+      //   title: Text(
+      //     '교회소식',
+      //     style: AppTextStyle(
+      //       color: AppColor.secondary07,
+      //     ).h2(),
+      //   ),
+      //   backgroundColor: AppColor.background,
+      //   elevation: 0,
+      //   leading: IconButton(
+      //     icon: Icon(
+      //       Icons.arrow_back_ios,
+      //       color: AppColor.secondary07,
+      //       size: 20.sp,
+      //     ),
+      //     onPressed: () => Navigator.pop(context),
+      //   ),
+      //   actions: [
+      //     AppDropdown<String>(
+      //       value: selectedDateFilter,
+      //       placeholder: _getFilterDisplayText(),
+      //       onChanged: (String? value) =>
+      //           value != null ? _onDateFilterChanged(value) : null,
+      //       prefixIcon:
+      //           Icon(Icons.filter_list, size: 16, color: AppColor.secondary07),
+      //       items: [
+      //         AppDropdownMenuItem(
+      //           value: 'latest',
+      //           text: '최신순',
+      //           leading:
+      //               Icon(Icons.schedule, size: 16, color: AppColor.secondary05),
+      //         ),
+      //         AppDropdownMenuItem(
+      //           value: 'oldest',
+      //           text: '오래된순',
+      //           leading:
+      //               Icon(Icons.history, size: 16, color: AppColor.secondary05),
+      //         ),
+      //         AppDropdownMenuItem(
+      //           value: 'week',
+      //           text: '최근 7일',
+      //           leading: Icon(Icons.date_range,
+      //               size: 16, color: AppColor.secondary05),
+      //         ),
+      //         AppDropdownMenuItem(
+      //           value: 'month',
+      //           text: '최근 30일',
+      //           leading: Icon(Icons.calendar_today,
+      //               size: 16, color: AppColor.secondary05),
+      //         ),
+      //         AppDropdownMenuItem(
+      //           value: 'this_month',
+      //           text: '이번 달',
+      //           leading: Icon(Icons.calendar_month,
+      //               size: 16, color: AppColor.secondary05),
+      //         ),
+      //         AppDropdownMenuItem(
+      //           value: 'custom',
+      //           text: '날짜 선택',
+      //           leading:
+      //               Icon(Icons.event, size: 16, color: AppColor.secondary05),
+      //         ),
+      //       ],
+      //     ),
+      //     SizedBox(width: 16.w),
+      //   ],
+      // ),
       body: Column(
         children: [
           // 탭바
@@ -268,13 +275,13 @@ class _NoticesScreenState extends State<NoticesScreen>
           // 공지사항 목록
           Expanded(
             child: TabBarView(
-        controller: _tabController,
-        children: tabCategories.map((category) {
-          return RefreshIndicator(
-            onRefresh: _loadAnnouncements,
-            child: _buildAnnouncementList(),
-          );
-        }).toList(),
+              controller: _tabController,
+              children: tabCategories.map((category) {
+                return RefreshIndicator(
+                  onRefresh: _loadAnnouncements,
+                  child: _buildAnnouncementList(),
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -297,11 +304,20 @@ class _NoticesScreenState extends State<NoticesScreen>
                 children: [
                   Row(
                     children: [
-                      AppSkeleton(width: 40.w, height: 16.h, borderRadius: BorderRadius.circular(8)),
+                      AppSkeleton(
+                          width: 40.w,
+                          height: 16.h,
+                          borderRadius: BorderRadius.circular(8)),
                       SizedBox(width: 8.w),
-                      AppSkeleton(width: 60.w, height: 16.h, borderRadius: BorderRadius.circular(8)),
+                      AppSkeleton(
+                          width: 60.w,
+                          height: 16.h,
+                          borderRadius: BorderRadius.circular(8)),
                       const Spacer(),
-                      AppSkeleton(width: 20, height: 20, borderRadius: BorderRadius.circular(10)),
+                      AppSkeleton(
+                          width: 20,
+                          height: 20,
+                          borderRadius: BorderRadius.circular(10)),
                     ],
                   ),
                   SizedBox(height: 12.h),
@@ -313,11 +329,17 @@ class _NoticesScreenState extends State<NoticesScreen>
                   SizedBox(height: 12.h),
                   Row(
                     children: [
-                      AppSkeleton(width: 16, height: 16, borderRadius: BorderRadius.circular(8)),
+                      AppSkeleton(
+                          width: 16,
+                          height: 16,
+                          borderRadius: BorderRadius.circular(8)),
                       SizedBox(width: 4.w),
                       AppSkeleton(width: 80.w, height: 12.h),
                       SizedBox(width: 16.w),
-                      AppSkeleton(width: 16, height: 16, borderRadius: BorderRadius.circular(8)),
+                      AppSkeleton(
+                          width: 16,
+                          height: 16,
+                          borderRadius: BorderRadius.circular(8)),
                       SizedBox(width: 4.w),
                       AppSkeleton(width: 60.w, height: 12.h),
                     ],
