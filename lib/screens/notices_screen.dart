@@ -95,21 +95,7 @@ class _NoticesScreenState extends State<NoticesScreen>
     }
   }
 
-  String _getFilterDisplayText() {
-    switch (selectedDateFilter) {
-      case 'oldest':
-        return '정렬';
-      case 'this_month':
-        return '이번 달';
-      case 'custom':
-        if (customStartDate != null && customEndDate != null) {
-          return '${customStartDate!.month}/${customStartDate!.day}~${customEndDate!.month}/${customEndDate!.day}';
-        }
-        return '날짜 선택';
-      default:
-        return '필터';
-    }
-  }
+
 
   Future<void> _loadAnnouncements() async {
     print('🔄 공지사항 로드 시작 - 카테고리: $selectedCategory, 날짜필터: $selectedDateFilter');
@@ -194,49 +180,73 @@ class _NoticesScreenState extends State<NoticesScreen>
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          AppDropdown<String>(
-            value: selectedDateFilter,
-            placeholder: _getFilterDisplayText(),
-            onChanged: (String? value) =>
-                value != null ? _onDateFilterChanged(value) : null,
-            prefixIcon:
-                Icon(Icons.filter_list, size: 16, color: AppColor.secondary07),
-            items: [
-              AppDropdownMenuItem(
+          PopupMenuButton<String>(
+            onSelected: (String value) => _onDateFilterChanged(value),
+            icon: Icon(
+              Icons.filter_list,
+              color: AppColor.secondary07,
+              size: 20.sp,
+            ),
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(
                 value: 'latest',
-                text: '최신순',
-                leading:
-                    Icon(Icons.schedule, size: 16, color: AppColor.secondary05),
+                child: Row(
+                  children: [
+                    Icon(Icons.schedule, size: 16),
+                    SizedBox(width: 8),
+                    Text('최신순'),
+                  ],
+                ),
               ),
-              AppDropdownMenuItem(
+              const PopupMenuItem(
                 value: 'oldest',
-                text: '오래된순',
-                leading:
-                    Icon(Icons.history, size: 16, color: AppColor.secondary05),
+                child: Row(
+                  children: [
+                    Icon(Icons.history, size: 16),
+                    SizedBox(width: 8),
+                    Text('오래된순'),
+                  ],
+                ),
               ),
-              AppDropdownMenuItem(
+              const PopupMenuItem(
                 value: 'week',
-                text: '최근 7일',
-                leading: Icon(Icons.date_range,
-                    size: 16, color: AppColor.secondary05),
+                child: Row(
+                  children: [
+                    Icon(Icons.date_range, size: 16),
+                    SizedBox(width: 8),
+                    Text('최근 7일'),
+                  ],
+                ),
               ),
-              AppDropdownMenuItem(
+              const PopupMenuItem(
                 value: 'month',
-                text: '최근 30일',
-                leading: Icon(Icons.calendar_today,
-                    size: 16, color: AppColor.secondary05),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 16),
+                    SizedBox(width: 8),
+                    Text('최근 30일'),
+                  ],
+                ),
               ),
-              AppDropdownMenuItem(
+              const PopupMenuItem(
                 value: 'this_month',
-                text: '이번 달',
-                leading: Icon(Icons.calendar_month,
-                    size: 16, color: AppColor.secondary05),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_month, size: 16),
+                    SizedBox(width: 8),
+                    Text('이번 달'),
+                  ],
+                ),
               ),
-              AppDropdownMenuItem(
+              const PopupMenuItem(
                 value: 'custom',
-                text: '날짜 선택',
-                leading:
-                    Icon(Icons.event, size: 16, color: AppColor.secondary05),
+                child: Row(
+                  children: [
+                    Icon(Icons.event, size: 16),
+                    SizedBox(width: 8),
+                    Text('날짜 선택'),
+                  ],
+                ),
               ),
             ],
           ),
