@@ -24,6 +24,14 @@ class ApiConfig {
   static const String membersUploadPhoto = '/members/{member_id}/upload-photo';
   static const String membersDeletePhoto = '/members/{member_id}/delete-photo';
 
+  // 심방 관리 (새 추가)
+  static const String pastoralCareRequests = '/pastoral-care/requests';
+  static const String pastoralCareRequestsMy = '/pastoral-care/requests/my';
+
+  // 중보 기도 관리
+  static const String prayerRequests = '/prayer-requests';
+  static const String prayerRequestsMy = '/prayer-requests/my';
+
   // 교회 관리
   static const String churches = '/churches/';
   static const String churchesMy = '/churches/my';

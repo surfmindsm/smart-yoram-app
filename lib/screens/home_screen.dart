@@ -29,7 +29,8 @@ import 'notice_detail_screen.dart';
 import 'notification_center_screen.dart';
 import 'staff_directory_screen.dart';
 import 'admin_dashboard_screen.dart';
-import 'pastoral_care_request_screen.dart';
+import '../screens/pastoral_care_request_screen.dart';
+import '../screens/prayer_request_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -415,16 +416,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      // 중보 기도 신청 - API 준비되면 활성화
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => Scaffold(
-                            appBar: AppBar(title: const Text('중보 기도 신청')),
-                            body: const Center(
-                              child: Text('준비 중입니다\nAPI 구현 완료 후 제공됩니다'),
-                            ),
-                          ),
+                          builder: (context) => const PrayerRequestScreen(),
                         ),
                       );
                     },
