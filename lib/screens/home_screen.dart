@@ -29,6 +29,7 @@ import 'notice_detail_screen.dart';
 import 'notification_center_screen.dart';
 import 'staff_directory_screen.dart';
 import 'admin_dashboard_screen.dart';
+import 'pastoral_care_request_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -310,6 +311,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     _buildChurchInfoCard(),
                     const SizedBox(height: 24),
 
+                    // 주요 기능 버튼들
+                    _buildQuickActions(),
+                    const SizedBox(height: 24),
+
                     // 오늘의 말씀
                     _buildTodaysVerse(),
                     const SizedBox(height: 24),
@@ -326,6 +331,152 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      child: AppCard(
+        backgroundColor: AppColor.white,
+        borderRadius: 16.r,
+        variant: CardVariant.elevated,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '주요 기능',
+              style: AppTextStyle(
+                color: AppColor.secondary07,
+              ).h2(),
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PastoralCareRequestScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(16.r),
+                      decoration: BoxDecoration(
+                        color: AppColor.primary100,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: AppColor.primary600.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 40.w,
+                            height: 40.h,
+                            decoration: BoxDecoration(
+                              color: AppColor.primary600,
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Icon(
+                              Icons.home_outlined,
+                              color: AppColor.white,
+                              size: 20.sp,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '심방 신청',
+                            style: AppTextStyle(
+                              color: AppColor.secondary07,
+                            ).b2(),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            '심방을 신청하세요',
+                            style: AppTextStyle(
+                              color: AppColor.secondary04,
+                            ).b4(),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      // 중보 기도 신청 - API 준비되면 활성화
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Scaffold(
+                            appBar: AppBar(title: const Text('중보 기도 신청')),
+                            body: const Center(
+                              child: Text('준비 중입니다\nAPI 구현 완료 후 제공됩니다'),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(16.r),
+                      decoration: BoxDecoration(
+                        color: AppColor.gray100,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: AppColor.gray300,
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 40.w,
+                            height: 40.h,
+                            decoration: BoxDecoration(
+                              color: AppColor.gray400,
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Icon(
+                              Icons.favorite_border,
+                              color: AppColor.white,
+                              size: 20.sp,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '중보 기도',
+                            style: AppTextStyle(
+                              color: AppColor.secondary04,
+                            ).b2(),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            '준비 중',
+                            style: AppTextStyle(
+                              color: AppColor.secondary04,
+                            ).b4(),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
