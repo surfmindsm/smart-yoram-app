@@ -108,6 +108,7 @@ class PrayerRequestCreate {
   final String category;
   final String priority;
   final bool isPrivate;
+  final String? requesterName;
 
   const PrayerRequestCreate({
     required this.title,
@@ -115,15 +116,17 @@ class PrayerRequestCreate {
     required this.category,
     this.priority = 'normal',
     this.isPrivate = false,
+    this.requesterName,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'title': title,
-      'content': content,
+      'prayer_content': content,  // API expects 'prayer_content'
       'category': category,
       'priority': priority,
       'is_private': isPrivate,
+      'requester_name': requesterName ?? '',  // API expects 'requester_name'
     };
   }
 }

@@ -29,7 +29,7 @@ class ApiConfig {
   static const String pastoralCareRequestsMy = '/pastoral-care/requests/my';
 
   // 중보 기도 관리
-  static const String prayerRequests = '/prayer-requests';
+  static const String prayerRequests = '/prayer-requests/';
   static const String prayerRequestsMy = '/prayer-requests/my';
 
   // 교회 관리

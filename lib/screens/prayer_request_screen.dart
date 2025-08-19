@@ -756,6 +756,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
         category: _selectedCategory,
         priority: _selectedPriority,
         isPrivate: _isPrivate,
+        requesterName: '익명', // 기본값으로 익명 설정
       );
 
       final response = await PrayerRequestService.createRequest(createRequest);

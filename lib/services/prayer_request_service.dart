@@ -6,7 +6,7 @@ import '../config/api_config.dart';
 import 'api_service.dart';
 
 class PrayerRequestService {
-  static const String baseUrl = '${ApiConfig.baseUrl}/prayer-requests';
+  static const String baseUrl = '${ApiConfig.baseUrl}${ApiConfig.prayerRequests}';
   static final ApiService _apiService = ApiService();
 
   /// 새 중보 기도 신청 생성
@@ -20,7 +20,7 @@ class PrayerRequestService {
       }
 
       final response = await http.post(
-        Uri.parse(baseUrl),
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequests}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -29,16 +29,34 @@ class PrayerRequestService {
       );
 
       final responseBody = utf8.decode(response.bodyBytes);
+      print('Prayer Request Create Response: ${response.statusCode} - $responseBody');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(responseBody);
-        final prayerRequest = PrayerRequest.fromJson(data);
-        return ApiResponse.success(prayerRequest);
+        if (responseBody.isEmpty) {
+          return ApiResponse.error('서버 응답이 비어있습니다.');
+        }
+        
+        try {
+          final data = jsonDecode(responseBody);
+          final prayerRequest = PrayerRequest.fromJson(data);
+          return ApiResponse.success(prayerRequest);
+        } catch (e) {
+          print('JSON Parse Error in createRequest: $e');
+          return ApiResponse.error('서버 응답 형식이 올바르지 않습니다.');
+        }
       } else {
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '중보 기도 신청 생성에 실패했습니다.',
-        );
+        if (responseBody.isEmpty) {
+          return ApiResponse.error('중보 기도 신청 생성에 실패했습니다.');
+        }
+        
+        try {
+          final error = jsonDecode(responseBody);
+          return ApiResponse.error(
+            error['detail']?.toString() ?? '중보 기도 신청 생성에 실패했습니다.',
+          );
+        } catch (e) {
+          return ApiResponse.error('중보 기도 신청 생성에 실패했습니다.');
+        }
       }
     } catch (e) {
       return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
@@ -71,7 +89,7 @@ class PrayerRequestService {
         queryParams['category'] = category;
       }
 
-      final uri = Uri.parse('$baseUrl/my').replace(queryParameters: queryParams);
+      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequestsMy}').replace(queryParameters: queryParams);
       
       final response = await http.get(
         uri,
@@ -82,18 +100,40 @@ class PrayerRequestService {
       );
 
       final responseBody = utf8.decode(response.bodyBytes);
+      print('Prayer Request My List Response: ${response.statusCode} - $responseBody');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(responseBody) as List;
-        final requests = data
-            .map((item) => PrayerRequest.fromJson(item))
-            .toList();
-        return ApiResponse.success(requests);
+        if (responseBody.isEmpty) {
+          return ApiResponse.success(<PrayerRequest>[]);
+        }
+        
+        try {
+          final data = jsonDecode(responseBody);
+          if (data is List) {
+            final requests = data
+                .map((item) => PrayerRequest.fromJson(item))
+                .toList();
+            return ApiResponse.success(requests);
+          } else {
+            return ApiResponse.success(<PrayerRequest>[]);
+          }
+        } catch (e) {
+          print('JSON Parse Error in getMyRequests: $e');
+          return ApiResponse.error('서버 응답 형식이 올바르지 않습니다.');
+        }
       } else {
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '중보 기도 목록을 불러오지 못했습니다.',
-        );
+        if (responseBody.isEmpty) {
+          return ApiResponse.error('중보 기도 목록을 불러오지 못했습니다.');
+        }
+        
+        try {
+          final error = jsonDecode(responseBody);
+          return ApiResponse.error(
+            error['detail']?.toString() ?? '중보 기도 목록을 불러오지 못했습니다.',
+          );
+        } catch (e) {
+          return ApiResponse.error('중보 기도 목록을 불러오지 못했습니다.');
+        }
       }
     } catch (e) {
       return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
@@ -127,7 +167,7 @@ class PrayerRequestService {
         queryParams['category'] = category;
       }
 
-      final uri = Uri.parse(baseUrl).replace(queryParameters: queryParams);
+      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequests}').replace(queryParameters: queryParams);
       
       final response = await http.get(
         uri,
@@ -138,18 +178,40 @@ class PrayerRequestService {
       );
 
       final responseBody = utf8.decode(response.bodyBytes);
+      print('Prayer Request Public List Response: ${response.statusCode} - $responseBody');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(responseBody) as List;
-        final requests = data
-            .map((item) => PrayerRequest.fromJson(item))
-            .toList();
-        return ApiResponse.success(requests);
+        if (responseBody.isEmpty) {
+          return ApiResponse.success(<PrayerRequest>[]);
+        }
+        
+        try {
+          final data = jsonDecode(responseBody);
+          if (data is List) {
+            final requests = data
+                .map((item) => PrayerRequest.fromJson(item))
+                .toList();
+            return ApiResponse.success(requests);
+          } else {
+            return ApiResponse.success(<PrayerRequest>[]);
+          }
+        } catch (e) {
+          print('JSON Parse Error in getPublicRequests: $e');
+          return ApiResponse.error('서버 응답 형식이 올바르지 않습니다.');
+        }
       } else {
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '공동 기도 목록을 불러오지 못했습니다.',
-        );
+        if (responseBody.isEmpty) {
+          return ApiResponse.error('공동 기도 목록을 불러오지 못했습니다.');
+        }
+        
+        try {
+          final error = jsonDecode(responseBody);
+          return ApiResponse.error(
+            error['detail']?.toString() ?? '공동 기도 목록을 불러오지 못했습니다.',
+          );
+        } catch (e) {
+          return ApiResponse.error('공동 기도 목록을 불러오지 못했습니다.');
+        }
       }
     } catch (e) {
       return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
@@ -168,7 +230,7 @@ class PrayerRequestService {
       }
 
       final response = await http.put(
-        Uri.parse('$baseUrl/$requestId'),
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequests}/$requestId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -177,16 +239,34 @@ class PrayerRequestService {
       );
 
       final responseBody = utf8.decode(response.bodyBytes);
+      print('Prayer Request Update Response: ${response.statusCode} - $responseBody');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(responseBody);
-        final prayerRequest = PrayerRequest.fromJson(data);
-        return ApiResponse.success(prayerRequest);
+        if (responseBody.isEmpty) {
+          return ApiResponse.error('서버 응답이 비어있습니다.');
+        }
+        
+        try {
+          final data = jsonDecode(responseBody);
+          final prayerRequest = PrayerRequest.fromJson(data);
+          return ApiResponse.success(prayerRequest);
+        } catch (e) {
+          print('JSON Parse Error in updateRequest: $e');
+          return ApiResponse.error('서버 응답 형식이 올바르지 않습니다.');
+        }
       } else {
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '중보 기도 수정에 실패했습니다.',
-        );
+        if (responseBody.isEmpty) {
+          return ApiResponse.error('중보 기도 수정에 실패했습니다.');
+        }
+        
+        try {
+          final error = jsonDecode(responseBody);
+          return ApiResponse.error(
+            error['detail']?.toString() ?? '중보 기도 수정에 실패했습니다.',
+          );
+        } catch (e) {
+          return ApiResponse.error('중보 기도 수정에 실패했습니다.');
+        }
       }
     } catch (e) {
       return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
@@ -202,7 +282,7 @@ class PrayerRequestService {
       }
 
       final response = await http.delete(
-        Uri.parse('$baseUrl/$requestId'),
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequests}/$requestId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -213,10 +293,20 @@ class PrayerRequestService {
         return ApiResponse.success(true);
       } else {
         final responseBody = utf8.decode(response.bodyBytes);
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '중보 기도 삭제에 실패했습니다.',
-        );
+        print('Prayer Request Delete Response: ${response.statusCode} - $responseBody');
+        
+        if (responseBody.isEmpty) {
+          return ApiResponse.error('중보 기도 삭제에 실패했습니다.');
+        }
+        
+        try {
+          final error = jsonDecode(responseBody);
+          return ApiResponse.error(
+            error['detail']?.toString() ?? '중보 기도 삭제에 실패했습니다.',
+          );
+        } catch (e) {
+          return ApiResponse.error('중보 기도 삭제에 실패했습니다.');
+        }
       }
     } catch (e) {
       return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
