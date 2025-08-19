@@ -362,7 +362,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const PastoralCareRequestScreen(),
+                          builder: (context) =>
+                              const PastoralCareRequestScreen(),
                         ),
                       );
                     },
@@ -426,10 +427,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Container(
                       padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
-                        color: AppColor.gray100,
+                        color: AppColor.primary100,
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: AppColor.gray300,
+                          color: AppColor.primary600.withOpacity(0.2),
                           width: 1,
                         ),
                       ),
@@ -439,7 +440,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             width: 40.w,
                             height: 40.h,
                             decoration: BoxDecoration(
-                              color: AppColor.gray400,
+                              color: AppColor.primary600,
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Icon(
@@ -452,13 +453,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           Text(
                             '중보 기도',
                             style: AppTextStyle(
-                              color: AppColor.secondary04,
+                              color: AppColor.secondary07,
                             ).b2(),
                             textAlign: TextAlign.center,
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            '준비 중',
+                            '함께 기도하겠습니다',
                             style: AppTextStyle(
                               color: AppColor.secondary04,
                             ).b4(),

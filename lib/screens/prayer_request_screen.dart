@@ -29,9 +29,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   
   // 데이터 목록들
   List<PrayerRequest> _myRequests = [];
-  List<PrayerRequest> _publicRequests = [];
   bool _isLoadingMy = false;
-  bool _isLoadingPublic = false;
 
   @override
   void initState() {
@@ -49,64 +47,58 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   }
 
   Future<void> _loadData() async {
-    await Future.wait([
-      _loadMyRequests(),
-      _loadPublicRequests(),
-    ]);
+    await _loadMyRequests();
   }
 
   Future<void> _loadMyRequests() async {
+    if (!mounted) return;
+    
     setState(() => _isLoadingMy = true);
     
     try {
       final response = await PrayerRequestService.getMyRequests();
+      if (!mounted) return;
+      
       if (response.success && response.data != null) {
         setState(() => _myRequests = response.data!);
       } else {
-        _showErrorSnackBar('내 기도 목록을 불러오지 못했습니다: ${response.message}');
+        AppToast.show(
+          context,
+          '내 기도 목록을 불러오지 못했습니다: ${response.message}',
+          type: ToastType.error,
+        );
       }
     } catch (e) {
-      _showErrorSnackBar('네트워크 오류: $e');
+      if (!mounted) return;
+      AppToast.show(
+        context,
+        '네트워크 오류가 발생했습니다: $e',
+        type: ToastType.error,
+      );
     } finally {
-      setState(() => _isLoadingMy = false);
+      if (mounted) {
+        setState(() => _isLoadingMy = false);
+      }
     }
   }
 
-  Future<void> _loadPublicRequests() async {
-    setState(() => _isLoadingPublic = true);
-    
-    try {
-      final response = await PrayerRequestService.getPublicRequests();
-      if (response.success && response.data != null) {
-        setState(() => _publicRequests = response.data!);
-      } else {
-        _showErrorSnackBar('공동 기도 목록을 불러오지 못했습니다: ${response.message}');
-      }
-    } catch (e) {
-      _showErrorSnackBar('네트워크 오류: $e');
-    } finally {
-      setState(() => _isLoadingPublic = false);
-    }
-  }
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('오류: $message'),
-          backgroundColor: AppColor.secondary04,
-        ),
+      AppToast.show(
+        context,
+        message,
+        type: ToastType.error,
       );
     }
   }
 
   void _showSuccessSnackBar(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('성공: $message'),
-          backgroundColor: AppColor.secondary02,
-        ),
+      AppToast.show(
+        context,
+        message,
+        type: ToastType.success,
       );
     }
   }
@@ -114,50 +106,183 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.secondary06,
       appBar: AppBar(
         title: Text(
           '중보 기도',
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: AppColor.secondary07,
           ),
         ),
-        backgroundColor: AppColor.primary600,
+        backgroundColor: AppColor.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          labelStyle: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-          ),
           tabs: const [
+            Tab(text: '새 기도'),
             Tab(text: '내 기도'),
-            Tab(text: '공동 기도'),
           ],
+          labelColor: AppColor.primary600,
+          unselectedLabelColor: AppColor.secondary04,
+          indicatorColor: AppColor.primary600,
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildMyRequestsTab(),
-          _buildPublicRequestsTab(),
+          _buildRequestForm(),
+          _buildMyRequestsList(),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddRequestDialog,
-        backgroundColor: AppColor.primary600,
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildMyRequestsTab() {
+  Widget _buildRequestForm() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(20.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '기도 요청 정보',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.secondary07,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                
+                // 제목
+                Text(
+                  '제목 *',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColor.secondary07,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AppInput(
+                  controller: _titleController,
+                  placeholder: '기도 제목을 입력하세요',
+                ),
+                SizedBox(height: 16.h),
+                
+                // 내용
+                Text(
+                  '내용 *',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColor.secondary07,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AppInput(
+                  controller: _contentController,
+                  placeholder: '기도 요청 내용을 입력하세요',
+                  maxLines: 5,
+                ),
+                SizedBox(height: 16.h),
+                
+                // 카테고리
+                Text(
+                  '분류',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColor.secondary07,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AppDropdown<String>(
+                  value: _selectedCategory,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    }
+                  },
+                  items: PrayerCategory.allCategories.map((category) {
+                    return AppDropdownMenuItem<String>(
+                      value: category,
+                      text: PrayerCategory.getCategoryName(category),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 16.h),
+                
+                // 우선순위
+                Text(
+                  '우선순위',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColor.secondary07,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AppDropdown<String>(
+                  value: _selectedPriority,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedPriority = value;
+                      });
+                    }
+                  },
+                  items: PrayerPriority.allPriorities.map((priority) {
+                    return AppDropdownMenuItem<String>(
+                      value: priority,
+                      text: PrayerPriority.getPriorityName(priority),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 16.h),
+                
+                // 비공개 설정
+                AppCheckbox(
+                  label: '비공개 요청',
+                  description: '다른 사용자에게 보이지 않습니다',
+                  value: _isPrivate,
+                  onChanged: (value) {
+                    setState(() {
+                      _isPrivate = value!;
+                    });
+                  },
+                ),
+                SizedBox(height: 24.h),
+                
+                // 등록 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    onPressed: _isSubmitting ? null : _submitNewRequest,
+                    child: _isSubmitting 
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('기도 요청 등록'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyRequestsList() {
     return RefreshIndicator(
       onRefresh: _loadMyRequests,
       child: _isLoadingMy
@@ -174,28 +299,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                   itemBuilder: (context, index) {
                     final request = _myRequests[index];
                     return _buildRequestCard(request, isMyRequest: true);
-                  },
-                ),
-    );
-  }
-
-  Widget _buildPublicRequestsTab() {
-    return RefreshIndicator(
-      onRefresh: _loadPublicRequests,
-      child: _isLoadingPublic
-          ? _buildLoadingWidget()
-          : _publicRequests.isEmpty
-              ? _buildEmptyWidget(
-                  icon: Icons.people_outline,
-                  title: '공동 기도제목이 없습니다',
-                  subtitle: '공동체와 함께 기도해보세요',
-                )
-              : ListView.builder(
-                  padding: EdgeInsets.all(16.w),
-                  itemCount: _publicRequests.length,
-                  itemBuilder: (context, index) {
-                    final request = _publicRequests[index];
-                    return _buildRequestCard(request, isMyRequest: false);
                   },
                 ),
     );
@@ -537,10 +640,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     }
   }
 
-  void _showAddRequestDialog() {
-    _resetForm();
-    _showRequestDialog(isEdit: false);
-  }
 
   void _showEditRequestDialog(PrayerRequest request) {
     _titleController.text = request.title;
@@ -551,13 +650,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     _showRequestDialog(isEdit: true, request: request);
   }
 
-  void _resetForm() {
-    _titleController.clear();
-    _contentController.clear();
-    _selectedCategory = PrayerCategory.personal;
-    _selectedPriority = PrayerPriority.normal;
-    _isPrivate = false;
-  }
 
   void _showRequestDialog({required bool isEdit, PrayerRequest? request}) {
     showDialog(
@@ -644,6 +736,56 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     );
   }
 
+  Future<void> _submitNewRequest() async {
+    if (_titleController.text.trim().isEmpty ||
+        _contentController.text.trim().isEmpty) {
+      AppToast.show(
+        context,
+        '제목과 내용을 입력해주세요.',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final createRequest = PrayerRequestCreate(
+        title: _titleController.text.trim(),
+        content: _contentController.text.trim(),
+        category: _selectedCategory,
+        priority: _selectedPriority,
+        isPrivate: _isPrivate,
+      );
+
+      final response = await PrayerRequestService.createRequest(createRequest);
+
+      if (response.success) {
+        _clearForm();
+        _showSuccessSnackBar('기도 요청이 등록되었습니다');
+        _loadMyRequests();
+      } else {
+        _showErrorSnackBar('기도 요청 등록에 실패했습니다: ${response.message}');
+      }
+    } catch (e) {
+      _showErrorSnackBar('네트워크 오류가 발생했습니다: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  void _clearForm() {
+    _titleController.clear();
+    _contentController.clear();
+    setState(() {
+      _selectedCategory = PrayerCategory.personal;
+      _selectedPriority = PrayerPriority.normal;
+      _isPrivate = false;
+    });
+  }
+
   Future<void> _submitRequest({required bool isEdit, PrayerRequest? request}) async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -693,7 +835,9 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     } catch (e) {
       _showErrorSnackBar('네트워크 오류: $e');
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 }
