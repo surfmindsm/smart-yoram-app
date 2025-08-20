@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
 import '../models/pastoral_care_request.dart';
 import '../services/pastoral_care_service.dart';
+import '../services/auth_service.dart';
 import '../resource/color_style.dart';
 
 class PastoralCareRequestScreen extends StatefulWidget {
@@ -94,6 +95,12 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     });
 
     try {
+      final currentUser = AuthService().currentUser;
+      final userName = currentUser?.fullName ?? '사용자';
+      final userPhone = _contactController.text.trim().isNotEmpty 
+                            ? _contactController.text.trim() 
+                            : '010-0000-0000';
+      
       final request = PastoralCareRequestCreate(
         requestType: PastoralCareRequestType.visit,  // 기본값: 심방
         priority: PastoralCarePriority.medium,       // 기본값: 보통
@@ -109,6 +116,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             ? null
             : _contactController.text.trim(),
         isUrgent: _isUrgent,
+        requesterName: userName, // 사용자 이름 추가
+        requesterPhone: userPhone, // 사용자 전화번호 추가
       );
 
       final response = await PastoralCareService.createRequest(request);

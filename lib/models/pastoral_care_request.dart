@@ -41,25 +41,27 @@ class PastoralCareRequest {
 
   factory PastoralCareRequest.fromJson(Map<String, dynamic> json) {
     return PastoralCareRequest(
-      id: json['id'] as int,
-      memberId: json['member_id'] as int,
-      requestType: json['request_type'] as String,
-      priority: json['priority'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      preferredDate: json['preferred_date'] as String?,
-      preferredTime: json['preferred_time'] as String?,
-      contactInfo: json['contact_info'] as String?,
-      isUrgent: json['is_urgent'] as bool,
-      status: json['status'] as String,
-      adminNotes: json['admin_notes'] as String?,
-      assignedTo: json['assigned_to'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      id: json['id'] ?? 0,
+      memberId: json['member_id'] ?? 0,
+      requestType: json['request_type'] ?? '',
+      priority: json['priority'] ?? 'medium',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      preferredDate: json['preferred_date'],
+      preferredTime: json['preferred_time'],
+      contactInfo: json['contact_info'],
+      isUrgent: json['is_urgent'] ?? false,
+      status: json['status'] ?? 'pending',
+      adminNotes: json['admin_notes'],
+      assignedTo: json['assigned_to'],
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : DateTime.now(),
       updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at'] as String) 
+          ? DateTime.parse(json['updated_at']) 
           : null,
       completedAt: json['completed_at'] != null 
-          ? DateTime.parse(json['completed_at'] as String) 
+          ? DateTime.parse(json['completed_at']) 
           : null,
       member: json['member'] != null 
           ? Member.fromJson(json['member'] as Map<String, dynamic>) 
@@ -174,6 +176,8 @@ class PastoralCareRequestCreate {
   final String? preferredTime;
   final String? contactInfo;
   final bool isUrgent;
+  final String? requesterName;
+  final String? requesterPhone;
 
   const PastoralCareRequestCreate({
     required this.requestType,
@@ -184,19 +188,34 @@ class PastoralCareRequestCreate {
     this.preferredTime,
     this.contactInfo,
     this.isUrgent = false,
+    this.requesterName,
+    this.requesterPhone,
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> json = {
       'request_type': requestType,
       'priority': priority,
       'title': title,
       'description': description,
-      'preferred_date': preferredDate,
-      'preferred_time': preferredTime,
-      'contact_info': contactInfo,
+      'request_content': description,  // API에서 요구하는 필드
       'is_urgent': isUrgent,
+      'requester_name': requesterName ?? '',
+      'requester_phone': requesterPhone ?? '',
     };
+    
+    // null이 아닌 경우만 추가
+    if (preferredDate != null && preferredDate!.isNotEmpty) {
+      json['preferred_date'] = preferredDate;
+    }
+    if (preferredTime != null && preferredTime!.isNotEmpty) {
+      json['preferred_time'] = preferredTime;
+    }
+    if (contactInfo != null && contactInfo!.isNotEmpty) {
+      json['contact_info'] = contactInfo;
+    }
+    
+    return json;
   }
 }
 
