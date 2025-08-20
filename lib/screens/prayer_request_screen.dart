@@ -16,15 +16,14 @@ class PrayerRequestScreen extends StatefulWidget {
 class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   // 폼 컨트롤러들
   final _contentController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  
+
   // 선택된 값들
   bool _isPrivate = false;
   bool _isSubmitting = false;
-  
+
   // 데이터 목록들
   List<PrayerRequest> _myRequests = [];
   bool _isLoadingMy = false;
@@ -49,13 +48,13 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
 
   Future<void> _loadMyRequests() async {
     if (!mounted) return;
-    
+
     setState(() => _isLoadingMy = true);
-    
+
     try {
       final response = await PrayerRequestService.getMyRequests();
       if (!mounted) return;
-      
+
       if (response.success && response.data != null) {
         setState(() => _myRequests = response.data!);
       } else {
@@ -78,7 +77,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
       }
     }
   }
-
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
@@ -154,8 +152,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                   ),
                 ),
                 SizedBox(height: 16.h),
-                
-                
+
                 // 내용
                 Text(
                   '내용 *',
@@ -172,8 +169,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                   maxLines: 5,
                 ),
                 SizedBox(height: 16.h),
-                
-                
+
                 // 비공개 설정
                 AppCheckbox(
                   label: '비공개 요청',
@@ -186,13 +182,13 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                   },
                 ),
                 SizedBox(height: 24.h),
-                
+
                 // 등록 버튼
                 SizedBox(
                   width: double.infinity,
                   child: AppButton(
                     onPressed: _isSubmitting ? null : _submitNewRequest,
-                    child: _isSubmitting 
+                    child: _isSubmitting
                         ? const SizedBox(
                             width: 20,
                             height: 20,
@@ -289,165 +285,221 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   Widget _buildRequestCard(PrayerRequest request, {required bool isMyRequest}) {
     return AppCard(
       margin: EdgeInsets.only(bottom: 12.h),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 헤더 행
-            Row(
-              children: [
-                AppBadge(
-                  text: PrayerCategory.getCategoryName(request.category),
-                  variant: _getCategoryBadgeVariant(request.category),
-                ),
-                SizedBox(width: 8.w),
-                if (request.priority == PrayerPriority.urgent)
-                  AppBadge(
-                    text: '긴급',
-                    variant: BadgeVariant.secondary,
-                  ),
-                if (request.isPrivate)
-                  Padding(
-                    padding: EdgeInsets.only(left: 8.w),
-                    child: AppBadge(
+      child: InkWell(
+        onTap: () => _showRequestDetailDialog(request),
+        borderRadius: BorderRadius.circular(12.r),
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 헤더 - 비공개 표시만
+              if (request.isPrivate)
+                Row(
+                  children: [
+                    AppBadge(
                       text: '비공개',
                       variant: BadgeVariant.secondary,
                     ),
-                  ),
-                const Spacer(),
-                AppBadge(
-                  text: PrayerStatus.getStatusName(request.status),
-                  variant: _getStatusBadgeVariant(request.status),
+                  ],
                 ),
-                if (isMyRequest)
-                  PopupMenuButton<String>(
-                    onSelected: (value) => _handleMenuAction(value, request),
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 16),
-                            SizedBox(width: 8),
-                            Text('수정'),
-                          ],
-                        ),
-                      ),
-                      if (request.status == PrayerStatus.active)
-                        const PopupMenuItem(
-                          value: 'answered',
-                          child: Row(
-                            children: [
-                              Icon(Icons.check, size: 16, color: Colors.green),
-                              SizedBox(width: 8),
-                              Text('응답됨으로 표시'),
-                            ],
-                          ),
-                        ),
-                      if (request.status == PrayerStatus.active)
-                        const PopupMenuItem(
-                          value: 'pause',
-                          child: Row(
-                            children: [
-                              Icon(Icons.pause, size: 16, color: Colors.orange),
-                              SizedBox(width: 8),
-                              Text('일시정지'),
-                            ],
-                          ),
-                        ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 16, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('삭제 확인', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-            
-            
-            // 내용
-            Text(
-              request.content,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColor.gray600,
-                height: 1.4,
+              SizedBox(height: 12.h),
+
+              // 내용 - 2줄까지만 표시
+              Text(
+                request.content,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColor.gray600,
+                  height: 1.4,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            SizedBox(height: 12.h),
-            
-            // 푸터
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 14.w,
-                  color: AppColor.secondary04,
-                ),
-                SizedBox(width: 4.w),
-                Text(
-                  _formatDate(request.createdAt),
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: AppColor.secondary04,
-                  ),
-                ),
-                if (request.memberName != null) ...[
-                  SizedBox(width: 16.w),
+              SizedBox(height: 12.h),
+
+              // 푸터 - 날짜와 버튼들
+              Row(
+                children: [
                   Icon(
-                    Icons.person,
+                    Icons.access_time,
                     size: 14.w,
                     color: AppColor.secondary04,
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    request.memberName!,
+                    _formatDate(request.createdAt),
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: AppColor.secondary04,
                     ),
                   ),
+                  const Spacer(),
+                  if (isMyRequest) ...[
+                    // 수정 버튼
+                    InkWell(
+                      onTap: () => _showEditRequestDialog(request),
+                      borderRadius: BorderRadius.circular(6.r),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 4.h),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.edit,
+                              size: 16.w,
+                              color: AppColor.primary600,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              '수정',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: AppColor.primary600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    // 삭제 버튼
+                    InkWell(
+                      onTap: () => _showDeleteConfirmDialog(request),
+                      borderRadius: BorderRadius.circular(6.r),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 4.h),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.delete,
+                              size: 16.w,
+                              color: Colors.red,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              '삭제',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-                const Spacer(),
-                if (!isMyRequest)
-                  AppButton(
-                    variant: ButtonVariant.ghost,
-                    onPressed: () => _prayForRequest(request),
-                    child: const Text('기도해요'),
-                  ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  BadgeVariant _getCategoryBadgeVariant(String category) {
-    switch (category) {
-      case PrayerCategory.personal:
-        return BadgeVariant.primary;
-      case PrayerCategory.family:
-        return BadgeVariant.secondary;
-      case PrayerCategory.church:
-        return BadgeVariant.success;
-      case PrayerCategory.mission:
-        return BadgeVariant.warning;
-      case PrayerCategory.healing:
-        return BadgeVariant.error;
-      case PrayerCategory.guidance:
-        return BadgeVariant.secondary;
-      default:
-        return BadgeVariant.secondary;
-    }
+  void _showRequestDetailDialog(PrayerRequest request) {
+    showDialog(
+      context: context,
+      builder: (context) => AppDialog(
+        title: '기도 요청 상세보기',
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 기본 정보
+              _buildDetailSection(
+                  '카테고리', PrayerCategory.getCategoryName(request.category)),
+              _buildDetailSection(
+                  '상태', PrayerStatus.getStatusName(request.status)),
+              if (request.priority == PrayerPriority.urgent)
+                _buildDetailSection('우선순위', '긴급'),
+              if (request.isPrivate) _buildDetailSection('공개 설정', '비공개'),
+
+              SizedBox(height: 16.h),
+
+              // 내용
+              Text(
+                '내용',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColor.secondary07,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColor.secondary01,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColor.secondary03),
+                ),
+                child: Text(
+                  request.content,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColor.gray600,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 16.h),
+
+              // 추가 정보
+              if (request.memberName != null)
+                _buildDetailSection('요청자', request.memberName!),
+              _buildDetailSection('등록일', _formatDetailDate(request.createdAt)),
+              if (request.updatedAt != null &&
+                  request.updatedAt != request.createdAt)
+                _buildDetailSection(
+                    '수정일', _formatDetailDate(request.updatedAt!)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailSection(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 70.w,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                color: AppColor.secondary04,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColor.secondary07,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDetailDate(DateTime date) {
+    return '${date.year}년 ${date.month}월 ${date.day}일 ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   BadgeVariant _getStatusBadgeVariant(String status) {
@@ -466,56 +518,17 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   }
 
   String _formatDate(DateTime date) {
-    return '${date.month}월 ${date.day}일';
-  }
-
-  void _handleMenuAction(String action, PrayerRequest request) {
-    switch (action) {
-      case 'edit':
-        _showEditRequestDialog(request);
-        break;
-      case 'answered':
-        _markAsAnswered(request);
-        break;
-      case 'pause':
-        _markAsPaused(request);
-        break;
-      case 'delete':
-        _showDeleteConfirmDialog(request);
-        break;
-    }
+    return '${date.month}월 ${date.day}일 ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   void _prayForRequest(PrayerRequest request) {
     _showSuccessSnackBar('기도하겠습니다 ');
   }
 
-  Future<void> _markAsAnswered(PrayerRequest request) async {
-    try {
-      final response = await PrayerRequestService.markAsAnswered(request.id!);
-      if (response.success) {
-        _showSuccessSnackBar('기도 요청이 응답됨으로 표시되었습니다');
-        _loadMyRequests();
-      } else {
-        _showErrorSnackBar('상태 변경에 실패했습니다: ${response.message}');
-      }
-    } catch (e) {
-      _showErrorSnackBar('네트워크 오류: $e');
-    }
-  }
-
-  Future<void> _markAsPaused(PrayerRequest request) async {
-    try {
-      final response = await PrayerRequestService.markAsPaused(request.id!);
-      if (response.success) {
-        _showSuccessSnackBar('기도 요청이 일시정지되었습니다');
-        _loadMyRequests();
-      } else {
-        _showErrorSnackBar('상태 변경에 실패했습니다: ${response.message}');
-      }
-    } catch (e) {
-      _showErrorSnackBar('네트워크 오류: $e');
-    }
+  void _showEditRequestDialog(PrayerRequest request) {
+    _contentController.text = request.content;
+    _isPrivate = request.isPrivate;
+    _showRequestDialog(isEdit: true, request: request);
   }
 
   void _showDeleteConfirmDialog(PrayerRequest request) {
@@ -557,14 +570,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     }
   }
 
-
-  void _showEditRequestDialog(PrayerRequest request) {
-    _contentController.text = request.content;
-    _isPrivate = request.isPrivate;
-    _showRequestDialog(isEdit: true, request: request);
-  }
-
-
   void _showRequestDialog({required bool isEdit, PrayerRequest? request}) {
     showDialog(
       context: context,
@@ -572,7 +577,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
         builder: (context, setState) => AppDialog(
           title: isEdit ? '기도 요청 수정' : '기도 요청 등록',
           content: Form(
-            key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -597,12 +601,17 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
           actions: [
             AppButton(
               variant: ButtonVariant.ghost,
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _clearForm();
+              },
               child: const Text('취소'),
             ),
             AppButton(
-              onPressed: _isSubmitting ? null : () => _submitRequest(isEdit: isEdit, request: request),
-              child: _isSubmitting 
+              onPressed: _isSubmitting
+                  ? null
+                  : () => _submitRequest(isEdit: isEdit, request: request),
+              child: _isSubmitting
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -614,6 +623,73 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _submitRequest(
+      {required bool isEdit, PrayerRequest? request}) async {
+    if (_contentController.text.trim().isEmpty) {
+      AppToast.show(
+        context,
+        '내용을 입력해주세요.',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      if (isEdit && request != null) {
+        final updateRequest = PrayerRequestUpdate(
+          content: _contentController.text.trim(),
+          category: PrayerCategory.personal,
+          priority: PrayerPriority.normal,
+          isPrivate: _isPrivate,
+        );
+
+        final response = await PrayerRequestService.updateRequest(
+          request.id!,
+          updateRequest,
+        );
+
+        if (response.success) {
+          Navigator.pop(context);
+          _showSuccessSnackBar('기도 요청이 수정되었습니다');
+          _loadMyRequests();
+        } else {
+          _showErrorSnackBar('기도 요청 수정에 실패했습니다: ${response.message}');
+        }
+      } else {
+        final currentUser = AuthService().currentUser;
+        final userName = currentUser?.fullName ?? '사용자';
+
+        final createRequest = PrayerRequestCreate(
+          title: '기도 요청',
+          content: _contentController.text.trim(),
+          category: PrayerCategory.personal,
+          priority: PrayerPriority.normal,
+          isPrivate: _isPrivate,
+          requesterName: userName,
+        );
+
+        final response =
+            await PrayerRequestService.createRequest(createRequest);
+
+        if (response.success) {
+          Navigator.pop(context);
+          _showSuccessSnackBar('기도 요청이 등록되었습니다');
+          _loadMyRequests();
+        } else {
+          _showErrorSnackBar('기도 요청 등록에 실패했습니다: ${response.message}');
+        }
+      }
+    } catch (e) {
+      _showErrorSnackBar('네트워크 오류: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   Future<void> _submitNewRequest() async {
@@ -631,12 +707,12 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     try {
       final currentUser = AuthService().currentUser;
       final userName = currentUser?.fullName ?? '사용자';
-      
+
       final createRequest = PrayerRequestCreate(
-        title: '기도 요청',  // 기본 제목
+        title: '기도 요청', // 기본 제목
         content: _contentController.text.trim(),
         category: PrayerCategory.personal, // 기본 카테고리
-        priority: PrayerPriority.normal,   // 기본 우선순위
+        priority: PrayerPriority.normal, // 기본 우선순위
         isPrivate: _isPrivate,
         requesterName: userName, // 사용자 이름 전달
       );
@@ -662,63 +738,5 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   void _clearForm() {
     _contentController.clear();
     _isPrivate = false;
-  }
-
-  Future<void> _submitRequest({required bool isEdit, PrayerRequest? request}) async {
-    if (!_formKey.currentState!.validate()) return;
-    
-    setState(() => _isSubmitting = true);
-    
-    try {
-      if (isEdit && request != null) {
-        final updateRequest = PrayerRequestUpdate(
-          content: _contentController.text.trim(),
-          category: PrayerCategory.personal, // 기본 카테고리
-          priority: PrayerPriority.normal,   // 기본 우선순위
-          isPrivate: _isPrivate,
-        );
-        
-        final response = await PrayerRequestService.updateRequest(
-          request.id!,
-          updateRequest,
-        );
-        
-        if (response.success) {
-          Navigator.pop(context);
-          _showSuccessSnackBar('기도 요청이 수정되었습니다');
-          _loadMyRequests();
-        } else {
-          _showErrorSnackBar('기도 요청 ${isEdit ? '수정' : '등록'}에 실패했습니다: ${response.message}');
-        }
-      } else {
-        final currentUser = AuthService().currentUser;
-        final userName = currentUser?.fullName ?? '사용자';
-        
-        final createRequest = PrayerRequestCreate(
-          title: '기도 요청',  // 기본 제목
-          content: _contentController.text.trim(),
-          category: PrayerCategory.personal, // 기본 카테고리
-          priority: PrayerPriority.normal,   // 기본 우선순위
-          isPrivate: _isPrivate,
-          requesterName: userName, // 사용자 이름 전달
-        );
-        
-        final response = await PrayerRequestService.createRequest(createRequest);
-        
-        if (response.success) {
-          Navigator.pop(context);
-          _showSuccessSnackBar('기도 요청이 등록되었습니다');
-          _loadData();
-        } else {
-          _showErrorSnackBar('상태 변경에 실패했습니다: ${response.message}');
-        }
-      }
-    } catch (e) {
-      _showErrorSnackBar('네트워크 오류: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
-    }
   }
 }

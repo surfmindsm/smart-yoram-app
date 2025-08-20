@@ -415,96 +415,103 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
       margin: EdgeInsets.only(bottom: 12.h),
       child: AppCard(
         variant: CardVariant.outlined,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        child: InkWell(
+          onTap: () => _showRequestDetailDialog(request),
+          borderRadius: BorderRadius.circular(12.r),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    request.title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.secondary07,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        request.title,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColor.secondary07,
+                        ),
+                      ),
                     ),
+                    AppBadge(
+                      text: request.statusDisplayName,
+                      variant: _getStatusBadgeVariant(request.status),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  request.requestTypeDisplayName,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColor.secondary04,
                   ),
                 ),
-                AppBadge(
-                  text: request.statusDisplayName,
-                  variant: _getStatusBadgeVariant(request.status),
+                SizedBox(height: 4.h),
+                Text(
+                  '우선순위: ${request.priorityDisplayName}',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppColor.secondary04,
+                  ),
                 ),
+                if (request.isUrgent) ...[
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.priority_high,
+                        size: 16.w,
+                        color: Colors.red,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        '긴급',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.red,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                SizedBox(height: 8.h),
+                Text(
+                  '신청일: ${_formatDate(request.createdAt)}',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppColor.secondary04,
+                  ),
+                ),
+                if (request.canEdit || request.canCancel) ...[
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      if (request.canEdit)
+                        AppButton(
+                          onPressed: () => _editRequest(request),
+                          variant: ButtonVariant.outline,
+                          size: ButtonSize.sm,
+                          child: const Text('수정'),
+                        ),
+                      if (request.canEdit && request.canCancel)
+                        SizedBox(width: 8.w),
+                      if (request.canCancel)
+                        AppButton(
+                          onPressed: () => _cancelRequest(request),
+                          variant: ButtonVariant.destructive,
+                          size: ButtonSize.sm,
+                          child: const Text('취소'),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
-            SizedBox(height: 8.h),
-            Text(
-              request.requestTypeDisplayName,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColor.secondary04,
-              ),
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              '우선순위: ${request.priorityDisplayName}',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: AppColor.secondary04,
-              ),
-            ),
-            if (request.isUrgent) ...[
-              SizedBox(height: 4.h),
-              Row(
-                children: [
-                  Icon(
-                    Icons.priority_high,
-                    size: 16.w,
-                    color: Colors.red,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '긴급',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.red,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            SizedBox(height: 8.h),
-            Text(
-              '신청일: ${_formatDate(request.createdAt)}',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: AppColor.secondary04,
-              ),
-            ),
-            if (request.canEdit || request.canCancel) ...[
-              SizedBox(height: 12.h),
-              Row(
-                children: [
-                  if (request.canEdit)
-                    AppButton(
-                      onPressed: () => _editRequest(request),
-                      variant: ButtonVariant.outline,
-                      size: ButtonSize.sm,
-                      child: const Text('수정'),
-                    ),
-                  if (request.canEdit && request.canCancel)
-                    SizedBox(width: 8.w),
-                  if (request.canCancel)
-                    AppButton(
-                      onPressed: () => _cancelRequest(request),
-                      variant: ButtonVariant.destructive,
-                      size: ButtonSize.sm,
-                      child: const Text('취소'),
-                    ),
-                ],
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -596,5 +603,146 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         }
       }
     }
+  }
+
+  void _showRequestDetailDialog(PastoralCareRequest request) {
+    showDialog(
+      context: context,
+      builder: (context) => AppDialog(
+        title: '신청 상세보기',
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 기본 정보
+              _buildDetailSection('신청 유형', request.requestTypeDisplayName),
+              _buildDetailSection('상태', request.statusDisplayName),
+              _buildDetailSection('우선순위', request.priorityDisplayName),
+              if (request.isUrgent)
+                _buildDetailSection('긴급 여부', '긴급 신청'),
+              
+              SizedBox(height: 16.h),
+              
+              // 신청 내용
+              Text(
+                '신청 내용',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColor.secondary07,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColor.secondary01,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColor.secondary03),
+                ),
+                child: Text(
+                  request.description,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColor.gray600,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: 16.h),
+              
+              // 희망 일정 정보
+              if (request.preferredDate != null)
+                _buildDetailSection('희망 날짜', request.preferredDate!),
+              if (request.preferredTime != null)
+                _buildDetailSection('희망 시간', request.preferredTime!),
+              if (request.contactInfo != null)
+                _buildDetailSection('연락처', request.contactInfo!),
+              
+              // 신청자 정보
+              if (request.member != null)
+                _buildDetailSection('신청자', request.member!.name),
+              if (request.member?.phone != null)
+                _buildDetailSection('신청자 연락처', request.member!.phone),
+              
+              // 일정 정보
+              _buildDetailSection('신청일', _formatDetailDate(request.createdAt)),
+              if (request.updatedAt != null && request.updatedAt != request.createdAt)
+                _buildDetailSection('수정일', _formatDetailDate(request.updatedAt!)),
+              
+              // 처리 정보
+              if (request.assignedTo != null)
+                _buildDetailSection('담당자', request.assignedTo!),
+              if (request.completedAt != null)
+                _buildDetailSection('완료일', _formatDetailDate(request.completedAt!)),
+              if (request.adminNotes != null && request.adminNotes!.isNotEmpty)
+                _buildDetailSection('관리자 메모', request.adminNotes!),
+            ],
+          ),
+        ),
+        actions: [
+          AppButton(
+            variant: ButtonVariant.ghost,
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('닫기'),
+          ),
+          if (request.canEdit)
+            AppButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _editRequest(request);
+              },
+              child: const Text('수정'),
+            ),
+          if (request.canCancel)
+            AppButton(
+              variant: ButtonVariant.destructive,
+              onPressed: () {
+                Navigator.of(context).pop();
+                _cancelRequest(request);
+              },
+              child: const Text('취소'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailSection(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80.w,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                color: AppColor.secondary04,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColor.secondary07,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDetailDate(DateTime date) {
+    return '${date.year}년 ${date.month}월 ${date.day}일 ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
