@@ -16,6 +16,7 @@ class AppInput extends StatefulWidget {
   final String? initialValue;
   final bool obscureText;
   final bool disabled;
+  final bool readOnly;
   final bool required;
   final InputSize size;
   final IconData? prefixIcon;
@@ -39,6 +40,7 @@ class AppInput extends StatefulWidget {
     this.initialValue,
     this.obscureText = false,
     this.disabled = false,
+    this.readOnly = false,
     this.required = false,
     this.size = InputSize.md,
     this.prefixIcon,
@@ -138,6 +140,7 @@ class _AppInputState extends State<AppInput> {
             focusNode: _focusNode,
             obscureText: widget.obscureText,
             enabled: !widget.disabled,
+            readOnly: widget.readOnly,
             keyboardType: widget.keyboardType,
             maxLines: widget.maxLines,
             maxLength: widget.maxLength,

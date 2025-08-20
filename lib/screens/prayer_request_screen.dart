@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
 import '../models/prayer_request.dart';
 import '../services/prayer_request_service.dart';
+import '../services/auth_service.dart';
 import '../resource/color_style.dart';
 
 class PrayerRequestScreen extends StatefulWidget {
@@ -17,13 +18,10 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   late TabController _tabController;
   
   // 폼 컨트롤러들
-  final _titleController = TextEditingController();
   final _contentController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   
   // 선택된 값들
-  String _selectedCategory = PrayerCategory.personal;
-  String _selectedPriority = PrayerPriority.normal;
   bool _isPrivate = false;
   bool _isSubmitting = false;
   
@@ -40,9 +38,8 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
 
   @override
   void dispose() {
-    _tabController.dispose();
-    _titleController.dispose();
     _contentController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -158,21 +155,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                 ),
                 SizedBox(height: 16.h),
                 
-                // 제목
-                Text(
-                  '제목 *',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColor.secondary07,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                AppInput(
-                  controller: _titleController,
-                  placeholder: '기도 제목을 입력하세요',
-                ),
-                SizedBox(height: 16.h),
                 
                 // 내용
                 Text(
@@ -191,61 +173,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                 ),
                 SizedBox(height: 16.h),
                 
-                // 카테고리
-                Text(
-                  '분류',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColor.secondary07,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                AppDropdown<String>(
-                  value: _selectedCategory,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                    }
-                  },
-                  items: PrayerCategory.allCategories.map((category) {
-                    return AppDropdownMenuItem<String>(
-                      value: category,
-                      text: PrayerCategory.getCategoryName(category),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: 16.h),
-                
-                // 우선순위
-                Text(
-                  '우선순위',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColor.secondary07,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                AppDropdown<String>(
-                  value: _selectedPriority,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedPriority = value;
-                      });
-                    }
-                  },
-                  items: PrayerPriority.allPriorities.map((priority) {
-                    return AppDropdownMenuItem<String>(
-                      value: priority,
-                      text: PrayerPriority.getPriorityName(priority),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: 16.h),
                 
                 // 비공개 설정
                 AppCheckbox(
@@ -290,8 +217,8 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
           : _myRequests.isEmpty
               ? _buildEmptyWidget(
                   icon: Icons.favorite_outline,
-                  title: '등록된 기도제목이 없습니다',
-                  subtitle: '첫 기도제목을 등록해보세요',
+                  title: '등록된 기도 요청이 없습니다',
+                  subtitle: '첫 기도 요청을 등록해보세요',
                 )
               : ListView.builder(
                   padding: EdgeInsets.all(16.w),
@@ -445,16 +372,6 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
             ),
             SizedBox(height: 12.h),
             
-            // 제목
-            Text(
-              request.title,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColor.secondary07,
-              ),
-            ),
-            SizedBox(height: 8.h),
             
             // 내용
             Text(
@@ -570,14 +487,14 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   }
 
   void _prayForRequest(PrayerRequest request) {
-    _showSuccessSnackBar('${request.title}을 위해 기도합니다 ');
+    _showSuccessSnackBar('기도하겠습니다 ');
   }
 
   Future<void> _markAsAnswered(PrayerRequest request) async {
     try {
       final response = await PrayerRequestService.markAsAnswered(request.id!);
       if (response.success) {
-        _showSuccessSnackBar('기도제목이 응답됨으로 표시되었습니다');
+        _showSuccessSnackBar('기도 요청이 응답됨으로 표시되었습니다');
         _loadMyRequests();
       } else {
         _showErrorSnackBar('상태 변경에 실패했습니다: ${response.message}');
@@ -591,7 +508,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     try {
       final response = await PrayerRequestService.markAsPaused(request.id!);
       if (response.success) {
-        _showSuccessSnackBar('기도제목이 일시정지되었습니다');
+        _showSuccessSnackBar('기도 요청이 일시정지되었습니다');
         _loadMyRequests();
       } else {
         _showErrorSnackBar('상태 변경에 실패했습니다: ${response.message}');
@@ -605,8 +522,8 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     showDialog(
       context: context,
       builder: (context) => AppDialog(
-        title: '기도제목 삭제',
-        description: '${request.title}을(를) 삭제하시겠습니까?',
+        title: '기도 요청 삭제',
+        description: '이 기도 요청을 삭제하시겠습니까?',
         actions: [
           AppButton(
             variant: ButtonVariant.ghost,
@@ -630,10 +547,10 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     try {
       final response = await PrayerRequestService.deleteRequest(request.id!);
       if (response.success) {
-        _showSuccessSnackBar('기도제목이 삭제되었습니다');
+        _showSuccessSnackBar('기도 요청이 삭제되었습니다');
         _loadMyRequests();
       } else {
-        _showErrorSnackBar('기도제목 삭제에 실패했습니다: ${response.message}');
+        _showErrorSnackBar('기도 요청 삭제에 실패했습니다: ${response.message}');
       }
     } catch (e) {
       _showErrorSnackBar('네트워크 오류: $e');
@@ -642,10 +559,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
 
 
   void _showEditRequestDialog(PrayerRequest request) {
-    _titleController.text = request.title;
     _contentController.text = request.content;
-    _selectedCategory = request.category;
-    _selectedPriority = request.priority;
     _isPrivate = request.isPrivate;
     _showRequestDialog(isEdit: true, request: request);
   }
@@ -656,51 +570,17 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AppDialog(
-          title: isEdit ? '기도제목 수정' : '기도제목 등록',
+          title: isEdit ? '기도 요청 수정' : '기도 요청 등록',
           content: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppInput(
-                  label: '제목',
-                  placeholder: '기도 제목을 입력하세요',
-                  controller: _titleController,
-                ),
-                SizedBox(height: 16.h),
-                AppInput(
                   label: '내용',
                   placeholder: '기도 요청 내용을 입력하세요',
                   maxLines: 5,
                   controller: _contentController,
-                ),
-                SizedBox(height: 16.h),
-                AppDropdown<String>(
-                  value: _selectedCategory,
-                  items: PrayerCategory.allCategories
-                      .map((category) => AppDropdownMenuItem<String>(
-                            value: category,
-                            text: PrayerCategory.getCategoryName(category),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedCategory = value!);
-                  },
-                  label: '분류',
-                ),
-                SizedBox(height: 16.h),
-                AppDropdown<String>(
-                  value: _selectedPriority,
-                  items: PrayerPriority.allPriorities
-                      .map((priority) => AppDropdownMenuItem<String>(
-                            value: priority,
-                            text: PrayerPriority.getPriorityName(priority),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedPriority = value!);
-                  },
-                  label: '우선순위',
                 ),
                 SizedBox(height: 16.h),
                 AppCheckbox(
@@ -737,11 +617,10 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   }
 
   Future<void> _submitNewRequest() async {
-    if (_titleController.text.trim().isEmpty ||
-        _contentController.text.trim().isEmpty) {
+    if (_contentController.text.trim().isEmpty) {
       AppToast.show(
         context,
-        '제목과 내용을 입력해주세요.',
+        '내용을 입력해주세요.',
         type: ToastType.warning,
       );
       return;
@@ -750,13 +629,16 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     setState(() => _isSubmitting = true);
 
     try {
+      final currentUser = AuthService().currentUser;
+      final userName = currentUser?.fullName ?? '사용자';
+      
       final createRequest = PrayerRequestCreate(
-        title: _titleController.text.trim(),
+        title: '기도 요청',  // 기본 제목
         content: _contentController.text.trim(),
-        category: _selectedCategory,
-        priority: _selectedPriority,
+        category: PrayerCategory.personal, // 기본 카테고리
+        priority: PrayerPriority.normal,   // 기본 우선순위
         isPrivate: _isPrivate,
-        requesterName: '익명', // 기본값으로 익명 설정
+        requesterName: userName, // 사용자 이름 전달
       );
 
       final response = await PrayerRequestService.createRequest(createRequest);
@@ -778,13 +660,8 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   }
 
   void _clearForm() {
-    _titleController.clear();
     _contentController.clear();
-    setState(() {
-      _selectedCategory = PrayerCategory.personal;
-      _selectedPriority = PrayerPriority.normal;
-      _isPrivate = false;
-    });
+    _isPrivate = false;
   }
 
   Future<void> _submitRequest({required bool isEdit, PrayerRequest? request}) async {
@@ -795,10 +672,9 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     try {
       if (isEdit && request != null) {
         final updateRequest = PrayerRequestUpdate(
-          title: _titleController.text.trim(),
           content: _contentController.text.trim(),
-          category: _selectedCategory,
-          priority: _selectedPriority,
+          category: PrayerCategory.personal, // 기본 카테고리
+          priority: PrayerPriority.normal,   // 기본 우선순위
           isPrivate: _isPrivate,
         );
         
@@ -809,25 +685,29 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
         
         if (response.success) {
           Navigator.pop(context);
-          _showSuccessSnackBar('기도제목이 수정되었습니다');
+          _showSuccessSnackBar('기도 요청이 수정되었습니다');
           _loadMyRequests();
         } else {
-          _showErrorSnackBar('기도제목 ${isEdit ? '수정' : '등록'}에 실패했습니다: ${response.message}');
+          _showErrorSnackBar('기도 요청 ${isEdit ? '수정' : '등록'}에 실패했습니다: ${response.message}');
         }
       } else {
+        final currentUser = AuthService().currentUser;
+        final userName = currentUser?.fullName ?? '사용자';
+        
         final createRequest = PrayerRequestCreate(
-          title: _titleController.text.trim(),
+          title: '기도 요청',  // 기본 제목
           content: _contentController.text.trim(),
-          category: _selectedCategory,
-          priority: _selectedPriority,
+          category: PrayerCategory.personal, // 기본 카테고리
+          priority: PrayerPriority.normal,   // 기본 우선순위
           isPrivate: _isPrivate,
+          requesterName: userName, // 사용자 이름 전달
         );
         
         final response = await PrayerRequestService.createRequest(createRequest);
         
         if (response.success) {
           Navigator.pop(context);
-          _showSuccessSnackBar('기도제목이 등록되었습니다');
+          _showSuccessSnackBar('기도 요청이 등록되었습니다');
           _loadData();
         } else {
           _showErrorSnackBar('상태 변경에 실패했습니다: ${response.message}');

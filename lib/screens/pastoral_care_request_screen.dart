@@ -20,14 +20,11 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   List<PastoralCareRequest> _requests = [];
 
   // 신청 폼 컨트롤러들
-  final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _contactController = TextEditingController();
   final _preferredDateController = TextEditingController();
   final _preferredTimeController = TextEditingController();
 
-  String _selectedRequestType = PastoralCareRequestType.visit;
-  String _selectedPriority = PastoralCarePriority.medium;
   bool _isUrgent = false;
 
   @override
@@ -40,7 +37,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    _titleController.dispose();
     _descriptionController.dispose();
     _contactController.dispose();
     _preferredDateController.dispose();
@@ -84,11 +80,10 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   }
 
   Future<void> _submitRequest() async {
-    if (_titleController.text.trim().isEmpty ||
-        _descriptionController.text.trim().isEmpty) {
+    if (_descriptionController.text.trim().isEmpty) {
       AppToast.show(
         context,
-        '제목과 내용을 입력해주세요.',
+        '내용을 입력해주세요.',
         type: ToastType.warning,
       );
       return;
@@ -100,9 +95,9 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
     try {
       final request = PastoralCareRequestCreate(
-        requestType: _selectedRequestType,
-        priority: _selectedPriority,
-        title: _titleController.text.trim(),
+        requestType: PastoralCareRequestType.visit,  // 기본값: 심방
+        priority: PastoralCarePriority.medium,       // 기본값: 보통
+        title: '심방 신청',  // 기본 제목
         description: _descriptionController.text.trim(),
         preferredDate: _preferredDateController.text.trim().isEmpty
             ? null
@@ -151,14 +146,11 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   }
 
   void _clearForm() {
-    _titleController.clear();
     _descriptionController.clear();
     _contactController.clear();
     _preferredDateController.clear();
     _preferredTimeController.clear();
     setState(() {
-      _selectedRequestType = PastoralCareRequestType.visit;
-      _selectedPriority = PastoralCarePriority.medium;
       _isUrgent = false;
     });
   }
@@ -247,69 +239,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 ),
                 SizedBox(height: 16.h),
                 
-                // 신청 유형
-                Text(
-                  '신청 유형 *',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColor.secondary07,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                AppDropdown<String>(
-                  value: _selectedRequestType,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedRequestType = value;
-                      });
-                    }
-                  },
-                  items: PastoralCareRequestType.all.map((type) {
-                    return AppDropdownMenuItem<String>(
-                      value: type,
-                      text: PastoralCareRequestType.displayNames[type]!,
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: 16.h),
-
-                // 우선순위
-                Text(
-                  '우선순위',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColor.secondary07,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                AppDropdown<String>(
-                  value: _selectedPriority,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedPriority = value;
-                      });
-                    }
-                  },
-                  items: PastoralCarePriority.all.map((priority) {
-                    return AppDropdownMenuItem<String>(
-                      value: priority,
-                      text: PastoralCarePriority.displayNames[priority]!,
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: 16.h),
-
-                // 제목
-                AppInput(
-                  controller: _titleController,
-                  label: '제목 *',
-                  placeholder: '신청 제목을 입력해주세요',
-                ),
-                SizedBox(height: 16.h),
 
                 // 내용
                 AppInput(
@@ -365,7 +294,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   controller: _preferredDateController,
                   label: '희망 날짜',
                   placeholder: '날짜를 선택해주세요',
-                  disabled: true,
+                  readOnly: true,
                   suffixIcon: Icons.calendar_today,
                   onTap: _selectDate,
                 ),
@@ -376,7 +305,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   controller: _preferredTimeController,
                   label: '희망 시간',
                   placeholder: '시간을 선택해주세요',
-                  disabled: true,
+                  readOnly: true,
                   suffixIcon: Icons.access_time,
                   onTap: _selectTime,
                 ),
