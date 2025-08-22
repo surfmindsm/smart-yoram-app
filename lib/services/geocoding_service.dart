@@ -77,6 +77,10 @@ class GeocodingService {
         );
         print('✅ GEOCODING_SERVICE: 지오코딩 성공');
         return ApiResponse.success(result);
+      } else if (res.statusCode == 401) {
+        // API 구독 필요 - 사용자에게 친화적인 메시지
+        print('⚠️ GEOCODING_SERVICE: API 구독이 필요합니다.');
+        return ApiResponse.error('주소 검색 기능을 사용하려면 네이버 클라우드 플랫폼에서\n지오코딩 API 구독을 활성화해야 합니다.\n\n대신 지도에서 직접 위치를 선택해 주세요.');
       } else {
         return ApiResponse.error('지오코딩 실패: HTTP ${res.statusCode}\n${body.length < 800 ? body : body.substring(0, 800)}');
       }
@@ -136,6 +140,15 @@ class GeocodingService {
           longitude: longitude,
         );
         print('✅ GEOCODING_SERVICE: 역지오코딩 성공');
+        return ApiResponse.success(result);
+      } else if (res.statusCode == 401) {
+        // API 구독 필요 - 좌표만으로 주소 표시
+        print('⚠️ GEOCODING_SERVICE: 역지오코딩 API 구독이 필요합니다.');
+        final result = GeoAddress(
+          address: '${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}',
+          latitude: latitude,
+          longitude: longitude,
+        );
         return ApiResponse.success(result);
       } else {
         return ApiResponse.error('역지오코딩 실패: HTTP ${res.statusCode}\n${body.length < 800 ? body : body.substring(0, 800)}');
