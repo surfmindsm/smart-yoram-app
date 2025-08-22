@@ -9,6 +9,7 @@ import '../services/pastoral_care_service.dart';
 import '../services/auth_service.dart';
 import '../services/geocoding_service.dart';
 import '../resource/color_style.dart';
+import '../widgets/datetime_picker_bottom_sheet.dart';
 
 class PastoralCareRequestScreen extends StatefulWidget {
   const PastoralCareRequestScreen({super.key});
@@ -270,33 +271,49 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     });
   }
 
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _preferredDateController.text =
-            '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
-      });
+  Future<void> _selectDateTime() async {
+    // 기존 선택된 날짜와 시간 파싱
+    DateTime? initialDate;
+    String? initialTime;
+    
+    if (_preferredDateController.text.isNotEmpty) {
+      final parts = _preferredDateController.text.split(' ');
+      if (parts.isNotEmpty) {
+        try {
+          final dateParts = parts[0].split('-');
+          if (dateParts.length == 3) {
+            initialDate = DateTime(
+              int.parse(dateParts[0]),
+              int.parse(dateParts[1]),
+              int.parse(dateParts[2]),
+            );
+          }
+          if (parts.length > 1) {
+            initialTime = parts[1];
+          }
+        } catch (e) {
+          // 파싱 오류시 무시
+        }
+      }
     }
-  }
 
-  Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
+    await showModalBottomSheet(
       context: context,
-      initialTime: TimeOfDay.now(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DateTimePickerBottomSheet(
+        initialDate: initialDate,
+        initialTime: initialTime,
+        onConfirm: (date, time) {
+          setState(() {
+            _preferredDateController.text = 
+                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} $time';
+            // 이전 시간 컨트롤러도 업데이트 (백엔드 호환성)
+            _preferredTimeController.text = time;
+          });
+        },
+      ),
     );
-
-    if (picked != null) {
-      setState(() {
-        _preferredTimeController.text = picked.format(context);
-      });
-    }
   }
 
   @override
@@ -403,25 +420,14 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 ),
                 SizedBox(height: 16.h),
 
-                // 희망 날짜
+                // 희망 날짜/시간
                 AppInput(
                   controller: _preferredDateController,
-                  label: '희망 날짜',
-                  placeholder: '날짜를 선택해주세요',
+                  label: '희망 날짜/시간',
+                  placeholder: '날짜와 시간을 선택해주세요',
                   readOnly: true,
-                  suffixIcon: Icons.calendar_today,
-                  onTap: _selectDate,
-                ),
-                SizedBox(height: 16.h),
-
-                // 희망 시간
-                AppInput(
-                  controller: _preferredTimeController,
-                  label: '희망 시간',
-                  placeholder: '시간을 선택해주세요',
-                  readOnly: true,
-                  suffixIcon: Icons.access_time,
-                  onTap: _selectTime,
+                  suffixIcon: Icons.event_available,
+                  onTap: _selectDateTime,
                 ),
                 SizedBox(height: 16.h),
 
