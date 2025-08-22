@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../components/index.dart';
 import '../models/pastoral_care_request.dart';
 import '../services/pastoral_care_service.dart';
 import '../services/auth_service.dart';
+import '../services/geocoding_service.dart';
 import '../resource/color_style.dart';
 
 class PastoralCareRequestScreen extends StatefulWidget {
@@ -25,8 +28,16 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   final _contactController = TextEditingController();
   final _preferredDateController = TextEditingController();
   final _preferredTimeController = TextEditingController();
+  final _addressController = TextEditingController();
 
   bool _isUrgent = false;
+  bool _isLocationConfirmed = false;
+
+  // 지도 관련 변수들
+  double? _latitude;
+  double? _longitude;
+  NaverMapController? _mapController;
+  NMarker? _marker;
 
   @override
   void initState() {
@@ -42,6 +53,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     _contactController.dispose();
     _preferredDateController.dispose();
     _preferredTimeController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -59,24 +71,113 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
           _requests = response.data!;
         });
       } else {
+        if (mounted) {
+          AppToast.show(
+            context,
+            '신청 목록을 불러올 수 없습니다: ${response.message}',
+            type: ToastType.error,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         AppToast.show(
           context,
-          '신청 목록을 불러올 수 없습니다: ${response.message}',
+          '네트워크 오류가 발생했습니다: $e',
           type: ToastType.error,
         );
       }
-    } catch (e) {
-      AppToast.show(
-        context,
-        '네트워크 오류가 발생했습니다: $e',
-        type: ToastType.error,
-      );
     } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  // 주소 검색 및 지오코딩
+  Future<void> _onSearchAddress() async {
+    final query = _addressController.text.trim();
+    if (query.isEmpty) return;
+
+    final response = await GeocodingService.geocode(query);
+    
+    if (response.success && response.data != null) {
+      final result = response.data!;
+      
+      setState(() {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+        _isLocationConfirmed = false;
+      });
+
+      // 지도 위치 업데이트
+      _updateMapLocation(result.latitude, result.longitude);
+      
+      if (mounted) {
+        AppToast.show(
+          context,
+          '주소를 찾았습니다: ${result.address}',
+          type: ToastType.success,
+        );
+      }
+    } else {
+      if (mounted) {
+        AppToast.show(
+          context,
+          response.message ?? '주소를 찾을 수 없습니다.',
+          type: ToastType.error,
+        );
+      }
+    }
+  }
+
+  // 지도 위치 업데이트
+  void _updateMapLocation(double lat, double lng) async {
+    if (_mapController == null) return;
+
+    try {
+      // 카메라 이동
+      await _mapController!.updateCamera(
+        NCameraUpdate.scrollAndZoomTo(
+          target: NLatLng(lat, lng),
+          zoom: 16,
+        ),
+      );
+
+      // 기존 마커 제거
+      if (_marker != null) {
+        await _mapController!.deleteOverlay(_marker!.info);
+      }
+
+      // 새 마커 추가
+      _marker = NMarker(
+        id: 'selected_location',
+        position: NLatLng(lat, lng),
+        caption: const NOverlayCaption(text: '선택 위치'),
+      );
+
+      await _mapController!.addOverlay(_marker!);
+    } catch (e) {
+      print('지도 업데이트 실패: $e');
+    }
+  }
+
+  // 위치 확정
+  void _confirmLocation() {
+    if (_latitude == null || _longitude == null) return;
+
+    setState(() {
+      _isLocationConfirmed = true;
+    });
+
+    if (mounted) {
+      AppToast.show(
+        context,
+        '위치가 확정되었습니다.',
+        type: ToastType.success,
+      );
     }
   }
 
@@ -102,9 +203,9 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                             : '010-0000-0000';
       
       final request = PastoralCareRequestCreate(
-        requestType: PastoralCareRequestType.visit,  // 기본값: 심방
-        priority: PastoralCarePriority.medium,       // 기본값: 보통
-        title: '심방 신청',  // 기본 제목
+        requestType: PastoralCareRequestType.visit,
+        priority: PastoralCarePriority.medium,
+        title: '심방 신청',
         description: _descriptionController.text.trim(),
         preferredDate: _preferredDateController.text.trim().isEmpty
             ? null
@@ -116,35 +217,46 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             ? null
             : _contactController.text.trim(),
         isUrgent: _isUrgent,
-        requesterName: userName, // 사용자 이름 추가
-        requesterPhone: userPhone, // 사용자 전화번호 추가
+        requesterName: userName,
+        requesterPhone: userPhone,
+        address: _addressController.text.trim().isNotEmpty
+            ? _addressController.text.trim()
+            : null,
+        latitude: _latitude,
+        longitude: _longitude,
       );
 
       final response = await PastoralCareService.createRequest(request);
 
       if (response.success) {
-        AppToast.show(
-          context,
-          '심방 신청이 완료되었습니다.',
-          type: ToastType.success,
-        );
+        if (mounted) {
+          AppToast.show(
+            context,
+            '심방 신청이 완료되었습니다.',
+            type: ToastType.success,
+          );
+        }
 
         _clearForm();
         _loadMyRequests();
-        _tabController.animateTo(1); // 신청 목록 탭으로 이동
+        _tabController.animateTo(1);
       } else {
+        if (mounted) {
+          AppToast.show(
+            context,
+            '신청에 실패했습니다: ${response.message}',
+            type: ToastType.error,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         AppToast.show(
           context,
-          '신청에 실패했습니다: ${response.message}',
+          '네트워크 오류가 발생했습니다: $e',
           type: ToastType.error,
         );
       }
-    } catch (e) {
-      AppToast.show(
-        context,
-        '네트워크 오류가 발생했습니다: $e',
-        type: ToastType.error,
-      );
     } finally {
       if (mounted) {
         setState(() {
@@ -159,8 +271,12 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     _contactController.clear();
     _preferredDateController.clear();
     _preferredTimeController.clear();
+    _addressController.clear();
     setState(() {
       _isUrgent = false;
+      _latitude = null;
+      _longitude = null;
+      _isLocationConfirmed = false;
     });
   }
 
@@ -247,13 +363,12 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   ),
                 ),
                 SizedBox(height: 16.h),
-                
 
                 // 내용
                 AppInput(
                   controller: _descriptionController,
                   label: '상세 내용 *',
-                  placeholder: '신청 내용을 자세히 입력해주세요',
+                  placeholder: '심방이 필요한 사유를 자세히 입력해주세요',
                   maxLines: 4,
                 ),
                 SizedBox(height: 16.h),
@@ -329,6 +444,123 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               ],
             ),
           ),
+          SizedBox(height: 16.h),
+
+          // 방문 위치 설정
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '방문 위치 (선택사항)',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.secondary07,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                // 주소 입력
+                AppInput(
+                  controller: _addressController,
+                  label: '주소',
+                  placeholder: '방문 주소를 입력하세요',
+                  suffixIcon: Icons.search,
+                  onSuffixIconTap: _onSearchAddress,
+                  onSubmitted: (_) => _onSearchAddress(),
+                ),
+                SizedBox(height: 16.h),
+
+                // 지도 영역
+                if (_latitude != null && _longitude != null) ...[
+                  Container(
+                    height: 200.h,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColor.secondary02),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: _buildMapWidget(),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 위치 정보 표시
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: _isLocationConfirmed ? AppColor.primary100 : AppColor.secondary01,
+                      border: Border.all(
+                        color: _isLocationConfirmed ? AppColor.primary600 : AppColor.secondary03,
+                      ),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              _isLocationConfirmed ? Icons.check_circle : Icons.location_on,
+                              size: 20.w,
+                              color: _isLocationConfirmed ? AppColor.primary600 : AppColor.secondary04,
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                _isLocationConfirmed ? '위치 확정됨' : '선택된 좌표',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: _isLocationConfirmed ? AppColor.primary600 : AppColor.secondary07,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '위도: ${_latitude!.toStringAsFixed(6)}',
+                              style: TextStyle(fontSize: 12.sp, color: AppColor.secondary05),
+                            ),
+                            Text(
+                              '경도: ${_longitude!.toStringAsFixed(6)}',
+                              style: TextStyle(fontSize: 12.sp, color: AppColor.secondary05),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 위치 관련 버튼들
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AppButton(
+                          onPressed: _isLocationConfirmed ? null : _confirmLocation,
+                          variant: _isLocationConfirmed ? ButtonVariant.ghost : ButtonVariant.outline,
+                          size: ButtonSize.md,
+                          child: Text(_isLocationConfirmed ? '위치 확정됨' : '위치 확정'),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: AppButton(
+                          onPressed: _isLocationConfirmed ? _previewLocationForAdmin : null,
+                          variant: ButtonVariant.primary,
+                          size: ButtonSize.md,
+                          child: const Text('지도 미리보기'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
           SizedBox(height: 24.h),
 
           SizedBox(
@@ -360,6 +592,131 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildMapWidget() {
+    try {
+      return NaverMap(
+        options: NaverMapViewOptions(
+          initialCameraPosition: NCameraPosition(
+            target: NLatLng(_latitude ?? 37.5665, _longitude ?? 126.9780),
+            zoom: 16,
+          ),
+          locationButtonEnable: false,
+          scaleBarEnable: false,
+          logoClickEnable: false,
+        ),
+        onMapReady: (controller) async {
+          _mapController = controller;
+          if (_latitude != null && _longitude != null) {
+            _updateMapLocation(_latitude!, _longitude!);
+          }
+        },
+        onMapTapped: (point, latLng) async {
+          setState(() {
+            _latitude = latLng.latitude;
+            _longitude = latLng.longitude;
+            _isLocationConfirmed = false;
+          });
+          _updateMapLocation(latLng.latitude, latLng.longitude);
+          
+          // 역지오코딩으로 주소 업데이트
+          final reverseResponse = await GeocodingService.reverseGeocode(
+            latitude: latLng.latitude,
+            longitude: latLng.longitude,
+          );
+          
+          if (reverseResponse.success && reverseResponse.data != null) {
+            _addressController.text = reverseResponse.data!.address;
+          }
+        },
+      );
+    } catch (e) {
+      return Container(
+        color: AppColor.secondary01,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.map_outlined,
+                size: 48.w,
+                color: AppColor.secondary04,
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                '지도 로딩 중...',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColor.secondary05,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  // 관리자용 지도 미리보기
+  Future<void> _previewLocationForAdmin() async {
+    if (_latitude == null || _longitude == null) return;
+
+    final links = _generateMapLinks(_latitude!, _longitude!);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AppDialog(
+        title: '지도 링크',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('선택된 위치: ${_latitude!.toStringAsFixed(6)}, ${_longitude!.toStringAsFixed(6)}'),
+            SizedBox(height: 16.h),
+            AppButton(
+              onPressed: () => _openMapLink(links['naver']!),
+              variant: ButtonVariant.primary,
+              size: ButtonSize.md,
+              child: const Text('네이버 지도에서 보기'),
+            ),
+            SizedBox(height: 8.h),
+            AppButton(
+              onPressed: () => _openMapLink(links['google']!),
+              variant: ButtonVariant.outline,
+              size: ButtonSize.md,
+              child: const Text('구글 지도에서 보기'),
+            ),
+          ],
+        ),
+        actions: [
+          AppButton(
+            onPressed: () => Navigator.pop(context),
+            variant: ButtonVariant.ghost,
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 지도 링크 생성
+  Map<String, String> _generateMapLinks(double lat, double lng) {
+    return {
+      'naver': 'nmap://place?lat=$lat&lng=$lng&name=심방위치',
+      'google': 'https://maps.google.com/?q=$lat,$lng',
+    };
+  }
+
+  // 지도 링크 열기
+  Future<void> _openMapLink(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      print('지도 링크 열기 실패: $e');
+    }
   }
 
   Widget _buildRequestList() {
@@ -478,6 +835,30 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     ],
                   ),
                 ],
+                if (request.address != null) ...[
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 16.w,
+                        color: AppColor.secondary04,
+                      ),
+                      SizedBox(width: 4.w),
+                      Expanded(
+                        child: Text(
+                          request.address!,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppColor.secondary04,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 SizedBox(height: 8.h),
                 Text(
                   '신청일: ${_formatDate(request.createdAt)}',
@@ -539,7 +920,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   }
 
   void _editRequest(PastoralCareRequest request) {
-    // TODO: 수정 화면으로 이동하거나 다이얼로그 표시
     AppToast.show(
       context,
       '수정 기능은 곧 추가됩니다.',
@@ -576,25 +956,31 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
       try {
         final response = await PastoralCareService.cancelRequest(request.id);
         if (response.success) {
-          AppToast.show(
-            context,
-            '신청이 취소되었습니다.',
-            type: ToastType.success,
-          );
+          if (mounted) {
+            AppToast.show(
+              context,
+              '신청이 취소되었습니다.',
+              type: ToastType.success,
+            );
+          }
           _loadMyRequests();
         } else {
+          if (mounted) {
+            AppToast.show(
+              context,
+              '취소에 실패했습니다: ${response.message}',
+              type: ToastType.error,
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
           AppToast.show(
             context,
-            '취소에 실패했습니다: ${response.message}',
+            '네트워크 오류가 발생했습니다: $e',
             type: ToastType.error,
           );
         }
-      } catch (e) {
-        AppToast.show(
-          context,
-          '네트워크 오류가 발생했습니다: $e',
-          type: ToastType.error,
-        );
       } finally {
         if (mounted) {
           setState(() {
@@ -661,6 +1047,12 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 _buildDetailSection('희망 시간', request.preferredTime!),
               if (request.contactInfo != null)
                 _buildDetailSection('연락처', request.contactInfo!),
+
+              // 위치 정보
+              if (request.address != null)
+                _buildDetailSection('주소', request.address!),
+              if (request.latitude != null && request.longitude != null)
+                _buildDetailSection('좌표', '${request.latitude!.toStringAsFixed(6)}, ${request.longitude!.toStringAsFixed(6)}'),
               
               // 신청자 정보
               if (request.member != null)
@@ -680,6 +1072,20 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 _buildDetailSection('완료일', _formatDetailDate(request.completedAt!)),
               if (request.adminNotes != null && request.adminNotes!.isNotEmpty)
                 _buildDetailSection('관리자 메모', request.adminNotes!),
+
+              // 위치가 있으면 지도 보기 버튼 추가
+              if (request.latitude != null && request.longitude != null) ...[
+                SizedBox(height: 16.h),
+                AppButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _showLocationOnMap(request.latitude!, request.longitude!, request.address);
+                  },
+                  variant: ButtonVariant.outline,
+                  size: ButtonSize.md,
+                  child: const Text('지도에서 위치 보기'),
+                ),
+              ],
             ],
           ),
         ),
@@ -706,6 +1112,49 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               },
               child: const Text('취소'),
             ),
+        ],
+      ),
+    );
+  }
+
+  // 위치를 지도에서 보기
+  void _showLocationOnMap(double latitude, double longitude, String? address) {
+    final links = _generateMapLinks(latitude, longitude);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AppDialog(
+        title: '위치 보기',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (address != null) ...[
+              Text('주소: $address'),
+              SizedBox(height: 8.h),
+            ],
+            Text('좌표: ${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}'),
+            SizedBox(height: 16.h),
+            AppButton(
+              onPressed: () => _openMapLink(links['naver']!),
+              variant: ButtonVariant.primary,
+              size: ButtonSize.md,
+              child: const Text('네이버 지도에서 보기'),
+            ),
+            SizedBox(height: 8.h),
+            AppButton(
+              onPressed: () => _openMapLink(links['google']!),
+              variant: ButtonVariant.outline,
+              size: ButtonSize.md,
+              child: const Text('구글 지도에서 보기'),
+            ),
+          ],
+        ),
+        actions: [
+          AppButton(
+            onPressed: () => Navigator.pop(context),
+            variant: ButtonVariant.ghost,
+            child: const Text('닫기'),
+          ),
         ],
       ),
     );

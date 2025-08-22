@@ -14,6 +14,10 @@ class PastoralCareRequest {
   final String status;
   final String? adminNotes;
   final String? assignedTo;
+  // 방문지 주소/좌표
+  final String? address;
+  final double? latitude;
+  final double? longitude;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DateTime? completedAt;
@@ -33,6 +37,9 @@ class PastoralCareRequest {
     required this.status,
     this.adminNotes,
     this.assignedTo,
+    this.address,
+    this.latitude,
+    this.longitude,
     required this.createdAt,
     this.updatedAt,
     this.completedAt,
@@ -54,6 +61,19 @@ class PastoralCareRequest {
       status: json['status'] ?? 'pending',
       adminNotes: json['admin_notes'],
       assignedTo: json['assigned_to'],
+      address: json['address'],
+      latitude: (() {
+        final v = json['latitude'] ?? json['lat'];
+        if (v is num) return v.toDouble();
+        if (v is String) return double.tryParse(v);
+        return null;
+      })(),
+      longitude: (() {
+        final v = json['longitude'] ?? json['lng'];
+        if (v is num) return v.toDouble();
+        if (v is String) return double.tryParse(v);
+        return null;
+      })(),
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : DateTime.now(),
@@ -84,6 +104,9 @@ class PastoralCareRequest {
       'status': status,
       'admin_notes': adminNotes,
       'assigned_to': assignedTo,
+      'address': address,
+      'latitude': latitude,
+      'longitude': longitude,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'completed_at': completedAt?.toIso8601String(),
@@ -178,6 +201,10 @@ class PastoralCareRequestCreate {
   final bool isUrgent;
   final String? requesterName;
   final String? requesterPhone;
+  // 방문지 주소/좌표 (옵션)
+  final String? address;
+  final double? latitude;
+  final double? longitude;
 
   const PastoralCareRequestCreate({
     required this.requestType,
@@ -190,6 +217,9 @@ class PastoralCareRequestCreate {
     this.isUrgent = false,
     this.requesterName,
     this.requesterPhone,
+    this.address,
+    this.latitude,
+    this.longitude,
   });
 
   Map<String, dynamic> toJson() {
@@ -214,6 +244,15 @@ class PastoralCareRequestCreate {
     if (contactInfo != null && contactInfo!.isNotEmpty) {
       json['contact_info'] = contactInfo;
     }
+    if (address != null && address!.isNotEmpty) {
+      json['address'] = address;
+    }
+    if (latitude != null) {
+      json['latitude'] = latitude;
+    }
+    if (longitude != null) {
+      json['longitude'] = longitude;
+    }
     
     return json;
   }
@@ -229,6 +268,10 @@ class PastoralCareRequestUpdate {
   final String? preferredTime;
   final String? contactInfo;
   final bool? isUrgent;
+  // 방문지 주소/좌표 (옵션)
+  final String? address;
+  final double? latitude;
+  final double? longitude;
 
   const PastoralCareRequestUpdate({
     this.requestType,
@@ -239,6 +282,9 @@ class PastoralCareRequestUpdate {
     this.preferredTime,
     this.contactInfo,
     this.isUrgent,
+    this.address,
+    this.latitude,
+    this.longitude,
   });
 
   Map<String, dynamic> toJson() {
@@ -252,6 +298,9 @@ class PastoralCareRequestUpdate {
     if (preferredTime != null) json['preferred_time'] = preferredTime;
     if (contactInfo != null) json['contact_info'] = contactInfo;
     if (isUrgent != null) json['is_urgent'] = isUrgent;
+    if (address != null) json['address'] = address;
+    if (latitude != null) json['latitude'] = latitude;
+    if (longitude != null) json['longitude'] = longitude;
     
     return json;
   }
