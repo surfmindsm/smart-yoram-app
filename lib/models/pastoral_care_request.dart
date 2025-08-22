@@ -203,6 +203,7 @@ class PastoralCareRequestCreate {
   final String? requesterPhone;
   // 방문지 주소/좌표 (옵션)
   final String? address;
+  final String? detailAddress;
   final double? latitude;
   final double? longitude;
 
@@ -218,6 +219,7 @@ class PastoralCareRequestCreate {
     this.requesterName,
     this.requesterPhone,
     this.address,
+    this.detailAddress,
     this.latitude,
     this.longitude,
   });
@@ -245,7 +247,12 @@ class PastoralCareRequestCreate {
       json['contact_info'] = contactInfo;
     }
     if (address != null && address!.isNotEmpty) {
-      json['address'] = address;
+      // 주소와 상세주소를 합쳐서 전송
+      String fullAddress = address!;
+      if (detailAddress != null && detailAddress!.isNotEmpty) {
+        fullAddress += ' ${detailAddress!}';
+      }
+      json['address'] = fullAddress;
     }
     if (latitude != null) {
       json['latitude'] = latitude;

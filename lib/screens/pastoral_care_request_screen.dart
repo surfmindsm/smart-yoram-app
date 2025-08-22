@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -29,15 +30,16 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   final _preferredDateController = TextEditingController();
   final _preferredTimeController = TextEditingController();
   final _addressController = TextEditingController();
+  final _detailAddressController = TextEditingController();
 
   bool _isUrgent = false;
-  bool _isLocationConfirmed = false;
 
   // 지도 관련 변수들
   double? _latitude;
   double? _longitude;
   NaverMapController? _mapController;
   NMarker? _marker;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -54,6 +56,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     _preferredDateController.dispose();
     _preferredTimeController.dispose();
     _addressController.dispose();
+    _detailAddressController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
@@ -109,7 +113,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
       setState(() {
         _latitude = result.latitude;
         _longitude = result.longitude;
-        _isLocationConfirmed = false;
       });
 
       // 지도 위치 업데이트
@@ -164,22 +167,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     }
   }
 
-  // 위치 확정
-  void _confirmLocation() {
-    if (_latitude == null || _longitude == null) return;
-
-    setState(() {
-      _isLocationConfirmed = true;
-    });
-
-    if (mounted) {
-      AppToast.show(
-        context,
-        '위치가 확정되었습니다.',
-        type: ToastType.success,
-      );
-    }
-  }
 
   Future<void> _submitRequest() async {
     if (_descriptionController.text.trim().isEmpty) {
@@ -221,6 +208,9 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         requesterPhone: userPhone,
         address: _addressController.text.trim().isNotEmpty
             ? _addressController.text.trim()
+            : null,
+        detailAddress: _detailAddressController.text.trim().isNotEmpty
+            ? _detailAddressController.text.trim()
             : null,
         latitude: _latitude,
         longitude: _longitude,
@@ -272,11 +262,11 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     _preferredDateController.clear();
     _preferredTimeController.clear();
     _addressController.clear();
+    _detailAddressController.clear();
     setState(() {
       _isUrgent = false;
       _latitude = null;
       _longitude = null;
-      _isLocationConfirmed = false;
     });
   }
 
@@ -472,6 +462,14 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 ),
                 SizedBox(height: 16.h),
 
+                // 상세주소 입력
+                AppInput(
+                  controller: _detailAddressController,
+                  label: '상세주소 (선택사항)',
+                  placeholder: '동/호수, 건물명 등을 입력하세요',
+                ),
+                SizedBox(height: 16.h),
+
                 // 지도 영역
                 if (_latitude != null && _longitude != null) ...[
                   Container(
@@ -481,81 +479,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: _buildMapWidget(),
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // 위치 정보 표시
-                  Container(
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: _isLocationConfirmed ? AppColor.primary100 : AppColor.secondary01,
-                      border: Border.all(
-                        color: _isLocationConfirmed ? AppColor.primary600 : AppColor.secondary03,
-                      ),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              _isLocationConfirmed ? Icons.check_circle : Icons.location_on,
-                              size: 20.w,
-                              color: _isLocationConfirmed ? AppColor.primary600 : AppColor.secondary04,
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Text(
-                                _isLocationConfirmed ? '위치 확정됨' : '선택된 좌표',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: _isLocationConfirmed ? AppColor.primary600 : AppColor.secondary07,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '위도: ${_latitude!.toStringAsFixed(6)}',
-                              style: TextStyle(fontSize: 12.sp, color: AppColor.secondary05),
-                            ),
-                            Text(
-                              '경도: ${_longitude!.toStringAsFixed(6)}',
-                              style: TextStyle(fontSize: 12.sp, color: AppColor.secondary05),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // 위치 관련 버튼들
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppButton(
-                          onPressed: _isLocationConfirmed ? null : _confirmLocation,
-                          variant: _isLocationConfirmed ? ButtonVariant.ghost : ButtonVariant.outline,
-                          size: ButtonSize.md,
-                          child: Text(_isLocationConfirmed ? '위치 확정됨' : '위치 확정'),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: AppButton(
-                          onPressed: _isLocationConfirmed ? _previewLocationForAdmin : null,
-                          variant: ButtonVariant.primary,
-                          size: ButtonSize.md,
-                          child: const Text('지도 미리보기'),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ],
@@ -596,40 +519,121 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
   Widget _buildMapWidget() {
     try {
-      return NaverMap(
-        options: NaverMapViewOptions(
-          initialCameraPosition: NCameraPosition(
-            target: NLatLng(_latitude ?? 37.5665, _longitude ?? 126.9780),
-            zoom: 16,
+      return Stack(
+        children: [
+          NaverMap(
+            options: NaverMapViewOptions(
+              initialCameraPosition: NCameraPosition(
+                target: NLatLng(_latitude ?? 37.5665, _longitude ?? 126.9780),
+                zoom: 16,
+              ),
+              locationButtonEnable: false,
+              scaleBarEnable: false,
+              logoClickEnable: false,
+            ),
+            onMapReady: (controller) async {
+              _mapController = controller;
+              if (_latitude != null && _longitude != null) {
+                _updateMapLocation(_latitude!, _longitude!);
+              }
+            },
+            onMapTapped: (point, latLng) async {
+              setState(() {
+                _latitude = latLng.latitude;
+                _longitude = latLng.longitude;
+              });
+              _updateMapLocation(latLng.latitude, latLng.longitude);
+              
+              // 역지오코딩으로 주소 업데이트
+              final reverseResponse = await GeocodingService.reverseGeocode(
+                latitude: latLng.latitude,
+                longitude: latLng.longitude,
+              );
+              
+              if (reverseResponse.success && reverseResponse.data != null) {
+                _addressController.text = reverseResponse.data!.address;
+              }
+            },
+            onCameraChange: (NCameraUpdateReason reason, bool animated) async {
+              // 지도가 제스처로 움직일 때만 위치 업데이트
+              if (reason == NCameraUpdateReason.gesture) {
+                // 현재 카메라 위치 가져오기
+                final cameraPosition = await _mapController?.getCameraPosition();
+                if (cameraPosition != null) {
+                  final newLat = cameraPosition.target.latitude;
+                  final newLng = cameraPosition.target.longitude;
+                  
+                  // 위치가 실제로 변경된 경우만 업데이트
+                  if ((_latitude == null || (_latitude! - newLat).abs() > 0.00001) ||
+                      (_longitude == null || (_longitude! - newLng).abs() > 0.00001)) {
+                    
+                    setState(() {
+                      _latitude = newLat;
+                      _longitude = newLng;
+                    });
+                    
+                    // 역지오코딩으로 주소 업데이트 (디바운싱 적용)
+                    _debounceTimer?.cancel();
+                    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+                      final reverseResponse = await GeocodingService.reverseGeocode(
+                        latitude: newLat,
+                        longitude: newLng,
+                      );
+                      
+                      if (reverseResponse.success && reverseResponse.data != null) {
+                        _addressController.text = reverseResponse.data!.address;
+                      }
+                    });
+                  }
+                }
+              }
+            },
           ),
-          locationButtonEnable: false,
-          scaleBarEnable: false,
-          logoClickEnable: false,
-        ),
-        onMapReady: (controller) async {
-          _mapController = controller;
-          if (_latitude != null && _longitude != null) {
-            _updateMapLocation(_latitude!, _longitude!);
-          }
-        },
-        onMapTapped: (point, latLng) async {
-          setState(() {
-            _latitude = latLng.latitude;
-            _longitude = latLng.longitude;
-            _isLocationConfirmed = false;
-          });
-          _updateMapLocation(latLng.latitude, latLng.longitude);
-          
-          // 역지오코딩으로 주소 업데이트
-          final reverseResponse = await GeocodingService.reverseGeocode(
-            latitude: latLng.latitude,
-            longitude: latLng.longitude,
-          );
-          
-          if (reverseResponse.success && reverseResponse.data != null) {
-            _addressController.text = reverseResponse.data!.address;
-          }
-        },
+          // 지도 중앙에 고정 마커
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.location_on,
+                  color: Colors.red,
+                  size: 40.w,
+                ),
+                // 마커 아래쪽 점
+                Container(
+                  width: 4.w,
+                  height: 4.w,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 지도 사용 안내
+          Positioned(
+            top: 10.h,
+            left: 10.w,
+            right: 10.w,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Text(
+                '지도를 움직여서 위치를 선택하세요',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
       );
     } catch (e) {
       return Container(
@@ -658,46 +662,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     }
   }
 
-  // 관리자용 지도 미리보기
-  Future<void> _previewLocationForAdmin() async {
-    if (_latitude == null || _longitude == null) return;
-
-    final links = _generateMapLinks(_latitude!, _longitude!);
-
-    await showDialog(
-      context: context,
-      builder: (context) => AppDialog(
-        title: '지도 링크',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('선택된 위치: ${_latitude!.toStringAsFixed(6)}, ${_longitude!.toStringAsFixed(6)}'),
-            SizedBox(height: 16.h),
-            AppButton(
-              onPressed: () => _openMapLink(links['naver']!),
-              variant: ButtonVariant.primary,
-              size: ButtonSize.md,
-              child: const Text('네이버 지도에서 보기'),
-            ),
-            SizedBox(height: 8.h),
-            AppButton(
-              onPressed: () => _openMapLink(links['google']!),
-              variant: ButtonVariant.outline,
-              size: ButtonSize.md,
-              child: const Text('구글 지도에서 보기'),
-            ),
-          ],
-        ),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
-    );
-  }
 
   // 지도 링크 생성
   Map<String, String> _generateMapLinks(double lat, double lng) {
