@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+ <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -36,7 +36,7 @@
 	<string>This app may use the microphone for voice recording features in learning activities.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to save and select images for learning activities and assignments.</string>
-	<key>NMFNcpKeyId</key>
+	<key>NMFClientId</key>
 	<string>l1xephxcbw</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>

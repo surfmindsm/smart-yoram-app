@@ -9,7 +9,7 @@ import '../services/pastoral_care_service.dart';
 import '../services/auth_service.dart';
 import '../services/geocoding_service.dart';
 import '../resource/color_style.dart';
-import '../widgets/datetime_picker_bottom_sheet.dart';
+import '../widgets/datetime_picker_page.dart';
 
 class PastoralCareRequestScreen extends StatefulWidget {
   const PastoralCareRequestScreen({super.key});
@@ -297,23 +297,26 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
       }
     }
 
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DateTimePickerBottomSheet(
-        initialDate: initialDate,
-        initialTime: initialTime,
-        onConfirm: (date, time) {
-          setState(() {
-            _preferredDateController.text = 
-                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} $time';
-            // 이전 시간 컨트롤러도 업데이트 (백엔드 호환성)
-            _preferredTimeController.text = time;
-          });
-        },
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DateTimePickerPage(
+          initialDate: initialDate,
+          initialTime: initialTime,
+        ),
       ),
     );
+
+    if (result != null && result is Map<String, dynamic>) {
+      final DateTime date = result['date'];
+      final String time = result['time'];
+      
+      setState(() {
+        _preferredDateController.text = 
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} $time';
+        // 이전 시간 컨트롤러도 업데이트 (백엔드 호환성)
+        _preferredTimeController.text = time;
+      });
+    }
   }
 
   @override
