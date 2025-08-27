@@ -84,12 +84,12 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    '이메일: privacy@smartyoram.com',
+                    '이메일: privacy@surfmind.co.kr',
                     style: TextStyle(fontSize: 14.sp, color: AppColor.secondary07),
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    '전화: 02-1234-5678',
+                    '전화: 02-6956-8903',
                     style: TextStyle(fontSize: 14.sp, color: AppColor.secondary07),
                   ),
                   SizedBox(height: 12.h),
@@ -114,7 +114,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
     return '''
 1. 개인정보처리방침 개요
 
-Smart Yoram (이하 "앱")은 사용자의 개인정보를 중요하게 생각하며, 「개인정보보호법」을 준수하고 있습니다. 본 개인정보처리방침은 앱에서 수집하는 개인정보의 항목, 수집 및 이용목적, 보유 및 이용기간, 파기절차 등에 관한 사항을 안내드립니다.
+고린도 (이하 "앱")는 서프마인드(주)에서 운영하는 교회 관리 애플리케이션으로, 사용자의 개인정보를 중요하게 생각하며 「개인정보보호법」을 준수하고 있습니다. 본 개인정보처리방침은 앱에서 수집하는 개인정보의 항목, 수집 및 이용목적, 보유 및 이용기간, 파기절차 등에 관한 사항을 안내드립니다.
 
 2. 수집하는 개인정보의 항목 및 수집방법
 
@@ -194,8 +194,8 @@ Smart Yoram (이하 "앱")은 사용자의 개인정보를 중요하게 생각�
 10. 개인정보보호 담당자
 
 담당자: 개인정보보호 담당자
-이메일: privacy@smartyoram.com
-전화: 02-1234-5678
+이메일: privacy@surfmind.co.kr
+전화: 02-6956-8903
 
 11. 개인정보처리방침 변경
 
