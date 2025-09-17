@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -429,7 +430,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   label: '희망 날짜/시간',
                   placeholder: '날짜와 시간을 선택해주세요',
                   readOnly: true,
-                  suffixIcon: Icons.event_available,
+                  suffixIcon: LucideIcons.calendarDays,
                   onTap: _selectDateTime,
                 ),
                 SizedBox(height: 16.h),
@@ -465,7 +466,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   controller: _addressController,
                   label: '주소',
                   placeholder: '방문 주소를 입력하세요',
-                  suffixIcon: Icons.search,
+                  suffixIcon: LucideIcons.search,
                   onSuffixIconTap: _onSearchAddress,
                   onSubmitted: (_) => _onSearchAddress(),
                 ),
@@ -604,7 +605,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.location_on,
+                  LucideIcons.mapPin,
                   color: Colors.red,
                   size: 40.w,
                 ),
@@ -652,7 +653,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.map_outlined,
+                LucideIcons.map,
                 size: 48.w,
                 color: AppColor.secondary04,
               ),
@@ -705,7 +706,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.description_outlined,
+              LucideIcons.fileText,
               size: 64.w,
               color: AppColor.secondary04,
             ),
@@ -792,7 +793,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   Row(
                     children: [
                       Icon(
-                        Icons.priority_high,
+                        LucideIcons.alertTriangle,
                         size: 16.w,
                         color: Colors.red,
                       ),
@@ -813,7 +814,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   Row(
                     children: [
                       Icon(
-                        Icons.location_on,
+                        LucideIcons.mapPin,
                         size: 16.w,
                         color: AppColor.secondary04,
                       ),

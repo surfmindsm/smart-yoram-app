@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -169,7 +170,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.church,
+                  LucideIcons.church,
                   size: 50,
                   color: Colors.white,
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../components/index.dart';
@@ -66,14 +67,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 _buildSettingItem(
-                  icon: Icons.person,
+                  icon: LucideIcons.user,
                   title: '개인정보 수정',
                   subtitle: '이름, 전화번호, 주소 등',
                   onTap: () => Navigator.pushNamed(context, '/profile'),
                 ),
                 Divider(height: 1, color: AppColor.border1),
                 _buildSettingItem(
-                  icon: Icons.lock,
+                  icon: LucideIcons.lock,
                   title: '비밀번호 변경',
                   subtitle: '로그인 비밀번호 변경',
                   onTap: _changePassword,
@@ -91,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 _buildSwitchItem(
-                  icon: Icons.notifications,
+                  icon: LucideIcons.bell,
                   title: '푸시 알림',
                   subtitle: '모든 푸시 알림 수신',
                   value: _pushNotifications,
@@ -100,7 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 Divider(height: 1, color: AppColor.border1),
                 _buildSwitchItem(
-                  icon: Icons.campaign,
+                  icon: LucideIcons.megaphone,
                   title: '교회 공지',
                   subtitle: '새로운 공지사항 알림',
                   value: _churchNotices,
@@ -119,7 +120,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Consumer<FontSettingsService>(
               builder: (context, fontSettings, child) {
                 return _buildDropdownItem(
-                  icon: Icons.text_fields,
+                  icon: LucideIcons.type,
                   title: '글꼴 크기',
                   subtitle:
                       '${fontSettings.fontSize} (${FontSettingsService.getFontSizeDescription(fontSettings.fontSize)})',
@@ -153,19 +154,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 _buildSettingItem(
-                  icon: Icons.info,
+                  icon: LucideIcons.info,
                   title: '교회 소개',
                   onTap: _showChurchInfo,
                 ),
                 Divider(height: 1, color: AppColor.border1),
                 _buildSettingItem(
-                  icon: Icons.phone,
+                  icon: LucideIcons.phone,
                   title: '연락처',
                   onTap: _showChurchContact,
                 ),
                 Divider(height: 1, color: AppColor.border1),
                 _buildSettingItem(
-                  icon: Icons.location_on,
+                  icon: LucideIcons.mapPin,
                   title: '위치',
                   onTap: _showChurchLocation,
                 ),
@@ -182,31 +183,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 _buildSettingItem(
-                  icon: Icons.help,
+                  icon: LucideIcons.helpCircle,
                   title: '도움말',
                   onTap: _showHelp,
                 ),
                 Divider(height: 1, color: AppColor.border1),
                 _buildSettingItem(
-                  icon: Icons.bug_report,
+                  icon: LucideIcons.bug,
                   title: '문제 신고',
                   onTap: _reportBug,
                 ),
                 Divider(height: 1, color: AppColor.border1),
                 _buildSettingItem(
-                  icon: Icons.info_outline,
+                  icon: LucideIcons.info,
                   title: '앱 정보',
                   onTap: _showAppInfo,
                 ),
                 Divider(height: 1, color: AppColor.border1),
                 _buildSettingItem(
-                  icon: Icons.privacy_tip,
+                  icon: LucideIcons.shield,
                   title: '개인정보처리방침',
                   onTap: _showPrivacyPolicy,
                 ),
                 Divider(height: 1, color: AppColor.border1),
                 _buildSettingItem(
-                  icon: Icons.article,
+                  icon: LucideIcons.fileText,
                   title: '서비스 이용약관',
                   onTap: _showTermsOfService,
                 ),
@@ -288,7 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             Icon(
-              Icons.chevron_right,
+              LucideIcons.chevronRight,
               size: 20.sp,
               color: AppColor.secondary05,
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../resource/color_style.dart';
 
 enum CalendarView {
@@ -93,7 +94,7 @@ class _AppCalendarState extends State<AppCalendar> {
         children: [
           IconButton(
             onPressed: _goToPreviousMonth,
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(LucideIcons.chevronLeft),
             iconSize: 20,
           ),
           const SizedBox(width: 12),
@@ -111,7 +112,7 @@ class _AppCalendarState extends State<AppCalendar> {
           const SizedBox(width: 12),
           IconButton(
             onPressed: _goToNextMonth,
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(LucideIcons.chevronRight),
             iconSize: 20,
           ),
         ],

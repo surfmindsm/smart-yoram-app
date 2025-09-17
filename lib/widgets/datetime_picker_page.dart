@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../resource/color_style.dart';
 import '../resource/text_style.dart';
@@ -74,7 +75,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
           child: Container(
             padding: EdgeInsets.all(12.w),
             child: Icon(
-              Icons.arrow_back_ios,
+              LucideIcons.arrowLeft,
               color: AppColor.secondary05,
               size: 20.w,
             ),
@@ -134,7 +135,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.info_outline,
+                          LucideIcons.info,
                           size: 16.w,
                           color: const Color(0xFFFF8A00),
                         ),
@@ -228,7 +229,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
-              Icons.chevron_left,
+              LucideIcons.chevronLeft,
               color: AppColor.secondary05,
               size: 20.w,
             ),
@@ -257,7 +258,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
-              Icons.chevron_right,
+              LucideIcons.chevronRight,
               color: AppColor.secondary05,
               size: 20.w,
             ),

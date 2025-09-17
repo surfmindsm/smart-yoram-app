@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/announcement.dart';
 import '../resource/color_style.dart';
@@ -40,7 +41,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.push_pin,
+                      LucideIcons.pin,
                       size: 16.sp,
                       color: Colors.red,
                     ),
@@ -81,7 +82,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    Icons.schedule,
+                    LucideIcons.clock,
                     size: 16.sp,
                     color: AppColor.secondary04,
                   ),

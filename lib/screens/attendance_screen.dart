@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
 import '../models/attendance.dart';
@@ -246,9 +247,9 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: const [
-            Tab(icon: Icon(Icons.qr_code), text: '내 QR 코드'),
-            Tab(icon: Icon(Icons.history), text: '출석 기록'),
-            Tab(icon: Icon(Icons.analytics), text: '내 출석률'),
+            Tab(icon: Icon(LucideIcons.qrCode), text: '내 QR 코드'),
+            Tab(icon: Icon(LucideIcons.history), text: '출석 기록'),
+            Tab(icon: Icon(LucideIcons.barChart), text: '내 출석률'),
           ],
         ),
       ),
@@ -280,7 +281,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                 child: Column(
                   children: [
                     const Icon(
-                      Icons.info_outline,
+                      LucideIcons.info,
                       color: Colors.blue,
                       size: 32,
                     ),
@@ -364,7 +365,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                   // QR 코드 새로고침 버튼
                   ElevatedButton.icon(
                     onPressed: isLoadingQR ? null : _refreshQRCode,
-                    icon: const Icon(Icons.refresh),
+                    icon: const Icon(LucideIcons.refreshCw),
                     label: const Text('QR 코드 새로고침'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[700],
@@ -381,7 +382,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
               Column(
                 children: [
                   const Icon(
-                    Icons.error_outline,
+                    LucideIcons.alertCircle,
                     color: Colors.red,
                     size: 48,
                   ),
@@ -418,7 +419,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             color: Colors.grey[50],
             child: Row(
               children: [
-                const Icon(Icons.history, color: Colors.blue),
+                const Icon(LucideIcons.history, color: Colors.blue),
                 const SizedBox(width: 8),
                 const Text(
                   '내 출석 기록',
@@ -448,7 +449,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.event_busy,
+                              LucideIcons.calendarX,
                               size: 64,
                               color: Colors.grey,
                             ),
@@ -479,8 +480,8 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                                     : Colors.red,
                                 child: Icon(
                                   attendance.present
-                                      ? Icons.check
-                                      : Icons.close,
+                                      ? LucideIcons.check
+                                      : LucideIcons.x,
                                   color: Colors.white,
                                 ),
                               ),

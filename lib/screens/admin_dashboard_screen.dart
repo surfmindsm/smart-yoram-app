@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../widget/widgets.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -17,7 +18,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         actions: [
           IconButton(
             onPressed: _showAdminMenu,
-            icon: const Icon(Icons.admin_panel_settings),
+            icon: const Icon(LucideIcons.settings),
           ),
         ],
       ),
@@ -54,17 +55,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: StatCard(title: '총 교인수', value: '342명', icon: Icons.people, color: Colors.blue)),
+            Expanded(child: StatCard(title: '총 교인수', value: '342명', icon: LucideIcons.users, color: Colors.blue)),
             const SizedBox(width: 12),
-            Expanded(child: StatCard(title: '이번주 출석', value: '287명', icon: Icons.check_circle, color: Colors.green)),
+            Expanded(child: StatCard(title: '이번주 출석', value: '287명', icon: LucideIcons.checkCircle, color: Colors.green)),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: StatCard(title: '새가족', value: '12명', icon: Icons.person_add, color: Colors.orange)),
+            Expanded(child: StatCard(title: '새가족', value: '12명', icon: LucideIcons.userPlus, color: Colors.orange)),
             const SizedBox(width: 12),
-            Expanded(child: StatCard(title: '신규공지', value: '3개', icon: Icons.announcement, color: Colors.purple)),
+            Expanded(child: StatCard(title: '신규공지', value: '3개', icon: LucideIcons.megaphone, color: Colors.purple)),
           ],
         ),
       ],
@@ -86,12 +87,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: [
-            QuickMenuItem(title: '교인 등록', icon: Icons.person_add, onTap: () => _addMember()),
-            QuickMenuItem(title: '공지 작성', icon: Icons.edit, onTap: () => _createNotice()),
-            QuickMenuItem(title: '출석 관리', icon: Icons.assignment_turned_in, onTap: () => _manageAttendance()),
-            QuickMenuItem(title: '주보 업로드', icon: Icons.upload_file, onTap: () => _uploadBulletin()),
-            QuickMenuItem(title: '단체 메시지', icon: Icons.message, onTap: () => _sendGroupMessage()),
-            QuickMenuItem(title: '통계 보기', icon: Icons.analytics, onTap: () => _viewStatistics()),
+            QuickMenuItem(title: '교인 등록', icon: LucideIcons.userPlus, onTap: () => _addMember()),
+            QuickMenuItem(title: '공지 작성', icon: LucideIcons.edit, onTap: () => _createNotice()),
+            QuickMenuItem(title: '출석 관리', icon: LucideIcons.clipboardCheck, onTap: () => _manageAttendance()),
+            QuickMenuItem(title: '주보 업로드', icon: LucideIcons.upload, onTap: () => _uploadBulletin()),
+            QuickMenuItem(title: '단체 메시지', icon: LucideIcons.messageCircle, onTap: () => _sendGroupMessage()),
+            QuickMenuItem(title: '통계 보기', icon: LucideIcons.barChart, onTap: () => _viewStatistics()),
           ],
         ),
       ],
@@ -132,25 +133,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               _buildActivityItem(
                 '김성도님이 출석체크를 완료했습니다',
                 '5분 전',
-                Icons.check_circle,
+                LucideIcons.checkCircle,
                 Colors.green,
               ),
               _buildActivityItem(
                 '새로운 공지사항이 등록되었습니다',
                 '30분 전',
-                Icons.announcement,
+                LucideIcons.megaphone,
                 Colors.blue,
               ),
               _buildActivityItem(
                 '이신규님이 새가족으로 등록되었습니다',
                 '2시간 전',
-                Icons.person_add,
+                LucideIcons.userPlus,
                 Colors.orange,
               ),
               _buildActivityItem(
                 '주보가 업데이트되었습니다',
                 '4시간 전',
-                Icons.book,
+                LucideIcons.book,
                 Colors.purple,
               ),
             ],
@@ -201,31 +202,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         SectionHeader(title: '관리 메뉴'),
         const SizedBox(height: 16),
         CustomListTile(
-          icon: Icons.people,
+          icon: LucideIcons.users,
           title: '교인 관리',
           subtitle: '교인 정보 수정 및 관리',
           onTap: _manageMembersScreen,
         ),
         CustomListTile(
-          icon: Icons.security,
+          icon: LucideIcons.shield,
           title: '권한 관리',
           subtitle: '사용자 권한 설정',
           onTap: _managePermissions,
         ),
         CustomListTile(
-          icon: Icons.storage,
+          icon: LucideIcons.database,
           title: '데이터 관리',
           subtitle: '데이터 가져오기 및 내보내기',
           onTap: _manageData,
         ),
         CustomListTile(
-          icon: Icons.payment,
+          icon: LucideIcons.creditCard,
           title: '결제 관리',
           subtitle: '헌금 및 십일조 관리',
           onTap: _managePayments,
         ),
         CustomListTile(
-          icon: Icons.settings,
+          icon: LucideIcons.settings,
           title: '시스템 설정',
           subtitle: '전체 시스템 설정',
           onTap: _systemSettings,
@@ -251,7 +252,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.backup),
+              leading: const Icon(LucideIcons.hardDrive),
               title: const Text('데이터 백업'),
               onTap: () {
                 Navigator.pop(context);
@@ -259,7 +260,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.refresh),
+              leading: const Icon(LucideIcons.refreshCw),
               title: const Text('데이터 동기화'),
               onTap: () {
                 Navigator.pop(context);
@@ -267,7 +268,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.bug_report),
+              leading: const Icon(LucideIcons.bug),
               title: const Text('시스템 진단'),
               onTap: () {
                 Navigator.pop(context);
@@ -275,7 +276,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.logout),
+              leading: const Icon(LucideIcons.logOut),
               title: const Text('관리자 로그아웃'),
               onTap: () {
                 Navigator.pop(context);
@@ -353,12 +354,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.upload),
+              leading: Icon(LucideIcons.upload),
               title: Text('엑셀 업로드'),
               subtitle: Text('교인 정보 일괄 등록'),
             ),
             ListTile(
-              leading: Icon(Icons.download),
+              leading: Icon(LucideIcons.download),
               title: Text('엑셀 다운로드'),
               subtitle: Text('교인 정보 내보내기'),
             ),

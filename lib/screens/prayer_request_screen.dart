@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
 import '../models/prayer_request.dart';
@@ -212,7 +213,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
           ? _buildLoadingWidget()
           : _myRequests.isEmpty
               ? _buildEmptyWidget(
-                  icon: Icons.favorite_outline,
+                  icon: LucideIcons.heart,
                   title: '등록된 기도 요청이 없습니다',
                   subtitle: '첫 기도 요청을 등록해보세요',
                 )
@@ -322,7 +323,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
               Row(
                 children: [
                   Icon(
-                    Icons.access_time,
+                    LucideIcons.clock,
                     size: 14.w,
                     color: AppColor.secondary04,
                   ),
@@ -347,7 +348,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.edit,
+                              LucideIcons.edit,
                               size: 16.w,
                               color: AppColor.primary600,
                             ),
@@ -375,7 +376,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.delete,
+                              LucideIcons.trash,
                               size: 16.w,
                               color: Colors.red,
                             ),

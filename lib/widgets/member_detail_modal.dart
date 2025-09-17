@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/member.dart';
@@ -52,7 +53,7 @@ class MemberDetailModal extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Icon(
-                      Icons.close,
+                      LucideIcons.x,
                       size: 20.sp,
                       color: AppColor.secondary04,
                     ),
@@ -231,7 +232,7 @@ class MemberDetailModal extends StatelessWidget {
                 ),
               ),
               icon: Icon(
-                Icons.phone,
+                LucideIcons.phone,
                 color: Colors.green,
                 size: 20.sp,
               ),
@@ -257,7 +258,7 @@ class MemberDetailModal extends StatelessWidget {
                 ),
               ),
               icon: Icon(
-                Icons.message,
+                LucideIcons.messageCircle,
                 color: Colors.white,
                 size: 20.sp,
               ),

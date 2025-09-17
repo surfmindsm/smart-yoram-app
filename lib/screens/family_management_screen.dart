@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide IconButton;
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
 import '../resource/color_style.dart';
@@ -139,7 +140,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                   value: selectedMainMember,
                   decoration: const InputDecoration(
                     labelText: '주 교인',
-                    prefixIcon: Icon(Icons.person),
+                    prefixIcon: Icon(LucideIcons.user),
                     border: OutlineInputBorder(),
                   ),
                   items: members.map((member) => DropdownMenuItem(
@@ -160,7 +161,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                   value: selectedRelationType,
                   decoration: const InputDecoration(
                     labelText: '관계',
-                    prefixIcon: Icon(Icons.family_restroom),
+                    prefixIcon: Icon(LucideIcons.users),
                     border: OutlineInputBorder(),
                   ),
                   items: relationshipTypes.map((type) => DropdownMenuItem(
@@ -181,7 +182,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                   value: selectedRelatedMember,
                   decoration: const InputDecoration(
                     labelText: '관련 교인',
-                    prefixIcon: Icon(Icons.person_outline),
+                    prefixIcon: Icon(LucideIcons.userCheck),
                     border: OutlineInputBorder(),
                   ),
                   items: members
@@ -317,7 +318,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.error, color: Colors.red),
+            Icon(LucideIcons.alertCircle, color: Colors.red),
             SizedBox(width: 8),
             Text('오류'),
           ],
@@ -371,7 +372,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
             borderRadius: BorderRadius.circular(20.r),
             child: Padding(
               padding: EdgeInsets.all(12.r),
-              child: Icon(Icons.add, color: AppColor.primary600),
+              child: Icon(LucideIcons.plus, color: AppColor.primary600),
             ),
           ),
           InkWell(
@@ -379,7 +380,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
             borderRadius: BorderRadius.circular(20.r),
             child: Padding(
               padding: EdgeInsets.all(12.r),
-              child: Icon(Icons.refresh, color: AppColor.secondary05),
+              child: Icon(LucideIcons.refreshCw, color: AppColor.secondary05),
             ),
           ),
         ],
@@ -388,7 +389,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
         heroTag: "family_fab",
         onPressed: _addRelationship,
         backgroundColor: AppColor.primary600,
-        child: Icon(Icons.add, color: Colors.white),
+        child: Icon(LucideIcons.plus, color: Colors.white),
       ),
       body: isLoading
           ? Center(
@@ -414,7 +415,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                   padding: EdgeInsets.all(16.w),
                   child: AppInput(
                     placeholder: '교인명, 관계로 검색',
-                    prefixIcon: Icons.search,
+                    prefixIcon: LucideIcons.search,
                     onChanged: (value) {
                       setState(() {
                         searchQuery = value;
@@ -443,7 +444,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                                       color: AppColor.secondary05,
                                     ),
                                   ),
-                                  Icon(Icons.people, color: Colors.blue, size: 18.r),
+                                  Icon(LucideIcons.users, color: Colors.blue, size: 18.r),
                                 ],
                               ),
                               SizedBox(height: 8.h),
@@ -475,7 +476,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                                       color: AppColor.secondary05,
                                     ),
                                   ),
-                                  Icon(Icons.people, color: Colors.green, size: 18.r),
+                                  Icon(LucideIcons.users, color: Colors.green, size: 18.r),
                                 ],
                               ),
                               SizedBox(height: 8.h),
@@ -505,7 +506,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.family_restroom,
+                                LucideIcons.users,
                                 size: 48.r,
                                 color: AppColor.secondary04,
                               ),
@@ -575,7 +576,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                                       value: 'family_tree',
                                       child: const Row(
                                         children: [
-                                          Icon(Icons.account_tree),
+                                          Icon(LucideIcons.gitBranch),
                                           SizedBox(width: 8),
                                           Text('가족도 보기'),
                                         ],
@@ -585,7 +586,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                                       value: 'edit',
                                       child: const Row(
                                         children: [
-                                          Icon(Icons.edit),
+                                          Icon(LucideIcons.edit),
                                           SizedBox(width: 8),
                                           Text('수정'),
                                         ],
@@ -595,7 +596,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                                       value: 'delete',
                                       child: const Row(
                                         children: [
-                                          Icon(Icons.delete, color: Colors.red),
+                                          Icon(LucideIcons.trash, color: Colors.red),
                                           SizedBox(width: 8),
                                           Text('삭제', style: TextStyle(color: Colors.red)),
                                         ],
@@ -650,20 +651,20 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
   IconData _getRelationshipIcon(String relationshipType) {
     switch (relationshipType) {
       case '배우자':
-        return Icons.favorite;
+        return LucideIcons.heart;
       case '부모':
-        return Icons.supervisor_account;
+        return LucideIcons.userCheck;
       case '자녀':
-        return Icons.child_care;
+        return LucideIcons.baby;
       case '형제':
       case '자매':
-        return Icons.people;
+        return LucideIcons.users;
       case '조부모':
-        return Icons.elderly;
+        return LucideIcons.user;
       case '손자녀':
-        return Icons.child_friendly;
+        return LucideIcons.baby;
       default:
-        return Icons.family_restroom;
+        return LucideIcons.users;
     }
   }
 }
@@ -687,7 +688,7 @@ class FamilyTreeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.account_tree,
+              LucideIcons.gitBranch,
               size: 64,
               color: Colors.grey,
             ),

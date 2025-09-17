@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../models/member.dart' as MemberModel;
 import '../models/qr_code.dart';
@@ -141,7 +142,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                 value: 'download',
                 child: Row(
                   children: [
-                    Icon(Icons.download),
+                    Icon(LucideIcons.download),
                     SizedBox(width: 8),
                     Text('다운로드'),
                   ],
@@ -151,7 +152,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                 value: 'share',
                 child: Row(
                   children: [
-                    Icon(Icons.share),
+                    Icon(LucideIcons.share2),
                     SizedBox(width: 8),
                     Text('공유'),
                   ],
@@ -252,7 +253,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                   ),
                   child: currentMember!.fullProfilePhotoUrl == null
                       ? const Icon(
-                          Icons.person,
+                          LucideIcons.user,
                           size: 40,
                           color: Colors.white,
                         )
@@ -401,7 +402,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(
-                            Icons.qr_code,
+                            LucideIcons.qrCode,
                             size: 80,
                             color: Colors.grey,
                           ),
@@ -442,7 +443,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: _showAttendanceHistory,
-            icon: const Icon(Icons.history),
+            icon: const Icon(LucideIcons.history),
             label: const Text('출석 기록 보기'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue[700],
@@ -457,7 +458,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _downloadMemberCard,
-                icon: const Icon(Icons.download),
+                icon: const Icon(LucideIcons.download),
                 label: const Text('다운로드'),
               ),
             ),
@@ -465,7 +466,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _shareMemberCard,
-                icon: const Icon(Icons.share),
+                icon: const Icon(LucideIcons.share2),
                 label: const Text('공유'),
               ),
             ),
@@ -523,7 +524,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                   
                   return ListTile(
                     leading: Icon(
-                      isPresent ? Icons.check_circle : Icons.cancel,
+                      isPresent ? LucideIcons.checkCircle : LucideIcons.x,
                       color: isPresent ? Colors.green : Colors.red,
                     ),
                     title: Text(

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:smart_yoram_app/resource/text_style.dart';
-import 'package:smart_yoram_app/resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
+import 'package:smart_yoram_app/resource/text_style_new.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
 import '../models/api_response.dart';
 import '../services/user_service.dart';
-import '../widget/widgets.dart';
+import '../components/login_type_toggle.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,12 +21,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FocusNode _passwordFocusNode = FocusNode();
 
   bool isLoading = false;
   bool obscurePassword = true;
   bool _isEmailValid = false;
   bool _isPasswordValid = false;
   bool _isPhoneValid = false;
+  bool _saveId = false;
 
   // 로그인 방식
   String _loginType = 'email'; // 'email' 또는 'phone'
@@ -46,6 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.removeListener(_validateInputs);
     _usernameController.dispose();
     _passwordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -84,446 +88,349 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/back_image.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Container(
-          // 이미지 위에 반투명 오버레이 추가
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.3),
-          ),
-          child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: ClampingScrollPhysics(),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: constraints.maxWidth > 600 ? 60.w : 24.w,
-                    vertical: 8.h,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                        SizedBox(
-                            height: constraints.maxWidth > 600 ? 80.h : 60.h),
+    const figmaStyles = FigmaTextStyles();
 
-                        // 앱 로고 및 제목
-                        Center(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                SizedBox(height: 150.h),
+
+                // 메인 컨텐츠 영역
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Container(
+                    width: 358.w,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 타이틀 섹션
+                        Container(
+                          width: 197.w,
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width:
-                                    constraints.maxWidth > 600 ? 120.w : 100.w,
-                                height:
-                                    constraints.maxWidth > 600 ? 120.w : 100.w,
-                                decoration: BoxDecoration(
-                                  color: AppColor.secondary00.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      spreadRadius: 2,
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
+                              Text(
+                                '스마트 교회요람',
+                                style: figmaStyles.display5.copyWith(
+                                  color: AppColor.neutral900,
+                                  fontFamily: 'Pretendard Variable',
+                                  letterSpacing: -0.80,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                '교회 생활의 새로운 시작',
+                                style: figmaStyles.headline4.copyWith(
+                                  color: AppColor.neutral600,
+                                  fontFamily: 'Pretendard',
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -0.50,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        SizedBox(height: 24.h),
+
+                        // 로그인 타입 토글
+                        LoginTypeToggle(
+                          selectedType: _loginType,
+                          onTypeChanged: (type) =>
+                              setState(() => _loginType = type),
+                        ),
+
+                        SizedBox(height: 24.h),
+
+                        // 입력 필드들
+                        Column(
+                          children: [
+                            // 이메일 입력 필드
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _loginType == 'email' ? '이메일' : '전화번호',
+                                  style: figmaStyles.bodyText2.copyWith(
+                                    color: Colors.black,
+                                    fontFamily: 'Pretendard Variable',
+                                    letterSpacing: -0.35,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Container(
+                                  width: 358.w,
+                                  height: 54.h,
+                                  padding: EdgeInsets.all(16.w),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColor.primary300,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: TextFormField(
+                                    controller: _usernameController,
+                                    keyboardType: _loginType == 'email'
+                                        ? TextInputType.emailAddress
+                                        : TextInputType.phone,
+                                    textInputAction: TextInputAction.next,
+                                    onFieldSubmitted: (_) {
+                                      FocusScope.of(context).requestFocus(_passwordFocusNode);
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: _loginType == 'email'
+                                          ? '이메일을 입력하세요'
+                                          : '전화번호를 입력하세요',
+                                      hintStyle: figmaStyles.body1.copyWith(
+                                        color: AppColor.neutral200,
+                                        fontFamily: 'Pretendard Variable',
+                                        letterSpacing: -0.38,
+                                      ),
+                                      border: InputBorder.none,
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return '${_loginType == 'email' ? '이메일' : '전화번호'}을 입력하세요';
+                                      }
+                                      if (_loginType == 'email' &&
+                                          !value.contains('@')) {
+                                        return '올바른 이메일 주소를 입력하세요';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 16.h),
+
+                            // 비밀번호 입력 필드
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '비밀 번호',
+                                  style: figmaStyles.bodyText2.copyWith(
+                                    color: Colors.black,
+                                    fontFamily: 'Pretendard Variable',
+                                    letterSpacing: -0.35,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Container(
+                                  width: 358.w,
+                                  height: 54.h,
+                                  padding: EdgeInsets.all(16.w),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColor.primary300,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _passwordController,
+                                          focusNode: _passwordFocusNode,
+                                          obscureText: obscurePassword,
+                                          textInputAction: TextInputAction.done,
+                                          onFieldSubmitted: (_) {
+                                            if (((_loginType == 'email' && _isEmailValid) ||
+                                                (_loginType == 'phone' && _isPhoneValid)) &&
+                                               _isPasswordValid && !isLoading) {
+                                              _login();
+                                            }
+                                          },
+                                          decoration: InputDecoration(
+                                            hintText: 'password',
+                                            hintStyle:
+                                                figmaStyles.body1.copyWith(
+                                              color: AppColor.neutral200,
+                                              fontFamily: 'Pretendard Variable',
+                                              letterSpacing: -0.38,
+                                            ),
+                                            border: InputBorder.none,
+                                          ),
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value.isEmpty) {
+                                              return '비밀번호를 입력하세요';
+                                            }
+                                            if (value.length < 6) {
+                                              return '비밀번호는 6자 이상이어야 합니다';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () => setState(() =>
+                                            obscurePassword = !obscurePassword),
+                                        child: Container(
+                                          width: 24.w,
+                                          height: 24.h,
+                                          child: Icon(
+                                            obscurePassword
+                                                ? LucideIcons.eyeOff
+                                                : LucideIcons.eye,
+                                            size: 20.w,
+                                            color: AppColor.neutral500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 16.h),
+
+                            // 체크박스와 링크
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () =>
+                                          setState(() => _saveId = !_saveId),
+                                      child: Container(
+                                        width: 20.w,
+                                        height: 20.h,
+                                        decoration: BoxDecoration(
+                                          color: _saveId
+                                              ? AppColor.primary100
+                                              : Colors.white,
+                                          border: Border.all(
+                                            color: _saveId
+                                                ? AppColor.primary100
+                                                : Color(0xFFE5E5EC),
+                                            width: 1,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(100.r),
+                                        ),
+                                        child: _saveId
+                                            ? Icon(
+                                                LucideIcons.check,
+                                                size: 14.w,
+                                                color: AppColor.primary600,
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      '아이디 저장',
+                                      style: figmaStyles.captionText1.copyWith(
+                                        color: AppColor.neutral500,
+                                        fontFamily: 'Pretendard Variable',
+                                        letterSpacing: -0.30,
+                                      ),
                                     ),
                                   ],
                                 ),
-                                child: Icon(
-                                  Icons.church,
-                                  size:
-                                      constraints.maxWidth > 600 ? 60.w : 50.w,
-                                  color: AppColor.white,
-                                ),
-                              ),
-                              SizedBox(height: 24.h),
-                              Text(
-                                '스마트 교회요람',
-                                style:
-                                    AppTextStyle(color: Colors.white).title1(),
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                '교회 생활의 새로운 시작',
-                                style: AppTextStyle(color: Colors.white).b2(),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 50.h),
-
-                        // 로그인 방식 선택 탭
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColor.secondary00.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(color: AppColor.transparent),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      setState(() => _loginType = 'email'),
-                                  child: Container(
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 16.h),
-                                    decoration: BoxDecoration(
-                                      color: _loginType == 'email'
-                                          ? AppColor.secondary07
-                                              .withOpacity(0.8)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(12.r),
-                                    ),
-                                    child: Text(
-                                      '이메일 로그인',
-                                      textAlign: TextAlign.center,
-                                      style: AppTextStyle(
-                                        color: _loginType == 'email'
-                                            ? AppColor.white
-                                            : Colors.white.withOpacity(0.6),
-                                        weight: _loginType == 'email'
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ).h3(),
-                                    ),
+                                GestureDetector(
+                                  onTap: _forgotPassword,
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        '아이디/비밀번호 찾기',
+                                        style:
+                                            figmaStyles.captionText1.copyWith(
+                                          color: AppColor.neutral500,
+                                          fontFamily: 'Pretendard Variable',
+                                          letterSpacing: -0.30,
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 12.w,
+                                        height: 12.h,
+                                        child: Icon(
+                                          LucideIcons.chevronRight,
+                                          size: 10.w,
+                                          color: AppColor.neutral500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      setState(() => _loginType = 'phone'),
-                                  child: Container(
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 16.h),
-                                    decoration: BoxDecoration(
-                                      color: _loginType == 'phone'
-                                          ? AppColor.secondary07
-                                              .withOpacity(0.8)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(10.r),
-                                    ),
-                                    child: Text(
-                                      '전화번호 로그인',
-                                      textAlign: TextAlign.center,
-                                      style: AppTextStyle(
-                                        color: _loginType == 'phone'
-                                            ? AppColor.white
-                                            : AppColor.white.withOpacity(0.6),
-                                        weight: _loginType == 'phone'
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ).h3(),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 30.h),
-
-                        // 사용자명/이메일/전화번호 입력
-                        CustomFormField(
-                          label: _loginType == 'email' ? '이메일' : '전화번호',
-                          labelStyle: AppTextStyle(color: AppColor.white).b2(),
-                          controller: _usernameController,
-                          hintText: _loginType == 'email'
-                              ? 'user@example.com'
-                              : '01012345678',
-                          hintStyle:
-                              AppTextStyle(color: AppColor.secondary03).b2(),
-                          prefixIcon: Icon(
-                            _loginType == 'email' ? Icons.email : Icons.phone,
-                          ),
-                          prefixIconColor: AppColor.secondary03,
-                          fillColor: AppColor.secondary01.withOpacity(0.8),
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide(color: AppColor.transparent),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide(
-                                color: AppColor.secondary06, width: 1),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide(color: AppColor.transparent),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 16.h),
-                          keyboardType: _loginType == 'email'
-                              ? TextInputType.emailAddress
-                              : TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return '${_loginType == 'email' ? '이메일' : '전화번호'}를 입력해주세요';
-                            }
-                            if (_loginType == 'email' && !value.contains('@')) {
-                              return '유효한 이메일 주소를 입력해주세요';
-                            }
-                            if (_loginType == 'phone' &&
-                                !RegExp(r'^[0-9-+]+$').hasMatch(value)) {
-                              return '유효한 전화번호를 입력해주세요';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        SizedBox(height: 20.h),
-
-                        // 비밀번호 입력
-                        CustomFormField(
-                          label: '비밀번호',
-                          labelStyle: AppTextStyle(color: AppColor.white).b2(),
-                          controller: _passwordController,
-                          hintText: '비밀번호를 입력하세요',
-                          hintStyle:
-                              AppTextStyle(color: AppColor.secondary03).b2(),
-                          prefixIcon: const Icon(Icons.lock),
-                          prefixIconColor: AppColor.secondary03,
-                          fillColor: AppColor.secondary01.withOpacity(0.8),
-                          filled: true,
-                          obscureText: obscurePassword,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide(color: AppColor.transparent),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide(
-                                color: AppColor.secondary06, width: 1),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide(color: AppColor.transparent),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 16.h),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
+                              ],
                             ),
-                            onPressed: () {
-                              setState(() {
-                                obscurePassword = !obscurePassword;
-                              });
-                            },
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return '비밀번호를 입력해주세요';
-                            }
-                            if (value.length < 6) {
-                              return '비밀번호는 6자 이상이어야 합니다';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        SizedBox(height: 30.h),
-
-                        // 로그인 버튼
-                        CommonButton(
-                          text: '로그인',
-                          fontStyle: AppTextStyle(
-                            color: Colors.white,
-                          ).buttonLarge(),
-                          style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.resolveWith<Color>(
-                              (Set<MaterialState> states) {
-                                // 버튼이 비활성화 상태일 때
-                                if (states.contains(MaterialState.disabled)) {
-                                  return AppColor.secondary03
-                                      .withOpacity(0.5); // 비활성화 색상
-                                }
-
-                                // 활성화 상태일 때 조건에 따라 색상 결정
-                                bool isValid = (_loginType == 'email' &&
-                                        _isEmailValid &&
-                                        _isPasswordValid) ||
-                                    (_loginType == 'phone' &&
-                                        _isPhoneValid &&
-                                        _isPasswordValid);
-                                return isValid
-                                    ? AppColor.secondary07
-                                    : AppColor.secondary03.withOpacity(0.5);
-                              },
-                            ),
-                            // 비활성화 상태에서도 동일한 모양 유지
-                            shape: MaterialStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.0))),
-                            // 비활성화 상태에서 텍스트 색상 설정
-                            foregroundColor:
-                                MaterialStateProperty.resolveWith<Color>(
-                              (Set<MaterialState> states) {
-                                if (states.contains(MaterialState.disabled)) {
-                                  return Colors.white
-                                      .withOpacity(0.7); // 비활성화 텍스트 색상
-                                }
-                                return Colors.white; // 활성화 텍스트 색상
-                              },
-                            ),
-                          ),
-                          type: ButtonType.primary,
-                          width: double.infinity,
-                          isLoading: isLoading,
-                          onPressed: (isLoading ||
-                                  (_loginType == 'email' &&
-                                      (!_isEmailValid || !_isPasswordValid)) ||
-                                  (_loginType == 'phone' &&
-                                      (!_isPhoneValid || !_isPasswordValid)))
-                              ? null
-                              : _login,
-                        ),
-
-                        SizedBox(height: 20.h),
-
-                        // // 개발자 옵션: 자동 로그인 상태 표시 및 활성화
-                        // FutureBuilder<bool>(
-                        //   future: _authService.isAutoLoginDisabled,
-                        //   builder: (context, snapshot) {
-                        //     if (snapshot.hasData && snapshot.data == true) {
-                        //       return Container(
-                        //         margin: EdgeInsets.only(bottom: 20.h),
-                        //         padding: EdgeInsets.all(16.w),
-                        //         decoration: BoxDecoration(
-                        //           color: Colors.orange.shade50,
-                        //           borderRadius: BorderRadius.circular(12.r),
-                        //           border:
-                        //               Border.all(color: Colors.orange.shade200),
-                        //         ),
-                        //         child: Row(
-                        //           children: [
-                        //             Icon(Icons.warning_amber,
-                        //                 color: Colors.orange.shade700,
-                        //                 size: 20.w),
-                        //             SizedBox(width: 8.w),
-                        //             Expanded(
-                        //               child: Text(
-                        //                 '개발 모드: 자동 로그인 비활성화됨',
-                        //                 style: TextStyle(fontSize: 12.sp),
-                        //               ),
-                        //             ),
-                        //             TextButton(
-                        //               onPressed: _enableAutoLogin,
-                        //               style: TextButton.styleFrom(
-                        //                 padding: EdgeInsets.symmetric(
-                        //                     horizontal: 8.w, vertical: 4.h),
-                        //               ),
-                        //               child: Text(
-                        //                 '활성화',
-                        //                 style: TextStyle(
-                        //                   color: Colors.orange.shade700,
-                        //                   fontSize: 12.sp,
-                        //                 ),
-                        //               ),
-                        //             ),
-                        //           ],
-                        //         ),
-                        //       );
-                        //     }
-                        //     return const SizedBox.shrink();
-                        //   },
-                        // ),
-
-                        // 비밀번호 찾기
-                        Center(
-                          child: TextButton(
-                            onPressed: _forgotPassword,
-                            child: Text(
-                              '비밀번호를 잊으셨나요?',
-                              style: AppTextStyle(
-                                color: AppColor.secondary01,
-                              ).b3(),
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 50.h),
-
-                        // 교회 가입 안내
-                        // Container(
-                        //   padding: const EdgeInsets.all(20),
-                        //   decoration: BoxDecoration(
-                        //     color: Colors.blue[50],
-                        //     borderRadius: BorderRadius.circular(12),
-                        //     border: Border.all(color: Colors.blue[200]!),
-                        //   ),
-                        //   child: Column(
-                        //     children: [
-                        //       Icon(
-                        //         Icons.info_outline,
-                        //         color: Colors.blue[700],
-                        //         size: 32,
-                        //       ),
-                        //       const SizedBox(height: 12),
-                        //       Text(
-                        //         '처음 이용하시나요?',
-                        //         style: TextStyle(
-                        //           fontSize: 16,
-                        //           fontWeight: FontWeight.bold,
-                        //           color: Colors.blue[700],
-                        //         ),
-                        //       ),
-                        //       const SizedBox(height: 8),
-                        //       const Text(
-                        //         '교회 관리자에게 계정 생성을 요청하거나\n초대장을 받아 가입하실 수 있습니다.',
-                        //         textAlign: TextAlign.center,
-                        //         style: TextStyle(fontSize: 14),
-                        //       ),
-                        //       const SizedBox(height: 16),
-                        //       SizedBox(
-                        //         width: double.infinity,
-                        //         child: OutlinedButton(
-                        //           onPressed: _requestAccount,
-                        //           style: OutlinedButton.styleFrom(
-                        //             side: BorderSide(color: Colors.blue[700]!),
-                        //             shape: RoundedRectangleBorder(
-                        //               borderRadius: BorderRadius.circular(8),
-                        //             ),
-                        //           ),
-                        //           child: Text(
-                        //             '계정 생성 요청',
-                        //             style: TextStyle(
-                        //               color: Colors.blue[700],
-                        //               fontWeight: FontWeight.w500,
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
                           ],
                         ),
-                      ),
+
+                        SizedBox(height: 48.h),
+
+                        // 로그인 버튼
+                        GestureDetector(
+                          onTap: (((_loginType == 'email' && _isEmailValid) ||
+                                      (_loginType == 'phone' &&
+                                          _isPhoneValid)) &&
+                                  _isPasswordValid &&
+                                  !isLoading)
+                              ? _login
+                              : null,
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(vertical: 16.h),
+                            decoration: BoxDecoration(
+                              color:
+                                  (((_loginType == 'email' && _isEmailValid) ||
+                                              (_loginType == 'phone' &&
+                                                  _isPhoneValid)) &&
+                                          _isPasswordValid)
+                                      ? AppColor.primary600
+                                      : Color(0xFFF1F4FF),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Center(
+                              child: isLoading
+                                  ? SizedBox(
+                                      width: 20.w,
+                                      height: 20.h,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'LOGIN',
+                                      style: figmaStyles.subtitle2.copyWith(
+                                        color: (((_loginType == 'email' &&
+                                                        _isEmailValid) ||
+                                                    (_loginType == 'phone' &&
+                                                        _isPhoneValid)) &&
+                                                _isPasswordValid)
+                                            ? Colors.white
+                                            : Color(0xFF9FB2F2),
+                                        fontFamily: 'Pretendard Variable',
+                                        letterSpacing: -0.40,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
+                ),
+                SizedBox(height: 40.h), // 하단 여백 추가
+              ],
             ),
           ),
         ),
@@ -842,7 +749,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
     return AlertDialog(
       title: const Column(
         children: [
-          Icon(Icons.lock_reset, size: 40, color: Colors.orange),
+          Icon(LucideIcons.lock, size: 40, color: Colors.orange),
           SizedBox(height: 8),
           Text('첫 로그인 - 비밀번호 변경'),
         ],
@@ -866,8 +773,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(_obscureCurrentPassword
-                      ? Icons.visibility
-                      : Icons.visibility_off),
+                      ? LucideIcons.eye
+                      : LucideIcons.eyeOff),
                   onPressed: () => setState(
                       () => _obscureCurrentPassword = !_obscureCurrentPassword),
                 ),
@@ -889,8 +796,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(_obscureNewPassword
-                      ? Icons.visibility
-                      : Icons.visibility_off),
+                      ? LucideIcons.eye
+                      : LucideIcons.eyeOff),
                   onPressed: () => setState(
                       () => _obscureNewPassword = !_obscureNewPassword),
                 ),
@@ -915,8 +822,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(_obscureConfirmPassword
-                      ? Icons.visibility
-                      : Icons.visibility_off),
+                      ? LucideIcons.eye
+                      : LucideIcons.eyeOff),
                   onPressed: () => setState(
                       () => _obscureConfirmPassword = !_obscureConfirmPassword),
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class StaffDirectoryScreen extends StatefulWidget {
   const StaffDirectoryScreen({super.key});
@@ -43,7 +44,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
         actions: [
           IconButton(
             onPressed: _showSearchDialog,
-            icon: const Icon(Icons.search),
+            icon: const Icon(LucideIcons.search),
           ),
         ],
       ),
@@ -56,7 +57,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
               color: Colors.blue[50],
               child: Row(
                 children: [
-                  Icon(Icons.search, color: Colors.blue[700]),
+                  Icon(LucideIcons.search, color: Colors.blue[700]),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -94,7 +95,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
         heroTag: "staff_fab",
         onPressed: _showContactAllDialog,
         backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.mail, color: Colors.white),
+        child: const Icon(LucideIcons.mail, color: Colors.white),
       ),
     );
   }
@@ -122,7 +123,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.people_outline,
+            LucideIcons.users,
             size: 80,
             color: Colors.grey[400],
           ),
@@ -171,7 +172,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
                             Icon(Icons.person, size: 30, color: Colors.grey[600]),
                       ),
                     )
-                  : Icon(Icons.person, size: 30, color: Colors.grey[600]),
+                  : Icon(LucideIcons.user, size: 30, color: Colors.grey[600]),
             ),
             const SizedBox(width: 16),
             
@@ -225,7 +226,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
                   
                   Row(
                     children: [
-                      Icon(Icons.phone, size: 16, color: Colors.grey[600]),
+                      Icon(LucideIcons.phone, size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 4),
                       Text(
                         staff.phone,
@@ -242,7 +243,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
                       padding: const EdgeInsets.only(top: 4),
                       child: Row(
                         children: [
-                          Icon(Icons.email, size: 16, color: Colors.grey[600]),
+                          Icon(LucideIcons.mail, size: 16, color: Colors.grey[600]),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -266,12 +267,12 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
               children: [
                 IconButton(
                   onPressed: () => _makeCall(staff.phone),
-                  icon: Icon(Icons.phone, color: Colors.green[600]),
+                  icon: Icon(LucideIcons.phone, color: Colors.green[600]),
                   tooltip: '전화걸기',
                 ),
                 IconButton(
                   onPressed: () => _sendMessage(staff.phone),
-                  icon: Icon(Icons.message, color: Colors.blue[600]),
+                  icon: Icon(LucideIcons.messageCircle, color: Colors.blue[600]),
                   tooltip: '문자보내기',
                 ),
               ],
@@ -399,7 +400,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
           content: TextField(
             decoration: const InputDecoration(
               labelText: '이름, 직분, 부서 검색',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(LucideIcons.search),
               border: OutlineInputBorder(),
             ),
             onChanged: (value) {
@@ -497,7 +498,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.message, color: Colors.blue),
+              leading: const Icon(LucideIcons.messageCircle, color: Colors.blue),
               title: const Text('단체 문자 보내기'),
               subtitle: const Text('선택된 그룹에 단체 문자를 보냅니다'),
               onTap: () {
@@ -506,7 +507,7 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
               },
             ),
             ListTile(
-              leading: const Icon(Icons.email, color: Colors.green),
+              leading: const Icon(LucideIcons.mail, color: Colors.green),
               title: const Text('단체 이메일 보내기'),
               subtitle: const Text('선택된 그룹에 단체 이메일을 보냅니다'),
               onTap: () {

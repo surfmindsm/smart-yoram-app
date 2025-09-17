@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../resource/color_style.dart';
 
 enum InputSize {
@@ -273,9 +274,9 @@ class AppSearchInput extends StatelessWidget {
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       size: size,
-      prefixIcon: Icons.search,
+      prefixIcon: LucideIcons.search,
       suffixIcon: controller?.text.isNotEmpty == true 
-          ? Icons.close 
+          ? LucideIcons.x
           : null,
       onSuffixIconTap: () {
         controller?.clear();
@@ -328,10 +329,10 @@ class _AppPasswordInputState extends State<AppPasswordInput> {
       size: widget.size,
       obscureText: _obscureText,
       onChanged: widget.onChanged,
-      prefixIcon: Icons.lock_outline,
+      prefixIcon: LucideIcons.lock,
       suffixIcon: _obscureText 
-          ? Icons.visibility_off_outlined
-          : Icons.visibility_outlined,
+          ? LucideIcons.eyeOff
+          : LucideIcons.eye,
       onSuffixIconTap: () {
         setState(() {
           _obscureText = !_obscureText;

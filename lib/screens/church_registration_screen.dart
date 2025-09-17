@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class ChurchRegistrationScreen extends StatefulWidget {
   const ChurchRegistrationScreen({super.key});
@@ -56,7 +57,7 @@ class _ChurchRegistrationScreenState extends State<ChurchRegistrationScreen> {
                   labelText: '교회명',
                   hintText: '○○교회',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.church),
+                  prefixIcon: Icon(LucideIcons.church),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -74,7 +75,7 @@ class _ChurchRegistrationScreenState extends State<ChurchRegistrationScreen> {
                   labelText: '대표자명',
                   hintText: '담임목사님 성함',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(LucideIcons.user),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -92,8 +93,8 @@ class _ChurchRegistrationScreenState extends State<ChurchRegistrationScreen> {
                   labelText: '교회 주소',
                   hintText: '주소를 입력해주세요',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                  suffixIcon: Icon(Icons.search),
+                  prefixIcon: Icon(LucideIcons.mapPin),
+                  suffixIcon: Icon(LucideIcons.search),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -118,7 +119,7 @@ class _ChurchRegistrationScreenState extends State<ChurchRegistrationScreen> {
                   labelText: '대표 연락처',
                   hintText: '010-0000-0000',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
+                  prefixIcon: Icon(LucideIcons.phone),
                 ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
@@ -140,7 +141,7 @@ class _ChurchRegistrationScreenState extends State<ChurchRegistrationScreen> {
                   labelText: '대표 이메일',
                   hintText: 'church@example.com',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                  prefixIcon: Icon(LucideIcons.mail),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {

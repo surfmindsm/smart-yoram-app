@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -168,7 +169,7 @@ class _MembersScreenState extends State<MembersScreen>
             child: AppInput(
               controller: _searchController,
               placeholder: '이름 또는 전화번호로 검색',
-              prefixIcon: Icons.search,
+              prefixIcon: LucideIcons.search,
             ),
           ),
 
@@ -240,7 +241,7 @@ class _MembersScreenState extends State<MembersScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.people_outline,
+              LucideIcons.users,
               size: 64.sp,
               color: AppColor.secondary03,
             ),
@@ -338,7 +339,7 @@ class _MembersScreenState extends State<MembersScreen>
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: IconButton(
-                  icon: Icon(Icons.phone, color: Colors.green, size: 20.sp),
+                  icon: Icon(LucideIcons.phone, color: Colors.green, size: 20.sp),
                   onPressed: () => _makePhoneCall(member.phone),
                   padding: EdgeInsets.zero,
                 ),
@@ -352,7 +353,7 @@ class _MembersScreenState extends State<MembersScreen>
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: IconButton(
-                  icon: Icon(Icons.message, color: AppColor.primary900, size: 20.sp),
+                  icon: Icon(LucideIcons.messageSquare, color: AppColor.primary900, size: 20.sp),
                   onPressed: () => _sendMessage(member.phone),
                   padding: EdgeInsets.zero,
                 ),

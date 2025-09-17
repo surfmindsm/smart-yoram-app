@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../resource/color_style.dart';
 
 class AppDialog extends StatelessWidget {
@@ -70,7 +71,7 @@ class AppDialog extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           child: Icon(
-                            Icons.close,
+                            LucideIcons.x,
                             size: 20,
                             color: AppColor.secondary05,
                           ),

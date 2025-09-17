@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../models/member.dart';
@@ -91,7 +92,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Icon(_isEditing ? Icons.save : Icons.edit),
+                : Icon(_isEditing ? LucideIcons.save : LucideIcons.edit),
             ),
         ],
       ),
@@ -114,7 +115,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                     backgroundColor: Colors.grey[300],
                     child: (_selectedImage == null && widget.member.fullProfilePhotoUrl == null)
                         ? Icon(
-                            Icons.person,
+                            LucideIcons.user,
                             size: 80,
                             color: Colors.grey[600],
                           )
@@ -133,7 +134,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.camera_alt,
+                            LucideIcons.camera,
                             color: Colors.white,
                             size: 20,
                           ),
@@ -295,7 +296,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_today),
+          suffixIcon: const Icon(LucideIcons.calendarDays),
         ),
         controller: TextEditingController(
           text: date != null ? '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}' : '',
@@ -324,21 +325,21 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
               if (_isEditing)
                 IconButton(
                   onPressed: _addFamilyMember,
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(LucideIcons.plus),
                 ),
             ],
           ),
           const ListTile(
-            leading: CircleAvatar(child: Icon(Icons.person)),
+            leading: CircleAvatar(child: Icon(LucideIcons.user)),
             title: Text('김아버지'),
             subtitle: Text('부 - 장로'),
-            trailing: Icon(Icons.edit),
+            trailing: Icon(LucideIcons.edit),
           ),
           const ListTile(
-            leading: CircleAvatar(child: Icon(Icons.person)),
+            leading: CircleAvatar(child: Icon(LucideIcons.user)),
             title: Text('김어머니'),
             subtitle: Text('모 - 권사'),
-            trailing: Icon(Icons.edit),
+            trailing: Icon(LucideIcons.edit),
           ),
         ],
       ),
@@ -363,7 +364,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
               if (_isEditing)
                 IconButton(
                   onPressed: _addServiceDepartment,
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(LucideIcons.plus),
                 ),
             ],
           ),
@@ -386,7 +387,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.photo_library),
+              leading: const Icon(LucideIcons.image),
               title: const Text('갤러리에서 선택'),
               onTap: () async {
                 Navigator.pop(context);
@@ -400,7 +401,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_camera),
+              leading: const Icon(LucideIcons.camera),
               title: const Text('카메라로 촬영'),
               onTap: () async {
                 Navigator.pop(context);
@@ -415,7 +416,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             ),
             if (widget.member.profilePhotoUrl != null)
               ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
+                leading: const Icon(LucideIcons.trash, color: Colors.red),
                 title: const Text('프로필 사진 삭제'),
                 onTap: () {
                   Navigator.pop(context);

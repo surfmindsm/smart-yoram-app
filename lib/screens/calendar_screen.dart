@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widget/widgets.dart';
 
@@ -160,7 +161,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(LucideIcons.plus),
             onPressed: () {
               _showAddEventDialog();
             },
@@ -189,7 +190,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         heroTag: "calendar_fab",
         onPressed: _showAddEventDialog,
         backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(LucideIcons.plus, color: Colors.white),
       ),
     );
   }
@@ -201,7 +202,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     
     if (todayEvents.isEmpty) {
       return const EmptyStateWidget(
-        icon: Icons.today_outlined,
+        icon: LucideIcons.calendarDays,
         title: '오늘 일정이 없습니다',
         subtitle: '좋은 하루 보내세요!',
       );
@@ -261,7 +262,7 @@ class _CalendarScreenState extends State<CalendarScreen>
       onRefresh: _loadEvents,
       child: upcomingEvents.isEmpty
           ? const EmptyStateWidget(
-              icon: Icons.event_note,
+              icon: LucideIcons.calendar,
               title: '예정된 일정이 없습니다',
               subtitle: '새로운 일정을 추가하세요!',
             )
@@ -365,7 +366,7 @@ class _CalendarScreenState extends State<CalendarScreen>
               value: 'edit',
               child: Row(
                 children: [
-                  Icon(Icons.edit, size: 16),
+                  Icon(LucideIcons.edit, size: 16),
                   SizedBox(width: 8),
                   Text('수정'),
                 ],
@@ -375,7 +376,7 @@ class _CalendarScreenState extends State<CalendarScreen>
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete, size: 16, color: Colors.red),
+                  Icon(LucideIcons.trash, size: 16, color: Colors.red),
                   SizedBox(width: 8),
                   Text('삭제', style: TextStyle(color: Colors.red)),
                 ],
@@ -404,13 +405,13 @@ class _CalendarScreenState extends State<CalendarScreen>
   IconData _getEventIcon(String type) {
     switch (type) {
       case 'birthday':
-        return Icons.cake;
+        return LucideIcons.cake;
       case 'church':
-        return Icons.church;
+        return LucideIcons.church;
       case 'personal':
-        return Icons.person;
+        return LucideIcons.user;
       default:
-        return Icons.event;
+        return LucideIcons.calendar;
     }
   }
 
@@ -457,7 +458,7 @@ class _CalendarScreenState extends State<CalendarScreen>
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.schedule, size: 16),
+                const Icon(LucideIcons.clock, size: 16),
                 const SizedBox(width: 8),
                 Text(_formatEventDate(event.date)),
               ],

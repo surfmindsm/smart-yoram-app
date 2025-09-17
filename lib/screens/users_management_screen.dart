@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
 import '../resource/color_style.dart';
@@ -97,21 +98,21 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
               AppInput(
                 controller: usernameController,
                 label: '사용자명',
-                prefixIcon: Icons.person,
+                prefixIcon: LucideIcons.user,
                 disabled: isEdit, // 수정 시 사용자명 변경 불가
               ),
               SizedBox(height: 16.h),
               AppInput(
                 controller: emailController,
                 label: '이메일',
-                prefixIcon: Icons.email,
+                prefixIcon: LucideIcons.mail,
                 keyboardType: TextInputType.emailAddress,
               ),
               SizedBox(height: 16.h),
               AppInput(
                 controller: fullNameController,
                 label: '이름',
-                prefixIcon: Icons.badge,
+                prefixIcon: LucideIcons.badge,
               ),
               if (!isEdit) ...[
                 SizedBox(height: 16.h),
@@ -359,7 +360,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.add, size: 16.sp),
+                  Icon(LucideIcons.plus, size: 16.sp),
                   SizedBox(width: 4.w),
                   Text('추가'),
                 ],
@@ -375,7 +376,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
             padding: EdgeInsets.all(16.w),
             child: AppInput(
               placeholder: '사용자 검색...',
-              prefixIcon: Icons.search,
+              prefixIcon: LucideIcons.search,
               onChanged: (value) {
                 setState(() {
                   searchQuery = value;
@@ -409,7 +410,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.person_off,
+                              LucideIcons.userX,
                               size: 64.sp,
                               color: AppColor.secondary03,
                             ),
@@ -489,13 +490,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                   ],
                                 ),
                                 trailing: PopupMenuButton(
-                                  icon: Icon(Icons.more_vert, color: AppColor.secondary05),
+                                  icon: Icon(LucideIcons.moreVertical, color: AppColor.secondary05),
                                   itemBuilder: (context) => [
                                     PopupMenuItem(
                                       value: 'edit',
                                       child: Row(
                                         children: [
-                                          Icon(Icons.edit, color: AppColor.secondary07),
+                                          Icon(LucideIcons.edit, color: AppColor.secondary07),
                                           SizedBox(width: 8.w),
                                           Text('수정'),
                                         ],
@@ -506,7 +507,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                       child: Row(
                                         children: [
                                           Icon(
-                                            user['is_active'] ? Icons.block : Icons.check_circle,
+                                            user['is_active'] ? LucideIcons.ban : LucideIcons.checkCircle,
                                             color: AppColor.secondary07,
                                           ),
                                           SizedBox(width: 8.w),
@@ -518,7 +519,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                       value: 'delete',
                                       child: Row(
                                         children: [
-                                          Icon(Icons.delete, color: AppColor.error),
+                                          Icon(LucideIcons.trash, color: AppColor.error),
                                           SizedBox(width: 8.w),
                                           Text('삭제', style: TextStyle(color: AppColor.error)),
                                         ],
@@ -566,13 +567,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   IconData _getRoleIcon(String role) {
     switch (role) {
       case 'admin':
-        return Icons.admin_panel_settings;
+        return LucideIcons.userCheck;
       case 'pastor':
-        return Icons.church;
+        return LucideIcons.church;
       case 'member':
-        return Icons.person;
+        return LucideIcons.user;
       default:
-        return Icons.help;
+        return LucideIcons.helpCircle;
     }
   }
 

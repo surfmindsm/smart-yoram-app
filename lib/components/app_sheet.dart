@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../resource/color_style.dart';
 
 enum SheetType {
@@ -310,7 +311,7 @@ class _AppBottomSheet extends StatelessWidget {
                         Navigator.of(context).pop();
                         onClose?.call();
                       },
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(LucideIcons.x),
                     ),
                 ],
               ),
@@ -409,7 +410,7 @@ class _AppSideSheet extends StatelessWidget {
                             Navigator.of(context).pop();
                             onClose?.call();
                           },
-                          icon: const Icon(Icons.close),
+                          icon: const Icon(LucideIcons.x),
                         ),
                     ],
                   ),
