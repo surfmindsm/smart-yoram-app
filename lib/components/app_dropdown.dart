@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../resource/color_style.dart';
 
 class AppDropdownMenuItem<T> {
@@ -119,7 +119,7 @@ class AppDropdown<T> extends StatelessWidget {
               onChanged: disabled ? null : onChanged,
               isExpanded: true,
               icon: const Icon(
-                LucideIcons.chevronDown,
+                Icons.keyboard_arrow_down,
                 color: AppColor.secondary03,
               ),
               dropdownColor: AppColor.white,

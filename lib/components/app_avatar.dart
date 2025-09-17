@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../resource/color_style.dart';
 
 enum AvatarSize {
@@ -98,7 +98,7 @@ class AppAvatar extends StatelessWidget {
     
     // Show default user icon
     return Icon(
-      LucideIcons.user,
+      Icons.person,
       size: sizeConfig.iconSize,
       color: textColor ?? AppColor.primary7,
     );

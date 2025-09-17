@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../utils/permission_utils.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../services/qr_service.dart';
@@ -88,7 +88,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
         actions: [
           IconButton(
             onPressed: _toggleFlash,
-            icon: Icon(_flashEnabled ? LucideIcons.flashlight : LucideIcons.flashlightOff),
+            icon: Icon(_flashEnabled ? Icons.flashlight_on : Icons.flashlight_off),
           ),
         ],
       ),
@@ -110,7 +110,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      _hasPermission ? LucideIcons.camera : LucideIcons.camera,
+                      _hasPermission ? Icons.camera_alt : Icons.camera_alt,
                       color: Colors.white,
                       size: 80,
                     ),
@@ -158,7 +158,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(
-                    LucideIcons.qrCode,
+                    Icons.qr_code,
                     size: 48,
                     color: Colors.grey,
                   ),
@@ -184,7 +184,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       ),
                       child: Column(
                         children: [
-                          const Icon(LucideIcons.checkCircle, color: Colors.green),
+                          const Icon(Icons.check_circle, color: Colors.green),
                           const SizedBox(height: 8),
                           Text('스캔 완료: $_scannedCode'),
                         ],
@@ -198,7 +198,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: _showMyQR,
-                          icon: const Icon(LucideIcons.qrCode),
+                          icon: const Icon(Icons.qr_code),
                           label: const Text('내 QR 보기'),
                         ),
                       ),
@@ -206,7 +206,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _hasPermission ? _startScan : null,
-                          icon: const Icon(LucideIcons.scan),
+                          icon: const Icon(Icons.qr_code_scanner),
                           label: Text(_isScanning ? '스캔 중...' : '스캔 시작'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue[700],
@@ -289,7 +289,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(LucideIcons.checkCircle, color: Colors.green),
+            Icon(Icons.check_circle, color: Colors.green),
             SizedBox(width: 8),
             Text('출석 완료'),
           ],
@@ -304,7 +304,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     ? NetworkImage(_scanResult!.member!.profilePhotoUrl!) 
                     : null,
                 child: _scanResult!.member!.profilePhotoUrl == null 
-                    ? const Icon(LucideIcons.user, size: 30) 
+                    ? const Icon(Icons.person, size: 30) 
                     : null,
               ),
               const SizedBox(height: 12),
@@ -338,7 +338,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(LucideIcons.alertCircle, color: Colors.red),
+            Icon(Icons.error, color: Colors.red),
             SizedBox(width: 8),
             Text('오류'),
           ],
@@ -497,7 +497,7 @@ class MyQRCodeScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(LucideIcons.qrCode, size: 80, color: Colors.grey),
+                            Icon(Icons.qr_code, size: 80, color: Colors.grey),
                             SizedBox(height: 8),
                             Text(
                               'QR 코드\n(qr_flutter 패키지 필요)',
@@ -531,7 +531,7 @@ class MyQRCodeScreen extends StatelessWidget {
                           const SnackBar(content: Text('QR 코드 저장 기능은 추후 구현 예정입니다')),
                         );
                       },
-                      icon: const Icon(LucideIcons.save),
+                      icon: const Icon(Icons.save),
                       label: const Text('저장'),
                     ),
                   ),
@@ -544,7 +544,7 @@ class MyQRCodeScreen extends StatelessWidget {
                           const SnackBar(content: Text('QR 코드 공유 기능은 추후 구현 예정입니다')),
                         );
                       },
-                      icon: const Icon(LucideIcons.share2),
+                      icon: const Icon(Icons.share),
                       label: const Text('공유'),
                     ),
                   ),

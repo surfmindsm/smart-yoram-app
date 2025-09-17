@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionUtils {
@@ -41,7 +41,7 @@ class PermissionUtils {
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(LucideIcons.camera, color: Colors.blue),
+            Icon(Icons.camera_alt, color: Colors.blue),
             SizedBox(width: 8),
             Text('카메라 권한 요청'),
           ],
@@ -124,7 +124,7 @@ class PermissionUtils {
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(LucideIcons.settings, color: Colors.orange),
+            Icon(Icons.settings, color: Colors.orange),
             SizedBox(width: 8),
             Text('권한 설정 필요'),
           ],

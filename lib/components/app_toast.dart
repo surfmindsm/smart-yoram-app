@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../resource/color_style.dart';
 
 enum ToastType {
@@ -59,28 +59,28 @@ class AppToast {
           backgroundColor: AppColor.primary600,
           iconColor: AppColor.white,
           textColor: AppColor.white,
-          icon: LucideIcons.info,
+          icon: Icons.info,
         );
       case ToastType.success:
         return const _ToastConfig(
           backgroundColor: Color(0xff10b981),
           iconColor: AppColor.white,
           textColor: AppColor.white,
-          icon: LucideIcons.checkCircle,
+          icon: Icons.check_circle,
         );
       case ToastType.warning:
         return const _ToastConfig(
           backgroundColor: AppColor.orange500,
           iconColor: AppColor.white,
           textColor: AppColor.white,
-          icon: LucideIcons.alertTriangle,
+          icon: Icons.warning,
         );
       case ToastType.error:
         return const _ToastConfig(
           backgroundColor: AppColor.error,
           iconColor: AppColor.white,
           textColor: AppColor.white,
-          icon: LucideIcons.alertCircle,
+          icon: Icons.error,
         );
     }
   }
@@ -331,7 +331,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                       });
                     },
                     child: Icon(
-                      LucideIcons.x,
+                      Icons.close,
                       color: widget.config.iconColor.withOpacity(0.8),
                       size: 18,
                     ),

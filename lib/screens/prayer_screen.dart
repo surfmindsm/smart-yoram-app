@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widget/widgets.dart';
 
@@ -175,7 +175,7 @@ class _PrayerScreenState extends State<PrayerScreen>
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.plus),
+            icon: const Icon(Icons.add),
             onPressed: () {
               _showAddDialog();
             },
@@ -210,7 +210,7 @@ class _PrayerScreenState extends State<PrayerScreen>
     
     if (myPrayerRequests.isEmpty) {
       return const EmptyStateWidget(
-        icon: LucideIcons.church,
+        icon: Icons.church,
         title: '등록된 기도제목이 없습니다',
         subtitle: '처음 기도제목을 등록해보세요',
       );
@@ -235,7 +235,7 @@ class _PrayerScreenState extends State<PrayerScreen>
     
     if (sharedPrayerRequests.isEmpty) {
       return const EmptyStateWidget(
-        icon: LucideIcons.users,
+        icon: Icons.group,
         title: '공동 기도제목이 없습니다',
         subtitle: '공동체와 함께 기도해보세요',
       );
@@ -274,7 +274,7 @@ class _PrayerScreenState extends State<PrayerScreen>
             ),
             child: Column(
               children: [
-                Icon(LucideIcons.info, color: Colors.blue[700]),
+                Icon(Icons.info, color: Colors.blue[700]),
                 const SizedBox(height: 8),
                 Text(
                   '심방 신청',
@@ -300,7 +300,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(LucideIcons.home, size: 64, color: Colors.grey),
+                        Icon(Icons.home, size: 64, color: Colors.grey),
                         SizedBox(height: 16),
                         Text(
                           '심방 신청 내역이 없습니다',
@@ -401,7 +401,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(LucideIcons.edit, size: 16),
+                            Icon(Icons.edit, size: 16),
                             SizedBox(width: 8),
                             Text('수정'),
                           ],
@@ -412,7 +412,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                           value: 'answered',
                           child: Row(
                             children: [
-                              Icon(LucideIcons.check, size: 16, color: Colors.green),
+                              Icon(Icons.check, size: 16, color: Colors.green),
                               SizedBox(width: 8),
                               Text('응답됨으로 표시'),
                             ],
@@ -422,7 +422,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(LucideIcons.trash, size: 16, color: Colors.red),
+                            Icon(Icons.delete, size: 16, color: Colors.red),
                             SizedBox(width: 8),
                             Text('삭제', style: TextStyle(color: Colors.red)),
                           ],
@@ -448,7 +448,7 @@ class _PrayerScreenState extends State<PrayerScreen>
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(LucideIcons.clock, size: 14, color: Colors.grey[600]),
+                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
                   _formatDate(request.createdAt),
@@ -461,7 +461,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                 if (!isMyRequest)
                   TextButton.icon(
                     onPressed: () => _prayForRequest(request),
-                    icon: const Icon(LucideIcons.heart, size: 14),
+                    icon: const Icon(Icons.favorite, size: 14),
                     label: const Text('기도해요', style: TextStyle(fontSize: 12)),
                   ),
               ],
@@ -632,7 +632,7 @@ class _PrayerScreenState extends State<PrayerScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(LucideIcons.heart),
+              leading: const Icon(Icons.favorite),
               title: const Text('기도제목 등록'),
               onTap: () {
                 Navigator.pop(context);
@@ -640,7 +640,7 @@ class _PrayerScreenState extends State<PrayerScreen>
               },
             ),
             ListTile(
-              leading: const Icon(LucideIcons.home),
+              leading: const Icon(Icons.home),
               title: const Text('심방 신청'),
               onTap: () {
                 Navigator.pop(context);

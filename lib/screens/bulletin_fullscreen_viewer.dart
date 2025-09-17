@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -191,7 +191,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.alertCircle, size: 64, color: Colors.red),
+            const Icon(Icons.error, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             const Text('이미지를 불러올 수 없습니다'),
             const SizedBox(height: 8),
@@ -227,7 +227,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(LucideIcons.checkCircle, color: Colors.green),
+            const Icon(Icons.check_circle, color: Colors.green),
             const SizedBox(width: 12),
             Text(message),
           ],
@@ -243,7 +243,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(LucideIcons.alertCircle, color: Colors.red),
+            const Icon(Icons.error, color: Colors.red),
             const SizedBox(width: 12),
             Text(message),
           ],
@@ -270,12 +270,12 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
           if (widget.fileType == FileType.image)
             IconButton(
               onPressed: _saveToGallery,
-              icon: const Icon(LucideIcons.download),
+              icon: const Icon(Icons.download),
               tooltip: '갤러리에 저장',
             ),
           IconButton(
             onPressed: _shareFile,
-            icon: const Icon(LucideIcons.share2),
+            icon: const Icon(Icons.share),
             tooltip: '공유',
           ),
         ],

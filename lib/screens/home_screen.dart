@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// // import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
@@ -14,6 +14,7 @@ import '../services/announcement_service.dart';
 import '../services/daily_verse_service.dart';
 import '../services/worship_service.dart';
 import '../services/fcm_service.dart';
+import '../services/home_data_service.dart';
 
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
@@ -48,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final AnnouncementService _announcementService = AnnouncementService();
   final DailyVerseService _dailyVerseService = DailyVerseService();
   final WorshipServiceApi _worshipServiceApi = WorshipServiceApi();
+  final HomeDataService _homeDataService = HomeDataService();
 
   app_user.User? currentUser;
   Member? currentMember;
@@ -74,19 +76,109 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _initializeFCM();
-    _loadDashboardData();
-    _loadTodaysVerse();
+    _loadEssentialDataFast();
+    _initializeFCMInBackground();
   }
 
-  // FCM 초기화
-  Future<void> _initializeFCM() async {
+  // 🚀 필수 데이터 빠른 로드
+  Future<void> _loadEssentialDataFast() async {
     try {
-      await FCMService.instance.initialize();
-      print('✅ FCM 초기화 완료');
+      print('🚀 HOME: 필수 데이터 빠른 로드 시작');
+
+      final essentialData = await _homeDataService.loadEssentialData();
+
+      if (mounted) {
+        setState(() {
+          currentUser = essentialData.user;
+          currentMember = essentialData.member;
+          currentChurch = essentialData.church;
+          isLoading = false; // 로딩 완료
+        });
+      }
+
+      print('🚀 HOME: 필수 데이터 로드 완료');
+
+      // 오늘의 말씀은 별도로 로드 (UI 블로킹 방지)
+      _loadTodaysVerseAsync();
+
+      // 공지사항도 백그라운드에서 로드
+      _loadAnnouncementsInBackground();
     } catch (e) {
-      print('❌ FCM 초기화 실패: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+      print('❌ HOME: 필수 데이터 로드 실패 - $e');
     }
+  }
+
+  // 📖 오늘의 말씀 비동기 로드
+  Future<void> _loadTodaysVerseAsync() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingVerse = true;
+    });
+
+    try {
+      final verse = await _homeDataService.loadTodaysVerse();
+
+      if (mounted) {
+        setState(() {
+          _currentVerse = verse;
+          _isLoadingVerse = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _currentVerse = null;
+          _isLoadingVerse = false;
+        });
+      }
+      print('❌ HOME: 오늘의 말씀 로드 실패 - $e');
+    }
+  }
+
+  // 📢 공지사항 백그라운드 로드
+  Future<void> _loadAnnouncementsInBackground() async {
+    // UI 블로킹을 피하기 위해 백그라운드에서 처리
+    Future.microtask(() async {
+      try {
+        final announcements = await _announcementService.getAnnouncements(
+          category: 'all',
+          limit: 5, // 최신 5개만
+        );
+
+        if (mounted) {
+          setState(() {
+            recentAnnouncements = announcements;
+          });
+          print('📢 HOME: 공지사항 ${recentAnnouncements.length}개 로드 완료');
+        }
+      } catch (e) {
+        print('❌ HOME: 공지사항 로드 실패 - $e');
+      }
+    });
+  }
+
+  // 🔄 FCM 백그라운드 초기화
+  Future<void> _initializeFCMInBackground() async {
+    // 백그라운드에서 FCM 초기화 (UI 블로킹 방지)
+    Future.microtask(() async {
+      try {
+        await FCMService.instance.initialize();
+        print('✅ FCM 초기화 완료');
+      } catch (e) {
+        print('❌ FCM 초기화 실패: $e');
+      }
+    });
+  }
+
+  // 기존 FCM 초기화 (호환성 유지)
+  Future<void> _initializeFCM() async {
+    return _initializeFCMInBackground();
   }
 
   Future<void> _loadDashboardData() async {
@@ -267,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: const Icon(
-                  LucideIcons.bell,
+                  Icons.notifications,
                   color: Colors.white,
                   size: 20,
                 ),
@@ -388,7 +480,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Icon(
-                              LucideIcons.home,
+                              Icons.home,
                               color: AppColor.white,
                               size: 20.sp,
                             ),
@@ -445,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Icon(
-                              LucideIcons.heart,
+                              Icons.favorite,
                               color: AppColor.white,
                               size: 20.sp,
                             ),
@@ -519,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Icon(
-                        LucideIcons.church,
+                        Icons.church,
                         color: AppColor.white,
                         size: 14.sp,
                       ),
@@ -549,7 +641,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     duration: const Duration(milliseconds: 200),
                     turns: _isChurchCardExpanded ? 0.5 : 0,
                     child: Icon(
-                      LucideIcons.chevronDown,
+                      Icons.keyboard_arrow_down,
                       color: AppColor.secondary04,
                       size: 24,
                     ),
@@ -582,7 +674,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Icon(
-                            LucideIcons.user,
+                            Icons.person,
                             color: AppColor.primary600,
                             size: 16,
                           ),
@@ -630,7 +722,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   borderRadius: BorderRadius.circular(6.r),
                                 ),
                                 child: Icon(
-                                  LucideIcons.phone,
+                                  Icons.phone,
                                   color: AppColor.green600,
                                   size: 16,
                                 ),
@@ -677,7 +769,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   borderRadius: BorderRadius.circular(6.r),
                                 ),
                                 child: Icon(
-                                  LucideIcons.mapPin,
+                                  Icons.location_on,
                                   color: AppColor.orange600,
                                   size: 16,
                                 ),
@@ -726,7 +818,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Padding(
                           padding: EdgeInsets.only(top: 2.h),
                           child: Icon(
-                            LucideIcons.mapPin,
+                            Icons.location_on,
                             color: AppColor.primary600,
                             size: 16,
                           ),
@@ -930,7 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Row(
                   children: [
                     Icon(
-                      LucideIcons.bookOpen,
+                      Icons.menu_book,
                       color: AppColor.primary900,
                       size: 20.r,
                     ),
@@ -956,7 +1048,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           turns: _isRefreshingVerse ? 1.0 : 0.0,
                           duration: const Duration(milliseconds: 800),
                           child: Icon(
-                            LucideIcons.refreshCw,
+                            Icons.refresh,
                             color: AppColor.secondary04,
                             size: 20.r,
                           ),
@@ -971,7 +1063,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Container(
                         padding: EdgeInsets.all(8.r),
                         child: Icon(
-                          LucideIcons.share2,
+                          Icons.share,
                           color: AppColor.secondary04,
                           size: 20.r,
                         ),
@@ -1058,7 +1150,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Row(
                   children: [
                     Icon(
-                      LucideIcons.messageSquare,
+                      Icons.chat_bubble,
                       size: 20.r,
                       color: AppColor.primary900,
                     ),
@@ -1170,7 +1262,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         Row(
                                           children: [
                                             Icon(
-                                              LucideIcons.clock,
+                                              Icons.access_time,
                                               size: 12.r,
                                               color: Colors.grey[500],
                                             ),
@@ -1183,7 +1275,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             ),
                                             SizedBox(width: 8.w),
                                             Icon(
-                                              LucideIcons.chevronRight,
+                                              Icons.keyboard_arrow_right,
                                               size: 16.r,
                                               color: Colors.grey[400],
                                             ),
@@ -1265,7 +1357,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     duration: const Duration(milliseconds: 200),
                     turns: _isWorshipScheduleExpanded ? 0.5 : 0,
                     child: Icon(
-                      LucideIcons.chevronDown,
+                      Icons.keyboard_arrow_down,
                       color: Colors.white.withOpacity(0.7),
                       size: 24,
                     ),

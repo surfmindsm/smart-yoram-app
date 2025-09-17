@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 
 class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -21,7 +21,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       type: NotificationType.important,
       isRead: false,
       timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-      icon: LucideIcons.church,
+      icon: Icons.church,
     ),
     NotificationItem(
       id: '2',
@@ -30,7 +30,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       type: NotificationType.notice,
       isRead: true,
       timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-      icon: LucideIcons.megaphone,
+      icon: Icons.campaign,
     ),
     NotificationItem(
       id: '3',
@@ -39,7 +39,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       type: NotificationType.attendance,
       isRead: false,
       timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-      icon: LucideIcons.checkCircle,
+      icon: Icons.check_circle,
     ),
     NotificationItem(
       id: '4',
@@ -48,7 +48,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       type: NotificationType.schedule,
       isRead: true,
       timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      icon: LucideIcons.cake,
+      icon: Icons.cake,
     ),
     NotificationItem(
       id: '5',
@@ -57,7 +57,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       type: NotificationType.notice,
       isRead: false,
       timestamp: DateTime.now().subtract(const Duration(days: 2)),
-      icon: LucideIcons.heart,
+      icon: Icons.favorite,
     ),
   ];
 
@@ -98,7 +98,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               ),
             ),
           PopupMenuButton<String>(
-            icon: const Icon(LucideIcons.moreVertical),
+            icon: const Icon(Icons.more_vert),
             onSelected: (value) {
               if (value == 'settings') {
                 _showNotificationSettings();
@@ -111,7 +111,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 value: 'settings',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.settings),
+                    Icon(Icons.settings),
                     SizedBox(width: 8),
                     Text('알림 설정'),
                   ],
@@ -121,7 +121,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 value: 'clear',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.trash),
+                    Icon(Icons.delete),
                     SizedBox(width: 8),
                     Text('모든 알림 삭제'),
                   ],
@@ -174,7 +174,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(LucideIcons.bell, color: Colors.blue[700]),
+                  Icon(Icons.notifications, color: Colors.blue[700]),
                   const SizedBox(width: 8),
                   Text(
                     '읽지 않은 알림 $unreadCount개',
@@ -211,7 +211,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            LucideIcons.bellOff,
+            Icons.notifications_off,
             size: 80,
             color: Colors.grey[400],
           ),
@@ -316,7 +316,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 value: 'read',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.checkCircle),
+                    Icon(Icons.check_circle),
                     SizedBox(width: 8),
                     Text('읽음 표시'),
                   ],
@@ -326,7 +326,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(LucideIcons.trash),
+                  Icon(Icons.delete),
                   SizedBox(width: 8),
                   Text('삭제'),
                 ],

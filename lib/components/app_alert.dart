@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../resource/color_style.dart';
 
 enum AlertType {
@@ -104,7 +104,7 @@ class AppAlert extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 child: Icon(
-                  LucideIcons.x,
+                  Icons.close,
                   size: 16,
                   color: alertTheme.titleColor.withOpacity(0.6),
                 ),
@@ -124,7 +124,7 @@ class AppAlert extends StatelessWidget {
           iconColor: AppColor.primary7,
           titleColor: AppColor.secondary07,
           descriptionColor: AppColor.secondary06,
-          defaultIcon: LucideIcons.info,
+          defaultIcon: Icons.info,
         );
       case AlertType.warning:
         return _AlertTheme(
@@ -133,7 +133,7 @@ class AppAlert extends StatelessWidget {
           iconColor: AppColor.orange500,
           titleColor: AppColor.secondary07,
           descriptionColor: AppColor.secondary06,
-          defaultIcon: LucideIcons.alertTriangle,
+          defaultIcon: Icons.warning,
         );
       case AlertType.error:
         return _AlertTheme(
@@ -142,7 +142,7 @@ class AppAlert extends StatelessWidget {
           iconColor: AppColor.error,
           titleColor: AppColor.secondary07,
           descriptionColor: AppColor.secondary06,
-          defaultIcon: LucideIcons.alertCircle,
+          defaultIcon: Icons.error,
         );
       case AlertType.success:
         return _AlertTheme(
@@ -151,7 +151,7 @@ class AppAlert extends StatelessWidget {
           iconColor: const Color(0xff22C55E),
           titleColor: AppColor.secondary07,
           descriptionColor: AppColor.secondary06,
-          defaultIcon: LucideIcons.checkCircle,
+          defaultIcon: Icons.check_circle,
         );
     }
   }

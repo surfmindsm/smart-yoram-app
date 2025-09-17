@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 
 /// 설정 화면 등에서 사용되는 커스텀 리스트 타일
 class CustomListTile extends StatelessWidget {
@@ -41,7 +41,7 @@ class CustomListTile extends StatelessWidget {
         ),
       ),
       subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
-      trailing: trailing ?? (showArrow ? const Icon(LucideIcons.chevronRight) : null),
+      trailing: trailing ?? (showArrow ? const Icon(Icons.keyboard_arrow_right) : null),
       onTap: onTap,
     );
   }

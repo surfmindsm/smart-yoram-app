@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../widget/widgets.dart';
 import '../config/api_config.dart';
 // import 'package:file_picker/file_picker.dart'; // TODO: 파일 선택용 패키지 추가 필요
@@ -236,7 +236,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(LucideIcons.alertCircle, color: Colors.red),
+            Icon(Icons.error, color: Colors.red),
             SizedBox(width: 8),
             Text('오류'),
           ],
@@ -268,20 +268,20 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
         title: 'Excel 관리',
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.helpCircle),
+            icon: const Icon(Icons.help),
             onPressed: _showUploadGuide,
             tooltip: '업로드 가이드',
           ),
           IconButton(
-            icon: const Icon(LucideIcons.refreshCw),
+            icon: const Icon(Icons.refresh),
             onPressed: _loadUploadHistory,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: '파일 관리', icon: Icon(LucideIcons.fileText)),
-            Tab(text: '업로드 기록', icon: Icon(LucideIcons.history)),
+            Tab(text: '파일 관리', icon: Icon(Icons.description)),
+            Tab(text: '업로드 기록', icon: Icon(Icons.history)),
           ],
         ),
       ),
@@ -310,7 +310,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                 children: [
                   Row(
                     children: [
-                      Icon(LucideIcons.users, color: Colors.blue[700]),
+                      Icon(Icons.group, color: Colors.blue[700]),
                       const SizedBox(width: 8),
                       const Text(
                         '교인 명단 관리',
@@ -339,7 +339,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                   else
                     CommonButton.primary(
                       text: '교인 명단 업로드',
-                      icon: LucideIcons.upload,
+                      icon: Icons.upload,
                       onPressed: _uploadMembersExcel,
                     ),
                   
@@ -351,7 +351,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                       Expanded(
                         child: CommonButton.secondary(
                           text: '명단 다운로드',
-                          icon: LucideIcons.download,
+                          icon: Icons.download,
                           onPressed: isDownloading ? null : _downloadMembersExcel,
                         ),
                       ),
@@ -359,7 +359,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                       Expanded(
                         child: CommonButton.secondary(
                           text: '템플릿 다운로드',
-                          icon: LucideIcons.fileText,
+                          icon: Icons.description,
                           onPressed: isDownloading ? null : _downloadTemplate,
                         ),
                       ),
@@ -381,7 +381,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                 children: [
                   Row(
                     children: [
-                      Icon(LucideIcons.checkCircle, color: Colors.green[700]),
+                      Icon(Icons.check_circle, color: Colors.green[700]),
                       const SizedBox(width: 8),
                       const Text(
                         '출석 기록 관리',
@@ -398,7 +398,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                   
                   CommonButton.primary(
                     text: '출석 기록 다운로드',
-                    icon: LucideIcons.download,
+                    icon: Icons.download,
                     onPressed: isDownloading ? null : _downloadAttendanceExcel,
                   ),
                 ],
@@ -418,7 +418,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                 children: [
                   Row(
                     children: [
-                      Icon(LucideIcons.info, color: Colors.blue[700]),
+                      Icon(Icons.info, color: Colors.blue[700]),
                       const SizedBox(width: 8),
                       Text(
                         '사용법 안내',
@@ -475,7 +475,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
             children: [
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.upload,
+                  icon: Icons.upload,
                   value: uploadHistory.length.toString(),
                   title: '총 업로드',
                   color: Colors.blue,
@@ -484,7 +484,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.plus,
+                  icon: Icons.add,
                   value: uploadHistory.fold<int>(0, (sum, h) => sum + (h['created'] as int)).toString(),
                   title: '총 생성',
                   color: Colors.green,
@@ -493,7 +493,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.edit,
+                  icon: Icons.edit,
                   value: uploadHistory.fold<int>(0, (sum, h) => sum + (h['updated'] as int)).toString(),
                   title: '총 수정',
                   color: Colors.orange,
@@ -509,7 +509,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
               ? const LoadingWidget()
               : uploadHistory.isEmpty
                   ? const EmptyStateWidget(
-                      icon: LucideIcons.history,
+                      icon: Icons.history,
                       title: '업로드 기록이 없습니다.',
                     )
                   : ListView.builder(
@@ -526,8 +526,8 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                                   : Colors.red,
                               child: Icon(
                                 history['status'] == 'success'
-                                    ? LucideIcons.check
-                                    : LucideIcons.alertCircle,
+                                    ? Icons.check
+                                    : Icons.error,
                                 color: Colors.white,
                               ),
                             ),
@@ -556,7 +556,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                                           child: _buildResultItem(
                                             '생성',
                                             history['created'].toString(),
-                                            LucideIcons.plus,
+                                            Icons.add,
                                             Colors.green,
                                           ),
                                         ),
@@ -564,7 +564,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                                           child: _buildResultItem(
                                             '수정',
                                             history['updated'].toString(),
-                                            LucideIcons.edit,
+                                            Icons.edit,
                                             Colors.blue,
                                           ),
                                         ),
@@ -572,7 +572,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                                           child: _buildResultItem(
                                             '오류',
                                             history['errors'].toString(),
-                                            LucideIcons.alertCircle,
+                                            Icons.error,
                                             Colors.red,
                                           ),
                                         ),

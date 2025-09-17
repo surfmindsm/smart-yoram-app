@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../resource/color_style.dart';
 
 enum CheckboxSize {
@@ -60,7 +60,7 @@ class AppCheckbox extends StatelessWidget {
                 ),
                 child: value
                   ? Icon(
-                      LucideIcons.check,
+                      Icons.check,
                       size: sizeConfig.iconSize,
                       color: AppColor.white,
                     )

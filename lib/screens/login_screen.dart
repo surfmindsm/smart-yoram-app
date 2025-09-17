@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// // import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
@@ -284,8 +284,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                           height: 24.h,
                                           child: Icon(
                                             obscurePassword
-                                                ? LucideIcons.eyeOff
-                                                : LucideIcons.eye,
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
                                             size: 20.w,
                                             color: AppColor.neutral500,
                                           ),
@@ -326,7 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                         child: _saveId
                                             ? Icon(
-                                                LucideIcons.check,
+                                                Icons.check,
                                                 size: 14.w,
                                                 color: AppColor.primary600,
                                               )
@@ -361,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         width: 12.w,
                                         height: 12.h,
                                         child: Icon(
-                                          LucideIcons.chevronRight,
+                                          Icons.keyboard_arrow_right,
                                           size: 10.w,
                                           color: AppColor.neutral500,
                                         ),
@@ -749,7 +749,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
     return AlertDialog(
       title: const Column(
         children: [
-          Icon(LucideIcons.lock, size: 40, color: Colors.orange),
+          Icon(Icons.lock, size: 40, color: Colors.orange),
           SizedBox(height: 8),
           Text('첫 로그인 - 비밀번호 변경'),
         ],
@@ -773,8 +773,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(_obscureCurrentPassword
-                      ? LucideIcons.eye
-                      : LucideIcons.eyeOff),
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: () => setState(
                       () => _obscureCurrentPassword = !_obscureCurrentPassword),
                 ),
@@ -796,8 +796,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(_obscureNewPassword
-                      ? LucideIcons.eye
-                      : LucideIcons.eyeOff),
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: () => setState(
                       () => _obscureNewPassword = !_obscureNewPassword),
                 ),
@@ -822,8 +822,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(_obscureConfirmPassword
-                      ? LucideIcons.eye
-                      : LucideIcons.eyeOff),
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: () => setState(
                       () => _obscureConfirmPassword = !_obscureConfirmPassword),
                 ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -315,7 +315,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              LucideIcons.fileText,
+                              Icons.description,
                               size: 64.sp,
                               color: AppColor.secondary04,
                             ),
@@ -411,7 +411,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Icon(
-                        LucideIcons.maximize2,
+                        Icons.fullscreen,
                         color: AppColor.secondary07,
                         size: 16.sp,
                       ),
@@ -532,7 +532,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
         content: AppInput(
           controller: _searchController,
           placeholder: '검색어를 입력하세요',
-          prefixIcon: LucideIcons.search,
+          prefixIcon: Icons.search,
         ),
         actions: [
           AppButton(
@@ -586,7 +586,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              LucideIcons.fileText,
+              Icons.description,
               size: 48.sp,
               color: Colors.grey[400],
             ),
@@ -628,7 +628,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  LucideIcons.imageOff,
+                  Icons.broken_image,
                   size: 48.sp,
                   color: Colors.grey[400],
                 ),
@@ -706,12 +706,12 @@ class _BulletinScreenState extends State<BulletinScreen> {
 
   // 파일 타입 아이콘 반환
   IconData _getFileTypeIcon(String? fileUrl) {
-    if (fileUrl == null) return LucideIcons.fileText;
+    if (fileUrl == null) return Icons.description;
 
     if (_isImageFile(fileUrl)) {
-      return LucideIcons.image;
+      return Icons.image;
     } else {
-      return LucideIcons.fileText;
+      return Icons.description;
     }
   }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
 import 'home_screen.dart';
@@ -48,31 +47,31 @@ class _MainNavigationState extends State<MainNavigation> {
           child: Row(
             children: [
               _NavItem(
-                iconPath: 'assets/icons/icon_home.svg',
+                icon: Icons.home,
                 label: '홈',
                 isActive: _currentIndex == 0,
                 onTap: () => _onTap(0),
               ),
               _NavItem(
-                iconPath: 'assets/icons/icon_member.svg',
+                icon: Icons.group,
                 label: '주소록',
                 isActive: _currentIndex == 1,
                 onTap: () => _onTap(1),
               ),
               _NavItem(
-                iconPath: 'assets/icons/icon_bulletin.svg',
+                icon: Icons.menu_book,
                 label: '주보',
                 isActive: _currentIndex == 2,
                 onTap: () => _onTap(2),
               ),
               _NavItem(
-                iconPath: 'assets/icons/icon_notice.svg',
+                icon: Icons.campaign,
                 label: '교회소식',
                 isActive: _currentIndex == 3,
                 onTap: () => _onTap(3),
               ),
               _NavItem(
-                iconPath: 'assets/icons/icon_setting.svg',
+                icon: Icons.settings,
                 label: '설정',
                 isActive: _currentIndex == 4,
                 onTap: () => _onTap(4),
@@ -92,13 +91,13 @@ class _MainNavigationState extends State<MainNavigation> {
 
 class _NavItem extends StatelessWidget {
   const _NavItem({
-    required this.iconPath,
+    required this.icon,
     required this.label,
     required this.isActive,
     required this.onTap,
   });
 
-  final String iconPath;
+  final IconData icon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
@@ -117,14 +116,10 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SvgPicture.asset(
-                iconPath,
-                width: 24.w,
-                height: 24.h,
-                colorFilter: ColorFilter.mode(
-                  iconColor,
-                  BlendMode.srcIn,
-                ),
+              Icon(
+                icon,
+                size: 24.w,
+                color: iconColor,
               ),
               const SizedBox(height: 4),
               Text(

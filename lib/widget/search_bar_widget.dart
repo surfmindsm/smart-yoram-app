@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 
 /// 검색바 위젯
 class SearchBarWidget extends StatelessWidget {
@@ -33,10 +33,10 @@ class SearchBarWidget extends StatelessWidget {
         autofocus: autofocus,
         decoration: InputDecoration(
           hintText: hintText,
-          prefixIcon: Icon(LucideIcons.search, color: Colors.blue[700]),
+          prefixIcon: Icon(Icons.search, color: Colors.blue[700]),
           suffixIcon: controller?.text.isNotEmpty == true
               ? IconButton(
-                  icon: const Icon(LucideIcons.x),
+                  icon: const Icon(Icons.close),
                   onPressed: () {
                     controller?.clear();
                     if (onClear != null) onClear!();

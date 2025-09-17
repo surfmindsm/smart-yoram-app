@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../resource/color_style.dart';
 
 class AppSelectOption<T> {
@@ -135,7 +135,7 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
                         onChanged: _onSearchChanged,
                         decoration: const InputDecoration(
                           hintText: 'Search...',
-                          prefixIcon: Icon(LucideIcons.search, size: 16),
+                          prefixIcon: Icon(Icons.search, size: 16),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(6)),
                           ),
@@ -196,7 +196,7 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
                                 if (option.trailing != null) option.trailing!,
                                 if (isSelected)
                                   const Icon(
-                                    LucideIcons.check,
+                                    Icons.check,
                                     size: 16,
                                     color: AppColor.primary600,
                                   ),
@@ -290,7 +290,7 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
                     ),
                   ),
                   Icon(
-                    _isOpen ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                    _isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                     color: widget.disabled ? AppColor.secondary03 : AppColor.secondary04,
                   ),
                 ],

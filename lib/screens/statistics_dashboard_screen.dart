@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../widget/widgets.dart';
 import '../config/api_config.dart';
 
@@ -207,7 +207,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(LucideIcons.alertCircle, color: Colors.red),
+            Icon(Icons.error, color: Colors.red),
             SizedBox(width: 8),
             Text('오류'),
           ],
@@ -230,21 +230,21 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
         title: '통계 대시보드',
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.calendarDays),
+            icon: const Icon(Icons.calendar_today),
             onPressed: _selectDateRange,
             tooltip: '기간 선택',
           ),
           IconButton(
-            icon: const Icon(LucideIcons.refreshCw),
+            icon: const Icon(Icons.refresh),
             onPressed: _loadStatistics,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: '출석 통계', icon: Icon(LucideIcons.checkCircle)),
-            Tab(text: '교인 현황', icon: Icon(LucideIcons.users)),
-            Tab(text: '성장 추이', icon: Icon(LucideIcons.trendingUp)),
+            Tab(text: '출석 통계', icon: Icon(Icons.check_circle)),
+            Tab(text: '교인 현황', icon: Icon(Icons.group)),
+            Tab(text: '성장 추이', icon: Icon(Icons.trending_up)),
           ],
         ),
       ),
@@ -276,7 +276,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  Icon(LucideIcons.calendarDays, color: Colors.blue[700]),
+                  Icon(Icons.calendar_today, color: Colors.blue[700]),
                   const SizedBox(width: 8),
                   Text(
                     '분석 기간: ${selectedDateRange.start.toString().split(' ')[0]} ~ ${selectedDateRange.end.toString().split(' ')[0]}',
@@ -297,7 +297,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
             children: [
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.users,
+                  icon: Icons.group,
                   value: summary['total_members']?.toString() ?? '0',
                   title: '총 교인 수',
                   color: Colors.blue,
@@ -306,7 +306,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.checkCircle,
+                  icon: Icons.check_circle,
                   value: summary['average_attendance']?.toStringAsFixed(1) ?? '0.0',
                   title: '평균 출석',
                   color: Colors.green,
@@ -315,7 +315,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.percent,
+                  icon: Icons.percent,
                   value: '${summary['average_attendance_rate']?.toStringAsFixed(1) ?? '0.0'}%',
                   title: '출석률',
                   color: Colors.orange,
@@ -464,7 +464,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
           // 성별 분포
           _buildDemographicCard(
             '성별 분포',
-            LucideIcons.users,
+            Icons.group,
             memberDemographics['gender_distribution'] ?? [],
             'gender',
             'count',
@@ -475,7 +475,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
           // 연령 분포
           _buildDemographicCard(
             '연령대별 분포',
-            LucideIcons.cake,
+            Icons.cake,
             memberDemographics['age_distribution'] ?? [],
             'age_group',
             'count',
@@ -486,7 +486,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
           // 직분 분포
           _buildDemographicCard(
             '직분별 분포',
-            LucideIcons.briefcase,
+            Icons.work,
             memberDemographics['position_distribution'] ?? [],
             'position',
             'count',
@@ -497,7 +497,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
           // 구역 분포
           _buildDemographicCard(
             '구역별 분포',
-            LucideIcons.mapPin,
+            Icons.location_on,
             memberDemographics['district_distribution'] ?? [],
             'district',
             'count',
@@ -520,7 +520,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
             children: [
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.userPlus,
+                  icon: Icons.person_add,
                   value: summary['total_new_members']?.toString() ?? '0',
                   title: '신규 교인',
                   color: Colors.green,
@@ -529,7 +529,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.userMinus,
+                  icon: Icons.person_remove,
                   value: summary['total_transfers_out']?.toString() ?? '0',
                   title: '이적 교인',
                   color: Colors.red,
@@ -538,7 +538,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  icon: LucideIcons.trendingUp,
+                  icon: Icons.trending_up,
                   value: summary['net_growth']?.toString() ?? '0',
                   title: '순증가',
                   color: Colors.blue,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import '../models/church_member.dart';
 
 /// 교인 정보를 표시하는 카드 위젯
@@ -41,10 +41,10 @@ class MemberCardWidget extends StatelessWidget {
                           height: 60,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                              Icon(LucideIcons.user, size: 30, color: Colors.grey[600]),
+                              Icon(Icons.person, size: 30, color: Colors.grey[600]),
                         ),
                       )
-                    : Icon(LucideIcons.user, size: 30, color: Colors.grey[600]),
+                    : Icon(Icons.person, size: 30, color: Colors.grey[600]),
               ),
               
               const SizedBox(width: 16),

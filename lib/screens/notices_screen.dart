@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
@@ -174,7 +174,7 @@ class _NoticesScreenState extends State<NoticesScreen>
         elevation: 0,
         leading: IconButton(
           icon: Icon(
-            LucideIcons.arrowLeft,
+            Icons.arrow_back,
             color: AppColor.secondary07,
             size: 20.sp,
           ),
@@ -184,7 +184,7 @@ class _NoticesScreenState extends State<NoticesScreen>
           PopupMenuButton<String>(
             onSelected: (String value) => _onDateFilterChanged(value),
             icon: Icon(
-              LucideIcons.filter,
+              Icons.filter_list,
               color: AppColor.secondary07,
               size: 20.sp,
             ),
@@ -193,7 +193,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                 value: 'latest',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.clock, size: 16),
+                    Icon(Icons.access_time, size: 16),
                     SizedBox(width: 8),
                     Text('최신순'),
                   ],
@@ -203,7 +203,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                 value: 'oldest',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.history, size: 16),
+                    Icon(Icons.history, size: 16),
                     SizedBox(width: 8),
                     Text('오래된순'),
                   ],
@@ -213,7 +213,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                 value: 'week',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.calendar, size: 16),
+                    Icon(Icons.calendar_month, size: 16),
                     SizedBox(width: 8),
                     Text('최근 7일'),
                   ],
@@ -223,7 +223,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                 value: 'month',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.calendarDays, size: 16),
+                    Icon(Icons.calendar_today, size: 16),
                     SizedBox(width: 8),
                     Text('최근 30일'),
                   ],
@@ -233,7 +233,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                 value: 'this_month',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.calendar, size: 16),
+                    Icon(Icons.calendar_month, size: 16),
                     SizedBox(width: 8),
                     Text('이번 달'),
                   ],
@@ -243,7 +243,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                 value: 'custom',
                 child: Row(
                   children: [
-                    Icon(LucideIcons.calendarCheck, size: 16),
+                    Icon(Icons.event_available, size: 16),
                     SizedBox(width: 8),
                     Text('날짜 선택'),
                   ],
@@ -380,7 +380,7 @@ class _NoticesScreenState extends State<NoticesScreen>
             type: AlertType.info,
             title: '공지사항이 없습니다',
             description: '기다려주세요. 공지사항이 등록되는 대로 여기에 표시됩니다.',
-            icon: Icon(LucideIcons.megaphone, size: 20),
+            icon: Icon(Icons.campaign, size: 20),
           ),
         ),
       );
@@ -453,7 +453,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                       value: 'share',
                       child: Row(
                         children: [
-                          Icon(LucideIcons.share2, size: 16),
+                          Icon(Icons.share, size: 16),
                           SizedBox(width: 8),
                           Text('공유하기'),
                         ],
@@ -461,7 +461,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                     ),
                   ],
                   child: Icon(
-                    LucideIcons.moreVertical,
+                    Icons.more_vert,
                     color: Colors.grey[600],
                     size: 20,
                   ),
@@ -497,7 +497,7 @@ class _NoticesScreenState extends State<NoticesScreen>
             Row(
               children: [
                 Icon(
-                  LucideIcons.user,
+                  Icons.person,
                   size: 16,
                   color: Colors.grey[500],
                 ),
@@ -511,7 +511,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                 ),
                 const SizedBox(width: 16),
                 Icon(
-                  LucideIcons.clock,
+                  Icons.access_time,
                   size: 16,
                   color: Colors.grey[500],
                 ),

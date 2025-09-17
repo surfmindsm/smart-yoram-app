@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -224,7 +224,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
           children: [
             Row(
               children: [
-                const Icon(LucideIcons.barChart, color: Colors.blue),
+                const Icon(Icons.bar_chart, color: Colors.blue),
                 const SizedBox(width: 8),
                 const Text('테스트 결과 요약', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ],
@@ -233,15 +233,15 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildSummaryCard('성공', successCount.toString(), Colors.green, LucideIcons.checkCircle),
+                  child: _buildSummaryCard('성공', successCount.toString(), Colors.green, Icons.check_circle),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _buildSummaryCard('실패', failCount.toString(), Colors.red, LucideIcons.alertCircle),
+                  child: _buildSummaryCard('실패', failCount.toString(), Colors.red, Icons.error),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _buildSummaryCard('성공률', '$successRate%', Colors.blue, LucideIcons.percent),
+                  child: _buildSummaryCard('성공률', '$successRate%', Colors.blue, Icons.percent),
                 ),
               ],
             ),
@@ -294,7 +294,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
             Row(
               children: [
                 Icon(
-                  _isLoggedIn ? LucideIcons.checkCircle : LucideIcons.alertTriangle,
+                  _isLoggedIn ? Icons.check_circle : Icons.warning,
                   color: _isLoggedIn ? Colors.green : Colors.orange,
                 ),
                 const SizedBox(width: 8),
@@ -342,7 +342,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
                   labelText: 'Username (사용자명)',
                   hintText: 'admin',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(LucideIcons.user),
+                  prefixIcon: Icon(Icons.person),
                 ),
               ),
               const SizedBox(height: 12),
@@ -352,7 +352,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
                   labelText: 'Password (비밀번호)',
                   hintText: 'admin123 또는 password',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(LucideIcons.lock),
+                  prefixIcon: Icon(Icons.lock),
                 ),
                 obscureText: true,
               ),
@@ -638,10 +638,10 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
               )
             : Icon(
                 result == null
-                    ? LucideIcons.circle
+                    ? Icons.circle
                     : result.contains('성공')
-                        ? LucideIcons.checkCircle
-                        : LucideIcons.alertCircle,
+                        ? Icons.check_circle
+                        : Icons.error,
                 color: result == null
                     ? Colors.grey
                     : result.contains('성공')

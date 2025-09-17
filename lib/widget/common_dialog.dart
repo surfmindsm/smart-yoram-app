@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import 'common_button.dart';
 
 /// 공통 다이얼로그 위젯들
@@ -70,7 +70,7 @@ class CommonDialog {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            const Icon(LucideIcons.alertCircle, color: Colors.red),
+            const Icon(Icons.error, color: Colors.red),
             const SizedBox(width: 8),
             Text(title),
           ],

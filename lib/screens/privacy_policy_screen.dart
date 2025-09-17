@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' hide IconButton;
-import 'package:lucide_icons/lucide_icons.dart';
+// import.*lucide_icons.*;
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
@@ -40,7 +40,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               },
               child: Padding(
                 padding: EdgeInsets.all(12.w),
-                child: Icon(LucideIcons.copy, color: AppColor.secondary07, size: 24.sp),
+                child: Icon(Icons.copy, color: AppColor.secondary07, size: 24.sp),
               ),
             ),
           ),
