@@ -1330,35 +1330,87 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.chat_bubble,
-                      size: 20.r,
-                      color: NewAppColor.primary600,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '교회 소식',
-                      style: const FigmaTextStyles().header2.copyWith(
-                            color: NewAppColor.neutral800,
-                          ),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: NewAppColor.primary200,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.article_outlined,
+                          color: NewAppColor.primary600,
+                          size: 20.sp,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '교회 소식',
+                              style: const FigmaTextStyles().headline4.copyWith(
+                                    color: NewAppColor.neutral900,
+                                  ),
+                            ),
+                            Text(
+                              'Church News',
+                              style: const FigmaTextStyles().body3.copyWith(
+                                    color: NewAppColor.neutral600,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                SecondaryButton(
-                  text: '더보기',
-                  size: ButtonSize.sm,
-                  onPressed: () {
+                GestureDetector(
+                  onTap: () {
                     Navigator.pushNamed(context, '/notices');
                   },
+                  child: Container(
+                    width: 80.w,
+                    height: 32.h,
+                    decoration: ShapeDecoration(
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                          width: 1,
+                          color: NewAppColor.neutral200,
+                        ),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 34.w,
+                          child: Text(
+                            '더보기',
+                            textAlign: TextAlign.center,
+                            style: FigmaTextStyles().caption1.copyWith(
+                                  color: NewAppColor.neutral800,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
 
             // 컨텐츠
             Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+              padding: EdgeInsets.fromLTRB(0.w, 16.h, 0.w, 0),
               child: _isLoadingAnnouncements
                   ? Column(
                       children: [
@@ -1394,80 +1446,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         )
                       : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: recentAnnouncements
                               .map(
-                                (announcement) => InkWell(
+                                (announcement) => GestureDetector(
                                   onTap: () {
                                     _navigateToAnnouncementDetail(announcement);
                                   },
-                                  borderRadius: BorderRadius.circular(8.r),
                                   child: Container(
-                                    padding: EdgeInsets.all(12.r),
-                                    margin: EdgeInsets.only(bottom: 8.h),
+                                    width: double.infinity,
+                                    height: 66.h,
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 12.w),
                                     decoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(8.r),
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          width: 1,
+                                          color: NewAppColor.neutral100,
+                                        ),
+                                      ),
                                     ),
                                     child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
-                                        // 왼쪽: 새 알림 표시 및 제목
                                         Expanded(
-                                          child: Row(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              // 새 알림 표시
-                                              if (announcement.isPinned)
-                                                Container(
-                                                  width: 8.r,
-                                                  height: 8.r,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.blue[500],
-                                                    shape: BoxShape.circle,
-                                                  ),
+                                              Text(
+                                                announcement.title,
+                                                style: TextStyle(
+                                                  color: NewAppColor.neutral900,
+                                                  fontSize: 14.sp,
+                                                  fontFamily:
+                                                      'Pretendard Variable',
+                                                  fontWeight: FontWeight.w400,
+                                                  height: 1.43,
+                                                  letterSpacing: -0.35,
                                                 ),
-                                              if (announcement.isPinned)
-                                                SizedBox(width: 8.w),
-                                              // 제목
-                                              Expanded(
-                                                child: Text(
-                                                  announcement.title,
-                                                  style: const FigmaTextStyles()
-                                                      .bodyText2
-                                                      .copyWith(
-                                                        color: NewAppColor
-                                                            .neutral800,
-                                                      ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              SizedBox(height: 4.h),
+                                              Text(
+                                                announcement.formattedDate,
+                                                style: TextStyle(
+                                                  color: NewAppColor.neutral600,
+                                                  fontSize: 13.sp,
+                                                  fontFamily: 'Pretendard',
+                                                  fontWeight: FontWeight.w500,
+                                                  height: 1.38,
+                                                  letterSpacing: -0.33,
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        // 오른쪽: 시간 및 화살표
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.access_time,
-                                              size: 12.r,
-                                              color: Colors.grey[500],
+                                        Container(
+                                          width: 28.w,
+                                          height: 28.h,
+                                          decoration: ShapeDecoration(
+                                            color: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(100.r),
                                             ),
-                                            SizedBox(width: 4.w),
-                                            Text(
-                                              announcement.formattedDate,
-                                              style: const FigmaTextStyles()
-                                                  .body3
-                                                  .copyWith(
-                                                    color: Colors.grey[500]!,
-                                                  ),
-                                            ),
-                                            SizedBox(width: 8.w),
-                                            Icon(
-                                              Icons.keyboard_arrow_right,
-                                              size: 16.r,
-                                              color: Colors.grey[400],
-                                            ),
-                                          ],
+                                          ),
+                                          child: Icon(
+                                            Icons.keyboard_arrow_right,
+                                            size: 16.sp,
+                                            color: NewAppColor.neutral500,
+                                          ),
                                         ),
                                       ],
                                     ),
