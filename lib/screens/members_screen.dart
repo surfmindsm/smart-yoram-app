@@ -288,12 +288,12 @@ class _MembersScreenState extends State<MembersScreen>
           CircleAvatar(
             radius: 24.r,
             backgroundColor: AppColor.primary900,
-            backgroundImage: member.profilePhotoUrl != null &&
-                    member.profilePhotoUrl!.isNotEmpty
-                ? NetworkImage(member.profilePhotoUrl!)
+            backgroundImage: member.fullProfilePhotoUrl != null &&
+                    member.fullProfilePhotoUrl!.isNotEmpty
+                ? NetworkImage(member.fullProfilePhotoUrl!)
                 : null,
-            child: member.profilePhotoUrl == null ||
-                    member.profilePhotoUrl!.isEmpty
+            child: member.fullProfilePhotoUrl == null ||
+                    member.fullProfilePhotoUrl!.isEmpty
                 ? Text(
                     member.name.isNotEmpty ? member.name[0] : '?',
                     style: AppTextStyle(color: AppColor.white).b2().copyWith(

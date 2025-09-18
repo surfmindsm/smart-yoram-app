@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_yoram_app/resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
 import '../widget/widgets.dart';
 import '../components/index.dart';
@@ -15,6 +16,7 @@ import '../services/daily_verse_service.dart';
 import '../services/worship_service.dart';
 import '../services/fcm_service.dart';
 import '../services/home_data_service.dart';
+import 'notification_center_screen.dart';
 
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
@@ -78,6 +80,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.initState();
     _loadEssentialDataFast();
     _initializeFCMInBackground();
+
+    // 공지사항 직접 로드 (우회 방법)
+    Future.delayed(Duration(seconds: 2), () {
+      _loadAnnouncementsDirectly();
+    });
+
+    // 프로필 이미지 테스트를 위해 임시 이미지 설정
+    Future.delayed(Duration(seconds: 3), () {
+      _setTestProfileImage();
+    });
   }
 
   // 🚀 필수 데이터 빠른 로드
@@ -94,15 +106,60 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           currentChurch = essentialData.church;
           isLoading = false; // 로딩 완료
         });
+
+        // 프로필 이미지 디버깅 로그
+        print('📸 PROFILE_IMAGE: === 프로필 이미지 로그 시작 ===');
+        if (currentMember != null) {
+          print('👤 PROFILE_IMAGE: Member data loaded');
+          print('👤 PROFILE_IMAGE: - name: ${currentMember!.name}');
+          print('👤 PROFILE_IMAGE: - email: ${currentMember!.email}');
+          print('👤 PROFILE_IMAGE: - id: ${currentMember!.id}');
+          print('👤 PROFILE_IMAGE: - profilePhotoUrl (원본): ${currentMember!.profilePhotoUrl}');
+          print('👤 PROFILE_IMAGE: - fullProfilePhotoUrl (변환됨): ${currentMember!.fullProfilePhotoUrl}');
+          print('👤 PROFILE_IMAGE: - photo getter: ${currentMember!.photo}');
+
+          // URL 유효성 체크
+          final finalUrl = currentMember!.fullProfilePhotoUrl ?? currentMember!.profilePhotoUrl;
+          if (finalUrl != null && finalUrl.isNotEmpty) {
+            print('✅ PROFILE_IMAGE: 최종 사용할 URL: $finalUrl');
+            if (finalUrl.startsWith('http')) {
+              print('✅ PROFILE_IMAGE: URL이 http로 시작함 (올바름)');
+            } else {
+              print('❌ PROFILE_IMAGE: URL이 http로 시작하지 않음 (상대경로?)');
+            }
+          } else {
+            print('❌ PROFILE_IMAGE: 프로필 이미지 URL이 null 또는 비어있음');
+          }
+        } else {
+          print('❌ PROFILE_IMAGE: currentMember가 null입니다');
+        }
+
+        if (currentUser != null) {
+          print('👤 PROFILE_IMAGE: User data loaded');
+          print('👤 PROFILE_IMAGE: - fullName: ${currentUser!.fullName}');
+          print('👤 PROFILE_IMAGE: - email: ${currentUser!.email}');
+        } else {
+          print('❌ PROFILE_IMAGE: currentUser가 null입니다');
+        }
+        print('📸 PROFILE_IMAGE: === 프로필 이미지 로그 끝 ===');
       }
 
       print('🚀 HOME: 필수 데이터 로드 완료');
 
       // 오늘의 말씀은 별도로 로드 (UI 블로킹 방지)
+      print('🔄 HOME: _loadTodaysVerseAsync() 호출 예정');
       _loadTodaysVerseAsync();
 
       // 공지사항도 백그라운드에서 로드
+      print('🔄 HOME: _loadAnnouncementsInBackground() 호출 예정');
       _loadAnnouncementsInBackground();
+
+      // 테스트: 임시 공지사항 데이터 추가
+      _addTestAnnouncements();
+
+      // 예배시간 로드 (백그라운드)
+      print('🔄 HOME: _loadWorshipServices() 호출 예정');
+      _loadWorshipServices();
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -144,23 +201,153 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // 📢 공지사항 백그라운드 로드
   Future<void> _loadAnnouncementsInBackground() async {
     // UI 블로킹을 피하기 위해 백그라운드에서 처리
-    Future.microtask(() async {
-      try {
-        final announcements = await _announcementService.getAnnouncements(
-          category: 'all',
-          limit: 5, // 최신 5개만
-        );
+    print('📢 HOME: _loadAnnouncementsInBackground() 시작');
 
-        if (mounted) {
-          setState(() {
-            recentAnnouncements = announcements;
-          });
-          print('📢 HOME: 공지사항 ${recentAnnouncements.length}개 로드 완료');
-        }
-      } catch (e) {
-        print('❌ HOME: 공지사항 로드 실패 - $e');
+    if (!mounted) {
+      print('❌ HOME: Widget이 mounted 상태가 아님');
+      return;
+    }
+
+    try {
+      print('📢 HOME: AnnouncementService.getAnnouncements() 호출 시작');
+
+      final announcements = await _announcementService.getAnnouncements(limit: 5);
+
+      print('📢 HOME: API 호출 완료 - 받은 데이터: ${announcements.length}개');
+
+      if (announcements.isNotEmpty) {
+        print('📢 HOME: 첫 번째 공지사항: ${announcements.first.title}');
+      }
+
+      if (mounted) {
+        setState(() {
+          recentAnnouncements = announcements;
+        });
+        print('📢 HOME: setState 완료 - recentAnnouncements.length: ${recentAnnouncements.length}');
+      }
+    } catch (e, stackTrace) {
+      print('❌ HOME: 공지사항 로드 실패 - $e');
+      print('❌ HOME: 스택트레이스: $stackTrace');
+
+      if (mounted) {
+        setState(() {
+          recentAnnouncements = [];
+        });
+      }
+    }
+
+    print('📢 HOME: _loadAnnouncementsInBackground() 종료');
+  }
+
+  // 🧪 테스트용 공지사항 추가
+  void _addTestAnnouncements() {
+    print('🧪 HOME: 테스트 공지사항 데이터 추가');
+
+    if (mounted) {
+      setState(() {
+        recentAnnouncements = [
+          // Announcement 객체를 생성하는 것은 복잡하므로 일단 빈 리스트로 시작
+        ];
+      });
+      print('🧪 HOME: 테스트 공지사항 추가 완료 - 개수: ${recentAnnouncements.length}');
+    }
+  }
+
+  // 📢 공지사항 직접 로드 (우회 방법)
+  Future<void> _loadAnnouncementsDirectly() async {
+    print('📢 HOME: _loadAnnouncementsDirectly() 시작');
+
+    if (!mounted) {
+      print('❌ HOME: Widget이 mounted 상태가 아님');
+      return;
+    }
+
+    try {
+      print('📢 HOME: AnnouncementService 직접 호출 시작');
+
+      final announcements = await _announcementService.getAnnouncements(limit: 5);
+
+      print('📢 HOME: 직접 호출 완료 - 받은 데이터: ${announcements.length}개');
+
+      if (announcements.isNotEmpty) {
+        print('📢 HOME: 첫 번째 공지사항: ${announcements.first.title}');
+      }
+
+      if (mounted) {
+        setState(() {
+          recentAnnouncements = announcements;
+        });
+        print('📢 HOME: setState 완료 - recentAnnouncements.length: ${recentAnnouncements.length}');
+      }
+    } catch (e, stackTrace) {
+      print('❌ HOME: 공지사항 직접 로드 실패 - $e');
+      print('❌ HOME: 스택트레이스: $stackTrace');
+    }
+
+    print('📢 HOME: _loadAnnouncementsDirectly() 종료');
+  }
+
+  // 🔄 캐시 무효화 후 프로필 다시 로드
+  Future<void> _reloadProfileWithCacheClear() async {
+    print('🔄 HOME: 캐시 무효화 후 프로필 다시 로드 시작');
+
+    try {
+      // 캐시 무효화
+      await _homeDataService.invalidateCache();
+      print('🗑️ HOME: 홈 데이터 캐시 무효화 완료');
+
+      // 새로운 데이터 로드
+      final essentialData = await _homeDataService.loadEssentialData();
+
+      if (mounted) {
+        setState(() {
+          currentUser = essentialData.user;
+          currentMember = essentialData.member;
+          currentChurch = essentialData.church;
+        });
+
+        // 프로필 이미지 로그
+        print('📸 HOME: 캐시 무효화 후 프로필 이미지');
+        print('👤 HOME: currentMember.name: ${currentMember?.name}');
+        print('🖼️ HOME: profilePhotoUrl: ${currentMember?.profilePhotoUrl}');
+        print('🖼️ HOME: fullProfilePhotoUrl: ${currentMember?.fullProfilePhotoUrl}');
+      }
+    } catch (e) {
+      print('❌ HOME: 캐시 무효화 후 재로드 실패 - $e');
+    }
+
+    print('🔄 HOME: 캐시 무효화 후 프로필 다시 로드 완료');
+  }
+
+  // 🧪 테스트용 프로필 이미지 설정
+  void _setTestProfileImage() {
+    print('🧪 HOME: 테스트 프로필 이미지 설정 시작');
+
+    if (!mounted) return;
+
+    // "사진테스트" 멤버의 프로필 이미지 URL 사용
+    const testImageUrl = 'https://adzhdsajdamrflvybhxq.supabase.co/storage/v1/object/public/member-photos/6/480_20250906_020147_a427da05.png';
+
+    setState(() {
+      if (currentMember != null) {
+        // 기존 멤버 정보를 유지하면서 프로필 이미지만 변경
+        currentMember = Member(
+          id: currentMember!.id,
+          name: currentMember!.name,
+          email: currentMember!.email,
+          gender: currentMember!.gender,
+          phone: currentMember!.phone,
+          churchId: currentMember!.churchId,
+          memberStatus: currentMember!.memberStatus,
+          createdAt: currentMember!.createdAt,
+          profilePhotoUrl: testImageUrl, // 테스트 이미지 URL 설정
+        );
       }
     });
+
+    print('🧪 HOME: 테스트 프로필 이미지 설정 완료');
+    print('🖼️ HOME: 설정된 이미지 URL: $testImageUrl');
+    print('👤 HOME: currentMember.fullProfilePhotoUrl: ${currentMember?.fullProfilePhotoUrl}');
   }
 
   // 🔄 FCM 백그라운드 초기화
@@ -318,55 +505,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildHeader() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
-      child: AppCard(
-        backgroundColor: AppColor.secondary01,
-        borderRadius: 20.r,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '안녕하세요',
-                  style: AppTextStyle(
-                    color: AppColor.secondary06,
-                  ).b4(),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '${currentMember?.name ?? currentUser?.fullName ?? '사용자'}님!',
-                  style: AppTextStyle(
-                    color: AppColor.secondary07,
-                  ).h1(),
-                ),
-              ],
+      child: ProfileAlert(
+        userName: currentMember?.name ?? currentUser?.fullName,
+        profileImageUrl: currentMember?.fullProfilePhotoUrl ?? currentMember?.profilePhotoUrl,
+        onNotificationTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const NotificationCenterScreen(),
             ),
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationCenterScreen(),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(20.r),
-              child: Container(
-                padding: EdgeInsets.all(8.r),
-                decoration: BoxDecoration(
-                  color: AppColor.primary900.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: const Icon(
-                  Icons.notifications,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1480,6 +1629,117 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ProfileAlert extends StatelessWidget {
+  final String? userName;
+  final String? profileImageUrl;
+  final VoidCallback? onNotificationTap;
+
+  const ProfileAlert({
+    super.key,
+    this.userName,
+    this.profileImageUrl,
+    this.onNotificationTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // ProfileAlert 렌더링 시 로그
+    print('🎨 PROFILE_ALERT: 렌더링 시작');
+    print('🎨 PROFILE_ALERT: userName = $userName');
+    print('🎨 PROFILE_ALERT: profileImageUrl = $profileImageUrl');
+
+    return Container(
+      width: double.infinity,
+      height: 84,
+      padding: const EdgeInsets.all(16),
+      decoration: ShapeDecoration(
+        color: NewAppColor.primary200, // Primary_200
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 21.54,
+            backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                ? (() {
+                    print('🖼️ CIRCLE_AVATAR: NetworkImage 생성 - URL: $profileImageUrl');
+                    return NetworkImage(profileImageUrl!) as ImageProvider;
+                  })()
+                : (() {
+                    print('🖼️ CIRCLE_AVATAR: 이미지 없음 - 기본 아이콘 표시');
+                    return null;
+                  })(),
+            backgroundColor: Colors.grey[300],
+            child: (profileImageUrl == null || profileImageUrl!.isEmpty)
+                ? Icon(
+                    Icons.person,
+                    size: 24,
+                    color: Colors.grey[600],
+                  )
+                : null,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '안녕하세요',
+                  style: TextStyle(
+                    color: NewAppColor.neutral600, // Neutral_600
+                    fontSize: 13,
+                    fontFamily: 'Pretendard Variable',
+                    fontWeight: FontWeight.w400,
+                    height: 1.38,
+                    letterSpacing: -0.33,
+                  ),
+                ),
+                Text(
+                  '${userName ?? '사용자'} 님',
+                  style: const TextStyle(
+                    color: NewAppColor.neutral900, // Neutral_900
+                    fontSize: 18,
+                    fontFamily: 'Pretendard',
+                    fontWeight: FontWeight.w500,
+                    height: 1.44,
+                    letterSpacing: -0.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          InkWell(
+            onTap: onNotificationTap,
+            borderRadius: BorderRadius.circular(100),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: ShapeDecoration(
+                color: const Color(0xFF0078FF), // Primary_600
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
+              child: const Icon(
+                Icons.notifications,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

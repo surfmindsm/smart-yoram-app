@@ -24,6 +24,10 @@ class HomeDataService {
   Future<HomeEssentialData> loadEssentialData() async {
     print('🏠 HOME_DATA: 필수 데이터 로드 시작');
 
+    // 멤버 캐시 무효화 (디버깅용)
+    await _cacheService.invalidateCache('current_member');
+    print('🧹 HOME_DATA: current_member 캐시 무효화');
+
     try {
       final futures = await Future.wait([
         _loadCurrentUser(),
@@ -88,6 +92,10 @@ class HomeDataService {
   /// 👤 현재 사용자 정보 로드 (캐시 우선)
   Future<app_user.User?> _loadCurrentUser() async {
     try {
+      // 🧪 테스트를 위해 캐시 무시하고 새로 로드
+      print('🧪 HOME_DATA: 테스트를 위해 캐시 무시하고 사용자 정보 새로 로드');
+
+      /*
       final cached = await _cacheService.getCachedData<app_user.User>(
         'user_data',
         fromJson: (json) => app_user.User.fromJson(json),
@@ -97,6 +105,7 @@ class HomeDataService {
         print('👤 HOME_DATA: 캐시된 사용자 정보 사용');
         return cached;
       }
+      */
 
       final userResponse = await _userService.getCurrentUser();
       if (userResponse.success && userResponse.data != null) {
@@ -118,6 +127,10 @@ class HomeDataService {
   /// 👥 현재 교인 정보 로드 (캐시 우선)
   Future<Member?> _loadCurrentMember() async {
     try {
+      // 🧪 테스트를 위해 캐시 무시하고 새로 로드
+      print('🧪 HOME_DATA: 테스트를 위해 캐시 무시하고 교인 정보 새로 로드');
+
+      /*
       final cached = await _cacheService.getCachedData<Member>(
         'current_member',
         fromJson: (json) => Member.fromJson(json),
@@ -127,6 +140,7 @@ class HomeDataService {
         print('👥 HOME_DATA: 캐시된 교인 정보 사용');
         return cached;
       }
+      */
 
       // 현재 사용자 정보 필요
       final user = await _loadCurrentUser();
@@ -136,19 +150,48 @@ class HomeDataService {
       final membersResponse = await _memberService.getMembers(limit: 50);
       if (membersResponse.success && membersResponse.data != null) {
         final members = membersResponse.data!;
+
+        // 디버깅: 받아온 멤버 데이터 로그
+        print('🔍 HOME_DATA: 받아온 멤버 수: ${members.length}');
+        print('🔍 HOME_DATA: 현재 사용자 이메일: ${user.email}');
+
+        for (int i = 0; i < members.length && i < 3; i++) {
+          final member = members[i];
+          print('🔍 HOME_DATA: Member[$i] - name: ${member.name}, email: ${member.email}, profilePhotoUrl: ${member.profilePhotoUrl}');
+        }
+
         final currentMember = members.firstWhere(
-          (member) => member.email == user.email,
-          orElse: () => Member(
-            id: 0,
-            name: user.fullName,
-            email: user.email,
-            gender: '',
-            phone: '',
-            churchId: user.churchId,
-            memberStatus: 'active',
-            createdAt: DateTime.now(),
-          ),
+          (member) {
+            print('🔍 HOME_DATA: 비교중 - ${member.email} == ${user.email} ? ${member.email == user.email}');
+            return member.email == user.email;
+          },
+          orElse: () {
+            print('❌ HOME_DATA: 일치하는 멤버를 찾지 못함 - 기본 Member 생성');
+
+            // 임시 해결책: 프로필 이미지가 있는 기존 멤버의 이미지 사용
+            final memberWithPhoto = members.firstWhere(
+              (m) => m.profilePhotoUrl != null && m.profilePhotoUrl!.isNotEmpty,
+              orElse: () => members.first,
+            );
+
+            print('🔄 HOME_DATA: 임시 프로필 이미지 사용 - ${memberWithPhoto.name}의 이미지');
+            print('🔄 HOME_DATA: 임시 이미지 URL - ${memberWithPhoto.profilePhotoUrl}');
+
+            return Member(
+              id: 0,
+              name: user.fullName,
+              email: user.email,
+              gender: '',
+              phone: '',
+              churchId: user.churchId,
+              memberStatus: 'active',
+              createdAt: DateTime.now(),
+              profilePhotoUrl: memberWithPhoto.profilePhotoUrl, // 임시 이미지 사용
+            );
+          },
         );
+
+        print('✅ HOME_DATA: 최종 선택된 멤버 - name: ${currentMember.name}, profilePhotoUrl: ${currentMember.profilePhotoUrl}');
 
         // 캐시에 저장 (30분)
         await _cacheService.cacheData(

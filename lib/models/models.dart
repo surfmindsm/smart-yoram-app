@@ -19,3 +19,4 @@ export 'statistics_model.dart';
 export 'member_card_model.dart';
 export 'worship_service.dart';
 export 'push_notification.dart';
+export 'notification.dart';

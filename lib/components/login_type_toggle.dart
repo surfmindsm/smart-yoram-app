@@ -21,7 +21,7 @@ class LoginTypeToggle extends StatelessWidget {
       width: 358.w,
       height: 54.h,
       decoration: BoxDecoration(
-        color: AppColor.neutral100,
+        color: NewAppColor.neutral100,
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Stack(
@@ -37,7 +37,7 @@ class LoginTypeToggle extends StatelessWidget {
                 height: 54.h,
                 decoration: BoxDecoration(
                   color: selectedType == 'email'
-                      ? AppColor.primary600
+                      ? NewAppColor.primary600
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8.r),
                 ),
@@ -46,8 +46,8 @@ class LoginTypeToggle extends StatelessWidget {
                     '이메일 로그인',
                     style: figmaStyles.body1.copyWith(
                       color: selectedType == 'email'
-                          ? AppColor.neutral100
-                          : AppColor.neutral500,
+                          ? NewAppColor.neutral100
+                          : NewAppColor.neutral500,
                       fontFamily: 'Pretendard Variable',
                       letterSpacing: -0.38,
                     ),
@@ -67,7 +67,7 @@ class LoginTypeToggle extends StatelessWidget {
                 height: 54.h,
                 decoration: BoxDecoration(
                   color: selectedType == 'phone'
-                      ? AppColor.primary600
+                      ? NewAppColor.primary600
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8.r),
                 ),
@@ -76,8 +76,8 @@ class LoginTypeToggle extends StatelessWidget {
                     '전화번호 로그인',
                     style: figmaStyles.body1.copyWith(
                       color: selectedType == 'phone'
-                          ? AppColor.neutral100
-                          : AppColor.neutral500,
+                          ? NewAppColor.neutral100
+                          : NewAppColor.neutral500,
                       fontFamily: 'Pretendard Variable',
                       letterSpacing: -0.38,
                     ),

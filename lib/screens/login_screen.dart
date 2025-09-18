@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 '스마트 교회요람',
                                 style: figmaStyles.display5.copyWith(
-                                  color: AppColor.neutral900,
+                                  color: NewAppColor.neutral900,
                                   fontFamily: 'Pretendard Variable',
                                   letterSpacing: -0.80,
                                 ),
@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 '교회 생활의 새로운 시작',
                                 style: figmaStyles.headline4.copyWith(
-                                  color: AppColor.neutral600,
+                                  color: NewAppColor.neutral600,
                                   fontFamily: 'Pretendard',
                                   fontWeight: FontWeight.w500,
                                   letterSpacing: -0.50,
@@ -173,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   padding: EdgeInsets.all(16.w),
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: AppColor.primary300,
+                                      color: NewAppColor.primary300,
                                       width: 1,
                                     ),
                                     borderRadius: BorderRadius.circular(8.r),
@@ -185,14 +185,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                         : TextInputType.phone,
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) {
-                                      FocusScope.of(context).requestFocus(_passwordFocusNode);
+                                      FocusScope.of(context)
+                                          .requestFocus(_passwordFocusNode);
                                     },
                                     decoration: InputDecoration(
                                       hintText: _loginType == 'email'
                                           ? '이메일을 입력하세요'
                                           : '전화번호를 입력하세요',
                                       hintStyle: figmaStyles.body1.copyWith(
-                                        color: AppColor.neutral200,
+                                        color: NewAppColor.neutral200,
                                         fontFamily: 'Pretendard Variable',
                                         letterSpacing: -0.38,
                                       ),
@@ -234,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   padding: EdgeInsets.all(16.w),
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: AppColor.primary300,
+                                      color: NewAppColor.primary300,
                                       width: 1,
                                     ),
                                     borderRadius: BorderRadius.circular(8.r),
@@ -248,9 +249,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                           obscureText: obscurePassword,
                                           textInputAction: TextInputAction.done,
                                           onFieldSubmitted: (_) {
-                                            if (((_loginType == 'email' && _isEmailValid) ||
-                                                (_loginType == 'phone' && _isPhoneValid)) &&
-                                               _isPasswordValid && !isLoading) {
+                                            if (((_loginType == 'email' &&
+                                                        _isEmailValid) ||
+                                                    (_loginType == 'phone' &&
+                                                        _isPhoneValid)) &&
+                                                _isPasswordValid &&
+                                                !isLoading) {
                                               _login();
                                             }
                                           },
@@ -258,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             hintText: 'password',
                                             hintStyle:
                                                 figmaStyles.body1.copyWith(
-                                              color: AppColor.neutral200,
+                                              color: NewAppColor.neutral200,
                                               fontFamily: 'Pretendard Variable',
                                               letterSpacing: -0.38,
                                             ),
@@ -287,7 +291,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 ? Icons.visibility_off
                                                 : Icons.visibility,
                                             size: 20.w,
-                                            color: AppColor.neutral500,
+                                            color: NewAppColor.neutral500,
                                           ),
                                         ),
                                       ),
@@ -313,11 +317,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                         height: 20.h,
                                         decoration: BoxDecoration(
                                           color: _saveId
-                                              ? AppColor.primary100
+                                              ? NewAppColor.primary100
                                               : Colors.white,
                                           border: Border.all(
                                             color: _saveId
-                                                ? AppColor.primary100
+                                                ? NewAppColor.primary100
                                                 : Color(0xFFE5E5EC),
                                             width: 1,
                                           ),
@@ -328,7 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ? Icon(
                                                 Icons.check,
                                                 size: 14.w,
-                                                color: AppColor.primary600,
+                                                color: NewAppColor.primary600,
                                               )
                                             : null,
                                       ),
@@ -337,7 +341,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Text(
                                       '아이디 저장',
                                       style: figmaStyles.captionText1.copyWith(
-                                        color: AppColor.neutral500,
+                                        color: NewAppColor.neutral500,
                                         fontFamily: 'Pretendard Variable',
                                         letterSpacing: -0.30,
                                       ),
@@ -352,7 +356,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         '아이디/비밀번호 찾기',
                                         style:
                                             figmaStyles.captionText1.copyWith(
-                                          color: AppColor.neutral500,
+                                          color: NewAppColor.neutral500,
                                           fontFamily: 'Pretendard Variable',
                                           letterSpacing: -0.30,
                                         ),
@@ -363,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         child: Icon(
                                           Icons.keyboard_arrow_right,
                                           size: 10.w,
-                                          color: AppColor.neutral500,
+                                          color: NewAppColor.neutral500,
                                         ),
                                       ),
                                     ],
@@ -394,7 +398,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                               (_loginType == 'phone' &&
                                                   _isPhoneValid)) &&
                                           _isPasswordValid)
-                                      ? AppColor.primary600
+                                      ? NewAppColor.primary600
                                       : Color(0xFFF1F4FF),
                               borderRadius: BorderRadius.circular(12.r),
                             ),

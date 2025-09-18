@@ -122,6 +122,9 @@ class Member {
     return 'https://packs-holds-marc-extended.trycloudflare.com$profilePhotoUrl';
   }
 
+  // 프로필 사진 별칭 (기존 코드 호환성을 위해)
+  String? get photo => fullProfilePhotoUrl;
+
   @override
   String toString() {
     return 'Member(id: $id, name: $name, phone: $phone, memberStatus: $memberStatus, userId: $userId)';

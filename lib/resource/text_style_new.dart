@@ -104,7 +104,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 72 / 56,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get display2 => const TextStyle(
@@ -113,7 +113,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 62 / 48,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get display3 => const TextStyle(
@@ -122,7 +122,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 52 / 40,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get display4 => const TextStyle(
@@ -131,7 +131,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 44 / 36,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get display5 => const TextStyle(
@@ -140,7 +140,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w600,
         height: 42 / 32,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get display6 => const TextStyle(
@@ -149,7 +149,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 38 / 28,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   // Headlines
@@ -159,7 +159,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 42 / 32,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get headline2 => const TextStyle(
@@ -168,7 +168,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 38 / 28,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get headline3 => const TextStyle(
@@ -177,7 +177,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 34 / 24,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get headline4 => const TextStyle(
@@ -186,7 +186,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w500,
         height: 28 / 20,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get headline5 => const TextStyle(
@@ -195,7 +195,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w500,
         height: 26 / 18,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get headline6 => const TextStyle(
@@ -204,7 +204,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 24 / 16,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   // Titles
@@ -214,7 +214,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 34 / 24,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get title2 => const TextStyle(
@@ -223,7 +223,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 28 / 20,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get title3 => const TextStyle(
@@ -232,7 +232,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 28 / 18,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get title4 => const TextStyle(
@@ -241,7 +241,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w500,
         height: 24 / 16,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   // Body Text (Alternative)
@@ -251,7 +251,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 22 / 15,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get body2 => const TextStyle(
@@ -260,7 +260,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 20 / 14,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get body3 => const TextStyle(
@@ -269,7 +269,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w500,
         height: 18 / 13,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   // Captions (Alternative)
@@ -279,7 +279,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 18 / 13,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get caption2 => const TextStyle(
@@ -288,7 +288,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 18 / 12,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get caption3 => const TextStyle(
@@ -297,7 +297,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 16 / 11,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   // Buttons
@@ -307,7 +307,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 24 / 16,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get button2 => const TextStyle(
@@ -316,7 +316,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 20 / 14,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get button3 => const TextStyle(
@@ -325,7 +325,7 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 18 / 13,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 
   TextStyle get button4 => const TextStyle(
@@ -334,6 +334,6 @@ class FigmaTextStyles {
         fontStyle: FontStyle.normal,
         fontWeight: FontWeight.w400,
         height: 18 / 12,
-        letterSpacing: -2.5,
+        letterSpacing: -0.5,
       );
 }
