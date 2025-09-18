@@ -53,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool isLoading = true;
   bool _isChurchCardExpanded = true; // 교회 카드 펼침 상태
   bool _isWorshipScheduleExpanded = true; // 예배시간 카드 펼침 상태
+  final ScrollController _scrollController = ScrollController(); // 스크롤 컨트롤러
+  final GlobalKey _worshipKey = GlobalKey(); // 예배시간안내 위젯 키
 
   // 최근 공지사항 관련 상태 변수
   List<Announcement> recentAnnouncements = [];
@@ -523,6 +525,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  // 예배시간안내 섹션으로 스크롤하는 메서드
+  void _scrollToWorshipSchedule() {
+    final context = _worshipKey.currentContext;
+    if (context != null) {
+      final RenderBox renderBox = context.findRenderObject() as RenderBox;
+      final position = renderBox.localToGlobal(Offset.zero);
+      final scrollOffset = position.dy - 100; // 약간의 여백을 위해 100 픽셀 위로
+
+      _scrollController.animateTo(
+        _scrollController.offset + scrollOffset,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -536,6 +554,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -570,7 +589,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     const SizedBox(height: 24),
 
                     // 예배안내
-                    _buildWorshipSchedule(),
+                    Container(
+                      key: _worshipKey,
+                      child: _buildWorshipSchedule(),
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -588,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: AppCard(
         backgroundColor: Colors.white,
         borderRadius: 16.r,
-        variant: CardVariant.elevated,
+        variant: CardVariant.outlined,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -750,7 +772,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: AppCard(
         backgroundColor: Colors.white,
         borderRadius: 16.r,
-        variant: CardVariant.elevated,
+        variant: CardVariant.outlined,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1322,7 +1344,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: AppCard(
         backgroundColor: Colors.white,
         borderRadius: 16.r,
-        variant: CardVariant.elevated,
+        variant: CardVariant.outlined,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1556,177 +1578,104 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // 예배안내 위젯
   Widget _buildWorshipSchedule() {
     return Container(
+      width: double.infinity,
       margin: EdgeInsets.symmetric(horizontal: 4.w),
-      child: AppCard(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF374151), // gray-700
-            Color.fromARGB(255, 21, 28, 38), // gray-800
-          ],
+      decoration: ShapeDecoration(
+        color: NewAppColor.neutral700,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
         ),
-        borderRadius: 16.r,
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+            16.w, 16.h, 16.w, _isWorshipScheduleExpanded ? 16.h : 12.h),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 헤더 (클릭하여 접고 펼치기)
+            // Header
             GestureDetector(
               onTap: () {
                 setState(() {
                   _isWorshipScheduleExpanded = !_isWorshipScheduleExpanded;
                 });
+
+                // 펼쳤을 때만 스크롤 포커싱
+                if (_isWorshipScheduleExpanded) {
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    _scrollToWorshipSchedule();
+                  });
+                }
               },
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Worship',
-                          style: const FigmaTextStyles().captionText1.copyWith(
-                                color: Colors.white.withOpacity(0.9),
-                              ),
+              child: Container(
+                padding: EdgeInsets.only(
+                    bottom: _isWorshipScheduleExpanded ? 12.h : 0.h),
+                decoration: _isWorshipScheduleExpanded
+                    ? BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            width: 1,
+                            color: NewAppColor.neutral100,
+                          ),
                         ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '예배시간안내',
-                          style: const FigmaTextStyles().header2.copyWith(
-                                color: Colors.white,
-                              ),
+                      )
+                    : null,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '예배시간안내',
+                            style: FigmaTextStyles().headline4.copyWith(
+                                  color: NewAppColor.neutral100,
+                                ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            'Worship',
+                            style: FigmaTextStyles().body3.copyWith(
+                                  color: NewAppColor.neutral400,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      duration: const Duration(milliseconds: 200),
+                      turns: _isWorshipScheduleExpanded ? 0.5 : 0,
+                      child: Container(
+                        width: 28.w,
+                        height: 28.h,
+                        decoration: ShapeDecoration(
+                          color: NewAppColor.neutral700,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100.r),
+                          ),
                         ),
-                      ],
+                        child: Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.white,
+                          size: 16.sp,
+                        ),
+                      ),
                     ),
-                  ),
-                  AnimatedRotation(
-                    duration: const Duration(milliseconds: 200),
-                    turns: _isWorshipScheduleExpanded ? 0.5 : 0,
-                    child: Icon(
-                      Icons.keyboard_arrow_down,
-                      color: Colors.white.withOpacity(0.7),
-                      size: 24,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            // 예배 시간 목록 (접고 폼치기 가능)
+            // Service List with Animation
             AnimatedCrossFade(
               duration: const Duration(milliseconds: 300),
               crossFadeState: _isWorshipScheduleExpanded
                   ? CrossFadeState.showFirst
                   : CrossFadeState.showSecond,
-              firstChild: Column(
-                children: [
-                  SizedBox(height: 20.h),
-                  // 예배 시간 목록
-                  if (_isLoadingWorshipServices)
-                    Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                    )
-                  else if (worshipServices.isEmpty)
-                    Center(
-                      child: Text(
-                        '예배 일정이 없습니다',
-                        style: const FigmaTextStyles().body3.copyWith(
-                              color: Colors.grey[400]!,
-                            ),
-                      ),
-                    )
-                  else
-                    ...worshipServices.map((worship) => Padding(
-                          padding: EdgeInsets.only(bottom: 16.h),
-                          child: Row(
-                            children: [
-                              // 예배명 + 요일
-                              Expanded(
-                                flex: 3,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      worship.name,
-                                      style: const FigmaTextStyles()
-                                          .body3
-                                          .copyWith(
-                                            color: Colors.white,
-                                          ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // 점선
-                              Expanded(
-                                flex: 1,
-                                child: Container(
-                                  height: 1.h,
-                                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      ...List.generate(
-                                        5,
-                                        (index) => Container(
-                                          width: 2.w,
-                                          height: 1.h,
-                                          margin: EdgeInsets.symmetric(
-                                              horizontal: 0.5.w),
-                                          color: Colors.grey.withOpacity(0.5),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              // 장소
-                              Expanded(
-                                flex: 3,
-                                child: Text(
-                                  worship.location,
-                                  style: const FigmaTextStyles().body3.copyWith(
-                                        color: Colors.grey[300]!,
-                                      ),
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                              // 시간
-                              Expanded(
-                                flex: 3,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      worship.dayOfWeekName,
-                                      style: const FigmaTextStyles()
-                                          .captionText1
-                                          .copyWith(
-                                            color: Colors.grey[400]!,
-                                          ),
-                                    ),
-                                    SizedBox(height: 2.h),
-                                    Text(
-                                      worship.formattedStartTime,
-                                      style: const FigmaTextStyles()
-                                          .body3
-                                          .copyWith(
-                                            color: Colors.white,
-                                          ),
-                                      textAlign: TextAlign.end,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        )),
-                ],
+              firstChild: Padding(
+                padding: EdgeInsets.only(top: 16.h),
+                child: Column(
+                  children: _buildWorshipServiceRows(),
+                ),
               ),
               secondChild: const SizedBox(),
             ),
@@ -1734,6 +1683,127 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildWorshipServiceRows() {
+    // Sample data - replace with actual worship service data
+    final services = [
+      {'name': '주일예배 1부', 'location': '예루살렘성전', 'day': '주일', 'time': '오전 9시'},
+      {'name': '주일예배 2부', 'location': '예루살렘성전', 'day': '주일', 'time': '오전 11시'},
+      {
+        'name': '주일예배 3부',
+        'location': '예루살렘성전',
+        'day': '주일',
+        'time': '오후 1시 30분'
+      },
+      {'name': '새싹부', 'location': '새싹부실', 'day': '주일', 'time': '오전 11시'},
+      {'name': '어린이부', 'location': '어린이부실', 'day': '주일', 'time': '오전 11시'},
+      {'name': '청소년부', 'location': '밷엘성전', 'day': '주일', 'time': '오전 11시'},
+      {'name': '대학청년부', 'location': '시온성전', 'day': '주일', 'time': '오후 1시 30분'},
+      {'name': '수요 예배', 'location': '예루살렘성전', 'day': '수요일', 'time': '오후 8시'},
+      {
+        'name': '새벽기도회(월)',
+        'location': '온라인',
+        'day': '월요일',
+        'time': '오전 5시 30분'
+      },
+      {
+        'name': '새벽기도회(화)',
+        'location': '온라인',
+        'day': '화요일',
+        'time': '오전 5시 30분'
+      },
+      {
+        'name': '새벽기도회(수)',
+        'location': '온라인',
+        'day': '수요일',
+        'time': '오전 5시 30분'
+      },
+      {
+        'name': '새벽기도회(목)',
+        'location': '온라인',
+        'day': '목요일',
+        'time': '오전 5시 30분'
+      },
+      {
+        'name': '새벽기도회(금)',
+        'location': '온라인',
+        'day': '금요일',
+        'time': '오전 5시 30분'
+      },
+    ];
+
+    return services.map((service) {
+      final isLast = services.indexOf(service) == services.length - 1;
+      return Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        decoration: isLast
+            ? null
+            : BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    width: 1,
+                    color: NewAppColor.neutral600,
+                  ),
+                ),
+              ),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: Text(
+                service['name']!,
+                style: FigmaTextStyles().body3.copyWith(
+                      color: Colors.white,
+                    ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              flex: 2,
+              child: Text(
+                service['location']!,
+                textAlign: TextAlign.center,
+                style: FigmaTextStyles().body3.copyWith(
+                      color: Colors.white,
+                    ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    service['day']!,
+                    textAlign: TextAlign.right,
+                    style: FigmaTextStyles().caption3.copyWith(
+                          color: Colors.white,
+                        ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    service['time']!,
+                    textAlign: TextAlign.right,
+                    style: FigmaTextStyles().subtitle4.copyWith(
+                          color: Colors.white,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }
 
