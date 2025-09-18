@@ -151,28 +151,71 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         PopupMenuItem(
           value: 'settings',
           height: 32.h,
-          child: Container(
-            width: 96.w,
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
-            child: Text(
-              '알림 설정',
-              style: const FigmaTextStyles()
-                  .caption1
-                  .copyWith(color: NewAppColor.neutral800),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => Navigator.pop(context, 'settings'),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8.r),
+                topRight: Radius.circular(8.r),
+              ),
+              child: Container(
+                width: 96.w,
+                height: 32.h,
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(8.r),
+                    topRight: Radius.circular(8.r),
+                  ),
+                  border: const Border(
+                    bottom: BorderSide(color: NewAppColor.neutral100),
+                  ),
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '알림 설정',
+                    style: const FigmaTextStyles()
+                        .caption1
+                        .copyWith(color: NewAppColor.neutral800),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
         PopupMenuItem(
           value: 'delete_all',
           height: 32.h,
-          child: Container(
-            width: 96.w,
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
-            child: Text(
-              '모든 알림 삭제',
-              style: const FigmaTextStyles()
-                  .caption1
-                  .copyWith(color: NewAppColor.neutral800),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => Navigator.pop(context, 'delete_all'),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(8.r),
+                bottomRight: Radius.circular(8.r),
+              ),
+              child: Container(
+                width: 96.w,
+                height: 32.h,
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(8.r),
+                    bottomRight: Radius.circular(8.r),
+                  ),
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '모든 알림 삭제',
+                    style: const FigmaTextStyles()
+                        .caption1
+                        .copyWith(color: NewAppColor.neutral800),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -246,31 +289,40 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
           // 제목
           Center(
-            child: Text(
-              '알림센터',
-              style: const FigmaTextStyles()
-                  .headline4
-                  .copyWith(color: Colors.white),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '알림센터',
+                  style: const FigmaTextStyles()
+                      .headline4
+                      .copyWith(color: Colors.white),
+                ),
+                SizedBox(width: 8.w),
+              ],
             ),
           ),
-
           // 모두 읽음 버튼
           Positioned(
-            right: 67.w,
-            top: 16.h,
-            child: GestureDetector(
-              onTap: _markAllAsRead,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  border: Border.all(color: NewAppColor.neutral100),
-                  borderRadius: BorderRadius.circular(100.r),
-                ),
-                child: Text(
-                  '모두 읽음',
-                  style: const FigmaTextStyles()
-                      .caption1
-                      .copyWith(color: NewAppColor.neutral100),
+            right: 45.w,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: _markAllAsRead,
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: NewAppColor.neutral100),
+                    borderRadius: BorderRadius.circular(100.r),
+                  ),
+                  child: Text(
+                    '모두 읽음',
+                    style: const FigmaTextStyles()
+                        .caption1
+                        .copyWith(color: NewAppColor.neutral100),
+                  ),
                 ),
               ),
             ),
@@ -332,7 +384,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
             child: Text(
               '읽지 않은 알림 $unreadCount개',
               style: const FigmaTextStyles()
-                  .bodyText1
+                  .title4
                   .copyWith(color: NewAppColor.primary600),
             ),
           ),
@@ -459,11 +511,11 @@ class NotificationItem extends StatelessWidget {
           ),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // 카테고리 뱃지와 메타 정보
                   Row(
@@ -520,8 +572,8 @@ class NotificationItem extends StatelessWidget {
                       if (!notification.isRead) ...[
                         SizedBox(width: 4.w),
                         Container(
-                          width: 7.w,
-                          height: 7.h,
+                          width: 6.w,
+                          height: 6.h,
                           decoration: BoxDecoration(
                             color: NewAppColor.danger600,
                             borderRadius: BorderRadius.circular(3.5.r),
@@ -548,22 +600,22 @@ class NotificationItem extends StatelessWidget {
 
             SizedBox(width: 8.w),
 
-            // 더보기 버튼
-            GestureDetector(
-              onTap: () {
-                // 알림 상세 또는 메뉴 액션
-              },
-              child: Container(
-                width: 24.w,
-                height: 24.h,
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.more_horiz,
-                  color: NewAppColor.neutral500,
-                  size: 20.w,
-                ),
-              ),
-            ),
+            // // 더보기 버튼
+            // GestureDetector(
+            //   onTap: () {
+            //     // 알림 상세 또는 메뉴 액션
+            //   },
+            //   child: Container(
+            //     width: 24.w,
+            //     height: 24.h,
+            //     alignment: Alignment.center,
+            //     child: Icon(
+            //       Icons.more_horiz,
+            //       color: NewAppColor.neutral500,
+            //       size: 20.w,
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
