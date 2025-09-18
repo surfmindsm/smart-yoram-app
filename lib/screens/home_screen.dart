@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 // // import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
-import 'package:smart_yoram_app/resource/text_style.dart';
+import 'package:smart_yoram_app/resource/text_style_new.dart';
 import '../widget/widgets.dart';
 import '../components/index.dart';
 import '../services/auth_service.dart';
@@ -16,8 +16,6 @@ import '../services/daily_verse_service.dart';
 import '../services/worship_service.dart';
 import '../services/fcm_service.dart';
 import '../services/home_data_service.dart';
-import 'notification_center_screen.dart';
-
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
 import '../models/church.dart';
@@ -25,14 +23,8 @@ import '../models/announcement.dart';
 import '../models/daily_verse.dart';
 import '../models/worship_service.dart';
 
-import 'calendar_screen.dart';
-import 'prayer_screen.dart';
-import 'settings_screen.dart';
-import 'qr_scan_screen.dart';
 import 'notice_detail_screen.dart';
 import 'notification_center_screen.dart';
-import 'staff_directory_screen.dart';
-import 'admin_dashboard_screen.dart';
 import '../screens/pastoral_care_request_screen.dart';
 import '../screens/prayer_request_screen.dart';
 
@@ -114,12 +106,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           print('👤 PROFILE_IMAGE: - name: ${currentMember!.name}');
           print('👤 PROFILE_IMAGE: - email: ${currentMember!.email}');
           print('👤 PROFILE_IMAGE: - id: ${currentMember!.id}');
-          print('👤 PROFILE_IMAGE: - profilePhotoUrl (원본): ${currentMember!.profilePhotoUrl}');
-          print('👤 PROFILE_IMAGE: - fullProfilePhotoUrl (변환됨): ${currentMember!.fullProfilePhotoUrl}');
+          print(
+              '👤 PROFILE_IMAGE: - profilePhotoUrl (원본): ${currentMember!.profilePhotoUrl}');
+          print(
+              '👤 PROFILE_IMAGE: - fullProfilePhotoUrl (변환됨): ${currentMember!.fullProfilePhotoUrl}');
           print('👤 PROFILE_IMAGE: - photo getter: ${currentMember!.photo}');
 
           // URL 유효성 체크
-          final finalUrl = currentMember!.fullProfilePhotoUrl ?? currentMember!.profilePhotoUrl;
+          final finalUrl = currentMember!.fullProfilePhotoUrl ??
+              currentMember!.profilePhotoUrl;
           if (finalUrl != null && finalUrl.isNotEmpty) {
             print('✅ PROFILE_IMAGE: 최종 사용할 URL: $finalUrl');
             if (finalUrl.startsWith('http')) {
@@ -211,7 +206,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       print('📢 HOME: AnnouncementService.getAnnouncements() 호출 시작');
 
-      final announcements = await _announcementService.getAnnouncements(limit: 5);
+      final announcements =
+          await _announcementService.getAnnouncements(limit: 5);
 
       print('📢 HOME: API 호출 완료 - 받은 데이터: ${announcements.length}개');
 
@@ -223,7 +219,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         setState(() {
           recentAnnouncements = announcements;
         });
-        print('📢 HOME: setState 완료 - recentAnnouncements.length: ${recentAnnouncements.length}');
+        print(
+            '📢 HOME: setState 완료 - recentAnnouncements.length: ${recentAnnouncements.length}');
       }
     } catch (e, stackTrace) {
       print('❌ HOME: 공지사항 로드 실패 - $e');
@@ -265,7 +262,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       print('📢 HOME: AnnouncementService 직접 호출 시작');
 
-      final announcements = await _announcementService.getAnnouncements(limit: 5);
+      final announcements =
+          await _announcementService.getAnnouncements(limit: 5);
 
       print('📢 HOME: 직접 호출 완료 - 받은 데이터: ${announcements.length}개');
 
@@ -277,7 +275,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         setState(() {
           recentAnnouncements = announcements;
         });
-        print('📢 HOME: setState 완료 - recentAnnouncements.length: ${recentAnnouncements.length}');
+        print(
+            '📢 HOME: setState 완료 - recentAnnouncements.length: ${recentAnnouncements.length}');
       }
     } catch (e, stackTrace) {
       print('❌ HOME: 공지사항 직접 로드 실패 - $e');
@@ -310,7 +309,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         print('📸 HOME: 캐시 무효화 후 프로필 이미지');
         print('👤 HOME: currentMember.name: ${currentMember?.name}');
         print('🖼️ HOME: profilePhotoUrl: ${currentMember?.profilePhotoUrl}');
-        print('🖼️ HOME: fullProfilePhotoUrl: ${currentMember?.fullProfilePhotoUrl}');
+        print(
+            '🖼️ HOME: fullProfilePhotoUrl: ${currentMember?.fullProfilePhotoUrl}');
       }
     } catch (e) {
       print('❌ HOME: 캐시 무효화 후 재로드 실패 - $e');
@@ -326,7 +326,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (!mounted) return;
 
     // "사진테스트" 멤버의 프로필 이미지 URL 사용
-    const testImageUrl = 'https://adzhdsajdamrflvybhxq.supabase.co/storage/v1/object/public/member-photos/6/480_20250906_020147_a427da05.png';
+    const testImageUrl =
+        'https://adzhdsajdamrflvybhxq.supabase.co/storage/v1/object/public/member-photos/6/480_20250906_020147_a427da05.png';
 
     setState(() {
       if (currentMember != null) {
@@ -347,7 +348,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     print('🧪 HOME: 테스트 프로필 이미지 설정 완료');
     print('🖼️ HOME: 설정된 이미지 URL: $testImageUrl');
-    print('👤 HOME: currentMember.fullProfilePhotoUrl: ${currentMember?.fullProfilePhotoUrl}');
+    print(
+        '👤 HOME: currentMember.fullProfilePhotoUrl: ${currentMember?.fullProfilePhotoUrl}');
   }
 
   // 🔄 FCM 백그라운드 초기화
@@ -507,7 +509,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       child: ProfileAlert(
         userName: currentMember?.name ?? currentUser?.fullName,
-        profileImageUrl: currentMember?.fullProfilePhotoUrl ?? currentMember?.profilePhotoUrl,
+        profileImageUrl: currentMember?.fullProfilePhotoUrl ??
+            currentMember?.profilePhotoUrl,
         onNotificationTap: () {
           Navigator.push(
             context,
@@ -529,7 +532,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     return Scaffold(
-      backgroundColor: AppColor.background,
+      backgroundColor: NewAppColor.neutral100,
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
@@ -583,17 +586,48 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       child: AppCard(
-        backgroundColor: AppColor.white,
+        backgroundColor: Colors.white,
         borderRadius: 16.r,
         variant: CardVariant.elevated,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '주요 기능',
-              style: AppTextStyle(
-                color: AppColor.secondary07,
-              ).h2(),
+            Row(
+              children: [
+                Container(
+                  width: 40.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    color: NewAppColor.success200,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.folder_open_outlined,
+                    color: NewAppColor.success600,
+                    size: 20.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '주요 기능',
+                        style: const FigmaTextStyles().headline4.copyWith(
+                              color: NewAppColor.neutral900,
+                            ),
+                      ),
+                      Text(
+                        'Main Features',
+                        style: const FigmaTextStyles().body3.copyWith(
+                              color: NewAppColor.neutral600,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 16.h),
             Row(
@@ -612,43 +646,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Container(
                       padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
-                        color: AppColor.primary100,
+                        color: NewAppColor.neutral100,
                         borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: AppColor.primary600.withOpacity(0.2),
-                          width: 1,
-                        ),
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 40.w,
-                            height: 40.h,
+                            width: 48.w,
+                            height: 48.h,
                             decoration: BoxDecoration(
-                              color: AppColor.primary600,
-                              borderRadius: BorderRadius.circular(20.r),
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.home,
-                              color: AppColor.white,
-                              size: 20.sp,
+                              Icons.home_outlined,
+                              color: NewAppColor.success400,
+                              size: 24.sp,
                             ),
                           ),
-                          SizedBox(height: 8.h),
+                          SizedBox(height: 24.h),
                           Text(
                             '심방 신청',
-                            style: AppTextStyle(
-                              color: AppColor.secondary07,
-                            ).b2(),
-                            textAlign: TextAlign.center,
+                            style: const FigmaTextStyles().headline5.copyWith(
+                                  color: NewAppColor.neutral900,
+                                ),
                           ),
                           SizedBox(height: 4.h),
                           Text(
                             '심방을 신청하세요',
-                            style: AppTextStyle(
-                              color: AppColor.secondary04,
-                            ).b4(),
-                            textAlign: TextAlign.center,
+                            style: const FigmaTextStyles().body1.copyWith(
+                                  color: NewAppColor.neutral600,
+                                ),
                           ),
                         ],
                       ),
@@ -669,43 +698,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Container(
                       padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
-                        color: AppColor.primary100,
+                        color: NewAppColor.neutral100,
                         borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: AppColor.primary600.withOpacity(0.2),
-                          width: 1,
-                        ),
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 40.w,
-                            height: 40.h,
+                            width: 48.w,
+                            height: 48.h,
                             decoration: BoxDecoration(
-                              color: AppColor.primary600,
-                              borderRadius: BorderRadius.circular(20.r),
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.favorite,
-                              color: AppColor.white,
-                              size: 20.sp,
+                              color: NewAppColor.success400,
+                              size: 24.sp,
                             ),
                           ),
-                          SizedBox(height: 8.h),
+                          SizedBox(height: 24.h),
                           Text(
                             '중보 기도',
-                            style: AppTextStyle(
-                              color: AppColor.secondary07,
-                            ).b2(),
-                            textAlign: TextAlign.center,
+                            style: const FigmaTextStyles().headline5.copyWith(
+                                  color: NewAppColor.neutral900,
+                                ),
                           ),
                           SizedBox(height: 4.h),
                           Text(
                             '함께 기도하겠습니다',
-                            style: AppTextStyle(
-                              color: AppColor.secondary04,
-                            ).b4(),
-                            textAlign: TextAlign.center,
+                            style: const FigmaTextStyles().body1.copyWith(
+                                  color: NewAppColor.neutral600,
+                                ),
                           ),
                         ],
                       ),
@@ -724,7 +748,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       child: AppCard(
-        backgroundColor: AppColor.white,
+        backgroundColor: Colors.white,
         borderRadius: 16.r,
         variant: CardVariant.elevated,
         child: Column(
@@ -740,30 +764,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(8.r),
+                    width: 40.w,
+                    height: 40.h,
                     decoration: BoxDecoration(
-                      color: AppColor.blue100,
-                      borderRadius: BorderRadius.circular(12.r),
+                      color: NewAppColor.primary200,
+                      shape: BoxShape.circle,
                     ),
-                    child: Container(
-                      width: 24.w,
-                      height: 24.h,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColor.primary600,
-                            AppColor.primary8,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(6.r),
-                      ),
-                      child: Icon(
-                        Icons.church,
-                        color: AppColor.white,
-                        size: 14.sp,
-                      ),
+                    child: Icon(
+                      Icons.home_outlined,
+                      color: NewAppColor.primary600,
+                      size: 20.sp,
                     ),
                   ),
                   SizedBox(width: 12.w),
@@ -773,15 +783,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       children: [
                         Text(
                           currentChurch?.name ?? '성암교회',
-                          style: AppTextStyle(
-                            color: AppColor.secondary07,
-                          ).h2(),
+                          style: const FigmaTextStyles().headline4.copyWith(
+                                color: NewAppColor.neutral900,
+                              ),
                         ),
                         Text(
                           currentChurch?.englishName ?? 'Community Church',
-                          style: AppTextStyle(
-                            color: AppColor.secondary04,
-                          ).b4(),
+                          style: const FigmaTextStyles().body3.copyWith(
+                                color: NewAppColor.neutral600,
+                              ),
                         ),
                       ],
                     ),
@@ -791,7 +801,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     turns: _isChurchCardExpanded ? 0.5 : 0,
                     child: Icon(
                       Icons.keyboard_arrow_down,
-                      color: AppColor.secondary04,
+                      color: NewAppColor.neutral500,
                       size: 24,
                     ),
                   ),
@@ -811,7 +821,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Container(
                     padding: EdgeInsets.all(12.r),
                     decoration: BoxDecoration(
-                      color: AppColor.background,
+                      color: NewAppColor.neutral100,
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Row(
@@ -819,12 +829,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Container(
                           padding: EdgeInsets.all(6.r),
                           decoration: BoxDecoration(
-                            color: AppColor.blue200,
+                            color: NewAppColor.primary300,
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Icon(
                             Icons.person,
-                            color: AppColor.primary600,
+                            color: NewAppColor.primary600,
                             size: 16,
                           ),
                         ),
@@ -835,15 +845,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             children: [
                               Text(
                                 '담임목사',
-                                style: AppTextStyle(
-                                  color: AppColor.secondary04,
-                                ).c1(),
+                                style: const FigmaTextStyles().body3.copyWith(
+                                      color: NewAppColor.neutral600,
+                                    ),
                               ),
                               Text(
                                 currentChurch?.pastorName ?? '안영목 목사',
-                                style: AppTextStyle(
-                                  color: AppColor.secondary07,
-                                ).b2(),
+                                style: const FigmaTextStyles().title4.copyWith(
+                                      color: NewAppColor.neutral900,
+                                    ),
                               ),
                             ],
                           ),
@@ -859,7 +869,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: Container(
                           padding: EdgeInsets.all(12.r),
                           decoration: BoxDecoration(
-                            color: AppColor.background,
+                            color: NewAppColor.neutral100,
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           child: Row(
@@ -867,12 +877,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               Container(
                                 padding: EdgeInsets.all(6.r),
                                 decoration: BoxDecoration(
-                                  color: AppColor.green200,
+                                  color: NewAppColor.success200,
                                   borderRadius: BorderRadius.circular(6.r),
                                 ),
                                 child: Icon(
                                   Icons.phone,
-                                  color: AppColor.green600,
+                                  color: NewAppColor.success600,
                                   size: 16,
                                 ),
                               ),
@@ -883,15 +893,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   children: [
                                     Text(
                                       '전화',
-                                      style: AppTextStyle(
-                                        color: AppColor.secondary04,
-                                      ).c1(),
+                                      style: const FigmaTextStyles()
+                                          .body3
+                                          .copyWith(
+                                            color: NewAppColor.neutral600,
+                                          ),
                                     ),
                                     Text(
                                       currentChurch?.phone ?? '031-563-5210',
-                                      style: AppTextStyle(
-                                        color: AppColor.secondary07,
-                                      ).b3(),
+                                      style: const FigmaTextStyles()
+                                          .body2
+                                          .copyWith(
+                                            color: NewAppColor.neutral900,
+                                          ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
@@ -906,7 +920,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: Container(
                           padding: EdgeInsets.all(12.r),
                           decoration: BoxDecoration(
-                            color: AppColor.background,
+                            color: NewAppColor.neutral100,
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           child: Row(
@@ -914,12 +928,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               Container(
                                 padding: EdgeInsets.all(6.r),
                                 decoration: BoxDecoration(
-                                  color: AppColor.orange200,
+                                  color: NewAppColor.warning200,
                                   borderRadius: BorderRadius.circular(6.r),
                                 ),
                                 child: Icon(
                                   Icons.location_on,
-                                  color: AppColor.orange600,
+                                  color: NewAppColor.warning600,
                                   size: 16,
                                 ),
                               ),
@@ -930,15 +944,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   children: [
                                     Text(
                                       '위치',
-                                      style: AppTextStyle(
-                                        color: AppColor.secondary04,
-                                      ).c1(),
+                                      style: const FigmaTextStyles()
+                                          .body3
+                                          .copyWith(
+                                            color: NewAppColor.neutral600,
+                                          ),
                                     ),
                                     Text(
                                       currentChurch?.city ?? '구리시',
-                                      style: AppTextStyle(
-                                        color: AppColor.secondary07,
-                                      ).b3(),
+                                      style: const FigmaTextStyles()
+                                          .body2
+                                          .copyWith(
+                                            color: NewAppColor.neutral900,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -954,10 +972,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Container(
                     padding: EdgeInsets.all(12.r),
                     decoration: BoxDecoration(
-                      color: AppColor.background,
+                      color: NewAppColor.neutral100,
                       borderRadius: BorderRadius.circular(12.r),
                       // border: Border.all(
-                      //   color: AppColor.blue200,
+                      //   color: NewAppColor.primary300,
                       //   width: 1,
                       // ),
                     ),
@@ -968,7 +986,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           padding: EdgeInsets.only(top: 2.h),
                           child: Icon(
                             Icons.location_on,
-                            color: AppColor.primary600,
+                            color: NewAppColor.primary600,
                             size: 16,
                           ),
                         ),
@@ -979,16 +997,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             children: [
                               Text(
                                 '교회 주소',
-                                style: AppTextStyle(
-                                  color: AppColor.primary600,
-                                ).c1(),
+                                style: const FigmaTextStyles().body3.copyWith(
+                                      color: NewAppColor.neutral600,
+                                    ),
                               ),
                               SizedBox(height: 4.h),
                               RichText(
                                 text: TextSpan(
-                                  style: AppTextStyle(
-                                    color: AppColor.secondary06,
-                                  ).b3(),
+                                  style: const FigmaTextStyles().body2.copyWith(
+                                        color: NewAppColor.neutral900,
+                                      ),
                                   children: [
                                     TextSpan(
                                       text: currentChurch?.address ??
@@ -997,9 +1015,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     if (currentChurch?.district != null)
                                       TextSpan(
                                         text: '(${currentChurch!.district})',
-                                        style: AppTextStyle(
-                                          color: AppColor.secondary04,
-                                        ).b4(),
+                                        style: const FigmaTextStyles()
+                                            .body2
+                                            .copyWith(
+                                              color: NewAppColor.neutral900,
+                                            ),
                                       ),
                                   ],
                                 ),
@@ -1150,16 +1170,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       child: AppCard(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.fromARGB(255, 230, 238, 249), // blue-50
-            Color.fromARGB(255, 235, 216, 255), // purple-50
-          ],
-        ),
-        borderColor: const Color(0xFFDEEEFF),
+        backgroundColor: NewAppColor.secondary200,
         borderRadius: 16.r,
+        variant: CardVariant.elevated,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1168,21 +1181,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // 왼쪽: 아이콘과 제목
-                Row(
-                  children: [
-                    Icon(
-                      Icons.menu_book,
-                      color: AppColor.primary900,
-                      size: 20.r,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '오늘의 말씀',
-                      style: AppTextStyle(
-                        color: AppColor.secondary07,
-                      ).h2(),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: NewAppColor.secondary100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.menu_book,
+                          color: NewAppColor.secondary600,
+                          size: 20.sp,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '오늘의 말씀',
+                              style: const FigmaTextStyles().headline4.copyWith(
+                                    color: NewAppColor.neutral900,
+                                  ),
+                            ),
+                            Text(
+                              'Daily Scripture',
+                              style: const FigmaTextStyles().body3.copyWith(
+                                    color: NewAppColor.neutral600,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 // 오른쪽: 버튼들
                 Row(
@@ -1198,7 +1234,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           duration: const Duration(milliseconds: 800),
                           child: Icon(
                             Icons.refresh,
-                            color: AppColor.secondary04,
+                            color: NewAppColor.neutral500,
                             size: 20.r,
                           ),
                         ),
@@ -1213,7 +1249,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         padding: EdgeInsets.all(8.r),
                         child: Icon(
                           Icons.share,
-                          color: AppColor.secondary04,
+                          color: NewAppColor.neutral500,
                           size: 20.r,
                         ),
                       ),
@@ -1224,56 +1260,54 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             SizedBox(height: 16.h),
             // 말씀 내용
-            AppCard(
-              backgroundColor: Colors.white,
-              borderRadius: 12.r,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _isLoadingVerse
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColor.primary600,
-                            ),
-                          ),
-                        )
-                      : _currentVerse != null
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 600),
-                                  child: Text(
-                                    _currentVerse!.verse,
-                                    key: ValueKey(_currentVerse!.id),
-                                    style: AppTextStyle(
-                                            color: AppColor.secondary06)
-                                        .b2()
-                                        .copyWith(),
-                                  ),
-                                ),
-                                SizedBox(height: 8.h),
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 600),
-                                  child: Text(
-                                    _currentVerse!.reference,
-                                    key: ValueKey('${_currentVerse!.id}_ref'),
-                                    style: AppTextStyle(
-                                            color: AppColor.secondary06)
-                                        .b4(),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Text(
-                              '말씀을 불러올 수 없습니다',
-                              style: AppTextStyle(
-                                color: AppColor.secondary04,
-                              ).b3(),
-                            ),
-                ],
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
               ),
+              child: _isLoadingVerse
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          NewAppColor.secondary600,
+                        ),
+                      ),
+                    )
+                  : _currentVerse != null
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 600),
+                              child: Text(
+                                _currentVerse!.verse,
+                                key: ValueKey(_currentVerse!.id),
+                                style: const FigmaTextStyles()
+                                    .body1
+                                    .copyWith(color: NewAppColor.neutral800),
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 600),
+                              child: Text(
+                                _currentVerse!.reference,
+                                key: ValueKey('${_currentVerse!.id}_ref'),
+                                style: const FigmaTextStyles()
+                                    .body3
+                                    .copyWith(color: NewAppColor.neutral400),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          '말씀을 불러올 수 없습니다',
+                          style: const FigmaTextStyles().body3.copyWith(
+                                color: NewAppColor.neutral500,
+                              ),
+                        ),
             ),
           ],
         ),
@@ -1286,7 +1320,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       child: AppCard(
-        backgroundColor: AppColor.white,
+        backgroundColor: Colors.white,
         borderRadius: 16.r,
         variant: CardVariant.elevated,
         child: Column(
@@ -1301,14 +1335,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Icon(
                       Icons.chat_bubble,
                       size: 20.r,
-                      color: AppColor.primary900,
+                      color: NewAppColor.primary600,
                     ),
                     SizedBox(width: 8.w),
                     Text(
                       '교회 소식',
-                      style: AppTextStyle(
-                        color: AppColor.secondary07,
-                      ).h2(),
+                      style: const FigmaTextStyles().header2.copyWith(
+                            color: NewAppColor.neutral800,
+                          ),
                     ),
                   ],
                 ),
@@ -1353,9 +1387,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           child: Center(
                             child: Text(
                               '공지사항이 없습니다',
-                              style: AppTextStyle(
-                                color: Colors.grey[600]!,
-                              ).b2(),
+                              style: const FigmaTextStyles().bodyText2.copyWith(
+                                    color: Colors.grey[600]!,
+                                  ),
                             ),
                           ),
                         )
@@ -1396,9 +1430,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                               Expanded(
                                                 child: Text(
                                                   announcement.title,
-                                                  style: AppTextStyle(
-                                                    color: AppColor.secondary07,
-                                                  ).b2(),
+                                                  style: const FigmaTextStyles()
+                                                      .bodyText2
+                                                      .copyWith(
+                                                        color: NewAppColor
+                                                            .neutral800,
+                                                      ),
                                                   maxLines: 1,
                                                   overflow:
                                                       TextOverflow.ellipsis,
@@ -1418,9 +1455,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             SizedBox(width: 4.w),
                                             Text(
                                               announcement.formattedDate,
-                                              style: AppTextStyle(
-                                                color: Colors.grey[500]!,
-                                              ).b3(),
+                                              style: const FigmaTextStyles()
+                                                  .body3
+                                                  .copyWith(
+                                                    color: Colors.grey[500]!,
+                                                  ),
                                             ),
                                             SizedBox(width: 8.w),
                                             Icon(
@@ -1488,16 +1527,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       children: [
                         Text(
                           'Worship',
-                          style: AppTextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                          ).c1(),
+                          style: const FigmaTextStyles().captionText1.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
                           '예배시간안내',
-                          style: AppTextStyle(
-                            color: Colors.white,
-                          ).h2(),
+                          style: const FigmaTextStyles().header2.copyWith(
+                                color: Colors.white,
+                              ),
                         ),
                       ],
                     ),
@@ -1534,9 +1573,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Center(
                       child: Text(
                         '예배 일정이 없습니다',
-                        style: AppTextStyle(
-                          color: Colors.grey[400]!,
-                        ).b3(),
+                        style: const FigmaTextStyles().body3.copyWith(
+                              color: Colors.grey[400]!,
+                            ),
                       ),
                     )
                   else
@@ -1552,9 +1591,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   children: [
                                     Text(
                                       worship.name,
-                                      style: AppTextStyle(
-                                        color: Colors.white,
-                                      ).b3(),
+                                      style: const FigmaTextStyles()
+                                          .body3
+                                          .copyWith(
+                                            color: Colors.white,
+                                          ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
@@ -1588,9 +1629,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 flex: 3,
                                 child: Text(
                                   worship.location,
-                                  style: AppTextStyle(
-                                    color: Colors.grey[300]!,
-                                  ).b3(),
+                                  style: const FigmaTextStyles().body3.copyWith(
+                                        color: Colors.grey[300]!,
+                                      ),
                                   textAlign: TextAlign.center,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -1604,16 +1645,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   children: [
                                     Text(
                                       worship.dayOfWeekName,
-                                      style: AppTextStyle(
-                                        color: Colors.grey[400]!,
-                                      ).c1(),
+                                      style: const FigmaTextStyles()
+                                          .captionText1
+                                          .copyWith(
+                                            color: Colors.grey[400]!,
+                                          ),
                                     ),
                                     SizedBox(height: 2.h),
                                     Text(
                                       worship.formattedStartTime,
-                                      style: AppTextStyle(
-                                        color: Colors.white,
-                                      ).b3(),
+                                      style: const FigmaTextStyles()
+                                          .body3
+                                          .copyWith(
+                                            color: Colors.white,
+                                          ),
                                       textAlign: TextAlign.end,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -1670,15 +1715,17 @@ class ProfileAlert extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 21.54,
-            backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
-                ? (() {
-                    print('🖼️ CIRCLE_AVATAR: NetworkImage 생성 - URL: $profileImageUrl');
-                    return NetworkImage(profileImageUrl!) as ImageProvider;
-                  })()
-                : (() {
-                    print('🖼️ CIRCLE_AVATAR: 이미지 없음 - 기본 아이콘 표시');
-                    return null;
-                  })(),
+            backgroundImage:
+                profileImageUrl != null && profileImageUrl!.isNotEmpty
+                    ? (() {
+                        print(
+                            '🖼️ CIRCLE_AVATAR: NetworkImage 생성 - URL: $profileImageUrl');
+                        return NetworkImage(profileImageUrl!) as ImageProvider;
+                      })()
+                    : (() {
+                        print('🖼️ CIRCLE_AVATAR: 이미지 없음 - 기본 아이콘 표시');
+                        return null;
+                      })(),
             backgroundColor: Colors.grey[300],
             child: (profileImageUrl == null || profileImageUrl!.isEmpty)
                 ? Icon(
@@ -1695,27 +1742,17 @@ class ProfileAlert extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '안녕하세요',
-                  style: TextStyle(
-                    color: NewAppColor.neutral600, // Neutral_600
-                    fontSize: 13,
-                    fontFamily: 'Pretendard Variable',
-                    fontWeight: FontWeight.w400,
-                    height: 1.38,
-                    letterSpacing: -0.33,
-                  ),
+                  style: FigmaTextStyles().caption1.copyWith(
+                        color: NewAppColor.neutral600, // Neutral_600
+                      ),
                 ),
                 Text(
                   '${userName ?? '사용자'} 님',
-                  style: const TextStyle(
-                    color: NewAppColor.neutral900, // Neutral_900
-                    fontSize: 18,
-                    fontFamily: 'Pretendard',
-                    fontWeight: FontWeight.w500,
-                    height: 1.44,
-                    letterSpacing: -0.45,
-                  ),
+                  style: FigmaTextStyles().headline5.copyWith(
+                        color: NewAppColor.neutral900, // Neutral_900
+                      ),
                 ),
               ],
             ),
