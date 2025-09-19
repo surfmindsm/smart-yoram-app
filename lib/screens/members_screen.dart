@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 // import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../services/member_service.dart';
 import '../models/member.dart';
-import '../resource/color_style.dart';
-import '../resource/text_style.dart';
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
 import '../widgets/member_detail_modal.dart';
 import '../components/index.dart' hide IconButton;
 
@@ -148,59 +149,115 @@ class _MembersScreenState extends State<MembersScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
-      // appBar: AppBar(
-      //   title: Text('주소록'),
-      //   titleTextStyle: AppTextStyle(
-      //     color: Colors.black,
-      //   ).h1(),
-      //   backgroundColor: Colors.white,
-      //   foregroundColor: Colors.black,
-      //   elevation: 0,
-      // ),backgroundColor: AppColor.background,
-
+      backgroundColor: NewAppColor.neutral100,
       body: Column(
         children: [
           SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
           // 검색창
           Container(
             padding: EdgeInsets.all(16.r),
-            color: AppColor.transparent,
-            child: AppInput(
-              controller: _searchController,
-              placeholder: '이름 또는 전화번호로 검색',
-              prefixIcon: Icons.search,
+            color: Colors.transparent,
+            child: Container(
+              width: 350.w,
+              height: 48.h,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12.r),
+                gradient: LinearGradient(
+                  colors: [
+                    NewAppColor.primary600,
+                    NewAppColor.primary600.withValues(alpha: 0.7),
+                    NewAppColor.primary600,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Container(
+                margin: EdgeInsets.all(1.r), // 그라디언트 보더 두께
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(11.r),
+                  color: Colors.white,
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: 16.w),
+                    Icon(
+                      Icons.search,
+                      size: 20.r,
+                      color: NewAppColor.neutral500,
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: '이름 또는 전화번호로 검색',
+                          hintStyle: const FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral500,
+                              ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        style: const FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral900,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
 
           // 탭바
           Container(
-            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: AppCard(
-              variant: CardVariant.elevated,
-              padding: EdgeInsets.zero,
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: AppColor.primary900,
-                labelStyle:
-                    AppTextStyle(color: AppColor.primary900).b2().copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                labelPadding: EdgeInsets.symmetric(horizontal: 12.w),
-                unselectedLabelColor: AppColor.secondary04,
-                unselectedLabelStyle:
-                    AppTextStyle(color: AppColor.secondary04).b2(),
-                indicatorColor: AppColor.primary900,
-                indicatorPadding: EdgeInsets.zero,
-                indicatorWeight: 2.h,
-                dividerColor: Colors.transparent,
-                dividerHeight: 0,
-                onTap: (_) => _filterMembers(),
-                tabs: tabs.map((tab) => Tab(text: tab)).toList(),
-                tabAlignment: TabAlignment.start,
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            height: 56.h,
+            margin: EdgeInsets.symmetric(horizontal: 22.w),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: NewAppColor.neutral200,
+                  width: 2.0,
+                ),
               ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(tabs.length, (index) {
+                final isSelected = _tabController.index == index;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      _tabController.animateTo(index);
+                      _filterMembers();
+                    },
+                    child: Container(
+                      height: 56.h,
+                      decoration: BoxDecoration(
+                        border: isSelected
+                            ? Border(
+                                bottom: BorderSide(
+                                  color: NewAppColor.primary600,
+                                  width: 2.0,
+                                ),
+                              )
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          tabs[index],
+                          style: const FigmaTextStyles().title4.copyWith(
+                                color: isSelected
+                                    ? NewAppColor.primary600
+                                    : NewAppColor.neutral400,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
 
@@ -224,11 +281,13 @@ class _MembersScreenState extends State<MembersScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: AppColor.primary900),
+            CircularProgressIndicator(color: NewAppColor.primary600),
             SizedBox(height: 16.h),
             Text(
               '교인 정보를 불러오는 중...',
-              style: AppTextStyle(color: AppColor.secondary04).b2(),
+              style: const FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral500,
+                  ),
             ),
           ],
         ),
@@ -237,34 +296,64 @@ class _MembersScreenState extends State<MembersScreen>
 
     if (filteredMembers.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.group,
-              size: 64.sp,
-              color: AppColor.secondary03,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              '교인 정보가 없습니다',
-              style: AppTextStyle(color: AppColor.secondary04).h3(),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '다른 카테고리를 선택하거나 검색어를 변경해보세요',
-              style: AppTextStyle(color: AppColor.secondary03).b3(),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: SizedBox(
+          width: 272.w,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 48.w,
+                height: 48.h,
+                clipBehavior: Clip.antiAlias,
+                decoration: const BoxDecoration(),
+                child: SvgPicture.asset(
+                  'assets/icons/members_empty.svg',
+                  width: 48.w,
+                  height: 48.h,
+                  colorFilter: ColorFilter.mode(
+                    NewAppColor.neutral800,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.h),
+              SizedBox(
+                width: double.infinity,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      '교인 정보가 없습니다',
+                      textAlign: TextAlign.center,
+                      style: FigmaTextStyles().title3.copyWith(
+                            color: NewAppColor.neutral800,
+                          ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      '다른 카테고리를 선택하거나 검색어를 변경해보세요',
+                      textAlign: TextAlign.center,
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral500,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return ListView.separated(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.all(20.w),
       itemCount: filteredMembers.length,
-      separatorBuilder: (context, index) => SizedBox(height: 12.h),
+      separatorBuilder: (context, index) => SizedBox(height: 8.h),
       itemBuilder: (context, index) {
         // 안전한 인덱스 체크 추가
         if (index >= filteredMembers.length) {
@@ -279,87 +368,182 @@ class _MembersScreenState extends State<MembersScreen>
   Widget _buildMemberCard(Member member) {
     return GestureDetector(
       onTap: () => _showMemberDetail(member),
-      child: AppCard(
-        variant: CardVariant.elevated,
-        padding: EdgeInsets.all(16.r),
-        child: Row(
+      child: Container(
+        width: double.infinity,
+        height: 76.h,
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
+        child: Stack(
           children: [
-          // 아바타
-          CircleAvatar(
-            radius: 24.r,
-            backgroundColor: AppColor.primary900,
-            backgroundImage: member.fullProfilePhotoUrl != null &&
-                    member.fullProfilePhotoUrl!.isNotEmpty
-                ? NetworkImage(member.fullProfilePhotoUrl!)
-                : null,
-            child: member.fullProfilePhotoUrl == null ||
-                    member.fullProfilePhotoUrl!.isEmpty
-                ? Text(
-                    member.name.isNotEmpty ? member.name[0] : '?',
-                    style: AppTextStyle(color: AppColor.white).b2().copyWith(
-                          fontWeight: FontWeight.w600,
+            Positioned(
+              left: 16.w,
+              top: 7.h,
+              child: SizedBox(
+                width: 253.w,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 42.w,
+                      height: 42.h,
+                      decoration: ShapeDecoration(
+                        image: member.fullProfilePhotoUrl != null &&
+                                member.fullProfilePhotoUrl!.isNotEmpty
+                            ? DecorationImage(
+                                image:
+                                    NetworkImage(member.fullProfilePhotoUrl!),
+                                fit: BoxFit.fill,
+                              )
+                            : null,
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: NewAppColor.neutral300,
+                          ),
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
-                  )
-                : null,
-          ),
-          SizedBox(width: 16.w),
-
-          // 정보 영역
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  member.name,
-                  style: AppTextStyle(color: AppColor.secondary07).b2(),
+                      ),
+                      child: member.fullProfilePhotoUrl == null ||
+                              member.fullProfilePhotoUrl!.isEmpty
+                          ? Center(
+                              child: Text(
+                                member.name.isNotEmpty ? member.name[0] : '?',
+                                style: TextStyle(
+                                  color: NewAppColor.neutral900,
+                                  fontSize: 16.sp,
+                                  fontFamily: 'Pretendard',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    SizedBox(width: 16.w),
+                    SizedBox(
+                      width: 195.w,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 195.w,
+                                  child: Text(
+                                    member.name,
+                                    style: TextStyle(
+                                      color: NewAppColor.neutral900,
+                                      fontSize: 16.sp,
+                                      fontFamily: 'Pretendard',
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.50,
+                                      letterSpacing: -0.40,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 195.w,
+                                  child: Text(
+                                    member.phone,
+                                    style: TextStyle(
+                                      color: NewAppColor.neutral600,
+                                      fontSize: 13.sp,
+                                      fontFamily: 'Pretendard Variable',
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.38,
+                                      letterSpacing: -0.33,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          SizedBox(
+                            width: 195.w,
+                            child: Text(
+                              member.position ?? '성도',
+                              style: TextStyle(
+                                color: NewAppColor.neutral600,
+                                fontSize: 11.sp,
+                                fontFamily: 'Pretendard Variable',
+                                fontWeight: FontWeight.w400,
+                                height: 1.45,
+                                letterSpacing: -0.28,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  member.phone,
-                  style: AppTextStyle(color: AppColor.secondary04).b3(),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  member.position ?? '성도',
-                  style: AppTextStyle(color: AppColor.secondary04).b3(),
-                ),
-              ],
+              ),
             ),
-          ),
-
-          // 액션 버튼들
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.phone, color: Colors.green, size: 20.sp),
-                  onPressed: () => _makePhoneCall(member.phone),
-                  padding: EdgeInsets.zero,
-                ),
+            Positioned(
+              left: 269.w,
+              top: 24.h,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 28.w,
+                    height: 28.h,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: ShapeDecoration(
+                      color: NewAppColor.success200,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100.r),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.phone,
+                        color: NewAppColor.success600,
+                        size: 16.sp,
+                      ),
+                      onPressed: () => _makePhoneCall(member.phone),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                  SizedBox(width: 9.w),
+                  Container(
+                    width: 28.w,
+                    height: 28.h,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: ShapeDecoration(
+                      color: NewAppColor.primary200,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100.r),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.chat_bubble,
+                        color: NewAppColor.primary600,
+                        size: 16.sp,
+                      ),
+                      onPressed: () => _sendMessage(member.phone),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 8.w),
-              Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  color: AppColor.primary900.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.chat_bubble, color: AppColor.primary900, size: 20.sp),
-                  onPressed: () => _sendMessage(member.phone),
-                  padding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
+            ),
           ],
         ),
       ),
@@ -388,7 +572,7 @@ class _MembersScreenState extends State<MembersScreen>
     if (phone != null && phone.isNotEmpty) {
       // 전화번호에서 하이픈, 공백 등 제거
       String cleanedPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
-      
+
       if (cleanedPhone.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -397,7 +581,7 @@ class _MembersScreenState extends State<MembersScreen>
         }
         return;
       }
-      
+
       // 전화 권한 확인 (선택적)
       try {
         PermissionStatus phonePermission = await Permission.phone.status;
@@ -407,13 +591,13 @@ class _MembersScreenState extends State<MembersScreen>
       } catch (e) {
         // 권한 오류는 무시하고 계속 진행
       }
-      
+
       final Uri phoneUri = Uri(scheme: 'tel', path: cleanedPhone);
-      
+
       try {
         // 먼저 일반적인 방법 시도
         bool canLaunch = await canLaunchUrl(phoneUri);
-        
+
         if (canLaunch) {
           await launchUrl(phoneUri);
         } else {
@@ -440,7 +624,7 @@ class _MembersScreenState extends State<MembersScreen>
     if (phone != null && phone.isNotEmpty) {
       // 전화번호에서 하이픈, 공백 등 제거
       String cleanedPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
-      
+
       if (cleanedPhone.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -449,13 +633,13 @@ class _MembersScreenState extends State<MembersScreen>
         }
         return;
       }
-      
+
       final Uri smsUri = Uri(scheme: 'sms', path: cleanedPhone);
-      
+
       try {
         // 먼저 일반적인 방법 시도
         bool canLaunch = await canLaunchUrl(smsUri);
-        
+
         if (canLaunch) {
           await launchUrl(smsUri);
         } else {
