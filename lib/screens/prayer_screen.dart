@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 // import.*lucide_icons.*;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widget/widgets.dart';
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
 
 class PrayerRequest {
   final String id;
@@ -56,16 +59,22 @@ class _PrayerScreenState extends State<PrayerScreen>
     with SingleTickerProviderStateMixin {
   final supabase = Supabase.instance.client;
   late TabController _tabController;
-  
+
   List<PrayerRequest> myPrayerRequests = [];
   List<PrayerRequest> sharedPrayerRequests = [];
   List<VisitationRequest> myVisitationRequests = [];
   bool isLoading = true;
+  int _currentTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        _currentTabIndex = _tabController.index;
+      });
+    });
     _loadData();
   }
 
@@ -170,9 +179,15 @@ class _PrayerScreenState extends State<PrayerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('기도'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        title: Text(
+          '중보 기도',
+          style: const FigmaTextStyles().headline4.copyWith(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: NewAppColor.success600,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -181,17 +196,137 @@ class _PrayerScreenState extends State<PrayerScreen>
             },
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(text: '내 기도'),
-            Tab(text: '공동 기도'),
-            Tab(text: '심방'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(52.h),
+          child: Container(
+            width: double.infinity,
+            height: 52.h,
+            color: Colors.white,
+            child: Row(
+              children: [
+                // 내 기도 탭
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      _tabController.animateTo(0);
+                      setState(() {
+                        _currentTabIndex = 0;
+                      });
+                    },
+                    child: Container(
+                      height: 52.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(
+                            width: _currentTabIndex == 0 ? 2.0 : 1,
+                            color: _currentTabIndex == 0
+                                ? NewAppColor.success600
+                                : NewAppColor.neutral200,
+                          ),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '내 기도',
+                          textAlign: TextAlign.center,
+                          style: const FigmaTextStyles().title4.copyWith(
+                            color: _currentTabIndex == 0
+                                ? NewAppColor.success600
+                                : NewAppColor.neutral500,
+                            fontWeight: _currentTabIndex == 0
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // 공동 기도 탭
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      _tabController.animateTo(1);
+                      setState(() {
+                        _currentTabIndex = 1;
+                      });
+                    },
+                    child: Container(
+                      height: 52.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(
+                            width: _currentTabIndex == 1 ? 2.0 : 1,
+                            color: _currentTabIndex == 1
+                                ? NewAppColor.success600
+                                : NewAppColor.neutral200,
+                          ),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '공동 기도',
+                          textAlign: TextAlign.center,
+                          style: const FigmaTextStyles().title4.copyWith(
+                            color: _currentTabIndex == 1
+                                ? NewAppColor.success600
+                                : NewAppColor.neutral500,
+                            fontWeight: _currentTabIndex == 1
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // 심방 탭
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      _tabController.animateTo(2);
+                      setState(() {
+                        _currentTabIndex = 2;
+                      });
+                    },
+                    child: Container(
+                      height: 52.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(
+                            width: _currentTabIndex == 2 ? 2.0 : 1,
+                            color: _currentTabIndex == 2
+                                ? NewAppColor.success600
+                                : NewAppColor.neutral200,
+                          ),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '심방',
+                          textAlign: TextAlign.center,
+                          style: const FigmaTextStyles().title4.copyWith(
+                            color: _currentTabIndex == 2
+                                ? NewAppColor.success600
+                                : NewAppColor.neutral500,
+                            fontWeight: _currentTabIndex == 2
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
+      backgroundColor: NewAppColor.neutral100,
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -207,7 +342,7 @@ class _PrayerScreenState extends State<PrayerScreen>
     if (isLoading) {
       return const LoadingWidget();
     }
-    
+
     if (myPrayerRequests.isEmpty) {
       return const EmptyStateWidget(
         icon: Icons.church,
@@ -216,14 +351,18 @@ class _PrayerScreenState extends State<PrayerScreen>
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView.builder(
-        itemCount: myPrayerRequests.length,
-        itemBuilder: (context, index) {
-          final request = myPrayerRequests[index];
-          return _buildPrayerCard(request, isMyRequest: true);
-        },
+    return Container(
+      color: NewAppColor.neutral100,
+      child: RefreshIndicator(
+        onRefresh: _loadData,
+        child: ListView.builder(
+          padding: EdgeInsets.all(16.w),
+          itemCount: myPrayerRequests.length,
+          itemBuilder: (context, index) {
+            final request = myPrayerRequests[index];
+            return _buildPrayerCard(request, isMyRequest: true);
+          },
+        ),
       ),
     );
   }
@@ -255,284 +394,320 @@ class _PrayerScreenState extends State<PrayerScreen>
 
   Widget _buildVisitationTab() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingWidget();
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: Column(
-        children: [
-          // 심방 신청 안내
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue[200]!),
+    return Container(
+      color: NewAppColor.neutral100,
+      child: RefreshIndicator(
+        onRefresh: _loadData,
+        child: Column(
+          children: [
+            // 심방 신청 안내
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16.r),
+              margin: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.info,
+                    color: NewAppColor.success600,
+                    size: 24.r,
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '심방 신청',
+                    style: const FigmaTextStyles().title4.copyWith(
+                      color: NewAppColor.success600,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    '목사님이나 교역자의 심방이 필요하시면\n언제든 신청해주세요',
+                    textAlign: TextAlign.center,
+                    style: const FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral600,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              children: [
-                Icon(Icons.info, color: Colors.blue[700]),
-                const SizedBox(height: 8),
-                Text(
-                  '심방 신청',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[700],
+          
+            // 심방 신청 목록
+            Expanded(
+              child: myVisitationRequests.isEmpty
+                  ? const EmptyStateWidget(
+                      icon: Icons.home,
+                      title: '심방 신청 내역이 없습니다',
+                      subtitle: '목사님께 심방을 신청해보세요',
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      itemCount: myVisitationRequests.length,
+                      itemBuilder: (context, index) {
+                        final request = myVisitationRequests[index];
+                        return _buildVisitationCard(request);
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrayerCard(PrayerRequest request, {required bool isMyRequest}) {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: _getCategoryColor(request.category),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Text(
+                  _getCategoryText(request.category),
+                  style: const FigmaTextStyles().caption1.copyWith(
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Text(
-                  '목사님이나 교역자의 심방이 필요하시면\n언제든 신청해주세요',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12),
+              ),
+              SizedBox(width: 8.w),
+              if (request.isPrivate)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.neutral400,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    '비공개',
+                    style: const FigmaTextStyles().caption1.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ],
+              const Spacer(),
+              if (request.status == 'answered')
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.success600,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    '응답됨',
+                    style: const FigmaTextStyles().caption1.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              if (isMyRequest)
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'edit':
+                        _editPrayerRequest(request);
+                        break;
+                      case 'delete':
+                        _deletePrayerRequest(request);
+                        break;
+                      case 'answered':
+                        _markAsAnswered(request);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 16),
+                          SizedBox(width: 8),
+                          Text('수정'),
+                        ],
+                      ),
+                    ),
+                    if (request.status != 'answered')
+                      const PopupMenuItem(
+                        value: 'answered',
+                        child: Row(
+                          children: [
+                            Icon(Icons.check, size: 16, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('응답됨으로 표시'),
+                          ],
+                        ),
+                      ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 16, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('삭제', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            request.title,
+            style: const FigmaTextStyles().title3.copyWith(
+              color: NewAppColor.neutral900,
             ),
           ),
-          
-          // 심방 신청 목록
-          Expanded(
-            child: myVisitationRequests.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+          SizedBox(height: 8.h),
+          Text(
+            request.content,
+            style: const FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral700,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                size: 14.r,
+                color: NewAppColor.neutral500,
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                _formatDate(request.createdAt),
+                style: const FigmaTextStyles().caption1.copyWith(
+                  color: NewAppColor.neutral500,
+                ),
+              ),
+              const Spacer(),
+              if (!isMyRequest)
+                GestureDetector(
+                  onTap: () => _prayForRequest(request),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: NewAppColor.success200,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.home, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
+                        Icon(
+                          Icons.favorite,
+                          size: 14.r,
+                          color: NewAppColor.success600,
+                        ),
+                        SizedBox(width: 4.w),
                         Text(
-                          '심방 신청 내역이 없습니다',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                          '기도해요',
+                          style: const FigmaTextStyles().caption1.copyWith(
+                            color: NewAppColor.success600,
+                          ),
                         ),
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    itemCount: myVisitationRequests.length,
-                    itemBuilder: (context, index) {
-                      final request = myVisitationRequests[index];
-                      return _buildVisitationCard(request);
-                    },
                   ),
+                ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPrayerCard(PrayerRequest request, {required bool isMyRequest}) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getCategoryColor(request.category),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _getCategoryText(request.category),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (request.isPrivate)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      '비공개',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                const Spacer(),
-                if (request.status == 'answered')
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      '응답됨',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                if (isMyRequest)
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'edit':
-                          _editPrayerRequest(request);
-                          break;
-                        case 'delete':
-                          _deletePrayerRequest(request);
-                          break;
-                        case 'answered':
-                          _markAsAnswered(request);
-                          break;
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 16),
-                            SizedBox(width: 8),
-                            Text('수정'),
-                          ],
-                        ),
-                      ),
-                      if (request.status != 'answered')
-                        const PopupMenuItem(
-                          value: 'answered',
-                          child: Row(
-                            children: [
-                              Icon(Icons.check, size: 16, color: Colors.green),
-                              SizedBox(width: 8),
-                              Text('응답됨으로 표시'),
-                            ],
-                          ),
-                        ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 16, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('삭제', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              request.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              request.content,
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  _formatDate(request.createdAt),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const Spacer(),
-                if (!isMyRequest)
-                  TextButton.icon(
-                    onPressed: () => _prayForRequest(request),
-                    icon: const Icon(Icons.favorite, size: 14),
-                    label: const Text('기도해요', style: TextStyle(fontSize: 12)),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildVisitationCard(VisitationRequest request) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getRequestTypeColor(request.requestType),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _getRequestTypeText(request.requestType),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: _getRequestTypeColor(request.requestType),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Text(
+                  _getRequestTypeText(request.requestType),
+                  style: const FigmaTextStyles().caption1.copyWith(
+                    color: Colors.white,
                   ),
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(request.status),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _getStatusText(request.status),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '신청 사유: ${request.reason}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text('희망 날짜: ${request.preferredDate}'),
-            Text('희망 시간: ${request.preferredTime}'),
-            const SizedBox(height: 8),
-            Text(
-              '신청일: ${_formatDate(request.createdAt)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
               ),
+              const Spacer(),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(request.status),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Text(
+                  _getStatusText(request.status),
+                  style: const FigmaTextStyles().caption1.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            '신청 사유: ${request.reason}',
+            style: const FigmaTextStyles().title3.copyWith(
+              color: NewAppColor.neutral900,
             ),
-          ],
-        ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '희망 날짜: ${request.preferredDate}',
+            style: const FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral700,
+            ),
+          ),
+          Text(
+            '희망 시간: ${request.preferredTime}',
+            style: const FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral700,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '신청일: ${_formatDate(request.createdAt)}',
+            style: const FigmaTextStyles().caption1.copyWith(
+              color: NewAppColor.neutral500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -540,15 +715,15 @@ class _PrayerScreenState extends State<PrayerScreen>
   Color _getCategoryColor(String category) {
     switch (category) {
       case 'personal':
-        return Colors.blue;
+        return NewAppColor.primary600;
       case 'family':
-        return Colors.green;
+        return NewAppColor.success600;
       case 'church':
-        return Colors.purple;
+        return NewAppColor.secondary600;
       case 'mission':
-        return Colors.orange;
+        return NewAppColor.warning600;
       default:
-        return Colors.grey;
+        return NewAppColor.neutral600;
     }
   }
 
@@ -570,13 +745,13 @@ class _PrayerScreenState extends State<PrayerScreen>
   Color _getRequestTypeColor(String type) {
     switch (type) {
       case 'visitation':
-        return Colors.blue;
+        return NewAppColor.primary600;
       case 'counseling':
-        return Colors.green;
+        return NewAppColor.success600;
       case 'prayer':
-        return Colors.purple;
+        return NewAppColor.secondary600;
       default:
-        return Colors.grey;
+        return NewAppColor.neutral600;
     }
   }
 
@@ -596,13 +771,13 @@ class _PrayerScreenState extends State<PrayerScreen>
   Color _getStatusColor(String status) {
     switch (status) {
       case 'pending':
-        return Colors.orange;
+        return NewAppColor.warning600;
       case 'scheduled':
-        return Colors.blue;
+        return NewAppColor.primary600;
       case 'completed':
-        return Colors.green;
+        return NewAppColor.success600;
       default:
-        return Colors.grey;
+        return NewAppColor.neutral600;
     }
   }
 
