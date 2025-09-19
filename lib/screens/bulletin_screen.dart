@@ -381,83 +381,16 @@ class _BulletinScreenState extends State<BulletinScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 헤더 영역 (프로필 + 정보)
-          Row(
-            children: [
-              // 프로필 이미지
-              Container(
-                width: 42.w,
-                height: 42.h,
-                decoration: BoxDecoration(
-                  color: NewAppColor.neutral900,
-                  borderRadius: BorderRadius.circular(21.r),
-                  border: Border.all(
-                    color: NewAppColor.neutral300,
-                    width: 0,
-                  ),
+          // 제목만 표시
+          Text(
+            bulletin.title,
+            style: const FigmaTextStyles().title3.copyWith(
+                  color: Colors.black,
                 ),
-                // 실제 프로필 이미지가 있다면 NetworkImage 사용
-              ),
-              SizedBox(width: 8.w),
-              // 사용자 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '관리자',
-                      style: const FigmaTextStyles().title4.copyWith(
-                            color: NewAppColor.neutral900,
-                          ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      '주보 - ${_formatDate(bulletin.createdAt)}',
-                      style: const FigmaTextStyles().caption1.copyWith(
-                            color: NewAppColor.neutral600,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: 24.h),
-
-          // 제목 및 조회수
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  bulletin.title,
-                  style: const FigmaTextStyles().title3.copyWith(
-                        color: Colors.black,
-                      ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              // 조회수 아이콘 및 숫자
-              Row(
-                children: [
-                  Icon(
-                    Icons.visibility_outlined,
-                    size: 16.sp,
-                    color: NewAppColor.neutral600,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '533', // 임시 조회수
-                    style: const FigmaTextStyles().caption3.copyWith(
-                          color: NewAppColor.neutral600,
-                        ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 16.h),
 
           // 미리보기 이미지
           GestureDetector(
