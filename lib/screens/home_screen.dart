@@ -824,7 +824,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Icon(
                       Icons.keyboard_arrow_down,
                       color: NewAppColor.neutral500,
-                      size: 16.sp,
+                      size: 24.sp,
                     ),
                   ),
                 ],
@@ -1545,7 +1545,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                           ),
                                           child: Icon(
                                             Icons.keyboard_arrow_right,
-                                            size: 16.sp,
+                                            size: 24.sp,
                                             color: NewAppColor.neutral500,
                                           ),
                                         ),
@@ -1657,7 +1657,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: Icon(
                           Icons.keyboard_arrow_down,
                           color: Colors.white,
-                          size: 16.sp,
+                          size: 24.sp,
                         ),
                       ),
                     ),
