@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:smart_yoram_app/resource/color_style.dart';
-import 'package:smart_yoram_app/resource/text_style.dart';
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
 import '../models/announcement.dart';
 import '../services/announcement_service.dart';
 import '../utils/announcement_categories.dart';
@@ -63,38 +62,6 @@ class _NoticesScreenState extends State<NoticesScreen>
     }
   }
 
-  void _onDateFilterChanged(String filterKey) {
-    if (filterKey == 'custom') {
-      _showDatePicker();
-    } else {
-      setState(() {
-        selectedDateFilter = filterKey;
-        customStartDate = null;
-        customEndDate = null;
-      });
-      _loadAnnouncements();
-    }
-  }
-
-  Future<void> _showDatePicker() async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: customStartDate != null && customEndDate != null
-          ? DateTimeRange(start: customStartDate!, end: customEndDate!)
-          : null,
-    );
-
-    if (picked != null) {
-      setState(() {
-        selectedDateFilter = 'custom';
-        customStartDate = picked.start;
-        customEndDate = picked.end;
-      });
-      _loadAnnouncements();
-    }
-  }
 
 
 
@@ -162,133 +129,86 @@ class _NoticesScreenState extends State<NoticesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
-      appBar: widget.showAppBar ? AppBar(
-        title: Text(
-          '교회소식',
-          style: AppTextStyle(
-            color: AppColor.secondary07,
-          ).h2(),
-        ),
-        backgroundColor: AppColor.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: AppColor.secondary07,
-            size: 20.sp,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (String value) => _onDateFilterChanged(value),
-            icon: Icon(
-              Icons.filter_list,
-              color: AppColor.secondary07,
-              size: 20.sp,
-            ),
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem(
-                value: 'latest',
-                child: Row(
-                  children: [
-                    Icon(Icons.access_time, size: 16),
-                    SizedBox(width: 8),
-                    Text('최신순'),
-                  ],
+      backgroundColor: NewAppColor.neutral100,
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: Text(
+                '교회 소식',
+                style: const FigmaTextStyles().headline4.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              const PopupMenuItem(
-                value: 'oldest',
-                child: Row(
-                  children: [
-                    Icon(Icons.history, size: 16),
-                    SizedBox(width: 8),
-                    Text('오래된순'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'week',
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_month, size: 16),
-                    SizedBox(width: 8),
-                    Text('최근 7일'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'month',
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 16),
-                    SizedBox(width: 8),
-                    Text('최근 30일'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'this_month',
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_month, size: 16),
-                    SizedBox(width: 8),
-                    Text('이번 달'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'custom',
-                child: Row(
-                  children: [
-                    Icon(Icons.event_available, size: 16),
-                    SizedBox(width: 8),
-                    Text('날짜 선택'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(width: 16.w),
-        ],
-      ) : null,
+              backgroundColor: NewAppColor.primary600,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
+            )
+          : null,
       body: Column(
         children: [
-          // main navigation에서 들어올 때 상단 여백 추가
+          // 상단 안전 영역 - AppBar가 없을 때만 적용
           if (!widget.showAppBar)
-            SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
-          
+            SizedBox(height: MediaQuery.of(context).padding.top + 22.h),
+
           // 탭바
           Container(
-            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: AppCard(
-              variant: CardVariant.elevated,
-              padding: EdgeInsets.zero,
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: AppColor.primary900,
-                labelStyle:
-                    AppTextStyle(color: AppColor.primary900).b2().copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                labelPadding: EdgeInsets.symmetric(horizontal: 12.w),
-                unselectedLabelColor: AppColor.secondary04,
-                unselectedLabelStyle:
-                    AppTextStyle(color: AppColor.secondary04).b2(),
-                indicatorColor: AppColor.primary900,
-                indicatorPadding: EdgeInsets.zero,
-                indicatorWeight: 2.h,
-                dividerColor: Colors.transparent,
-                dividerHeight: 0,
-                tabs: tabCategories.map((category) {
-                  return Tab(text: category['label']);
-                }).toList(),
-                tabAlignment: TabAlignment.start,
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  width: 2,
+                  color: NewAppColor.neutral200,
+                ),
               ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: List.generate(tabCategories.length, (index) {
+                final category = tabCategories[index];
+                final isSelected = _tabController.index == index;
+
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _tabController.animateTo(index);
+                      });
+                    },
+                    child: Container(
+                      height: 56.h,
+                      decoration: isSelected ? const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            width: 2,
+                            color: NewAppColor.neutral900,
+                          ),
+                        ),
+                      ) : null,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            category['label']!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isSelected
+                                ? NewAppColor.neutral900
+                                : NewAppColor.neutral400,
+                              fontSize: 15.sp,
+                              fontFamily: 'Pretendard Variable',
+                              fontWeight: FontWeight.w400,
+                              height: 1.47,
+                              letterSpacing: -0.38,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
 
@@ -299,6 +219,7 @@ class _NoticesScreenState extends State<NoticesScreen>
               children: tabCategories.map((category) {
                 return RefreshIndicator(
                   onRefresh: _loadAnnouncements,
+                  color: NewAppColor.primary500,
                   child: _buildAnnouncementList(),
                 );
               }).toList(),
@@ -311,83 +232,56 @@ class _NoticesScreenState extends State<NoticesScreen>
 
   Widget _buildAnnouncementList() {
     if (isLoading) {
-      return ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: 3,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: EdgeInsets.only(bottom: 12.h),
-            child: AppCard(
-              variant: CardVariant.elevated,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      AppSkeleton(
-                          width: 40.w,
-                          height: 16.h,
-                          borderRadius: BorderRadius.circular(8)),
-                      SizedBox(width: 8.w),
-                      AppSkeleton(
-                          width: 60.w,
-                          height: 16.h,
-                          borderRadius: BorderRadius.circular(8)),
-                      const Spacer(),
-                      AppSkeleton(
-                          width: 20,
-                          height: 20,
-                          borderRadius: BorderRadius.circular(10)),
-                    ],
-                  ),
-                  SizedBox(height: 12.h),
-                  AppSkeleton(width: double.infinity, height: 20.h),
-                  SizedBox(height: 8.h),
-                  AppSkeleton(width: 0.8.sw, height: 16.h),
-                  SizedBox(height: 8.h),
-                  AppSkeleton(width: 0.6.sw, height: 16.h),
-                  SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      AppSkeleton(
-                          width: 16,
-                          height: 16,
-                          borderRadius: BorderRadius.circular(8)),
-                      SizedBox(width: 4.w),
-                      AppSkeleton(width: 80.w, height: 12.h),
-                      SizedBox(width: 16.w),
-                      AppSkeleton(
-                          width: 16,
-                          height: 16,
-                          borderRadius: BorderRadius.circular(8)),
-                      SizedBox(width: 4.w),
-                      AppSkeleton(width: 60.w, height: 12.h),
-                    ],
-                  ),
-                ],
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(NewAppColor.primary500),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              '교회 소식을 불러오는 중...',
+              style: const FigmaTextStyles().body1.copyWith(
+                color: NewAppColor.neutral600,
               ),
             ),
-          );
-        },
+          ],
+        ),
       );
     }
 
     if (announcements.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: AppAlert(
-            type: AlertType.info,
-            title: '공지사항이 없습니다',
-            description: '기다려주세요. 공지사항이 등록되는 대로 여기에 표시됩니다.',
-            icon: Icon(Icons.campaign, size: 20),
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.campaign,
+              size: 64.sp,
+              color: NewAppColor.neutral400,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              '교회 소식이 없습니다',
+              style: const FigmaTextStyles().title3.copyWith(
+                color: NewAppColor.neutral600,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '새로운 소식이 등록되는 대로 알려드릴게요',
+              style: const FigmaTextStyles().caption1.copyWith(
+                color: NewAppColor.neutral600,
+              ),
+            ),
+          ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
       itemCount: announcements.length,
       itemBuilder: (context, index) {
         final announcement = announcements[index];
@@ -397,133 +291,171 @@ class _NoticesScreenState extends State<NoticesScreen>
   }
 
   Widget _buildAnnouncementCard(Announcement announcement) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      child: AppCard(
-        variant: CardVariant.elevated,
-        onTap: () => _viewNoticeDetail(announcement),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () => _viewNoticeDetail(announcement),
+      child: Container(
+        width: double.infinity,
+        height: 154.h,
+        margin: EdgeInsets.only(bottom: 8.h),
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
+        child: Stack(
           children: [
-            // 태그 영역
-            Row(
-              children: [
-                // 고정 배지
-                if (announcement.isPinned)
-                  Padding(
-                    padding: EdgeInsets.only(right: 8.w),
-                    child: AppBadge(
-                      text: '고정',
-                      variant: BadgeVariant.error,
-                      size: BadgeSize.sm,
-                    ),
-                  ),
-                // 카테고리 태그
-                if (announcement.category != null)
-                  Padding(
-                    padding: EdgeInsets.only(right: 8.w),
-                    child: AppBadge(
-                      text: AnnouncementCategories.getCategoryLabel(
-                          announcement.category),
-                      variant: _getBadgeVariant(announcement.category!),
-                      size: BadgeSize.sm,
-                    ),
-                  ),
-                // 서브카테고리
-                if (announcement.subcategory != null)
-                  Padding(
-                    padding: EdgeInsets.only(right: 8.w),
-                    child: AppBadge(
-                      text: AnnouncementCategories.getSubcategoryLabel(
-                          announcement.category, announcement.subcategory),
-                      variant: BadgeVariant.secondary,
-                      size: BadgeSize.sm,
-                    ),
-                  ),
-                const Spacer(),
-                // 더보기 버튼
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'share') {
-                      _shareAnnouncement(announcement);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'share',
-                      child: Row(
+            Positioned(
+              left: 16.w,
+              top: 16.h,
+              child: SizedBox(
+                width: 318.w,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 상단 영역 (태그 + 제목/내용)
+                    SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.share, size: 16),
-                          SizedBox(width: 8),
-                          Text('공유하기'),
+                          // 태그 영역
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildCategoryTag('예배/모임'),
+                              SizedBox(width: 4.w),
+                              _buildSubcategoryTag('주말예배'),
+                            ],
+                          ),
+                          SizedBox(height: 12.h),
+                          // 제목과 내용
+                          SizedBox(
+                            width: double.infinity,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 318.w,
+                                  child: Text(
+                                    announcement.title,
+                                    style: TextStyle(
+                                      color: NewAppColor.neutral800,
+                                      fontSize: 18.sp,
+                                      fontFamily: 'Pretendard',
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.44,
+                                      letterSpacing: -0.45,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                SizedBox(
+                                  width: 318.w,
+                                  child: Text(
+                                    announcement.content,
+                                    style: TextStyle(
+                                      color: NewAppColor.neutral400,
+                                      fontSize: 14.sp,
+                                      fontFamily: 'Pretendard Variable',
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.43,
+                                      letterSpacing: -0.35,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
+                    SizedBox(height: 24.h),
+                    // 하단 정보 (작성자, 날짜)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 16.w,
+                              height: 16.h,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: const BoxDecoration(),
+                              child: Icon(
+                                Icons.person_outline,
+                                size: 16.sp,
+                                color: NewAppColor.neutral400,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              announcement.authorName ?? '관리자',
+                              style: TextStyle(
+                                color: NewAppColor.neutral400,
+                                fontSize: 11.sp,
+                                fontFamily: 'Pretendard Variable',
+                                fontWeight: FontWeight.w400,
+                                height: 1.45,
+                                letterSpacing: -0.28,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(width: 8.w),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 16.w,
+                              height: 16.h,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: const BoxDecoration(),
+                              child: Icon(
+                                Icons.access_time,
+                                size: 16.sp,
+                                color: NewAppColor.neutral400,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              _formatDate(announcement.createdAt),
+                              style: TextStyle(
+                                color: NewAppColor.neutral400,
+                                fontSize: 11.sp,
+                                fontFamily: 'Pretendard Variable',
+                                fontWeight: FontWeight.w400,
+                                height: 1.45,
+                                letterSpacing: -0.28,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ],
-                  child: Icon(
-                    Icons.more_vert,
-                    color: Colors.grey[600],
-                    size: 20,
-                  ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // 제목
-            Text(
-              announcement.title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            // 내용 미리보기
-            Text(
-              announcement.content,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                height: 1.4,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            // 하단 정보 (작성자, 날짜)
-            Row(
-              children: [
-                Icon(
-                  Icons.person,
-                  size: 16,
-                  color: Colors.grey[500],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  announcement.authorName ?? '관리자',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Icon(
-                  Icons.access_time,
-                  size: 16,
-                  color: Colors.grey[500],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  _formatDate(announcement.createdAt),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -531,18 +463,62 @@ class _NoticesScreenState extends State<NoticesScreen>
     );
   }
 
-  BadgeVariant _getBadgeVariant(String category) {
-    switch (category) {
-      case 'worship':
-        return BadgeVariant.primary;
-      case 'member_news':
-        return BadgeVariant.success;
-      case 'event':
-        return BadgeVariant.warning;
-      default:
-        return BadgeVariant.secondary;
-    }
+  Widget _buildCategoryTag(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      clipBehavior: Clip.antiAlias,
+      decoration: const BoxDecoration(
+        color: Color(0xFF0078FF), // Primary_600
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            text,
+            style: TextStyle(
+              color: NewAppColor.neutral100,
+              fontSize: 11.sp,
+              fontFamily: 'Pretendard Variable',
+              fontWeight: FontWeight.w400,
+              height: 1.45,
+              letterSpacing: -0.28,
+            ),
+          ),
+        ],
+      ),
+    );
   }
+
+  Widget _buildSubcategoryTag(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: NewAppColor.neutral100,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            text,
+            style: TextStyle(
+              color: NewAppColor.neutral800,
+              fontSize: 11.sp,
+              fontFamily: 'Pretendard Variable',
+              fontWeight: FontWeight.w400,
+              height: 1.45,
+              letterSpacing: -0.28,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();

@@ -987,25 +987,69 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.description,
-              size: 64.w,
-              color: NewAppColor.neutral400,
+            Container(
+              width: 80.w,
+              height: 80.h,
+              decoration: ShapeDecoration(
+                color: NewAppColor.neutral100,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+              ),
+              child: Icon(
+                Icons.home_outlined,
+                size: 40.sp,
+                color: NewAppColor.neutral400,
+              ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 24.h),
             Text(
               '신청 내역이 없습니다',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: NewAppColor.neutral400,
+              style: const FigmaTextStyles().title3.copyWith(
+                color: NewAppColor.neutral700,
               ),
             ),
             SizedBox(height: 8.h),
             Text(
-              '첫 번째 신청서를 작성해보세요',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: NewAppColor.neutral400,
+              '첫 번째 심방 신청서를 작성해보세요',
+              style: const FigmaTextStyles().body1.copyWith(
+                color: NewAppColor.neutral500,
+              ),
+            ),
+            SizedBox(height: 32.h),
+            GestureDetector(
+              onTap: () {
+                _tabController.animateTo(0);
+                setState(() {
+                  _currentTabIndex = 0;
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                decoration: ShapeDecoration(
+                  color: NewAppColor.success600,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add,
+                      size: 18.sp,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '새 신청 작성하기',
+                      style: const FigmaTextStyles().body1.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1024,150 +1068,304 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   }
 
   Widget _buildRequestCard(PastoralCareRequest request) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      child: AppCard(
-        variant: CardVariant.outlined,
-        child: InkWell(
-          onTap: () => _showRequestDetailDialog(request),
-          borderRadius: BorderRadius.circular(12.r),
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        request.title,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: NewAppColor.neutral900,
-                        ),
+    return GestureDetector(
+      onTap: () => _showRequestDetailDialog(request),
+      child: Container(
+        width: double.infinity,
+        margin: EdgeInsets.only(bottom: 12.h),
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 상단 헤더 영역
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
+              child: Row(
+                children: [
+                  // 아이콘
+                  Container(
+                    width: 40.w,
+                    height: 40.h,
+                    decoration: ShapeDecoration(
+                      color: NewAppColor.success200,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                     ),
-                    AppBadge(
-                      text: request.statusDisplayName,
-                      variant: _getStatusBadgeVariant(request.status),
+                    child: Icon(
+                      Icons.home_outlined,
+                      size: 20.sp,
+                      color: NewAppColor.success600,
                     ),
+                  ),
+                  SizedBox(width: 12.w),
+                  // 제목과 정보
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                request.title,
+                                style: const FigmaTextStyles().title4.copyWith(
+                                  color: NewAppColor.neutral900,
+                                ),
+                              ),
+                            ),
+                            // 상태 배지
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                              decoration: ShapeDecoration(
+                                color: _getStatusColor(request.status),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                              ),
+                              child: Text(
+                                request.statusDisplayName,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontFamily: 'Pretendard',
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
+                            Text(
+                              request.requestTypeDisplayName,
+                              style: const FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral600,
+                              ),
+                            ),
+                            if (request.isUrgent) ...[
+                              SizedBox(width: 8.w),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                decoration: ShapeDecoration(
+                                  color: NewAppColor.danger100,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                ),
+                                child: Text(
+                                  '긴급',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: NewAppColor.danger600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 내용 영역
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 신청 내용 미리보기
+                  if (request.description.isNotEmpty) ...[
+                    Text(
+                      request.description,
+                      style: const FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral800,
+                        height: 1.4,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 12.h),
                   ],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  request.requestTypeDisplayName,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: NewAppColor.neutral400,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '우선순위: ${request.priorityDisplayName}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: NewAppColor.neutral400,
-                  ),
-                ),
-                if (request.isUrgent) ...[
-                  SizedBox(height: 4.h),
+
+                  // 부가 정보들
                   Row(
                     children: [
+                      // 우선순위
                       Icon(
-                        Icons.warning,
-                        size: 16.w,
-                        color: Colors.red,
+                        Icons.flag_outlined,
+                        size: 14.sp,
+                        color: NewAppColor.neutral500,
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        '긴급',
+                        request.priorityDisplayName,
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: Colors.red,
-                          fontWeight: FontWeight.w500,
+                          color: NewAppColor.neutral500,
                         ),
                       ),
-                    ],
-                  ),
-                ],
-                if (request.address != null) ...[
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
+                      SizedBox(width: 16.w),
+                      // 신청일
                       Icon(
-                        Icons.location_on,
-                        size: 16.w,
-                        color: NewAppColor.neutral400,
+                        Icons.access_time,
+                        size: 14.sp,
+                        color: NewAppColor.neutral500,
                       ),
                       SizedBox(width: 4.w),
-                      Expanded(
-                        child: Text(
-                          request.address!,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: NewAppColor.neutral400,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        _formatDate(request.createdAt),
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: NewAppColor.neutral500,
                         ),
                       ),
                     ],
                   ),
+
+                  // 위치 정보
+                  if (request.address != null) ...[
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14.sp,
+                          color: NewAppColor.neutral500,
+                        ),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Text(
+                            request.address!,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: NewAppColor.neutral500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
-                SizedBox(height: 8.h),
-                Text(
-                  '신청일: ${_formatDate(request.createdAt)}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: NewAppColor.neutral400,
+              ),
+            ),
+
+            // 액션 버튼들
+            if (request.canEdit || request.canCancel) ...[
+              SizedBox(height: 16.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: NewAppColor.neutral200,
+                      width: 1,
+                    ),
                   ),
                 ),
-                if (request.canEdit || request.canCancel) ...[
-                  SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      if (request.canEdit)
-                        AppButton(
-                          onPressed: () => _editRequest(request),
-                          variant: ButtonVariant.outline,
-                          size: ButtonSize.sm,
-                          child: const Text('수정'),
+                child: Row(
+                  children: [
+                    if (request.canEdit) ...[
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _editRequest(request),
+                          child: Container(
+                            height: 36.h,
+                            decoration: ShapeDecoration(
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6.r),
+                                side: const BorderSide(
+                                  color: NewAppColor.neutral300,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '수정',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: NewAppColor.neutral700,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      if (request.canEdit && request.canCancel)
-                        SizedBox(width: 8.w),
-                      if (request.canCancel)
-                        AppButton(
-                          onPressed: () => _cancelRequest(request),
-                          variant: ButtonVariant.destructive,
-                          size: ButtonSize.sm,
-                          child: const Text('취소'),
-                        ),
+                      ),
                     ],
-                  ),
-                ],
-              ],
-            ),
-          ),
+                    if (request.canEdit && request.canCancel) SizedBox(width: 8.w),
+                    if (request.canCancel) ...[
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _cancelRequest(request),
+                          child: Container(
+                            height: 36.h,
+                            decoration: ShapeDecoration(
+                              color: NewAppColor.danger100,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6.r),
+                                side: const BorderSide(
+                                  color: NewAppColor.danger200,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '취소',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: NewAppColor.danger600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ] else ...[
+              SizedBox(height: 20.h),
+            ],
+          ],
         ),
       ),
     );
   }
 
-  BadgeVariant _getStatusBadgeVariant(String status) {
+  Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return BadgeVariant.secondary;
+        return NewAppColor.warning600;
       case 'approved':
-        return BadgeVariant.secondary;
+        return NewAppColor.primary600;
       case 'in_progress':
-        return BadgeVariant.secondary;
+        return NewAppColor.success600;
       case 'completed':
-        return BadgeVariant.secondary;
+        return NewAppColor.success700;
       case 'cancelled':
-        return BadgeVariant.error;
+        return NewAppColor.neutral500;
       default:
-        return BadgeVariant.secondary;
+        return NewAppColor.neutral500;
     }
   }
 
