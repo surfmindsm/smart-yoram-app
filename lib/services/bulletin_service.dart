@@ -1,28 +1,29 @@
 import '../models/bulletin.dart';
 import '../models/api_response.dart';
 import '../config/api_config.dart';
-import 'api_service.dart';
+import 'supabase_service.dart';
 import 'auth_service.dart';
 
-/// 주보/공지사항 서비스
+/// 주보/공지사항 서비스 (Supabase Edge Function 사용)
 class BulletinService {
   static final BulletinService _instance = BulletinService._internal();
   factory BulletinService() => _instance;
   BulletinService._internal();
 
-  final ApiService _apiService = ApiService();
+  final SupabaseService _supabaseService = SupabaseService();
   final AuthService _authService = AuthService();
 
-  /// 주보 목록 조회
+  /// 주보 목록 조회 (Supabase Edge Function 사용)
   Future<ApiResponse<List<Bulletin>>> getBulletins({
-    int skip = 0,
+    int page = 1,
     int limit = 100,
     String? search,
-    String? category,
+    int? year,
+    int? month,
   }) async {
     try {
-      print('📰 BULLETIN_SERVICE: 주보 목록 조회 시작');
-      
+      print('📰 BULLETIN_SERVICE: 주보 목록 조회 시작 (Supabase)');
+
       // 현재 사용자 정보 가져오기
       final userResponse = await _authService.getCurrentUser();
       if (!userResponse.success || userResponse.data == null) {
@@ -36,73 +37,29 @@ class BulletinService {
 
       final user = userResponse.data!;
       print('📰 BULLETIN_SERVICE: 사용자 정보 - ID: ${user.id}, Church ID: ${user.churchId}');
-      
-      // API 엔드포인트 구성 (ApiService에서 baseUrl을 붙이므로 경로만 전달)
-      String endpoint = '${ApiConfig.bulletins}?skip=$skip&limit=$limit&church_id=${user.churchId}';
-      
-      if (search != null && search.isNotEmpty) {
-        endpoint += '&search=${Uri.encodeComponent(search)}';
-      }
-      
-      if (category != null && category.isNotEmpty) {
-        endpoint += '&category=${Uri.encodeComponent(category)}';
-      }
 
-      print('📰 BULLETIN_SERVICE: API 요청 시작 - ${ApiConfig.baseUrl}$endpoint');
-      print('📰 BULLETIN_SERVICE: API 엔드포인트 - $endpoint');
-      
-      try {
-        var response = await _apiService.get<List<dynamic>>(
-          endpoint,
-          fromJson: (json) => json as List<dynamic>,
-        ).timeout(const Duration(seconds: 10));
-        print('📰 BULLETIN_SERVICE: API 응답 완료 - success: ${response.success}, message: ${response.message}');
-        
-        if (response.success && response.data != null) {
-          print('📰 BULLETIN_SERVICE: 응답 데이터 타입: ${response.data.runtimeType}');
-          print('📰 BULLETIN_SERVICE: 응답 데이터 길이: ${(response.data as List).length}');
-          
-          final List<Bulletin> bulletins = (response.data as List)
-              .map((bulletinJson) {
-                print('📰 BULLETIN_SERVICE: 주보 데이터 파싱: $bulletinJson');
-                return Bulletin.fromJson(bulletinJson);
-              })
-              .toList();
+      // 직접 bulletins 테이블 조회
+      final response = await _supabaseService.client
+          .from('bulletins')
+          .select('*')
+          .eq('church_id', user.churchId)
+          .order('date', ascending: false)
+          .limit(limit);
 
-          print('📰 BULLETIN_SERVICE: 파싱된 주보 수: ${bulletins.length}');
-          return ApiResponse<List<Bulletin>>(
-            success: true,
-            message: '주보 목록 조회 성공',
-            data: bulletins,
-          );
-        }
-        
-        print('📰 BULLETIN_SERVICE: API 응답 실패 또는 빈 데이터');
-        
-        // "Not Found" 오류인 경우 샘플 데이터로 대체하여 UI 테스트 진행
-        if (response.message.contains('Not Found')) {
-          print('📰 BULLETIN_SERVICE: "Not Found" 오류로 인해 샘플 데이터 사용');
-          return ApiResponse<List<Bulletin>>(
-            success: true,
-            message: '해당 교회에 주보 데이터가 없어 샘플 데이터로 표시',
-            data: _generateSampleBulletins(),
-          );
-        }
-        
-        return ApiResponse<List<Bulletin>>(
-          success: false,
-          message: response.message,
-          data: [],
-        );
-      } catch (e) {
-        print('📰 BULLETIN_SERVICE: API 호출 타임아웃 또는 예외 - $e');
-        print('📰 BULLETIN_SERVICE: 네트워크 문제로 인해 샘플 데이터 사용');
-        return ApiResponse<List<Bulletin>>(
-          success: true,
-          message: 'API 연결 문제로 인해 샘플 데이터로 표시',
-          data: _generateSampleBulletins(),
-        );
-      }
+      print('📰 BULLETIN_SERVICE: Supabase 응답 타입: ${response.runtimeType}');
+      print('📰 BULLETIN_SERVICE: Supabase 응답 데이터: $response');
+
+      final List<Bulletin> bulletins = (response as List)
+          .map((item) => Bulletin.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      print('📰 BULLETIN_SERVICE: 파싱된 주보 수: ${bulletins.length}');
+
+      return ApiResponse<List<Bulletin>>(
+        success: true,
+        message: '주보 목록 조회 성공',
+        data: bulletins,
+      );
     } catch (e) {
       print('📰 BULLETIN_SERVICE: 목록 조회 예외 발생 - $e');
       print('📰 BULLETIN_SERVICE: 샘플 데이터로 대체하여 UI 테스트 진행');
@@ -114,15 +71,31 @@ class BulletinService {
     }
   }
 
-  /// 특정 주보 조회
-  Future<ApiResponse<Bulletin>> getBulletin(String bulletinId) async {
+  /// 특정 주보 조회 (Supabase Edge Function)
+  Future<ApiResponse<Bulletin>> getBulletin(int bulletinId) async {
     try {
-      final response = await _apiService.get<Bulletin>(
-        '${ApiConfig.bulletins}$bulletinId',
+      final response = await _supabaseService.invokeFunction<Bulletin>(
+        SupabaseConfig.bulletinsFunction,
+        body: {
+          'action': 'get_bulletin',
+          'bulletin_id': bulletinId,
+        },
         fromJson: (json) => Bulletin.fromJson(json),
       );
 
-      return response;
+      if (response.success && response.data != null) {
+        return ApiResponse<Bulletin>(
+          success: true,
+          message: '주보 조회 성공',
+          data: response.data!,
+        );
+      } else {
+        return ApiResponse<Bulletin>(
+          success: false,
+          message: response.message,
+          data: null,
+        );
+      }
     } catch (e) {
       return ApiResponse<Bulletin>(
         success: false,
@@ -132,16 +105,31 @@ class BulletinService {
     }
   }
 
-  /// 주보 생성 (관리자용)
-  Future<ApiResponse<Bulletin>> createBulletin(BulletinCreateRequest request) async {
+  /// 주보 생성 (관리자용) (Supabase Edge Function)
+  Future<ApiResponse<Bulletin>> createBulletin(Map<String, dynamic> bulletinData) async {
     try {
-      final response = await _apiService.post<Bulletin>(
-        ApiConfig.bulletins,
-        body: request.toJson(),
+      final response = await _supabaseService.invokeFunction<Bulletin>(
+        SupabaseConfig.bulletinsFunction,
+        body: {
+          'action': 'create_bulletin',
+          'bulletin_data': bulletinData,
+        },
         fromJson: (json) => Bulletin.fromJson(json),
       );
 
-      return response;
+      if (response.success && response.data != null) {
+        return ApiResponse<Bulletin>(
+          success: true,
+          message: '주보 생성 성공',
+          data: response.data!,
+        );
+      } else {
+        return ApiResponse<Bulletin>(
+          success: false,
+          message: response.message,
+          data: null,
+        );
+      }
     } catch (e) {
       return ApiResponse<Bulletin>(
         success: false,
@@ -151,19 +139,35 @@ class BulletinService {
     }
   }
 
-  /// 주보 수정 (관리자용)
+  /// 주보 수정 (관리자용) (Supabase Edge Function)
   Future<ApiResponse<Bulletin>> updateBulletin(
-    String bulletinId,
-    BulletinUpdateRequest request,
+    int bulletinId,
+    Map<String, dynamic> updateData,
   ) async {
     try {
-      final response = await _apiService.put<Bulletin>(
-        '${ApiConfig.bulletins}$bulletinId',
-        body: request.toJson(),
+      final response = await _supabaseService.invokeFunction<Bulletin>(
+        SupabaseConfig.bulletinsFunction,
+        body: {
+          'action': 'update_bulletin',
+          'bulletin_id': bulletinId,
+          'bulletin_data': updateData,
+        },
         fromJson: (json) => Bulletin.fromJson(json),
       );
 
-      return response;
+      if (response.success && response.data != null) {
+        return ApiResponse<Bulletin>(
+          success: true,
+          message: '주보 수정 성공',
+          data: response.data!,
+        );
+      } else {
+        return ApiResponse<Bulletin>(
+          success: false,
+          message: response.message,
+          data: null,
+        );
+      }
     } catch (e) {
       return ApiResponse<Bulletin>(
         success: false,
@@ -173,14 +177,22 @@ class BulletinService {
     }
   }
 
-  /// 주보 삭제 (관리자용)
-  Future<ApiResponse<void>> deleteBulletin(String bulletinId) async {
+  /// 주보 삭제 (관리자용) (Supabase Edge Function)
+  Future<ApiResponse<void>> deleteBulletin(int bulletinId) async {
     try {
-      final response = await _apiService.delete<void>(
-        '${ApiConfig.bulletins}$bulletinId',
+      final response = await _supabaseService.invokeFunction<Map<String, dynamic>>(
+        SupabaseConfig.bulletinsFunction,
+        body: {
+          'action': 'delete_bulletin',
+          'bulletin_id': bulletinId,
+        },
+        fromJson: (json) => json,
       );
 
-      return response;
+      return ApiResponse<void>(
+        success: response.success,
+        message: response.message,
+      );
     } catch (e) {
       return ApiResponse<void>(
         success: false,
@@ -189,14 +201,16 @@ class BulletinService {
     }
   }
 
-  /// 주보 파일 다운로드
-  Future<ApiResponse<String>> downloadBulletin(String bulletinId) async {
+  /// 주보 파일 다운로드 (Supabase Storage)
+  Future<ApiResponse<String>> downloadBulletin(int bulletinId) async {
     try {
-      final response = await _apiService.get<String>(
-        '${ApiConfig.bulletins}$bulletinId/download',
+      // 실제 구현에서는 Supabase Storage를 통해 파일 다운로드 URL을 가져옴
+      // 현재는 빈 구현으로 유지
+      return ApiResponse<String>(
+        success: false,
+        message: '주보 다운로드 기능은 현재 구현되지 않았습니다',
+        data: null,
       );
-
-      return response;
     } catch (e) {
       return ApiResponse<String>(
         success: false,

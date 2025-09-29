@@ -1,23 +1,23 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/api_config.dart';
 import '../models/api_response.dart';
-import '../models/user.dart';
-import 'api_service.dart';
+import '../models/user.dart' as app_user;
+import 'supabase_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
-  final ApiService _apiService = ApiService();
-  User? _currentUser;
-  
-  static const String _tokenKey = 'access_token';
+  final SupabaseService _supabaseService = SupabaseService();
+  app_user.User? _currentUser;
+
   static const String _userKey = 'user_data';
   static const String _devModeKey = 'dev_mode_disable_auto_login';
 
-  User? get currentUser => _currentUser;
-  bool get isLoggedIn => _currentUser != null && _apiService.isAuthenticated;
+  app_user.User? get currentUser => _currentUser;
+  bool get isLoggedIn => _currentUser != null && _supabaseService.isAuthenticated;
   
   // 개발 모드: 자동 로그인 비활성화 플래그
   Future<bool> get isAutoLoginDisabled async {
@@ -39,27 +39,18 @@ class AuthService {
         print('개발 모드: 자동 로그인이 비활성화되어 있습니다.');
         return false;
       }
-      
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(_tokenKey);
-      final userData = prefs.getString(_userKey);
-      
-      if (token != null && userData != null) {
-        _apiService.setToken(token);
-        
-        // 저장된 사용자 정보는 토큰 검증 후 다시 받아옴
-        
-        // 토큰 유효성 검증
+
+      // Supabase 세션 복구 시도
+      final session = _supabaseService.currentSession;
+      if (session != null) {
+        // 세션이 있으면 현재 사용자 정보 가져오기
         final response = await getCurrentUser();
         if (response.success && response.data != null) {
           _currentUser = response.data;
           return true;
-        } else {
-          // 토큰이 만료되었으면 저장된 데이터 삭제
-          await clearStoredAuth();
         }
       }
-      
+
       return false;
     } catch (e) {
       print('저장된 인증 정보 로드 실패: $e');
@@ -67,112 +58,100 @@ class AuthService {
     }
   }
 
-  // 로그인 (기본 토큰만)
-  Future<ApiResponse<LoginResponse>> login(String username, String password) async {
+  // 로그인 (Custom Users 테이블 사용)
+  Future<ApiResponse<AuthResponse>> login(String email, String password) async {
     try {
-      final formData = {
-        'username': username,
-        'password': password,
-      };
+      // Custom users 테이블에서 사용자 검색
+      final response = await _supabaseService.client
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .eq('is_active', true)
+          .maybeSingle();
 
-      final response = await _apiService.postForm<LoginResponse>(
-        ApiConfig.authMemberLogin,
-        formData,
-        fromJson: (json) => LoginResponse.fromJson(json),
-      );
+      if (response != null) {
+        final userData = response as Map<String, dynamic>;
+        final storedPassword = userData['hashed_password'] as String;
 
-      if (response.success && response.data != null) {
-        final loginData = response.data!;
-        _apiService.setToken(loginData.accessToken);
-        
-        // 토큰 저장
-        await _saveToken(loginData.accessToken);
-        
-        // 사용자 정보 가져오기
-        final userResponse = await getCurrentUser();
-        if (userResponse.success && userResponse.data != null) {
-          _currentUser = userResponse.data;
-          await _saveUser(_currentUser!);
-          // 로그인 성공 시 자동 로그인 활성화
+        // 비밀번호 확인 (단순 문자열 비교)
+        if (password == storedPassword) {
+          // User 객체 생성
+          final user = app_user.User.fromJson(userData);
+          _currentUser = user;
+          await _saveUser(user);
           await setAutoLoginEnabled(true);
-          print('로그인 성공 - 자동 로그인 활성화됨');
+
+          // 간단한 Mock AuthResponse
+          AuthResponse? mockAuthResponse;
+
+          return ApiResponse<AuthResponse>(
+            success: true,
+            message: '로그인 성공',
+            data: mockAuthResponse,
+          );
+        } else {
+          return ApiResponse<AuthResponse>(
+            success: false,
+            message: '로그인 실패: 잘못된 이메일 또는 비밀번호',
+            data: null,
+          );
         }
-      }
-
-      return response;
-    } catch (e) {
-      return ApiResponse<LoginResponse>(
-        success: false,
-        message: '로그인 중 오류가 발생했습니다: ${e.toString()}',
-        data: null,
-      );
-    }
-  }
-
-  // 로그인 (사용자 정보 포함)
-  Future<ApiResponse<LoginWithUserResponse>> loginWithUser(String username, String password) async {
-    try {
-      final body = {
-        'username': username,
-        'password': password,
-      };
-
-      final response = await _apiService.post<LoginWithUserResponse>(
-        ApiConfig.authMemberLoginAccessToken,
-        body: body,
-        fromJson: (json) => LoginWithUserResponse.fromJson(json),
-      );
-
-      if (response.success && response.data != null) {
-        final loginData = response.data!;
-        _apiService.setToken(loginData.accessToken);
-        
-        // 토큰과 사용자 정보 저장
-        await _saveToken(loginData.accessToken);
-        
-        if (loginData.user != null) {
-          _currentUser = loginData.user;
-          await _saveUser(_currentUser!);
-          // 로그인 성공 시 자동 로그인 활성화
-          await setAutoLoginEnabled(true);
-          print('로그인(사용자포함) 성공 - 자동 로그인 활성화됨');
-        }
-      }
-
-      return response;
-    } catch (e) {
-      return ApiResponse<LoginWithUserResponse>(
-        success: false,
-        message: '로그인 중 오류가 발생했습니다: ${e.toString()}',
-        data: null,
-      );
-    }
-  }
-
-  // 비밀번호 재설정 요청
-  Future<ApiResponse<String>> requestPasswordReset(String email) async {
-    try {
-      final body = {
-        'email': email,
-      };
-
-      final response = await _apiService.post(
-        ApiConfig.authLogin, // 임시로 같은 엔드포인트 사용, 나중에 올바른 엔드포인트로 변경 필요
-        body: body,
-      );
-
-      if (response.success) {
-        return ApiResponse<String>(
-          success: true,
-          message: '비밀번호 재설정 이메일이 전송되었습니다.',
-          data: 'success',
+      } else {
+        return ApiResponse<AuthResponse>(
+          success: false,
+          message: '로그인 실패: 사용자를 찾을 수 없습니다',
+          data: null,
         );
       }
+    } catch (e) {
+      return ApiResponse<AuthResponse>(
+        success: false,
+        message: '로그인 중 오류가 발생했습니다: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // 회원가입 (Supabase Auth 사용)
+  Future<ApiResponse<AuthResponse>> signUp(String email, String password, {String? fullName}) async {
+    try {
+      final response = await _supabaseService.client.auth.signUp(
+        email: email,
+        password: password,
+        data: fullName != null ? {'full_name': fullName} : null,
+      );
+
+      if (response.user != null) {
+        return ApiResponse<AuthResponse>(
+          success: true,
+          message: '회원가입 성공. 이메일을 확인해주세요.',
+          data: response,
+        );
+      } else {
+        return ApiResponse<AuthResponse>(
+          success: false,
+          message: '회원가입 실패',
+          data: null,
+        );
+      }
+    } catch (e) {
+      return ApiResponse<AuthResponse>(
+        success: false,
+        message: '회원가입 중 오류가 발생했습니다: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // 비밀번호 재설정 요청 (Supabase Auth 사용)
+  Future<ApiResponse<String>> requestPasswordReset(String email) async {
+    try {
+      await _supabaseService.client.auth.resetPasswordForEmail(email);
 
       return ApiResponse<String>(
-        success: false,
-        message: response.message.isNotEmpty ? response.message : '비밀번호 재설정 요청에 실패했습니다.',
-        data: null,
+        success: true,
+        message: '비밀번호 재설정 이메일이 전송되었습니다.',
+        data: 'success',
       );
     } catch (e) {
       return ApiResponse<String>(
@@ -183,28 +162,53 @@ class AuthService {
     }
   }
 
-  // 현재 사용자 정보 조회
-  Future<ApiResponse<User>> getCurrentUser() async {
-    print('💬 AUTH: getCurrentUser 시작');
+  // 현재 사용자 정보 조회 (Custom users 테이블 사용)
+  Future<ApiResponse<app_user.User>> getCurrentUser({bool forceRefresh = false}) async {
     try {
-      print('💬 AUTH: API 요청 - ${ApiConfig.usersMe}');
-      final response = await _apiService.get<User>(
-        ApiConfig.usersMe,
-        fromJson: (json) => User.fromJson(json),
-      );
-      
-      print('💬 AUTH: API 응답 - success: ${response.success}');
-      if (response.success && response.data != null) {
-        _currentUser = response.data;
-        print('💬 AUTH: 사용자 정보 저장 성공 - ID: ${response.data!.id}');
-      } else {
-        print('💬 AUTH: 사용자 정보 없음 - message: ${response.message}');
+      // 강제 새로고침이 아니고 이미 로그인된 사용자가 있으면 반환
+      if (!forceRefresh && _currentUser != null) {
+        print('👤 AUTH_SERVICE: 캐시된 사용자 정보 반환');
+        return ApiResponse<app_user.User>(
+          success: true,
+          message: '성공',
+          data: _currentUser!,
+        );
       }
 
-      return response;
+      // DB에서 최신 사용자 정보 가져오기
+      if (_currentUser != null) {
+        print('👤 AUTH_SERVICE: DB에서 최신 사용자 정보 조회 - ID: ${_currentUser!.id}');
+
+        final response = await _supabaseService.client
+            .from('users')
+            .select('*')
+            .eq('id', _currentUser!.id)
+            .single();
+
+        print('👤 AUTH_SERVICE: DB 응답 데이터: $response');
+
+        final updatedUser = app_user.User.fromJson(response);
+        _currentUser = updatedUser;
+        await _saveUser(updatedUser);
+
+        print('👤 AUTH_SERVICE: 업데이트된 사용자 정보 - 전화번호: ${updatedUser.phone}, 주소: ${updatedUser.address}');
+
+        return ApiResponse<app_user.User>(
+          success: true,
+          message: '성공',
+          data: updatedUser,
+        );
+      }
+
+      // 저장된 정보가 없는 경우
+      return ApiResponse<app_user.User>(
+        success: false,
+        message: '로그인이 필요합니다',
+        data: null,
+      );
     } catch (e) {
-      print('💬 AUTH: getCurrentUser 예외 - $e');
-      return ApiResponse<User>(
+      print('❌ AUTH_SERVICE: 사용자 정보 조회 오류: $e');
+      return ApiResponse<app_user.User>(
         success: false,
         message: '사용자 정보 조회 실패: ${e.toString()}',
         data: null,
@@ -212,34 +216,96 @@ class AuthService {
     }
   }
 
-  // 비밀번호 변경
+  // 사용자 정보 업데이트 (Custom users 테이블 사용)
+  Future<ApiResponse<app_user.User>> updateUserProfile({
+    String? fullName,
+    String? phone,
+    String? address,
+  }) async {
+    try {
+      if (_currentUser == null) {
+        return ApiResponse<app_user.User>(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      final updateData = <String, dynamic>{};
+      if (fullName != null) updateData['full_name'] = fullName;
+      if (phone != null) updateData['phone'] = phone;
+      if (address != null) updateData['address'] = address;
+      updateData['updated_at'] = DateTime.now().toIso8601String();
+
+      final response = await _supabaseService.client
+          .from('users')
+          .update(updateData)
+          .eq('id', _currentUser!.id)
+          .select()
+          .single();
+
+      final updatedUser = app_user.User.fromJson(response);
+      _currentUser = updatedUser;
+      await _saveUser(updatedUser);
+
+      return ApiResponse<app_user.User>(
+        success: true,
+        message: '사용자 정보가 성공적으로 업데이트되었습니다.',
+        data: updatedUser,
+      );
+    } catch (e) {
+      return ApiResponse<app_user.User>(
+        success: false,
+        message: '사용자 정보 업데이트 중 오류가 발생했습니다: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // 비밀번호 변경 (Custom users 테이블 사용)
   Future<ApiResponse<String>> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
     try {
-      final body = {
-        'current_password': currentPassword,
-        'new_password': newPassword,
-      };
-
-      final response = await _apiService.post(
-        ApiConfig.authLogin, // 임시로 같은 엔드포인트 사용, 나중에 올바른 엔드포인트로 변경 필요
-        body: body,
-      );
-
-      if (response.success) {
+      if (_currentUser == null) {
         return ApiResponse<String>(
-          success: true,
-          message: '비밀번호가 성공적으로 변경되었습니다.',
-          data: 'success',
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
         );
       }
 
+      // 현재 비밀번호 확인
+      final userResponse = await _supabaseService.client
+          .from('users')
+          .select('hashed_password')
+          .eq('id', _currentUser!.id)
+          .single();
+
+      final storedPassword = userResponse['hashed_password'] as String;
+
+      if (currentPassword != storedPassword) {
+        return ApiResponse<String>(
+          success: false,
+          message: '현재 비밀번호가 일치하지 않습니다',
+          data: null,
+        );
+      }
+
+      // 새 비밀번호로 업데이트
+      await _supabaseService.client
+          .from('users')
+          .update({
+            'hashed_password': newPassword,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', _currentUser!.id);
+
       return ApiResponse<String>(
-        success: false,
-        message: response.message.isNotEmpty ? response.message : '비밀번호 변경에 실패했습니다.',
-        data: null,
+        success: true,
+        message: '비밀번호가 성공적으로 변경되었습니다.',
+        data: 'success',
       );
     } catch (e) {
       return ApiResponse<String>(
@@ -250,10 +316,10 @@ class AuthService {
     }
   }
 
-  // 로그아웃
+  // 로그아웃 (Supabase Auth 사용)
   Future<void> logout() async {
     try {
-      _apiService.clearToken();
+      await _supabaseService.client.auth.signOut();
       _currentUser = null;
       await clearStoredAuth();
       // 로그아웃 시 자동 로그인 비활성화
@@ -264,21 +330,14 @@ class AuthService {
     }
   }
 
-  // 토큰 저장
-  Future<void> _saveToken(String token) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_tokenKey, token);
-    } catch (e) {
-      print('토큰 저장 실패: $e');
-    }
-  }
+  // Supabase에서는 토큰을 자동으로 관리하므로 더 이상 필요하지 않음
+  // 하지만 호환성을 위해 유지
 
-  // 저장된 토큰 조회
+  // 호환성을 위한 토큰 조회 메서드 (Supabase 세션 토큰 반환)
   Future<String?> getStoredToken() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_tokenKey);
+      final session = _supabaseService.currentSession;
+      return session?.accessToken;
     } catch (e) {
       print('토큰 조회 실패: $e');
       return null;
@@ -286,7 +345,7 @@ class AuthService {
   }
 
   // 사용자 정보 저장
-  Future<void> _saveUser(User user) async {
+  Future<void> _saveUser(app_user.User user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_userKey, user.toJson().toString());
@@ -299,7 +358,6 @@ class AuthService {
   Future<void> clearStoredAuth() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
     } catch (e) {
       print('저장된 인증 정보 삭제 실패: $e');

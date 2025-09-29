@@ -148,9 +148,27 @@ class ApiConfig {
   }
 }
 
-// 레거시 Supabase 설정 (필요시 사용)
+// Supabase 설정 (마이그레이션 후 메인 백엔드)
 class SupabaseConfig {
   static const String supabaseUrl = 'https://adzhdsajdamrflvybhxq.supabase.co';
-  static const String supabaseAnonKey =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c';
+
+  // Edge Functions 기본 URL
+  static String get functionsUrl => '$supabaseUrl/functions/v1';
+
+  // Edge Function 엔드포인트들
+  static const String membersFunction = '/members';
+  static const String announcementsFunction = '/announcements';
+  static const String bulletinsFunction = '/bulletins';
+  static const String offeringsFunction = '/offerings';
+  static const String communityFunction = '/community-sharing';
+  static const String requestsFunction = '/community-requests';
+  static const String wishlistsFunction = '/wishlists';
+  static const String musicSeekersFunction = '/music-seekers';
+  static const String worshipServicesFunction = '/worship-services';
+  static const String statisticsFunction = '/statistics';
+  static const String sendSmsFunction = '/send-sms';
+  static const String emailVerificationFunction = '/email-verification';
+  static const String dailyVersesFunction = '/daily-verses';
+  static const String pastoralCareFunction = '/pastoral-care-requests';
 }

@@ -685,7 +685,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
       );
 
       final response =
-          await _bulletinService.downloadBulletin(bulletin.id.toString());
+          await _bulletinService.downloadBulletin(bulletin.id);
 
       if (response.success) {
         if (mounted) {

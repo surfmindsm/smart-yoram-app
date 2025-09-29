@@ -1,185 +1,222 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/pastoral_care_request.dart';
 import '../models/api_response.dart';
 import '../config/api_config.dart';
-import 'api_service.dart';
+import 'supabase_service.dart';
+import 'auth_service.dart';
 
+/// 심방 신청 서비스 (Supabase Edge Function 사용)
 class PastoralCareService {
-  static const String baseUrl = '${ApiConfig.baseUrl}/pastoral-care/requests';
-  static final ApiService _apiService = ApiService();
+  static final PastoralCareService _instance = PastoralCareService._internal();
+  factory PastoralCareService() => _instance;
+  PastoralCareService._internal();
 
-  /// 새 심방 신청 생성
-  static Future<ApiResponse<PastoralCareRequest>> createRequest(
+  final SupabaseService _supabaseService = SupabaseService();
+  final AuthService _authService = AuthService();
+
+  /// 새 심방 신청 생성 (Supabase Edge Function)
+  Future<ApiResponse<PastoralCareRequest>> createRequest(
     PastoralCareRequestCreate request,
   ) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
+      print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 생성 시작 (Supabase)');
+
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        print('🙏 PASTORAL_CARE_SERVICE: 사용자 정보 조회 실패 - ${userResponse.message}');
+        return ApiResponse<PastoralCareRequest>(
+          success: false,
+          message: '사용자 정보 조회 실패: ${userResponse.message}',
+          data: null,
+        );
       }
 
-      final response = await http.post(
-        Uri.parse(baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+      final user = userResponse.data!;
+      print('🙏 PASTORAL_CARE_SERVICE: 사용자 정보 - ID: ${user.id}, Church ID: ${user.churchId}');
+
+      // Edge Function 호출
+      final response = await _supabaseService.invokeFunction<PastoralCareRequest>(
+        SupabaseConfig.pastoralCareFunction,
+        body: {
+          'action': 'create_request',
+          'church_id': user.churchId,
+          'request_data': request.toJson(),
         },
-        body: jsonEncode(request.toJson()),
+        fromJson: (json) => PastoralCareRequest.fromJson(json),
       );
 
-      final responseBody = utf8.decode(response.bodyBytes);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(responseBody);
-        final pastoralCareRequest = PastoralCareRequest.fromJson(data);
-        return ApiResponse.success(pastoralCareRequest);
+      if (response.success && response.data != null) {
+        print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 생성 완료');
+        return ApiResponse<PastoralCareRequest>(
+          success: true,
+          message: '심방 신청이 성공적으로 생성되었습니다',
+          data: response.data!,
+        );
       } else {
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '심방 신청 생성에 실패했습니다.',
+        print('🙏 PASTORAL_CARE_SERVICE: Edge Function 응답 실패 - ${response.message}');
+        return ApiResponse<PastoralCareRequest>(
+          success: false,
+          message: response.message,
+          data: null,
         );
       }
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 생성 예외 발생 - $e');
+      return ApiResponse<PastoralCareRequest>(
+        success: false,
+        message: '심방 신청 생성 실패: ${e.toString()}',
+        data: null,
+      );
     }
   }
 
-  /// 내 심방 신청 목록 조회
-  static Future<ApiResponse<List<PastoralCareRequest>>> getMyRequests({
-    int skip = 0,
+  /// 내 심방 신청 목록 조회 (Supabase Edge Function)
+  Future<ApiResponse<List<PastoralCareRequest>>> getMyRequests({
+    int page = 1,
     int limit = 100,
     String? status,
   }) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
+      print('🙏 PASTORAL_CARE_SERVICE: 내 심방 신청 목록 조회 시작 (Supabase)');
+
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        print('🙏 PASTORAL_CARE_SERVICE: 사용자 정보 조회 실패 - ${userResponse.message}');
+        return ApiResponse<List<PastoralCareRequest>>(
+          success: false,
+          message: '사용자 정보 조회 실패: ${userResponse.message}',
+          data: [],
+        );
       }
 
-      final queryParams = <String, String>{
-        'skip': skip.toString(),
-        'limit': limit.toString(),
-      };
-      
-      if (status != null && status.isNotEmpty) {
-        queryParams['status'] = status;
-      }
+      final user = userResponse.data!;
+      print('🙏 PASTORAL_CARE_SERVICE: 사용자 정보 - ID: ${user.id}, Church ID: ${user.churchId}');
 
-      final uri = Uri.parse('$baseUrl/my').replace(queryParameters: queryParams);
-      
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+      // Edge Function 호출
+      final response = await _supabaseService.invokeFunction<List<PastoralCareRequest>>(
+        SupabaseConfig.pastoralCareFunction,
+        body: {
+          'action': 'get_my_requests',
+          'church_id': user.churchId,
+          'user_id': user.id,
+          'page': page,
+          'limit': limit,
+          if (status != null) 'status': status,
         },
+        fromJsonList: (dataList) => dataList
+            .map((item) => PastoralCareRequest.fromJson(item as Map<String, dynamic>))
+            .toList(),
       );
 
-      final responseBody = utf8.decode(response.bodyBytes);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(responseBody) as List;
-        final requests = data
-            .map((item) => PastoralCareRequest.fromJson(item))
-            .toList();
-        return ApiResponse.success(requests);
+      if (response.success && response.data != null) {
+        print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 ${response.data!.length}개 조회 완료');
+        return ApiResponse<List<PastoralCareRequest>>(
+          success: true,
+          message: '심방 신청 목록 조회 성공',
+          data: response.data!,
+        );
       } else {
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '심방 신청 목록을 불러오지 못했습니다.',
+        print('🙏 PASTORAL_CARE_SERVICE: Edge Function 응답 실패 - ${response.message}');
+        // API 실패 시 빈 목록 반환
+        return ApiResponse<List<PastoralCareRequest>>(
+          success: true,
+          message: '심방 신청 목록을 찾을 수 없습니다',
+          data: [],
         );
       }
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      print('🙏 PASTORAL_CARE_SERVICE: 목록 조회 예외 발생 - $e');
+      return ApiResponse<List<PastoralCareRequest>>(
+        success: true,
+        message: '심방 신청 목록을 찾을 수 없습니다',
+        data: [],
+      );
     }
   }
 
-  /// 심방 신청 수정 (pending 상태만 가능)
-  static Future<ApiResponse<PastoralCareRequest>> updateRequest(
+  /// 심방 신청 수정 (pending 상태만 가능) (Supabase Edge Function)
+  Future<ApiResponse<PastoralCareRequest>> updateRequest(
     int requestId,
     PastoralCareRequestUpdate updateRequest,
   ) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
-      }
-
-      final response = await http.put(
-        Uri.parse('$baseUrl/$requestId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+      final response = await _supabaseService.invokeFunction<PastoralCareRequest>(
+        SupabaseConfig.pastoralCareFunction,
+        body: {
+          'action': 'update_request',
+          'request_id': requestId,
+          'request_data': updateRequest.toJson(),
         },
-        body: jsonEncode(updateRequest.toJson()),
+        fromJson: (json) => PastoralCareRequest.fromJson(json),
       );
 
-      final responseBody = utf8.decode(response.bodyBytes);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(responseBody);
-        final pastoralCareRequest = PastoralCareRequest.fromJson(data);
-        return ApiResponse.success(pastoralCareRequest);
+      if (response.success && response.data != null) {
+        return ApiResponse<PastoralCareRequest>(
+          success: true,
+          message: '심방 신청 수정 성공',
+          data: response.data!,
+        );
       } else {
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '심방 신청 수정에 실패했습니다.',
+        return ApiResponse<PastoralCareRequest>(
+          success: false,
+          message: response.message,
+          data: null,
         );
       }
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      return ApiResponse<PastoralCareRequest>(
+        success: false,
+        message: '심방 신청 수정 실패: ${e.toString()}',
+        data: null,
+      );
     }
   }
 
-  /// 심방 신청 취소 (pending 상태만 가능)
-  static Future<ApiResponse<bool>> cancelRequest(int requestId) async {
+  /// 심방 신청 취소 (pending 상태만 가능) (Supabase Edge Function)
+  Future<ApiResponse<bool>> cancelRequest(int requestId) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
-      }
-
-      final response = await http.delete(
-        Uri.parse('$baseUrl/$requestId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+      final response = await _supabaseService.invokeFunction<Map<String, dynamic>>(
+        SupabaseConfig.pastoralCareFunction,
+        body: {
+          'action': 'cancel_request',
+          'request_id': requestId,
         },
+        fromJson: (json) => json,
       );
 
-      if (response.statusCode == 200) {
-        return ApiResponse.success(true);
-      } else {
-        final responseBody = utf8.decode(response.bodyBytes);
-        final error = jsonDecode(responseBody);
-        return ApiResponse.error(
-          error['detail']?.toString() ?? '심방 신청 취소에 실패했습니다.',
-        );
-      }
+      return ApiResponse<bool>(
+        success: response.success,
+        message: response.message,
+        data: response.success,
+      );
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      return ApiResponse<bool>(
+        success: false,
+        message: '심방 신청 취소 실패: ${e.toString()}',
+        data: false,
+      );
     }
   }
 
   /// 심방 신청 상태별 목록 조회 헬퍼
-  static Future<ApiResponse<List<PastoralCareRequest>>> getPendingRequests() {
+  Future<ApiResponse<List<PastoralCareRequest>>> getPendingRequests() {
     return getMyRequests(status: 'pending');
   }
 
-  static Future<ApiResponse<List<PastoralCareRequest>>> getApprovedRequests() {
+  Future<ApiResponse<List<PastoralCareRequest>>> getApprovedRequests() {
     return getMyRequests(status: 'approved');
   }
 
-  static Future<ApiResponse<List<PastoralCareRequest>>> getInProgressRequests() {
+  Future<ApiResponse<List<PastoralCareRequest>>> getInProgressRequests() {
     return getMyRequests(status: 'in_progress');
   }
 
-  static Future<ApiResponse<List<PastoralCareRequest>>> getCompletedRequests() {
+  Future<ApiResponse<List<PastoralCareRequest>>> getCompletedRequests() {
     return getMyRequests(status: 'completed');
   }
 
-  static Future<ApiResponse<List<PastoralCareRequest>>> getCancelledRequests() {
+  Future<ApiResponse<List<PastoralCareRequest>>> getCancelledRequests() {
     return getMyRequests(status: 'cancelled');
   }
 }

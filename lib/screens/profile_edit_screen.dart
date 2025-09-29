@@ -41,32 +41,42 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      final user = _authService.currentUser;
-      if (user != null) {
+      print('📝 PROFILE_EDIT: 사용자 데이터 로드 시작');
+      // 사용자 정보를 DB에서 강제로 새로 가져오기
+      final response = await _authService.getCurrentUser(forceRefresh: true);
+
+      print('📝 PROFILE_EDIT: API 응답 - 성공: ${response.success}, 데이터: ${response.data}');
+
+      if (response.success && response.data != null) {
+        final userData = response.data!;
+        print('📝 PROFILE_EDIT: 사용자 정보 상세:');
+        print('  - 이름: ${userData.fullName}');
+        print('  - 이메일: ${userData.email}');
+        print('  - 전화번호: ${userData.phone}');
+        print('  - 주소: ${userData.address}');
+
         setState(() {
-          _currentUser = user;
-          _fullNameController.text = user.fullName;
-          _emailController.text = user.email;
-          // 전화번호와 주소는 User 모델에 없으므로 임시로 빈 값
-          _phoneController.text = '';
-          _addressController.text = '';
+          _currentUser = userData;
+          _fullNameController.text = userData.fullName;
+          _emailController.text = userData.email;
+          _phoneController.text = userData.phone ?? '';
+          _addressController.text = userData.address ?? '';
           _isLoading = false;
         });
       } else {
-        // 사용자 정보를 다시 가져오기
-        final response = await _authService.getCurrentUser();
-        if (response.success && response.data != null) {
-          setState(() {
-            _currentUser = response.data;
-            _fullNameController.text = response.data!.fullName;
-            _emailController.text = response.data!.email;
-            _phoneController.text = '';
-            _addressController.text = '';
-            _isLoading = false;
-          });
+        setState(() {
+          _isLoading = false;
+        });
+        if (mounted) {
+          AppToast.show(
+            context,
+            '사용자 정보를 불러올 수 없습니다: ${response.message}',
+            type: ToastType.error,
+          );
         }
       }
     } catch (e) {
+      print('❌ PROFILE_EDIT: 데이터 로드 오류: $e');
       setState(() {
         _isLoading = false;
       });
@@ -104,17 +114,37 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     });
 
     try {
-      // TODO: 실제 API 엔드포인트가 있다면 여기서 사용자 정보 업데이트
-      // 현재는 시뮬레이션
-      await Future.delayed(const Duration(seconds: 1));
+      // 실제 사용자 정보 업데이트
+      final response = await _authService.updateUserProfile(
+        fullName: _fullNameController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+        address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
+      );
 
       if (mounted) {
-        AppToast.show(
-          context,
-          '개인정보가 성공적으로 수정되었습니다.',
-          type: ToastType.success,
-        );
-        Navigator.pop(context);
+        if (response.success) {
+          print('✅ PROFILE_EDIT: 프로필 업데이트 성공, 화면 새로고침');
+          // 업데이트된 정보로 화면 새로고침
+          await _loadUserData();
+
+          if (mounted) {
+            AppToast.show(
+              context,
+              '개인정보가 성공적으로 수정되었습니다.',
+              type: ToastType.success,
+            );
+            Navigator.pop(context);
+          }
+        } else {
+          print('❌ PROFILE_EDIT: 프로필 업데이트 실패 - ${response.message}');
+          if (mounted) {
+            AppToast.show(
+              context,
+              response.message,
+              type: ToastType.error,
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -193,11 +223,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         controller: _emailController,
                         placeholder: '이메일을 입력하세요',
                         keyboardType: TextInputType.emailAddress,
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildReadOnlyField(
-                        label: '사용자명',
-                        value: _currentUser?.username ?? '',
                       ),
                     ],
                   ),

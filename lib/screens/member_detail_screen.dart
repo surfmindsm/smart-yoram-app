@@ -521,7 +521,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
         memberStatus: _selectedStatus,
       );
       
-      final response = await _memberService.updateMember(widget.member.id, request);
+      final response = await _memberService.updateMember(widget.member.id, request.toJson());
       
       if (response.success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

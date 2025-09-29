@@ -486,7 +486,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // 로그인 성공 처리
-  Future<void> _handleLoginSuccess(ApiResponse<LoginResponse> result) async {
+  Future<void> _handleLoginSuccess(ApiResponse<dynamic> result) async {
     if (mounted) {
       if (result.success) {
         print('🔑 LOGIN: 로그인 성공');

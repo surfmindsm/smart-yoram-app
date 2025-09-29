@@ -6,6 +6,8 @@ import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../services/auth_service.dart';
 import '../services/font_settings_service.dart';
+import '../services/church_service.dart';
+import '../models/church.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
 import 'profile_edit_screen.dart';
@@ -35,6 +37,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
+  final ChurchService _churchService = ChurchService();
 
   // 설정 값들
   bool _pushNotifications = true;
@@ -162,11 +165,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildGroupedSection(
             title: '교회 정보',
             items: [
-              _GroupedSettingItem(
-                icon: Icons.church_outlined,
-                title: '교회 소개',
-                onTap: _showChurchInfo,
-              ),
               _GroupedSettingItem(
                 icon: Icons.phone_outlined,
                 title: '연락처',
@@ -626,92 +624,159 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showChurchInfo() {
+
+  void _showChurchContact() async {
+    print('🏛️ SETTINGS: 교회 연락처 정보 조회 시작');
+
+    // 로딩 다이얼로그 표시
     showDialog(
       context: context,
-      builder: (context) => AppDialog(
-        title: '교회 소개',
-        content: SingleChildScrollView(
-          child: Text(
-            '우리 교회는 하나님의 사랑을 실천하며, 지역사회와 함께 성장하는 교회입니다.\n\n'
-            '설립년도: 1995년\n'
-            '담임목사: 김목사님\n'
-            '교인 수: 약 500명\n\n'
-            '우리의 비전은 모든 성도가 그리스도의 제자로 성장하여 세상의 빛과 소금이 되는 것입니다.',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: NewAppColor.neutral900,
-              height: 1.5,
-            ),
-          ),
-        ),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: Text('닫기'),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
       ),
     );
+
+    try {
+      // 교회 정보 가져오기
+      final response = await _churchService.getMyChurch();
+
+      if (mounted) {
+        // 로딩 다이얼로그 닫기
+        Navigator.pop(context);
+
+        if (response.success && response.data != null) {
+          final church = response.data!;
+          print('🏛️ SETTINGS: 교회 정보 조회 성공 - ${church.name}');
+
+          // 교회 연락처 다이얼로그 표시
+          showDialog(
+            context: context,
+            builder: (context) => AppDialog(
+              title: '${church.name} 연락처',
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (church.phone != null && church.phone!.isNotEmpty)
+                    Text('전화: ${church.phone}', style: TextStyle(fontSize: 14.sp)),
+                  if (church.phone != null && church.phone!.isNotEmpty)
+                    SizedBox(height: 8.h),
+                  if (church.email != null && church.email!.isNotEmpty)
+                    Text('이메일: ${church.email}', style: TextStyle(fontSize: 14.sp)),
+                  if (church.email != null && church.email!.isNotEmpty)
+                    SizedBox(height: 8.h),
+                  if (church.pastorName != null && church.pastorName!.isNotEmpty)
+                    Text('담임목사: ${church.pastorName}', style: TextStyle(fontSize: 14.sp)),
+                ],
+              ),
+              actions: [
+                AppButton(
+                  onPressed: () => Navigator.pop(context),
+                  variant: ButtonVariant.ghost,
+                  child: const Text('닫기'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          print('❌ SETTINGS: 교회 정보 조회 실패 - ${response.message}');
+          AppToast.show(
+            context,
+            '교회 정보를 불러올 수 없습니다: ${response.message}',
+            type: ToastType.error,
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ SETTINGS: 교회 연락처 조회 오류: $e');
+      if (mounted) {
+        Navigator.pop(context); // 로딩 다이얼로그 닫기
+        AppToast.show(
+          context,
+          '교회 연락처 정보를 불러오는데 실패했습니다: $e',
+          type: ToastType.error,
+        );
+      }
+    }
   }
 
-  void _showChurchContact() {
-    showDialog(
-      context: context,
-      builder: (context) => AppDialog(
-        title: '연락처',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('전화: 02-1234-5678', style: TextStyle(fontSize: 14.sp)),
-            SizedBox(height: 8.h),
-            Text('팩스: 02-1234-5679', style: TextStyle(fontSize: 14.sp)),
-            SizedBox(height: 8.h),
-            Text('이메일: info@church.com', style: TextStyle(fontSize: 14.sp)),
-          ],
-        ),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: Text('닫기'),
-          ),
-        ],
-      ),
-    );
-  }
+  void _showChurchLocation() async {
+    print('🏛️ SETTINGS: 교회 위치 정보 조회 시작');
 
-  void _showChurchLocation() {
+    // 로딩 다이얼로그 표시
     showDialog(
       context: context,
-      builder: (context) => AppDialog(
-        title: '교회 위치',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '주소: 서울특별시 강남구 테헤란로 123\n교회건물 2층',
-              style: TextStyle(fontSize: 14.sp),
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              '지하철: 2호선 강남역 3번 출구에서 도보 5분',
-              style: TextStyle(fontSize: 14.sp),
-            ),
-          ],
-        ),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: Text('닫기'),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
       ),
     );
+
+    try {
+      // 교회 정보 가져오기
+      final response = await _churchService.getMyChurch();
+
+      if (mounted) {
+        // 로딩 다이얼로그 닫기
+        Navigator.pop(context);
+
+        if (response.success && response.data != null) {
+          final church = response.data!;
+          print('🏛️ SETTINGS: 교회 위치 정보 조회 성공 - ${church.name}');
+
+          // 교회 위치 다이얼로그 표시
+          showDialog(
+            context: context,
+            builder: (context) => AppDialog(
+              title: '${church.name} 위치',
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (church.address != null && church.address!.isNotEmpty)
+                    Text(
+                      '주소: ${church.address}',
+                      style: TextStyle(fontSize: 14.sp),
+                    ),
+                  if (church.address != null && church.address!.isNotEmpty)
+                    SizedBox(height: 16.h),
+                  if (church.phone != null && church.phone!.isNotEmpty)
+                    Text(
+                      '연락처: ${church.phone}',
+                      style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                    ),
+                ],
+              ),
+              actions: [
+                AppButton(
+                  onPressed: () => Navigator.pop(context),
+                  variant: ButtonVariant.ghost,
+                  child: const Text('닫기'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          print('❌ SETTINGS: 교회 위치 정보 조회 실패 - ${response.message}');
+          AppToast.show(
+            context,
+            '교회 위치 정보를 불러올 수 없습니다: ${response.message}',
+            type: ToastType.error,
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ SETTINGS: 교회 위치 조회 오류: $e');
+      if (mounted) {
+        Navigator.pop(context); // 로딩 다이얼로그 닫기
+        AppToast.show(
+          context,
+          '교회 위치 정보를 불러오는데 실패했습니다: $e',
+          type: ToastType.error,
+        );
+      }
+    }
   }
 
   void _showHelp() {

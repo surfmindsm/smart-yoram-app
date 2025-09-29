@@ -78,7 +78,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     });
 
     try {
-      final response = await PastoralCareService.getMyRequests();
+      final response = await PastoralCareService().getMyRequests();
       if (response.success && response.data != null) {
         setState(() {
           _requests = response.data!;
@@ -224,7 +224,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         longitude: _longitude,
       );
 
-      final response = await PastoralCareService.createRequest(request);
+      final response = await PastoralCareService().createRequest(request);
 
       if (response.success) {
         if (mounted) {
@@ -1408,7 +1408,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
       });
 
       try {
-        final response = await PastoralCareService.cancelRequest(request.id);
+        final response = await PastoralCareService().cancelRequest(request.id);
         if (response.success) {
           if (mounted) {
             AppToast.show(

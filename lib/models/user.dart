@@ -8,6 +8,9 @@ class User {
   final bool isActive;
   final bool isFirst;
   final DateTime? createdAt;
+  final String? phone;
+  final String? address;
+  final DateTime? updatedAt;
 
   User({
     required this.id,
@@ -19,6 +22,9 @@ class User {
     required this.isActive,
     required this.isFirst,
     this.createdAt,
+    this.phone,
+    this.address,
+    this.updatedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -31,8 +37,13 @@ class User {
       role: json['role'] ?? 'member',
       isActive: json['is_active'] ?? true,
       isFirst: json['is_first'] ?? false,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+      phone: json['phone'],
+      address: json['address'],
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : null,
     );
   }
@@ -48,6 +59,9 @@ class User {
       'is_active': isActive,
       'is_first': isFirst,
       'created_at': createdAt?.toIso8601String(),
+      'phone': phone,
+      'address': address,
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 

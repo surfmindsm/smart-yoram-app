@@ -1,15 +1,126 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/member.dart';
 import '../models/user.dart' as app_user;
+import '../models/api_response.dart';
 
-/// Supabase를 직접 사용하여 데이터를 조회하는 서비스
-/// users 테이블과 members 테이블에서 실제 데이터를 가져옵니다.
+/// Supabase 클라이언트 및 Edge Functions를 관리하는 통합 서비스
+/// 레거시 API에서 Supabase로 마이그레이션하기 위한 중앙화된 서비스
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;
   SupabaseService._internal();
 
   SupabaseClient get client => Supabase.instance.client;
+
+  // 현재 사용자 세션
+  Session? get currentSession => client.auth.currentSession;
+  User? get currentUser => client.auth.currentUser;
+
+  // 인증 상태 확인
+  bool get isAuthenticated => currentSession != null;
+
+  // Edge Function 호출을 위한 공통 메서드
+  Future<ApiResponse<T>> invokeFunction<T>(
+    String functionName, {
+    required Map<String, dynamic> body,
+    T Function(Map<String, dynamic>)? fromJson,
+    T Function(List<dynamic>)? fromJsonList,
+  }) async {
+    try {
+      final response = await client.functions.invoke(
+        functionName,
+        body: body,
+        headers: {
+          'Authorization': 'Bearer ${currentSession?.accessToken ?? ''}',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.status == 200 && response.data != null) {
+        T? data;
+
+        if (fromJsonList != null && response.data is List) {
+          data = fromJsonList(response.data as List<dynamic>);
+        } else if (fromJson != null && response.data is Map<String, dynamic>) {
+          data = fromJson(response.data as Map<String, dynamic>);
+        } else {
+          data = response.data as T?;
+        }
+
+        return ApiResponse<T>(
+          success: true,
+          message: '성공',
+          data: data,
+        );
+      } else {
+        return ApiResponse<T>(
+          success: false,
+          message: response.data?['error']?.toString() ?? 'Edge Function 호출 실패',
+          data: null,
+        );
+      }
+    } catch (e) {
+      return ApiResponse<T>(
+        success: false,
+        message: 'Edge Function 호출 오류: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // 테이블 직접 쿼리를 위한 공통 메서드 (안전한 쿼리만 허용)
+  Future<ApiResponse<List<T>>> queryTable<T>(
+    String tableName, {
+    String? select,
+    Map<String, dynamic>? filters,
+    String? orderBy,
+    bool ascending = true,
+    int? limit,
+    int? offset,
+    required T Function(Map<String, dynamic>) fromJson,
+  }) async {
+    try {
+      dynamic query = client.from(tableName).select(select ?? '*');
+
+      // 필터 적용
+      if (filters != null) {
+        for (final entry in filters.entries) {
+          query = query.eq(entry.key, entry.value);
+        }
+      }
+
+      // 정렬 적용
+      if (orderBy != null) {
+        query = query.order(orderBy, ascending: ascending);
+      }
+
+      // 페이지네이션 적용
+      if (limit != null) {
+        query = query.limit(limit);
+      }
+      if (offset != null) {
+        query = query.range(offset, offset + (limit ?? 10) - 1);
+      }
+
+      final response = await query;
+
+      final List<T> items = (response as List)
+          .map((item) => fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      return ApiResponse<List<T>>(
+        success: true,
+        message: '성공',
+        data: items,
+      );
+    } catch (e) {
+      return ApiResponse<List<T>>(
+        success: false,
+        message: '테이블 쿼리 오류: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
 
   /// 모든 사용자 조회
   Future<List<app_user.User>> getUsers({

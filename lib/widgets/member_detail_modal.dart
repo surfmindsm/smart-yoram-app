@@ -164,7 +164,7 @@ class MemberDetailModal extends StatelessWidget {
         _buildInfoItem('전화번호', member.phone),
         if (member.email != null && member.email!.isNotEmpty)
           _buildInfoItem('이메일', member.email!),
-        _buildInfoItem('성별', member.gender == 'M' ? '남성' : '여성'),
+        _buildInfoItem('성별', _getGenderDisplay(member.gender)),
         if (member.birthdate != null)
           _buildInfoItem('생년월일', _formatDate(member.birthdate!)),
         if (member.address != null && member.address!.isNotEmpty)
@@ -306,6 +306,21 @@ class MemberDetailModal extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  String _getGenderDisplay(String gender) {
+    switch (gender.toLowerCase()) {
+      case '남':
+      case 'male':
+      case 'm':
+        return '남성';
+      case '여':
+      case 'female':
+      case 'f':
+        return '여성';
+      default:
+        return gender; // 원본 값 반환
+    }
   }
 
   Future<void> _makePhoneCall(BuildContext context, String? phone) async {

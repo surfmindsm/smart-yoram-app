@@ -16,6 +16,7 @@ import '../services/daily_verse_service.dart';
 import '../services/worship_service.dart';
 import '../services/fcm_service.dart';
 import '../services/home_data_service.dart';
+import 'notices_screen.dart';
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
 import '../models/church.dart';
@@ -208,8 +209,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       print('📢 HOME: AnnouncementService.getAnnouncements() 호출 시작');
 
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      final churchId = userResponse.data?.churchId;
+
       final announcements =
-          await _announcementService.getAnnouncements(limit: 5);
+          await _announcementService.getAnnouncements(
+            limit: 5,
+            churchId: churchId,
+          );
 
       print('📢 HOME: API 호출 완료 - 받은 데이터: ${announcements.length}개');
 
@@ -264,8 +272,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       print('📢 HOME: AnnouncementService 직접 호출 시작');
 
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      final churchId = userResponse.data?.churchId;
+
       final announcements =
-          await _announcementService.getAnnouncements(limit: 5);
+          await _announcementService.getAnnouncements(
+            limit: 5,
+            churchId: churchId,
+          );
 
       print('📢 HOME: 직접 호출 완료 - 받은 데이터: ${announcements.length}개');
 
@@ -441,8 +456,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _isLoadingAnnouncements = true;
       });
 
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      final churchId = userResponse.data?.churchId;
+
       final announcements =
-          await _announcementService.getAnnouncements(limit: 5);
+          await _announcementService.getAnnouncements(
+            limit: 5,
+            churchId: churchId,
+          );
       setState(() {
         recentAnnouncements = announcements;
         _isLoadingAnnouncements = false;
@@ -1393,7 +1415,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(context, '/notices');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NoticesScreen(showAppBar: true),
+                      ),
+                    );
                   },
                   child: Container(
                     width: 80.w,

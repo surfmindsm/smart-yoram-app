@@ -4,6 +4,7 @@ import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../models/announcement.dart';
 import '../services/announcement_service.dart';
+import '../services/auth_service.dart';
 import '../utils/announcement_categories.dart';
 import '../utils/date_filter.dart';
 import '../components/index.dart' hide IconButton;
@@ -24,6 +25,7 @@ class NoticesScreen extends StatefulWidget {
 class _NoticesScreenState extends State<NoticesScreen>
     with TickerProviderStateMixin {
   final _announcementService = AnnouncementService();
+  final _authService = AuthService();
 
   List<Announcement> announcements = [];
   bool isLoading = true;
@@ -82,6 +84,10 @@ class _NoticesScreenState extends State<NoticesScreen>
 
       print(
           '📞 API 호출 중... 카테고리: $apiCategory, 날짜: ${dateRange['startDate']} ~ ${dateRange['endDate']}, 정렬: $sortOrder');
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      final churchId = userResponse.data?.churchId;
+
       final announcementList = await _announcementService.getAnnouncements(
         skip: 0,
         limit: 100,
@@ -90,6 +96,7 @@ class _NoticesScreenState extends State<NoticesScreen>
         startDate: dateRange['startDate'],
         endDate: dateRange['endDate'],
         sortOrder: sortOrder,
+        churchId: churchId,
       );
 
       print('✅ API 호출 성공: ${announcementList.length}개 공지사항');

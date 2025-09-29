@@ -34,19 +34,39 @@ class Notice {
       content: json['content'] as String,
       type: json['type'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at'] as String) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
           : null,
       createdBy: json['created_by'] as String,
       isPublished: json['is_published'] as bool? ?? true,
       imageUrl: json['image_url'] as String?,
-      attachments: json['attachments'] != null 
+      attachments: json['attachments'] != null
           ? List<String>.from(json['attachments'] as List)
           : null,
-      expiryDate: json['expiry_date'] != null 
+      expiryDate: json['expiry_date'] != null
           ? DateTime.parse(json['expiry_date'] as String)
           : null,
       isRead: json['is_read'] as bool? ?? false,
+    );
+  }
+
+  // Announcement 테이블 데이터에서 Notice 객체 생성
+  factory Notice.fromAnnouncement(Map<String, dynamic> json) {
+    return Notice(
+      id: json['id'].toString(),
+      title: json['title'] as String,
+      content: json['content'] as String,
+      type: json['category'] as String? ?? 'general',
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
+      createdBy: json['author_name'] as String? ?? '관리자',
+      isPublished: json['is_active'] as bool? ?? true,
+      imageUrl: null, // announcements 테이블에 없는 경우
+      attachments: null,
+      expiryDate: null,
+      isRead: false, // 기본값
     );
   }
 
