@@ -8,6 +8,7 @@ import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../services/member_service.dart';
 import 'admin_member_detail_screen.dart';
+import 'admin_member_edit_screen.dart';
 
 /// 관리자용 교인 관리 화면
 class AdminMemberManagementScreen extends StatefulWidget {
@@ -111,6 +112,19 @@ class _AdminMemberManagementScreenState
     });
   }
 
+  void _navigateToAdd() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminMemberEditScreen(),
+      ),
+    );
+
+    if (result == true) {
+      _loadMembers(); // 성공 시 목록 새로고침
+    }
+  }
+
   void _navigateToDetail(Member member) {
     Navigator.push(
       context,
@@ -138,6 +152,10 @@ class _AdminMemberManagementScreenState
           ),
         ),
         actions: [
+          material.IconButton(
+            icon: const Icon(Icons.person_add, color: Colors.black),
+            onPressed: _navigateToAdd,
+          ),
           material.IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black),
             onPressed: _loadMembers,

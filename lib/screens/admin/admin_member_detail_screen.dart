@@ -8,6 +8,7 @@ import '../../models/member.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../services/member_service.dart';
+import 'admin_member_edit_screen.dart';
 
 /// 관리자용 교인 상세 화면
 class AdminMemberDetailScreen extends StatefulWidget {
@@ -206,6 +207,77 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
     }
   }
 
+  Future<void> _navigateToEdit() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdminMemberEditScreen(member: _member),
+      ),
+    );
+
+    if (result == true) {
+      _loadMember(); // 수정 후 정보 새로고침
+    }
+  }
+
+  Future<void> _loadMember() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _memberService.getMember(_member.id);
+
+      if (response.success && response.data != null) {
+        setState(() {
+          _member = response.data!;
+        });
+      } else {
+        if (mounted) {
+          AppToast.show(
+            context,
+            response.message.isNotEmpty
+                ? response.message
+                : '교인 정보를 불러오는데 실패했습니다',
+            type: ToastType.error,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.show(
+          context,
+          '교인 정보 조회 중 오류가 발생했습니다: $e',
+          type: ToastType.error,
+        );
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  String _getGenderDisplay(String gender) {
+    if (gender.isEmpty) return '미지정';
+
+    // 모든 가능한 gender 값 처리
+    switch (gender) {
+      case '남':
+      case '남자':
+      case '남성':
+      case 'M':
+      case 'male':
+      case 'MALE':
+        return '남성';
+      case '여':
+      case '여자':
+      case '여성':
+      case 'F':
+      case 'female':
+      case 'FEMALE':
+        return '여성';
+      default:
+        return gender; // 알 수 없는 값은 그대로 표시
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -223,6 +295,16 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
             color: NewAppColor.neutral900,
           ),
         ),
+        actions: [
+          material.IconButton(
+            icon: const Icon(Icons.edit, color: Colors.black),
+            onPressed: _navigateToEdit,
+          ),
+          material.IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black),
+            onPressed: _loadMember,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -379,7 +461,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           _buildInfoRow(
             icon: Icons.person_outline,
             label: '성별',
-            value: _member.gender == 'M' ? '남성' : '여성',
+            value: _getGenderDisplay(_member.gender),
           ),
         ],
       ),

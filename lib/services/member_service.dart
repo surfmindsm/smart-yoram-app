@@ -156,6 +156,8 @@ class MemberService {
     Map<String, dynamic> memberData,
   ) async {
     try {
+      print('📝 MEMBER_SERVICE: 교인 정보 수정 시작 - memberId: $memberId');
+
       final response = await _supabaseService.client
           .from('members')
           .update(memberData)
@@ -165,15 +167,50 @@ class MemberService {
 
       final member = Member.fromJson(response);
 
+      print('✅ MEMBER_SERVICE: 교인 정보 수정 성공');
+
       return ApiResponse<Member>(
         success: true,
         message: '교인 정보 수정 성공',
         data: member,
       );
     } catch (e) {
+      print('❌ MEMBER_SERVICE: 교인 정보 수정 실패 - $e');
       return ApiResponse<Member>(
         success: false,
         message: '교인 정보 수정 실패: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  /// 교인 추가 (직접 테이블 삽입)
+  Future<ApiResponse<Member>> createMember(
+    Map<String, dynamic> memberData,
+  ) async {
+    try {
+      print('➕ MEMBER_SERVICE: 교인 추가 시작 - 데이터: $memberData');
+
+      final response = await _supabaseService.client
+          .from('members')
+          .insert(memberData)
+          .select()
+          .single();
+
+      final member = Member.fromJson(response);
+
+      print('✅ MEMBER_SERVICE: 교인 추가 성공');
+
+      return ApiResponse<Member>(
+        success: true,
+        message: '교인이 추가되었습니다',
+        data: member,
+      );
+    } catch (e) {
+      print('❌ MEMBER_SERVICE: 교인 추가 실패 - $e');
+      return ApiResponse<Member>(
+        success: false,
+        message: '교인 추가 실패: ${e.toString()}',
         data: null,
       );
     }
