@@ -12,6 +12,17 @@ class User {
   final String? address;
   final DateTime? updatedAt;
 
+  // 권한 체크 헬퍼
+  bool get isAdmin => role == 'admin' ||
+                      role == 'church_admin' ||
+                      role == 'church_super_admin' ||
+                      role == 'community_admin' ||
+                      role == 'system_admin' ||
+                      role == 'super_admin';
+  bool get isMember => role == 'member';
+  bool get hasAdminAccess => isAdmin;
+  bool get hasChurch => churchId != 9998;
+
   User({
     required this.id,
     required this.username,

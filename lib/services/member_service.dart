@@ -179,6 +179,67 @@ class MemberService {
     }
   }
 
+  /// 교인 상태 변경 (직접 테이블 수정)
+  Future<ApiResponse<Member>> updateMemberStatus({
+    required int memberId,
+    required String status,
+  }) async {
+    try {
+      print('📝 MEMBER_SERVICE: 교인 상태 변경 시작 - memberId: $memberId, status: $status');
+
+      final response = await _supabaseService.client
+          .from('members')
+          .update({'member_status': status})
+          .eq('id', memberId)
+          .select()
+          .single();
+
+      final member = Member.fromJson(response);
+
+      print('✅ MEMBER_SERVICE: 교인 상태 변경 성공');
+
+      return ApiResponse<Member>(
+        success: true,
+        message: '교인 상태가 변경되었습니다',
+        data: member,
+      );
+    } catch (e) {
+      print('❌ MEMBER_SERVICE: 교인 상태 변경 실패 - $e');
+      return ApiResponse<Member>(
+        success: false,
+        message: '교인 상태 변경 실패: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  /// 교인 삭제 (직접 테이블 삭제)
+  Future<ApiResponse<bool>> deleteMember(int memberId) async {
+    try {
+      print('🗑️ MEMBER_SERVICE: 교인 삭제 시작 - memberId: $memberId');
+
+      await _supabaseService.client
+          .from('members')
+          .delete()
+          .eq('id', memberId);
+
+      print('✅ MEMBER_SERVICE: 교인 삭제 성공');
+
+      return ApiResponse<bool>(
+        success: true,
+        message: '교인이 삭제되었습니다',
+        data: true,
+      );
+    } catch (e) {
+      print('❌ MEMBER_SERVICE: 교인 삭제 실패 - $e');
+      return ApiResponse<bool>(
+        success: false,
+        message: '교인 삭제 실패: ${e.toString()}',
+        data: false,
+      );
+    }
+  }
+
   /// 교인 초대 (Supabase Edge Function)
   Future<ApiResponse<Map<String, dynamic>>> inviteMember({
     required String email,

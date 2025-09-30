@@ -8,6 +8,8 @@ import '../services/auth_service.dart';
 import '../services/font_settings_service.dart';
 import '../services/church_service.dart';
 import '../models/church.dart';
+import '../models/user.dart';
+import '../utils/admin_permission_utils.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
 import 'profile_edit_screen.dart';
@@ -43,12 +45,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushNotifications = true;
   bool _churchNotices = true;
 
+  // 현재 사용자
+  User? _currentUser;
+
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Provider를 통해 현재 글꼴 크기 가져오기
     });
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final userResponse = await _authService.getCurrentUser();
+    if (userResponse.success && userResponse.data != null) {
+      setState(() {
+        _currentUser = userResponse.data;
+      });
+    }
   }
 
   @override
@@ -88,6 +103,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+
+          // 관리자 메뉴 섹션 (관리자만 표시)
+          if (_currentUser?.isAdmin == true) ...[
+            SizedBox(height: 16.h),
+            _buildGroupedSection(
+              title: '관리자 메뉴',
+              items: [
+                _GroupedSettingItem(
+                  icon: Icons.people_outline,
+                  title: '교인 관리',
+                  subtitle: '교인 목록, 정보 수정, 상태 관리',
+                  onTap: () => Navigator.pushNamed(context, '/admin/members'),
+                ),
+                _GroupedSettingItem(
+                  icon: Icons.church_outlined,
+                  title: '심방 신청 관리',
+                  subtitle: '신청 목록, 상태 변경, 담당자 지정',
+                  onTap: () => Navigator.pushNamed(context, '/admin/pastoral-care'),
+                ),
+                _GroupedSettingItem(
+                  icon: Icons.announcement_outlined,
+                  title: '공지사항 관리',
+                  subtitle: '공지 작성, 수정, 삭제',
+                  onTap: () => Navigator.pushNamed(context, '/admin/notices'),
+                ),
+                _GroupedSettingItem(
+                  icon: Icons.checklist_outlined,
+                  title: '출석 현황',
+                  subtitle: '실시간 출석 조회',
+                  onTap: () => Navigator.pushNamed(context, '/admin/attendance'),
+                ),
+                _GroupedSettingItem(
+                  icon: Icons.paid_outlined,
+                  title: '헌금 통계',
+                  subtitle: '헌금 집계 및 통계',
+                  onTap: () => Navigator.pushNamed(context, '/admin/offering'),
+                ),
+              ],
+            ),
+          ],
 
           SizedBox(height: 16.h),
 

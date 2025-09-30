@@ -18,6 +18,8 @@ import 'screens/member_card_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/prayer_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/admin/admin_member_management_screen.dart';
+import 'screens/admin/admin_pastoral_care_list_screen.dart';
 import 'services/auth_service.dart';
 import 'services/fcm_service.dart';
 import 'services/font_settings_service.dart';
@@ -90,6 +92,9 @@ class MyApp extends ConsumerWidget {
                   '/calendar': (context) => const CalendarScreen(),
                   '/prayer': (context) => const PrayerScreen(),
                   '/settings': (context) => const SettingsScreen(),
+                  // Admin routes
+                  '/admin/members': (context) => const AdminMemberManagementScreen(),
+                  '/admin/pastoral-care': (context) => const AdminPastoralCareListScreen(),
                 },
               ),
             );

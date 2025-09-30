@@ -293,4 +293,156 @@ class PastoralCareService {
   Future<ApiResponse<List<PastoralCareRequest>>> getCancelledRequests() {
     return getMyRequests(status: 'cancelled');
   }
+
+  /// 관리자용: 전체 심방 신청 목록 조회 (모든 교인의 신청)
+  Future<ApiResponse<List<PastoralCareRequest>>> getAllRequests({
+    int page = 1,
+    int limit = 100,
+    String? status,
+  }) async {
+    try {
+      print('🙏 PASTORAL_CARE_SERVICE: 전체 심방 신청 목록 조회 시작 (관리자)');
+
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        print('🙏 PASTORAL_CARE_SERVICE: 사용자 정보 조회 실패 - ${userResponse.message}');
+        return ApiResponse<List<PastoralCareRequest>>(
+          success: false,
+          message: '사용자 정보 조회 실패: ${userResponse.message}',
+          data: [],
+        );
+      }
+
+      final user = userResponse.data!;
+      print('🙏 PASTORAL_CARE_SERVICE: 사용자 정보 - ID: ${user.id}, Church ID: ${user.churchId}');
+
+      // pastoral_care_requests 테이블에서 교회의 모든 신청 조회
+      var query = _supabaseService.client
+          .from('pastoral_care_requests')
+          .select()
+          .eq('church_id', user.churchId);
+
+      if (status != null) {
+        query = query.eq('status', status);
+      }
+
+      final response = await query
+          .order('created_at', ascending: false)
+          .range((page - 1) * limit, page * limit - 1);
+
+      final requests = (response as List)
+          .map((item) => PastoralCareRequest.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      print('🙏 PASTORAL_CARE_SERVICE: 전체 심방 신청 ${requests.length}개 조회 완료');
+
+      return ApiResponse<List<PastoralCareRequest>>(
+        success: true,
+        message: '전체 심방 신청 목록 조회 성공',
+        data: requests,
+      );
+    } catch (e) {
+      print('🙏 PASTORAL_CARE_SERVICE: 전체 목록 조회 예외 발생 - $e');
+      return ApiResponse<List<PastoralCareRequest>>(
+        success: true,
+        message: '심방 신청 목록을 찾을 수 없습니다',
+        data: [],
+      );
+    }
+  }
+
+  /// 관리자용: 심방 신청 상태 변경
+  Future<ApiResponse<PastoralCareRequest>> updateRequestStatus({
+    required int requestId,
+    required String status,
+    String? adminNote,
+  }) async {
+    try {
+      print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 상태 변경 시작 - requestId: $requestId, status: $status');
+
+      final updateData = <String, dynamic>{
+        'status': status,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (adminNote != null) {
+        updateData['admin_note'] = adminNote;
+      }
+
+      final response = await _supabaseService.client
+          .from('pastoral_care_requests')
+          .update(updateData)
+          .eq('id', requestId)
+          .select()
+          .single();
+
+      final updatedRequest = PastoralCareRequest.fromJson(response);
+
+      print('✅ PASTORAL_CARE_SERVICE: 심방 신청 상태 변경 성공');
+
+      return ApiResponse<PastoralCareRequest>(
+        success: true,
+        message: '심방 신청 상태가 변경되었습니다',
+        data: updatedRequest,
+      );
+    } catch (e) {
+      print('❌ PASTORAL_CARE_SERVICE: 심방 신청 상태 변경 실패 - $e');
+      return ApiResponse<PastoralCareRequest>(
+        success: false,
+        message: '심방 신청 상태 변경 실패: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  /// 관리자용: 담당자 지정 및 일정 설정
+  Future<ApiResponse<PastoralCareRequest>> assignPastor({
+    required int requestId,
+    required int pastorId,
+    String? scheduledDate,
+    String? scheduledTime,
+  }) async {
+    try {
+      print('🙏 PASTORAL_CARE_SERVICE: 담당자 지정 시작 - requestId: $requestId, pastorId: $pastorId');
+
+      final updateData = <String, dynamic>{
+        'assigned_pastor_id': pastorId,
+        'status': 'approved',
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (scheduledDate != null) {
+        updateData['scheduled_date'] = scheduledDate;
+      }
+
+      if (scheduledTime != null) {
+        updateData['scheduled_time'] = scheduledTime;
+      }
+
+      final response = await _supabaseService.client
+          .from('pastoral_care_requests')
+          .update(updateData)
+          .eq('id', requestId)
+          .select()
+          .single();
+
+      final updatedRequest = PastoralCareRequest.fromJson(response);
+
+      print('✅ PASTORAL_CARE_SERVICE: 담당자 지정 성공');
+
+      return ApiResponse<PastoralCareRequest>(
+        success: true,
+        message: '담당자가 지정되었습니다',
+        data: updatedRequest,
+      );
+    } catch (e) {
+      print('❌ PASTORAL_CARE_SERVICE: 담당자 지정 실패 - $e');
+      return ApiResponse<PastoralCareRequest>(
+        success: false,
+        message: '담당자 지정 실패: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
 }
