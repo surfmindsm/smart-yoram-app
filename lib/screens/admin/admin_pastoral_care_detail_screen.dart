@@ -36,7 +36,9 @@ class _AdminPastoralCareDetailScreenState
   }
 
   Future<void> _makePhoneCall() async {
-    final phoneNumber = _request.member?.phone ?? '';
+    final phoneNumber = _request.requesterPhone.isNotEmpty
+        ? _request.requesterPhone
+        : (_request.member?.phone ?? '');
     if (phoneNumber.isEmpty) return;
 
     final uri = Uri(scheme: 'tel', path: phoneNumber);
@@ -196,9 +198,19 @@ class _AdminPastoralCareDetailScreenState
           _buildInfoRow(
             icon: Icons.person_outline,
             label: '이름',
-            value: _request.member?.name ?? '알 수 없음',
+            value: _request.requesterName.isNotEmpty
+                ? _request.requesterName
+                : (_request.member?.name ?? '알 수 없음'),
           ),
-          if (_request.member?.phone.isNotEmpty ?? false) ...[
+          if (_request.requesterPhone.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            _buildInfoRow(
+              icon: Icons.phone_outlined,
+              label: '전화번호',
+              value: _request.requesterPhone,
+              onTap: _makePhoneCall,
+            ),
+          ] else if (_request.member?.phone.isNotEmpty ?? false) ...[
             SizedBox(height: 12.h),
             _buildInfoRow(
               icon: Icons.phone_outlined,
