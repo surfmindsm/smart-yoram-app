@@ -6,6 +6,7 @@ import '../../models/announcement.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../services/announcement_service.dart';
+import '../../services/auth_service.dart';
 import 'admin_notice_detail_screen.dart';
 import 'admin_notice_editor_screen.dart';
 
@@ -19,6 +20,7 @@ class AdminNoticeListScreen extends StatefulWidget {
 
 class _AdminNoticeListScreenState extends State<AdminNoticeListScreen> {
   final AnnouncementService _announcementService = AnnouncementService();
+  final AuthService _authService = AuthService();
 
   List<Announcement> _notices = [];
   List<Announcement> _filteredNotices = [];
@@ -35,7 +37,17 @@ class _AdminNoticeListScreenState extends State<AdminNoticeListScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final notices = await _announcementService.getAnnouncements();
+      // 현재 사용자의 church_id 가져오기
+      final currentUserResponse = await _authService.getCurrentUser();
+      if (!currentUserResponse.success || currentUserResponse.data == null) {
+        throw Exception('사용자 정보를 가져올 수 없습니다');
+      }
+
+      final churchId = currentUserResponse.data!.churchId;
+
+      final notices = await _announcementService.getAnnouncements(
+        churchId: churchId,
+      );
 
       setState(() {
         _notices = notices;

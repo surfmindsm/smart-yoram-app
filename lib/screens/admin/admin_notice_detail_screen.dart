@@ -305,6 +305,21 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildInfoRow(
+            icon: Icons.category_outlined,
+            label: '카테고리',
+            value: _getCategoryLabel(_announcement.category),
+          ),
+          if (_announcement.subcategory != null &&
+              _announcement.subcategory!.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            _buildInfoRow(
+              icon: Icons.label_outline,
+              label: '서브카테고리',
+              value: _getSubcategoryLabel(_announcement.subcategory!),
+            ),
+          ],
+          SizedBox(height: 12.h),
+          _buildInfoRow(
             icon: Icons.person_outline,
             label: '작성자',
             value: _announcement.authorName ?? '관리자',
@@ -409,5 +424,53 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
 
   String _formatDate(DateTime date) {
     return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _getCategoryLabel(String category) {
+    switch (category) {
+      case 'general':
+        return '일반';
+      case 'worship':
+        return '예배';
+      case 'event':
+        return '행사';
+      case 'member_news':
+        return '교인 소식';
+      case 'announcement':
+        return '공지';
+      case 'education':
+        return '교육';
+      default:
+        return category;
+    }
+  }
+
+  String _getSubcategoryLabel(String subcategory) {
+    switch (subcategory) {
+      case 'sunday':
+        return '주일예배';
+      case 'wednesday':
+        return '수요예배';
+      case 'friday':
+        return '금요예배';
+      case 'special':
+        return '특별예배';
+      case 'church':
+        return '교회행사';
+      case 'community':
+        return '지역행사';
+      case 'mission':
+        return '선교';
+      case 'bible_study':
+        return '성경공부';
+      case 'seminary':
+        return '신학강좌';
+      case 'youth':
+        return '청소년부';
+      case 'children':
+        return '어린이부';
+      default:
+        return subcategory;
+    }
   }
 }

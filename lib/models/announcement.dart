@@ -1,25 +1,29 @@
 class Announcement {
   final int id;
+  final int churchId;
   final String title;
   final String content;
   final int authorId;
   final String? authorName;
   final bool isPinned;
+  final bool isActive;
   final String? targetAudience; // 대상 (전체, 임원진 등)
-  final String? category; // 카테고리 (worship, member_news, event)
+  final String category; // 카테고리 (worship, member_news, event)
   final String? subcategory; // 서브카테고리
   final DateTime createdAt;
   final DateTime updatedAt;
 
   const Announcement({
     required this.id,
+    required this.churchId,
     required this.title,
     required this.content,
     required this.authorId,
     this.authorName,
     required this.isPinned,
+    required this.isActive,
     this.targetAudience,
-    this.category,
+    required this.category,
     this.subcategory,
     required this.createdAt,
     required this.updatedAt,
@@ -28,19 +32,21 @@ class Announcement {
   factory Announcement.fromJson(Map<String, dynamic> json) {
     return Announcement(
       id: json['id'] ?? 0,
+      churchId: json['church_id'] ?? 0,
       title: json['title'] ?? '',
       content: json['content'] ?? '',
       authorId: json['author_id'] ?? 0,
       authorName: json['author_name'],
       isPinned: json['is_pinned'] ?? false,
+      isActive: json['is_active'] ?? true,
       targetAudience: json['target_audience'],
-      category: json['category'],
+      category: json['category'] ?? 'general',
       subcategory: json['subcategory'],
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : DateTime.now(),
     );
   }
@@ -48,11 +54,13 @@ class Announcement {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'church_id': churchId,
       'title': title,
       'content': content,
       'author_id': authorId,
       'author_name': authorName,
       'is_pinned': isPinned,
+      'is_active': isActive,
       'target_audience': targetAudience,
       'category': category,
       'subcategory': subcategory,
@@ -63,23 +71,31 @@ class Announcement {
 
   Announcement copyWith({
     int? id,
+    int? churchId,
     String? title,
     String? content,
     int? authorId,
     String? authorName,
     bool? isPinned,
+    bool? isActive,
     String? targetAudience,
+    String? category,
+    String? subcategory,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return Announcement(
       id: id ?? this.id,
+      churchId: churchId ?? this.churchId,
       title: title ?? this.title,
       content: content ?? this.content,
       authorId: authorId ?? this.authorId,
       authorName: authorName ?? this.authorName,
       isPinned: isPinned ?? this.isPinned,
+      isActive: isActive ?? this.isActive,
       targetAudience: targetAudience ?? this.targetAudience,
+      category: category ?? this.category,
+      subcategory: subcategory ?? this.subcategory,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
