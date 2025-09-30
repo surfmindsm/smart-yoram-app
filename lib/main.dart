@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'config/naver_map_config.dart';
 import 'screens/main_navigation.dart';
@@ -72,6 +73,16 @@ class MyApp extends ConsumerWidget {
               child: MaterialApp(
                 title: 'Smart Yoram App',
                 debugShowCheckedModeBanner: false,
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('ko', 'KR'),
+                  Locale('en', 'US'),
+                ],
+                locale: const Locale('ko', 'KR'),
                 theme: ThemeData(
                   colorScheme: ColorScheme.fromSeed(
                     seedColor: Colors.blue,
