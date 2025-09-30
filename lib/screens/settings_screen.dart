@@ -128,18 +128,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: '공지 작성, 수정, 삭제',
                   onTap: () => Navigator.pushNamed(context, '/admin/notices'),
                 ),
-                _GroupedSettingItem(
-                  icon: Icons.checklist_outlined,
-                  title: '출석 현황',
-                  subtitle: '실시간 출석 조회',
-                  onTap: () => Navigator.pushNamed(context, '/admin/attendance'),
-                ),
-                _GroupedSettingItem(
-                  icon: Icons.paid_outlined,
-                  title: '헌금 통계',
-                  subtitle: '헌금 집계 및 통계',
-                  onTap: () => Navigator.pushNamed(context, '/admin/offering'),
-                ),
               ],
             ),
           ],
