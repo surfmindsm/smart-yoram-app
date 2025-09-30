@@ -124,86 +124,71 @@ class HomeDataService {
     }
   }
 
-  /// 👥 현재 교인 정보 로드 (캐시 우선)
+  /// 👥 현재 교인 정보 로드 (user_id로 직접 조회)
   Future<Member?> _loadCurrentMember() async {
     try {
-      // 🧪 테스트를 위해 캐시 무시하고 새로 로드
-      print('🧪 HOME_DATA: 테스트를 위해 캐시 무시하고 교인 정보 새로 로드');
-
-      /*
-      final cached = await _cacheService.getCachedData<Member>(
-        'current_member',
-        fromJson: (json) => Member.fromJson(json),
-      );
-
-      if (cached != null) {
-        print('👥 HOME_DATA: 캐시된 교인 정보 사용');
-        return cached;
-      }
-      */
+      print('👥 HOME_DATA: 교인 정보 로드 시작');
 
       // 현재 사용자 정보 필요
       final user = await _loadCurrentUser();
-      if (user == null) return null;
+      if (user == null) {
+        print('❌ HOME_DATA: 사용자 정보가 없음');
+        return null;
+      }
 
-      // 교인 목록에서 현재 사용자 찾기 (최소한만)
-      final membersResponse = await _memberService.getMembers(limit: 50);
-      if (membersResponse.success && membersResponse.data != null) {
-        final members = membersResponse.data!;
+      print('👥 HOME_DATA: 현재 사용자 ID: ${user.id}, 이메일: ${user.email}');
 
-        // 디버깅: 받아온 멤버 데이터 로그
-        print('🔍 HOME_DATA: 받아온 멤버 수: ${members.length}');
-        print('🔍 HOME_DATA: 현재 사용자 이메일: ${user.email}');
+      // members 테이블에서 user_id로 직접 조회
+      final memberResponse = await _memberService.getMemberByUserId(user.id);
 
-        for (int i = 0; i < members.length && i < 3; i++) {
-          final member = members[i];
-          print('🔍 HOME_DATA: Member[$i] - name: ${member.name}, email: ${member.email}, profilePhotoUrl: ${member.profilePhotoUrl}');
-        }
+      if (memberResponse.success && memberResponse.data != null) {
+        final member = memberResponse.data!;
 
-        final currentMember = members.firstWhere(
-          (member) {
-            print('🔍 HOME_DATA: 비교중 - ${member.email} == ${user.email} ? ${member.email == user.email}');
-            return member.email == user.email;
-          },
-          orElse: () {
-            print('❌ HOME_DATA: 일치하는 멤버를 찾지 못함 - 기본 Member 생성');
-
-            // 임시 해결책: 프로필 이미지가 있는 기존 멤버의 이미지 사용
-            final memberWithPhoto = members.firstWhere(
-              (m) => m.profilePhotoUrl != null && m.profilePhotoUrl!.isNotEmpty,
-              orElse: () => members.first,
-            );
-
-            print('🔄 HOME_DATA: 임시 프로필 이미지 사용 - ${memberWithPhoto.name}의 이미지');
-            print('🔄 HOME_DATA: 임시 이미지 URL - ${memberWithPhoto.profilePhotoUrl}');
-
-            return Member(
-              id: 0,
-              name: user.fullName,
-              email: user.email,
-              gender: '',
-              phone: '',
-              churchId: user.churchId,
-              memberStatus: 'active',
-              createdAt: DateTime.now(),
-              profilePhotoUrl: memberWithPhoto.profilePhotoUrl, // 임시 이미지 사용
-            );
-          },
-        );
-
-        print('✅ HOME_DATA: 최종 선택된 멤버 - name: ${currentMember.name}, profilePhotoUrl: ${currentMember.profilePhotoUrl}');
+        print('✅ HOME_DATA: 교인 정보 조회 성공');
+        print('  - 이름: ${member.name}');
+        print('  - 이메일: ${member.email}');
+        print('  - 프로필 이미지 URL: ${member.profilePhotoUrl}');
+        print('  - Full 프로필 이미지 URL: ${member.fullProfilePhotoUrl}');
 
         // 캐시에 저장 (30분)
         await _cacheService.cacheData(
           'current_member',
-          currentMember.toJson(),
+          member.toJson(),
           cacheMinutes: 30,
           persistToDisk: true,
         );
 
-        return currentMember;
+        return member;
+      } else {
+        print('❌ HOME_DATA: user_id로 교인 정보를 찾지 못함 - ${memberResponse.message}');
+
+        // fallback: 이메일로 검색
+        print('🔄 HOME_DATA: 이메일로 재시도 - ${user.email}');
+        final membersResponse = await _memberService.getMembers(limit: 100);
+
+        if (membersResponse.success && membersResponse.data != null) {
+          final members = membersResponse.data!;
+
+          final memberByEmail = members.where((m) => m.email == user.email).firstOrNull;
+
+          if (memberByEmail != null) {
+            print('✅ HOME_DATA: 이메일로 교인 정보 찾음 - ${memberByEmail.name}');
+
+            // 캐시에 저장
+            await _cacheService.cacheData(
+              'current_member',
+              memberByEmail.toJson(),
+              cacheMinutes: 30,
+              persistToDisk: true,
+            );
+
+            return memberByEmail;
+          }
+        }
+
+        print('❌ HOME_DATA: 교인 정보를 찾을 수 없음');
+        return null;
       }
-      return null;
     } catch (e) {
       print('❌ HOME_DATA: 교인 정보 로드 실패 - $e');
       return null;

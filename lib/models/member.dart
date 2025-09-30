@@ -115,11 +115,24 @@ class Member {
     return age;
   }
 
-  // 프로필 사진 전체 URL
+  // 프로필 사진 전체 URL (Supabase Storage)
   String? get fullProfilePhotoUrl {
     if (profilePhotoUrl == null || profilePhotoUrl!.isEmpty) return null;
+
+    // 이미 전체 URL이면 그대로 반환
     if (profilePhotoUrl!.startsWith('http')) return profilePhotoUrl;
-    return 'https://packs-holds-marc-extended.trycloudflare.com$profilePhotoUrl';
+
+    // Supabase Storage public URL 생성
+    const supabaseUrl = 'https://adzhdsajdamrflvybhxq.supabase.co';
+
+    // profilePhotoUrl이 상대경로일 경우 (/uploads/... 또는 uploads/...)
+    final cleanPath = profilePhotoUrl!.startsWith('/')
+        ? profilePhotoUrl!.substring(1)
+        : profilePhotoUrl!;
+
+    // Supabase Storage public URL 형식: {supabase_url}/storage/v1/object/public/{bucket}/{path}
+    // 실제 버킷 이름은 member-photos
+    return '$supabaseUrl/storage/v1/object/public/member-photos/$cleanPath';
   }
 
   // 프로필 사진 별칭 (기존 코드 호환성을 위해)

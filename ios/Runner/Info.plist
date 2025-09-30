@@ -38,6 +38,8 @@
 	<string>This app needs access to your photo library to save and select images for learning activities and assignments.</string>
 	<key>NMFClientId</key>
 	<string>l1xephxcbw</string>
+	<key>NMFNcpKeyId</key>
+	<string>l1xephxcbw</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

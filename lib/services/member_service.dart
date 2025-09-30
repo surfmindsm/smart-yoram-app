@@ -104,37 +104,47 @@ class MemberService {
     }
   }
 
-  /// user_id로 교인 조회 (users-members 매핑)
+  /// user_id로 교인 조회 (직접 DB 조회)
   Future<ApiResponse<Member>> getMemberByUserId(int userId) async {
     try {
-      // 전체 members 목록에서 user_id로 필터링하는 방식
-      final response = await getMembers(limit: 1000); // 충분히 큰 limit
+      print('👤 MEMBER_SERVICE: user_id로 교인 조회 시작 - userId: $userId');
 
-      if (response.success && response.data != null) {
-        // user_id가 일치하는 member 찾기
-        final members = response.data!;
+      // members 테이블에서 user_id로 직접 조회
+      final response = await _supabaseService.client
+          .from('members')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-        final matchedMember = members.firstWhere(
-          (member) => member.userId == userId,
-          orElse: () => throw Exception('Member not found'),
-        );
+      print('👤 MEMBER_SERVICE: DB 응답: $response');
+
+      if (response != null) {
+        final member = Member.fromJson(response as Map<String, dynamic>);
+
+        print('✅ MEMBER_SERVICE: 교인 정보 조회 성공');
+        print('  - ID: ${member.id}');
+        print('  - 이름: ${member.name}');
+        print('  - 이메일: ${member.email}');
+        print('  - 프로필 이미지: ${member.profilePhotoUrl}');
 
         return ApiResponse<Member>(
           success: true,
-          message: '매핑 성공',
-          data: matchedMember,
+          message: '교인 정보 조회 성공',
+          data: member,
         );
       } else {
+        print('❌ MEMBER_SERVICE: user_id에 해당하는 교인 정보 없음');
         return ApiResponse<Member>(
           success: false,
-          message: 'Members 목록 조회 실패: ${response.message}',
+          message: 'user_id에 해당하는 교인 정보를 찾을 수 없습니다',
           data: null,
         );
       }
     } catch (e) {
+      print('❌ MEMBER_SERVICE: user_id로 교인 조회 실패 - $e');
       return ApiResponse<Member>(
         success: false,
-        message: 'user_id로 member 매핑 실패: ${e.toString()}',
+        message: 'user_id로 교인 조회 실패: ${e.toString()}',
         data: null,
       );
     }

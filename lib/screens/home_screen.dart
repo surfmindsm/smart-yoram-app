@@ -80,11 +80,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     Future.delayed(Duration(seconds: 2), () {
       _loadAnnouncementsDirectly();
     });
-
-    // 프로필 이미지 테스트를 위해 임시 이미지 설정
-    Future.delayed(Duration(seconds: 3), () {
-      _setTestProfileImage();
-    });
   }
 
   // 🚀 필수 데이터 빠른 로드
@@ -337,37 +332,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // 🧪 테스트용 프로필 이미지 설정
-  void _setTestProfileImage() {
-    print('🧪 HOME: 테스트 프로필 이미지 설정 시작');
-
-    if (!mounted) return;
-
-    // "사진테스트" 멤버의 프로필 이미지 URL 사용
-    const testImageUrl =
-        'https://adzhdsajdamrflvybhxq.supabase.co/storage/v1/object/public/member-photos/6/480_20250906_020147_a427da05.png';
-
-    setState(() {
-      if (currentMember != null) {
-        // 기존 멤버 정보를 유지하면서 프로필 이미지만 변경
-        currentMember = Member(
-          id: currentMember!.id,
-          name: currentMember!.name,
-          email: currentMember!.email,
-          gender: currentMember!.gender,
-          phone: currentMember!.phone,
-          churchId: currentMember!.churchId,
-          memberStatus: currentMember!.memberStatus,
-          createdAt: currentMember!.createdAt,
-          profilePhotoUrl: testImageUrl, // 테스트 이미지 URL 설정
-        );
-      }
-    });
-
-    print('🧪 HOME: 테스트 프로필 이미지 설정 완료');
-    print('🖼️ HOME: 설정된 이미지 URL: $testImageUrl');
-    print(
-        '👤 HOME: currentMember.fullProfilePhotoUrl: ${currentMember?.fullProfilePhotoUrl}');
-  }
+  // 테스트용 메서드 - 실제 운영에서는 사용하지 않음
+  // void _setTestProfileImage() {
+  //   print('🧪 HOME: 테스트 프로필 이미지 설정 시작');
+  //
+  //   if (!mounted) return;
+  //
+  //   // "사진테스트" 멤버의 프로필 이미지 URL 사용
+  //   const testImageUrl =
+  //       'https://adzhdsajdamrflvybhxq.supabase.co/storage/v1/object/public/member-photos/6/480_20250906_020147_a427da05.png';
+  //
+  //   setState(() {
+  //     if (currentMember != null) {
+  //       // 기존 멤버 정보를 유지하면서 프로필 이미지만 변경
+  //       currentMember = Member(
+  //         id: currentMember!.id,
+  //         name: currentMember!.name,
+  //         email: currentMember!.email,
+  //         gender: currentMember!.gender,
+  //         phone: currentMember!.phone,
+  //         churchId: currentMember!.churchId,
+  //         memberStatus: currentMember!.memberStatus,
+  //         createdAt: currentMember!.createdAt,
+  //         profilePhotoUrl: testImageUrl, // 테스트 이미지 URL 설정
+  //       );
+  //     }
+  //   });
+  //
+  //   print('🧪 HOME: 테스트 프로필 이미지 설정 완료');
+  //   print('🖼️ HOME: 설정된 이미지 URL: $testImageUrl');
+  //   print(
+  //       '👤 HOME: currentMember.fullProfilePhotoUrl: ${currentMember?.fullProfilePhotoUrl}');
+  // }
 
   // 🔄 FCM 백그라운드 초기화
   Future<void> _initializeFCMInBackground() async {

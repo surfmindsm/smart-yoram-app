@@ -806,82 +806,97 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   }
 
   Widget _buildMapWidget() {
+    print('🗺️ PASTORAL_CARE: _buildMapWidget 호출됨 - lat: $_latitude, lng: $_longitude');
     try {
-      return Stack(
-        children: [
-          NaverMap(
-            options: NaverMapViewOptions(
-              initialCameraPosition: NCameraPosition(
-                target: NLatLng(_latitude ?? 37.5665, _longitude ?? 126.9780),
-                zoom: 16,
-              ),
-              locationButtonEnable: false,
-              scaleBarEnable: false,
-              logoClickEnable: false,
-            ),
-            onMapReady: (controller) async {
-              _mapController = controller;
-              if (_latitude != null && _longitude != null) {
-                _updateMapLocation(_latitude!, _longitude!);
-              }
-            },
-            onMapTapped: (point, latLng) async {
-              setState(() {
-                _latitude = latLng.latitude;
-                _longitude = latLng.longitude;
-              });
-              _updateMapLocation(latLng.latitude, latLng.longitude);
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8.r),
+        child: Stack(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 200.h,
+              child: Builder(
+                builder: (context) {
+                  print('🗺️ PASTORAL_CARE: NaverMap 위젯 빌드 중');
+                  return NaverMap(
+                    options: NaverMapViewOptions(
+                      initialCameraPosition: NCameraPosition(
+                        target: NLatLng(_latitude ?? 37.5665, _longitude ?? 126.9780),
+                        zoom: 16,
+                      ),
+                      locationButtonEnable: false,
+                      scaleBarEnable: false,
+                      logoClickEnable: false,
+                      indoorEnable: false,
+                      nightModeEnable: false,
+                    ),
+                    onMapReady: (controller) async {
+                      print('🗺️ PASTORAL_CARE: 지도 초기화 완료');
+                      _mapController = controller;
+                      if (_latitude != null && _longitude != null) {
+                        _updateMapLocation(_latitude!, _longitude!);
+                      }
+                    },
+                    onMapTapped: (point, latLng) async {
+                      setState(() {
+                        _latitude = latLng.latitude;
+                        _longitude = latLng.longitude;
+                      });
+                      _updateMapLocation(latLng.latitude, latLng.longitude);
 
-              // 역지오코딩으로 주소 업데이트
-              final reverseResponse = await GeocodingService.reverseGeocode(
-                latitude: latLng.latitude,
-                longitude: latLng.longitude,
-              );
-
-              if (reverseResponse.success && reverseResponse.data != null) {
-                _addressController.text = reverseResponse.data!.address;
-              }
-            },
-            onCameraChange: (NCameraUpdateReason reason, bool animated) async {
-              // 지도가 제스처로 움직일 때만 위치 업데이트
-              if (reason == NCameraUpdateReason.gesture) {
-                // 현재 카메라 위치 가져오기
-                final cameraPosition =
-                    await _mapController?.getCameraPosition();
-                if (cameraPosition != null) {
-                  final newLat = cameraPosition.target.latitude;
-                  final newLng = cameraPosition.target.longitude;
-
-                  // 위치가 실제로 변경된 경우만 업데이트
-                  if ((_latitude == null ||
-                          (_latitude! - newLat).abs() > 0.00001) ||
-                      (_longitude == null ||
-                          (_longitude! - newLng).abs() > 0.00001)) {
-                    setState(() {
-                      _latitude = newLat;
-                      _longitude = newLng;
-                    });
-
-                    // 역지오코딩으로 주소 업데이트 (디바운싱 적용)
-                    _debounceTimer?.cancel();
-                    _debounceTimer =
-                        Timer(const Duration(milliseconds: 500), () async {
-                      final reverseResponse =
-                          await GeocodingService.reverseGeocode(
-                        latitude: newLat,
-                        longitude: newLng,
+                      // 역지오코딩으로 주소 업데이트
+                      final reverseResponse = await GeocodingService.reverseGeocode(
+                        latitude: latLng.latitude,
+                        longitude: latLng.longitude,
                       );
 
-                      if (reverseResponse.success &&
-                          reverseResponse.data != null) {
+                      if (reverseResponse.success && reverseResponse.data != null) {
                         _addressController.text = reverseResponse.data!.address;
                       }
-                    });
-                  }
-                }
-              }
-            },
-          ),
+                    },
+                    onCameraChange: (NCameraUpdateReason reason, bool animated) async {
+                      // 지도가 제스처로 움직일 때만 위치 업데이트
+                      if (reason == NCameraUpdateReason.gesture) {
+                        // 현재 카메라 위치 가져오기
+                        final cameraPosition =
+                            await _mapController?.getCameraPosition();
+                        if (cameraPosition != null) {
+                          final newLat = cameraPosition.target.latitude;
+                          final newLng = cameraPosition.target.longitude;
+
+                          // 위치가 실제로 변경된 경우만 업데이트
+                          if ((_latitude == null ||
+                                  (_latitude! - newLat).abs() > 0.00001) ||
+                              (_longitude == null ||
+                                  (_longitude! - newLng).abs() > 0.00001)) {
+                            setState(() {
+                              _latitude = newLat;
+                              _longitude = newLng;
+                            });
+
+                            // 역지오코딩으로 주소 업데이트 (디바운싱 적용)
+                            _debounceTimer?.cancel();
+                            _debounceTimer =
+                                Timer(const Duration(milliseconds: 500), () async {
+                              final reverseResponse =
+                                  await GeocodingService.reverseGeocode(
+                                latitude: newLat,
+                                longitude: newLng,
+                              );
+
+                              if (reverseResponse.success &&
+                                  reverseResponse.data != null) {
+                                _addressController.text = reverseResponse.data!.address;
+                              }
+                            });
+                          }
+                        }
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
           // 지도 중앙에 고정 마커
           Center(
             child: Column(
@@ -927,6 +942,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             ),
           ),
         ],
+      ),
       );
     } catch (e) {
       return Container(
