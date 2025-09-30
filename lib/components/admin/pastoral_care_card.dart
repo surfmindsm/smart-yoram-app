@@ -39,7 +39,9 @@ class PastoralCareCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    request.member?.name ?? '요청자',
+                    request.requesterName.isNotEmpty
+                        ? request.requesterName
+                        : (request.member?.name ?? '요청자'),
                     style: const FigmaTextStyles().body1.copyWith(
                       fontWeight: FontWeight.w600,
                       color: NewAppColor.neutral900,
@@ -64,7 +66,7 @@ class PastoralCareCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: Text(
-                    request.requestType,
+                    _getRequestTypeLabel(request.requestType),
                     style: const FigmaTextStyles().caption2.copyWith(
                       color: NewAppColor.primary600,
                       fontWeight: FontWeight.w600,
@@ -121,7 +123,7 @@ class PastoralCareCard extends StatelessWidget {
                   ),
                 ],
                 if (request.preferredDate != null &&
-                    (request.member?.phone.isNotEmpty ?? false)) ...[
+                    request.requesterPhone.isNotEmpty) ...[
                   SizedBox(width: 12.w),
                   Container(
                     width: 1,
@@ -130,7 +132,7 @@ class PastoralCareCard extends StatelessWidget {
                   ),
                   SizedBox(width: 12.w),
                 ],
-                if (request.member?.phone.isNotEmpty ?? false) ...[
+                if (request.requesterPhone.isNotEmpty) ...[
                   Icon(
                     Icons.phone_outlined,
                     size: 14.sp,
@@ -138,7 +140,7 @@ class PastoralCareCard extends StatelessWidget {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    request.member!.phone,
+                    request.requesterPhone,
                     style: const FigmaTextStyles().caption1.copyWith(
                       color: NewAppColor.neutral600,
                     ),
@@ -169,6 +171,23 @@ class PastoralCareCard extends StatelessWidget {
     }
   }
 
+  String _getRequestTypeLabel(String type) {
+    switch (type) {
+      case 'visit':
+        return '심방';
+      case 'counseling':
+        return '상담';
+      case 'prayer':
+        return '기도';
+      case 'emergency':
+        return '응급';
+      case 'general':
+        return '일반';
+      default:
+        return type;
+    }
+  }
+
   String _getContentPreview(String content) {
     if (content.length > 60) {
       return '${content.substring(0, 60)}...';
@@ -176,12 +195,7 @@ class PastoralCareCard extends StatelessWidget {
     return content;
   }
 
-  String _formatDate(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return isoDate;
-    }
+  String _formatDate(DateTime date) {
+    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
   }
 }

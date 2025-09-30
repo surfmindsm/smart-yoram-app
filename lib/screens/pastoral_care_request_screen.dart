@@ -1511,7 +1511,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
               // 희망 일정 정보
               if (request.preferredDate != null)
-                _buildDetailSection('희망 날짜', request.preferredDate!),
+                _buildDetailSection('희망 날짜',
+                  '${request.preferredDate!.year}.${request.preferredDate!.month.toString().padLeft(2, '0')}.${request.preferredDate!.day.toString().padLeft(2, '0')}'),
               if (request.preferredTime != null)
                 _buildDetailSection('희망 시간', request.preferredTime!),
               if (request.contactInfo != null)

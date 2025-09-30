@@ -2,18 +2,24 @@ import 'member.dart';
 
 class PastoralCareRequest {
   final int id;
-  final int memberId;
+  final int churchId;
+  final int? memberId;
+  final String requesterName;
+  final String requesterPhone;
   final String requestType;
+  final String? requestContent;
   final String priority;
-  final String title;
-  final String description;
-  final String? preferredDate;
-  final String? preferredTime;
+  final DateTime? preferredDate;
+  final String? preferredTimeStart;
+  final String? preferredTimeEnd;
   final String? contactInfo;
   final bool isUrgent;
   final String status;
   final String? adminNotes;
-  final String? assignedTo;
+  final int? assignedPastorId;
+  final DateTime? scheduledDate;
+  final String? scheduledTime;
+  final String? completionNotes;
   // 방문지 주소/좌표
   final String? address;
   final double? latitude;
@@ -25,18 +31,24 @@ class PastoralCareRequest {
 
   const PastoralCareRequest({
     required this.id,
-    required this.memberId,
+    required this.churchId,
+    this.memberId,
+    required this.requesterName,
+    required this.requesterPhone,
     required this.requestType,
+    this.requestContent,
     required this.priority,
-    required this.title,
-    required this.description,
     this.preferredDate,
-    this.preferredTime,
+    this.preferredTimeStart,
+    this.preferredTimeEnd,
     this.contactInfo,
     required this.isUrgent,
     required this.status,
     this.adminNotes,
-    this.assignedTo,
+    this.assignedPastorId,
+    this.scheduledDate,
+    this.scheduledTime,
+    this.completionNotes,
     this.address,
     this.latitude,
     this.longitude,
@@ -46,21 +58,37 @@ class PastoralCareRequest {
     this.member,
   });
 
+  // 하위 호환성을 위한 getter
+  String get title => requestContent?.split('\n').first ?? '';
+  String get description => requestContent ?? '';
+  String? get assignedTo => assignedPastorId?.toString();
+  String? get preferredTime => preferredTimeStart;
+
   factory PastoralCareRequest.fromJson(Map<String, dynamic> json) {
     return PastoralCareRequest(
       id: json['id'] ?? 0,
-      memberId: json['member_id'] ?? 0,
-      requestType: json['request_type'] ?? '',
-      priority: json['priority'] ?? 'medium',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      preferredDate: json['preferred_date'],
-      preferredTime: json['preferred_time'],
+      churchId: json['church_id'] ?? 0,
+      memberId: json['member_id'],
+      requesterName: json['requester_name'] ?? '',
+      requesterPhone: json['requester_phone'] ?? '',
+      requestType: json['request_type'] ?? 'general',
+      requestContent: json['request_content'] ?? json['description'],
+      priority: json['priority'] ?? 'normal',
+      preferredDate: json['preferred_date'] != null
+          ? DateTime.parse(json['preferred_date'])
+          : null,
+      preferredTimeStart: json['preferred_time_start']?.toString(),
+      preferredTimeEnd: json['preferred_time_end']?.toString(),
       contactInfo: json['contact_info'],
       isUrgent: json['is_urgent'] ?? false,
       status: json['status'] ?? 'pending',
       adminNotes: json['admin_notes'],
-      assignedTo: json['assigned_to'],
+      assignedPastorId: json['assigned_pastor_id'],
+      scheduledDate: json['scheduled_date'] != null
+          ? DateTime.parse(json['scheduled_date'])
+          : null,
+      scheduledTime: json['scheduled_time']?.toString(),
+      completionNotes: json['completion_notes'],
       address: json['address'],
       latitude: (() {
         final v = json['latitude'] ?? json['lat'];
@@ -74,17 +102,17 @@ class PastoralCareRequest {
         if (v is String) return double.tryParse(v);
         return null;
       })(),
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : null,
-      completedAt: json['completed_at'] != null 
-          ? DateTime.parse(json['completed_at']) 
+      completedAt: json['completed_at'] != null
+          ? DateTime.parse(json['completed_at'])
           : null,
-      member: json['member'] != null 
-          ? Member.fromJson(json['member'] as Map<String, dynamic>) 
+      member: json['member'] != null
+          ? Member.fromJson(json['member'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -92,18 +120,24 @@ class PastoralCareRequest {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'church_id': churchId,
       'member_id': memberId,
+      'requester_name': requesterName,
+      'requester_phone': requesterPhone,
       'request_type': requestType,
+      'request_content': requestContent,
       'priority': priority,
-      'title': title,
-      'description': description,
-      'preferred_date': preferredDate,
-      'preferred_time': preferredTime,
+      'preferred_date': preferredDate?.toIso8601String().split('T')[0],
+      'preferred_time_start': preferredTimeStart,
+      'preferred_time_end': preferredTimeEnd,
       'contact_info': contactInfo,
       'is_urgent': isUrgent,
       'status': status,
       'admin_notes': adminNotes,
-      'assigned_to': assignedTo,
+      'assigned_pastor_id': assignedPastorId,
+      'scheduled_date': scheduledDate?.toIso8601String().split('T')[0],
+      'scheduled_time': scheduledTime,
+      'completion_notes': completionNotes,
       'address': address,
       'latitude': latitude,
       'longitude': longitude,
