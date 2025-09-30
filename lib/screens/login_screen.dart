@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
 import '../models/api_response.dart';
@@ -36,11 +37,52 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _loadSavedId(); // 저장된 아이디 불러오기
     _checkExistingLogin();
 
     // 텍스트 필드 리스너 추가
     _usernameController.addListener(_validateInputs);
     _passwordController.addListener(_validateInputs);
+  }
+
+  // 저장된 아이디 불러오기
+  Future<void> _loadSavedId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedId = prefs.getString('saved_username');
+      final saveIdEnabled = prefs.getBool('save_id_enabled') ?? false;
+
+      if (savedId != null && saveIdEnabled) {
+        setState(() {
+          _usernameController.text = savedId;
+          _saveId = true;
+        });
+        print('📱 LOGIN: 저장된 아이디 불러오기 성공 - $savedId');
+      }
+    } catch (e) {
+      print('📱 LOGIN: 저장된 아이디 불러오기 실패 - $e');
+    }
+  }
+
+  // 아이디 저장 처리
+  Future<void> _saveIdIfEnabled() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      if (_saveId) {
+        // 아이디 저장
+        await prefs.setString('saved_username', _usernameController.text.trim());
+        await prefs.setBool('save_id_enabled', true);
+        print('📱 LOGIN: 아이디 저장 완료 - ${_usernameController.text.trim()}');
+      } else {
+        // 아이디 저장 해제
+        await prefs.remove('saved_username');
+        await prefs.setBool('save_id_enabled', false);
+        print('📱 LOGIN: 저장된 아이디 삭제');
+      }
+    } catch (e) {
+      print('📱 LOGIN: 아이디 저장 실패 - $e');
+    }
   }
 
   @override
@@ -490,6 +532,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) {
       if (result.success) {
         print('🔑 LOGIN: 로그인 성공');
+
+        // 아이디 저장 처리
+        await _saveIdIfEnabled();
 
         // 로그인 성공 후 사용자 정보 가져오기
         final userResponse = await _authService.getCurrentUser();
