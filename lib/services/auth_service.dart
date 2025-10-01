@@ -364,6 +364,13 @@ class AuthService {
     }
   }
 
+  // Temp Token 생성 (Edge Function 인증용)
+  String? getTempToken() {
+    if (_currentUser == null) return null;
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    return 'temp_token_${_currentUser!.id}_$timestamp';
+  }
+
   // 권한 확인
   bool hasRole(String role) {
     if (_currentUser == null) return false;
