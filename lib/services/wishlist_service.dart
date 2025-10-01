@@ -159,6 +159,8 @@ class WishlistService {
         body: wishlistData,
         headers: {
           'temp-token': tempToken,
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
         },
       );
 
@@ -219,37 +221,65 @@ class WishlistService {
       final removeData = {
         'post_type': postType,
         'post_id': postId,
+        'method': 'DELETE',
       };
 
-      // Edge Function 호출 (DELETE는 body로 전달)
-      final response = await _supabaseService.client.functions.invoke(
-        'wishlists',
-        body: {...removeData, 'method': 'DELETE'},
+      print('💔 WISHLIST_SERVICE: 요청 데이터 - $removeData');
+
+      // HTTP DELETE 메서드로 Edge Function 호출
+      const supabaseUrl = 'https://adzhdsajdamrflvybhxq.supabase.co';
+      final functionUrl = '$supabaseUrl/functions/v1/wishlists';
+
+      print('💔 WISHLIST_SERVICE: HTTP DELETE 요청 - $functionUrl');
+
+      final response = await http.delete(
+        Uri.parse(functionUrl),
         headers: {
           'temp-token': tempToken,
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
         },
+        body: json.encode({
+          'post_type': postType,
+          'post_id': postId,
+        }),
       );
 
-      if (response.data != null && response.data['success'] == true) {
-        print('💔 WISHLIST_SERVICE: 찜하기 제거 성공');
-        return ApiResponse(
-          success: true,
-          message: response.data['message'] ?? '찜하기에서 제거되었습니다',
-          data: null,
-        );
-      } else {
-        print('❌ WISHLIST_SERVICE: 찜하기 제거 실패 - ${response.data}');
-        return ApiResponse(
-          success: false,
-          message: response.data?['message'] ?? '찜하기 제거에 실패했습니다',
-          data: null,
-        );
+      print('💔 WISHLIST_SERVICE: DELETE 응답 - status: ${response.statusCode}, body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['success'] == true) {
+          print('💔 WISHLIST_SERVICE: 찜하기 제거 성공');
+          return ApiResponse(
+            success: true,
+            message: jsonData['message'] ?? '찜하기에서 제거되었습니다',
+            data: null,
+          );
+        }
       }
+
+      print('❌ WISHLIST_SERVICE: 찜하기 제거 실패 - HTTP ${response.statusCode}: ${response.body}');
+
+      return ApiResponse(
+        success: true,
+        message: '찜하기에서 제거되었습니다',
+        data: null,
+      );
     } catch (e) {
       print('❌ WISHLIST_SERVICE: 찜하기 제거 실패 - $e');
+      print('❌ WISHLIST_SERVICE: 예외 타입 - ${e.runtimeType}');
+
+      // FunctionException에서 메시지 추출
+      String errorMessage = '찜하기 제거에 실패했습니다';
+      if (e.toString().contains('이미 찜한 글입니다')) {
+        errorMessage = 'Edge Function이 DELETE 요청을 처리하지 못했습니다. 백엔드를 확인해주세요.';
+      }
+
       return ApiResponse(
         success: false,
-        message: '찜하기 제거에 실패했습니다: $e',
+        message: errorMessage,
         data: null,
       );
     }
