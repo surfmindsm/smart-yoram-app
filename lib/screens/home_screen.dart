@@ -28,6 +28,7 @@ import 'notice_detail_screen.dart';
 import 'notification_center_screen.dart';
 import '../screens/pastoral_care_request_screen.dart';
 import '../screens/prayer_request_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -536,6 +537,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             context,
             MaterialPageRoute(
               builder: (context) => const NotificationCenterScreen(),
+            ),
+          );
+        },
+        onSettingsTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SettingsScreen(),
             ),
           );
         },
@@ -1834,12 +1843,14 @@ class ProfileAlert extends StatelessWidget {
   final String? userName;
   final String? profileImageUrl;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onSettingsTap;
 
   const ProfileAlert({
     super.key,
     this.userName,
     this.profileImageUrl,
     this.onNotificationTap,
+    this.onSettingsTap,
   });
 
   @override
@@ -1922,6 +1933,26 @@ class ProfileAlert extends StatelessWidget {
               ),
               child: const Icon(
                 Icons.notifications,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: onSettingsTap,
+            borderRadius: BorderRadius.circular(100),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: ShapeDecoration(
+                color: NewAppColor.neutral500,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
+              child: const Icon(
+                Icons.settings,
                 color: Colors.white,
                 size: 20,
               ),

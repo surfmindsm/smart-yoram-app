@@ -99,7 +99,7 @@ class CommunityService {
       final data = item.toJson();
       data['church_id'] = currentUser.churchId;
       data['author_id'] = currentUser.id;
-      data['author_name'] = currentUser.fullName;
+      // author_name은 DB 트리거나 뷰에서 자동으로 채워짐
       data['created_at'] = DateTime.now().toIso8601String();
 
       final response = await _supabaseService.client
@@ -204,7 +204,7 @@ class CommunityService {
       final data = item.toJson();
       data['church_id'] = currentUser.churchId;
       data['author_id'] = currentUser.id;
-      data['author_name'] = currentUser.fullName;
+      // author_name은 DB 트리거나 뷰에서 자동으로 채워짐
       data['created_at'] = DateTime.now().toIso8601String();
 
       final response = await _supabaseService.client
@@ -329,6 +329,8 @@ class CommunityService {
     String? search,
   }) async {
     try {
+      print('📋 COMMUNITY_SERVICE: 행사팀 지원 조회 시작');
+
       final userResponse = await _authService.getCurrentUser();
       final currentUser = userResponse.data;
 
@@ -336,6 +338,8 @@ class CommunityService {
         print('❌ COMMUNITY_SERVICE: 로그인된 사용자 없음');
         return [];
       }
+
+      print('📋 COMMUNITY_SERVICE: 행사팀 지원 쿼리 실행');
 
       dynamic query = _supabaseService.client
           .from('music_team_seekers')
@@ -350,6 +354,8 @@ class CommunityService {
       query = query.order('created_at', ascending: false).limit(limit);
 
       final response = await query;
+
+      print('📋 COMMUNITY_SERVICE: 행사팀 지원 조회 결과 - ${(response as List).length}개');
 
       return (response as List)
           .map((item) => MusicTeamSeeker.fromJson(item as Map<String, dynamic>))
@@ -521,6 +527,70 @@ class CommunityService {
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 내 게시글 조회 실패 - $e');
       return [];
+    }
+  }
+
+  /// 사역자 모집 단일 조회
+  Future<JobPost?> getJobPost(int id) async {
+    try {
+      final response = await _supabaseService.client
+          .from('job_posts')
+          .select()
+          .eq('id', id)
+          .single();
+
+      return JobPost.fromJson(response);
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 사역자 모집 조회 실패 - $e');
+      return null;
+    }
+  }
+
+  /// 행사팀 모집 단일 조회
+  Future<MusicTeamRecruitment?> getMusicTeamRecruitment(int id) async {
+    try {
+      final response = await _supabaseService.client
+          .from('community_music_teams')
+          .select()
+          .eq('id', id)
+          .single();
+
+      return MusicTeamRecruitment.fromJson(response);
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 행사팀 모집 조회 실패 - $e');
+      return null;
+    }
+  }
+
+  /// 행사팀 지원 단일 조회
+  Future<MusicTeamSeeker?> getMusicTeamSeeker(int id) async {
+    try {
+      final response = await _supabaseService.client
+          .from('music_team_seekers')
+          .select()
+          .eq('id', id)
+          .single();
+
+      return MusicTeamSeeker.fromJson(response);
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 행사팀 지원 조회 실패 - $e');
+      return null;
+    }
+  }
+
+  /// 행사 소식 단일 조회
+  Future<ChurchNews?> getChurchNewsItem(int id) async {
+    try {
+      final response = await _supabaseService.client
+          .from('church_news')
+          .select()
+          .eq('id', id)
+          .single();
+
+      return ChurchNews.fromJson(response);
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 행사 소식 조회 실패 - $e');
+      return null;
     }
   }
 }

@@ -60,6 +60,18 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         case 'community_requests':
           post = await _communityService.getRequestItem(widget.postId);
           break;
+        case 'job_posts':
+          post = await _communityService.getJobPost(widget.postId);
+          break;
+        case 'community_music_teams':
+          post = await _communityService.getMusicTeamRecruitment(widget.postId);
+          break;
+        case 'music_team_seekers':
+          post = await _communityService.getMusicTeamSeeker(widget.postId);
+          break;
+        case 'church_news':
+          post = await _communityService.getChurchNewsItem(widget.postId);
+          break;
         default:
           post = null;
       }

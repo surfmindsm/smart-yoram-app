@@ -70,11 +70,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => Navigator.pop(context),
+            child: Icon(Icons.arrow_back, color: NewAppColor.neutral900),
+          ),
+        ),
+        title: Text(
+          '설정',
+          style: const FigmaTextStyles().headline4.copyWith(
+            color: NewAppColor.neutral900,
+          ),
+        ),
+      ),
       body: Column(
         children: [
-          // 상단 여백 (탭 네비게이션에서 들어올 때)
-          SizedBox(height: MediaQuery.of(context).padding.top + 22.h),
-
           // 메인 콘텐츠
           Expanded(
             child: ListView(

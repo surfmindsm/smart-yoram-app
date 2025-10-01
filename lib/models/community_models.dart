@@ -200,8 +200,6 @@ class SharingItem extends CommunityBasePost {
       'quantity': quantity,
       'images': images,
       'location': location,
-      'contact_phone': contactPhone,
-      'contact_email': contactEmail,
       'is_free': isFree,
       'price': price,
       'delivery_method': deliveryMethod,
@@ -308,8 +306,6 @@ class RequestItem extends CommunityBasePost {
       'needed_date': neededDate,
       'location': location,
       'price_range': priceRange,
-      'contact_phone': contactPhone,
-      'contact_email': contactEmail,
       'urgency': urgency,
       'images': images,
     };
