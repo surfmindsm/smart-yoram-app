@@ -23,6 +23,24 @@ class User {
   bool get hasAdminAccess => isAdmin;
   bool get hasChurch => churchId != 9998;
 
+  // 커뮤니티 권한 체크
+  bool get hasCommunityAccess =>
+    role == 'member' ||
+    role == 'community_admin' ||
+    role == 'church_admin' ||
+    role == 'church_super_admin' ||
+    role == 'system_admin';
+
+  bool get isCommunityAdmin => role == 'community_admin';
+
+  bool get isChurchAdmin =>
+    role == 'church_admin' ||
+    role == 'church_super_admin' ||
+    role == 'system_admin';
+
+  // 네비게이션 메뉴 표시 여부
+  bool get shouldShowBasicMenus => !isCommunityAdmin; // community_admin은 기본 메뉴 숨김
+
   User({
     required this.id,
     required this.username,
