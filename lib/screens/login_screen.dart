@@ -471,6 +471,37 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
+
+                        SizedBox(height: 24.h),
+
+                        // 회원가입 버튼
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/signup/selection');
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(vertical: 16.h),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(
+                                color: NewAppColor.primary600,
+                                width: 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '회원가입',
+                                style: figmaStyles.subtitle2.copyWith(
+                                  color: NewAppColor.primary600,
+                                  fontFamily: 'Pretendard Variable',
+                                  letterSpacing: -0.40,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

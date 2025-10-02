@@ -22,6 +22,10 @@ import 'screens/settings_screen.dart';
 import 'screens/admin/admin_member_management_screen.dart';
 import 'screens/admin/admin_pastoral_care_list_screen.dart';
 import 'screens/admin/admin_notice_list_screen.dart';
+import 'screens/signup/signup_selection_screen.dart';
+import 'screens/signup/church_signup_screen.dart';
+import 'screens/signup/community_signup_screen.dart';
+import 'screens/signup/signup_success_screen.dart';
 import 'services/auth_service.dart';
 import 'services/fcm_service.dart';
 import 'services/font_settings_service.dart';
@@ -104,6 +108,11 @@ class MyApp extends ConsumerWidget {
                   '/calendar': (context) => const CalendarScreen(),
                   '/prayer': (context) => const PrayerScreen(),
                   '/settings': (context) => const SettingsScreen(),
+                  // Signup routes
+                  '/signup/selection': (context) => const SignupSelectionScreen(),
+                  '/signup/church': (context) => const ChurchSignupScreen(),
+                  '/signup/community': (context) => const CommunitySignupScreen(),
+                  '/signup/success': (context) => const SignupSuccessScreen(),
                   // Admin routes
                   '/admin/members': (context) => const AdminMemberManagementScreen(),
                   '/admin/pastoral-care': (context) => const AdminPastoralCareListScreen(),
