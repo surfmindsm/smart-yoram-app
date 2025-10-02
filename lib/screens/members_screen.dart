@@ -28,7 +28,7 @@ class _MembersScreenState extends State<MembersScreen>
   List<Member> filteredMembers = [];
   bool isLoading = true;
 
-  final List<String> tabs = ['전체', '교역자', '장로', '권사', '집사', '성도'];
+  final List<String> tabs = ['전체', '목사', '장로', '집사', '권사', '전도사', '교사'];
 
   @override
   void initState() {
@@ -107,29 +107,28 @@ class _MembersScreenState extends State<MembersScreen>
 
       List<Member> baseList = allMembers;
 
-      // 탭에 따른 필터링
+      // 탭에 따른 필터링 (웹 명세에 맞춤)
       switch (currentTab) {
         case 0: // 전체
           baseList = List.from(allMembers);
           break;
-        case 1: // 교역자
-          baseList = allMembers.where((m) => m.position == '교역자').toList();
+        case 1: // 목사
+          baseList = allMembers.where((m) => m.position == '목사').toList();
           break;
         case 2: // 장로
           baseList = allMembers.where((m) => m.position == '장로').toList();
           break;
-        case 3: // 권사
+        case 3: // 집사
+          baseList = allMembers.where((m) => m.position == '집사').toList();
+          break;
+        case 4: // 권사
           baseList = allMembers.where((m) => m.position == '권사').toList();
           break;
-        case 4: // 집사
-          baseList = allMembers
-              .where((m) => m.position?.contains('집사') == true)
-              .toList();
+        case 5: // 전도사
+          baseList = allMembers.where((m) => m.position == '전도사').toList();
           break;
-        case 5: // 성도
-          baseList = allMembers
-              .where((m) => m.position?.contains('성도') == true)
-              .toList();
+        case 6: // 교사
+          baseList = allMembers.where((m) => m.position == '교사').toList();
           break;
       }
 

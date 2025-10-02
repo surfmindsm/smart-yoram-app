@@ -6,8 +6,10 @@ class Member {
   final DateTime? birthdate;
   final String phone;
   final String? address;
-  final String? position;
-  final String? district;
+  final String? position; // 직분: 목사, 장로, 집사, 권사, 전도사, 교사, 부장, 회장
+  final String? department; // 부서: WORSHIP, EDUCATION, MISSION, YOUTH, CHILDREN
+  final String? district; // 구역: 텍스트 입력 (예: "1구역")
+  final String? organizationId; // 조직 ID (UUID)
   final int churchId;
   final String? profilePhotoUrl;
   final String memberStatus;
@@ -29,7 +31,9 @@ class Member {
     required this.phone,
     this.address,
     this.position,
+    this.department,
     this.district,
+    this.organizationId,
     required this.churchId,
     this.profilePhotoUrl,
     required this.memberStatus,
@@ -49,30 +53,32 @@ class Member {
       name: json['name'] ?? '',
       email: json['email'],
       gender: json['gender'] ?? '',
-      birthdate: json['birthdate'] != null 
-          ? DateTime.parse(json['birthdate']) 
+      birthdate: json['birthdate'] != null
+          ? DateTime.parse(json['birthdate'])
           : null,
       phone: json['phone'] ?? '',
       address: json['address'],
       position: json['position'],
+      department: json['department'],
       district: json['district'],
+      organizationId: json['organization_id'],
       churchId: json['church_id'] ?? 0,
       profilePhotoUrl: json['profile_photo_url'],
       memberStatus: json['member_status'] ?? 'active',
-      registrationDate: json['registration_date'] != null 
-          ? DateTime.parse(json['registration_date']) 
+      registrationDate: json['registration_date'] != null
+          ? DateTime.parse(json['registration_date'])
           : null,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : null,
       transferChurch: json['transfer_church'],
-      transferDate: json['transfer_date'] != null 
-          ? DateTime.parse(json['transfer_date']) 
+      transferDate: json['transfer_date'] != null
+          ? DateTime.parse(json['transfer_date'])
           : null,
       memo: json['memo'],
       invitationSent: json['invitation_sent'] ?? false,
-      invitationSentAt: json['invitation_sent_at'] != null 
-          ? DateTime.parse(json['invitation_sent_at']) 
+      invitationSentAt: json['invitation_sent_at'] != null
+          ? DateTime.parse(json['invitation_sent_at'])
           : null,
       userId: json['user_id'], // user_id 매핑 필드 추가
     );
@@ -88,7 +94,9 @@ class Member {
       'phone': phone,
       'address': address,
       'position': position,
+      'department': department,
       'district': district,
+      'organization_id': organizationId,
       'church_id': churchId,
       'profile_photo_url': profilePhotoUrl,
       'member_status': memberStatus,
@@ -151,8 +159,10 @@ class MemberCreateRequest {
   final DateTime? birthdate;
   final String phone;
   final String? address;
-  final String? position;
-  final String? district;
+  final String? position; // 직분: 목사, 장로, 집사, 권사, 전도사, 교사, 부장, 회장
+  final String? department; // 부서: WORSHIP, EDUCATION, MISSION, YOUTH, CHILDREN
+  final String? district; // 구역
+  final String? organizationId; // 조직 ID (UUID)
   final int churchId;
   final String? transferChurch;
   final DateTime? transferDate;
@@ -165,7 +175,9 @@ class MemberCreateRequest {
     required this.phone,
     this.address,
     this.position,
+    this.department,
     this.district,
+    this.organizationId,
     required this.churchId,
     this.transferChurch,
     this.transferDate,
@@ -179,8 +191,10 @@ class MemberCreateRequest {
       'birthdate': birthdate?.toIso8601String().split('T')[0],
       'phone': phone,
       'address': address,
-      'position': position,
+      'position': position, // null이면 null로 전송 (빈 문자열 ❌)
+      'department': department,
       'district': district,
+      'organization_id': organizationId,
       'church_id': churchId,
       'transfer_church': transferChurch,
       'transfer_date': transferDate?.toIso8601String().split('T')[0],
@@ -195,8 +209,10 @@ class MemberUpdateRequest {
   final String? phone;
   final String? memberStatus;
   final String? address;
-  final String? position;
-  final String? district;
+  final String? position; // 직분: 목사, 장로, 집사, 권사, 전도사, 교사, 부장, 회장
+  final String? department; // 부서: WORSHIP, EDUCATION, MISSION, YOUTH, CHILDREN
+  final String? district; // 구역
+  final String? organizationId; // 조직 ID (UUID)
   final String? transferChurch;
   final DateTime? transferDate;
   final String? memo;
@@ -207,7 +223,9 @@ class MemberUpdateRequest {
     this.memberStatus,
     this.address,
     this.position,
+    this.department,
     this.district,
+    this.organizationId,
     this.transferChurch,
     this.transferDate,
     this.memo,
@@ -219,11 +237,48 @@ class MemberUpdateRequest {
     if (phone != null) data['phone'] = phone;
     if (memberStatus != null) data['member_status'] = memberStatus;
     if (address != null) data['address'] = address;
-    if (position != null) data['position'] = position;
+    if (position != null) data['position'] = position; // null이면 null로 전송
+    if (department != null) data['department'] = department;
     if (district != null) data['district'] = district;
+    if (organizationId != null) data['organization_id'] = organizationId;
     if (transferChurch != null) data['transfer_church'] = transferChurch;
     if (transferDate != null) data['transfer_date'] = transferDate?.toIso8601String().split('T')[0];
     if (memo != null) data['memo'] = memo;
     return data;
+  }
+}
+
+// 직분 옵션 (웹과 동일)
+class MemberPositionOptions {
+  static const List<String> positions = [
+    '목사',
+    '장로',
+    '집사',
+    '권사',
+    '전도사',
+    '교사',
+    '부장',
+    '회장',
+  ];
+}
+
+// 부서 옵션 (웹과 동일)
+class MemberDepartmentOptions {
+  static const Map<String, String> departments = {
+    'WORSHIP': '예배부',
+    'EDUCATION': '교육부',
+    'MISSION': '선교부',
+    'YOUTH': '청년부',
+    'CHILDREN': '아동부',
+  };
+
+  static String? getLabel(String? value) {
+    return value != null ? departments[value] : null;
+  }
+
+  static String? getValue(String? label) {
+    return departments.entries
+        .firstWhere((entry) => entry.value == label, orElse: () => const MapEntry('', ''))
+        .key;
   }
 }
