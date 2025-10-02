@@ -1919,26 +1919,27 @@ class ProfileAlert extends StatelessWidget {
               ],
             ),
           ),
-          InkWell(
-            onTap: onNotificationTap,
-            borderRadius: BorderRadius.circular(100),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: ShapeDecoration(
-                color: const Color(0xFF0078FF), // Primary_600
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
-                ),
-              ),
-              child: const Icon(
-                Icons.notifications,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
+          // 알림 버튼 주석처리
+          // InkWell(
+          //   onTap: onNotificationTap,
+          //   borderRadius: BorderRadius.circular(100),
+          //   child: Container(
+          //     width: 36,
+          //     height: 36,
+          //     decoration: ShapeDecoration(
+          //       color: const Color(0xFF0078FF), // Primary_600
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(100),
+          //       ),
+          //     ),
+          //     child: const Icon(
+          //       Icons.notifications,
+          //       color: Colors.white,
+          //       size: 20,
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(width: 8),
           InkWell(
             onTap: onSettingsTap,
             borderRadius: BorderRadius.circular(100),

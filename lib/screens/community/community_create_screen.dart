@@ -1,13 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/community_models.dart';
 import 'package:smart_yoram_app/services/community_service.dart';
+import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:smart_yoram_app/components/index.dart';
 
 /// 커뮤니티 게시글 작성/수정 화면 (공통)
+/// docs/writing/ API 명세서 기반 구현
 class CommunityCreateScreen extends StatefulWidget {
   final CommunityListType type;
   final String categoryTitle;
@@ -26,24 +30,79 @@ class CommunityCreateScreen extends StatefulWidget {
 
 class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   final CommunityService _communityService = CommunityService();
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _imagePicker = ImagePicker();
 
   // 공통 필드
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _contactPhoneController = TextEditingController();
-  final TextEditingController _contactEmailController = TextEditingController();
+  final TextEditingController _contactController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
-  // 타입별 필드
+  // 무료나눔/물품판매 전용
+  String? _selectedCategory; // furniture, electronics, books, etc.
+  String? _selectedCondition; // new, like_new, used
+  int _quantity = 1;
   final TextEditingController _priceController = TextEditingController();
+  String? _selectedDeliveryMethod; // 직거래, 택배, 협의
+  final TextEditingController _purchaseDateController = TextEditingController();
+
+  // 물품요청 전용
+  final TextEditingController _requestedItemController = TextEditingController();
+  final TextEditingController _reasonController = TextEditingController();
+  final TextEditingController _neededDateController = TextEditingController();
   final TextEditingController _priceRangeController = TextEditingController();
+  final TextEditingController _quantityController = TextEditingController();
+  String _selectedUrgency = 'normal'; // low, normal, high
+
+  // 사역자모집 전용
+  final TextEditingController _companyController = TextEditingController();
+  final TextEditingController _churchIntroController = TextEditingController();
+  final TextEditingController _positionController = TextEditingController();
+  final TextEditingController _jobTypeController = TextEditingController();
+  String? _selectedEmploymentType; // full-time, part-time, contract, volunteer
   final TextEditingController _salaryController = TextEditingController();
+  final TextEditingController _qualificationsController = TextEditingController();
+  final TextEditingController _preferredQualificationsController = TextEditingController();
+  final TextEditingController _benefitsController = TextEditingController();
+  final TextEditingController _deadlineController = TextEditingController();
+
+  // 행사팀모집 전용
+  String _selectedRecruitmentType = 'new_member'; // new_member, substitute, project, permanent
+  final TextEditingController _worshipTypeController = TextEditingController();
+  List<String> _selectedInstruments = []; // 필요 악기/파트
+  final TextEditingController _scheduleController = TextEditingController();
+  final TextEditingController _requirementsController = TextEditingController();
+  final TextEditingController _compensationController = TextEditingController();
+
+  // 행사팀지원 전용
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _teamNameController = TextEditingController();
+  String? _selectedInstrument; // 전공 파트
+  List<String> _compatibleInstruments = []; // 호환 악기
+  final TextEditingController _experienceController = TextEditingController();
+  final TextEditingController _portfolioController = TextEditingController();
+  String? _portfolioFileUrl; // 포트폴리오 파일 URL
+  List<String> _preferredLocations = [];
+  List<String> _availableDays = [];
+  final TextEditingController _availableTimeController = TextEditingController();
+  final TextEditingController _introductionController = TextEditingController();
+
+  // 교회소식 전용
+  String? _selectedNewsCategory; // worship, event, retreat, mission, etc.
+  String _selectedPriority = 'normal'; // urgent, important, normal
+  final TextEditingController _eventDateController = TextEditingController();
+  final TextEditingController _eventTimeController = TextEditingController();
+  final TextEditingController _organizerController = TextEditingController();
+  final TextEditingController _targetAudienceController = TextEditingController();
+  final TextEditingController _participationFeeController = TextEditingController();
+  final TextEditingController _contactPersonController = TextEditingController();
 
   bool _isLoading = false;
   List<XFile> _selectedImages = [];
   String _selectedStatus = 'active';
-  bool _isFree = false; // 무료나눔 여부
 
   @override
   void initState() {
@@ -58,11 +117,40 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
-    _contactPhoneController.dispose();
-    _contactEmailController.dispose();
+    _contactController.dispose();
+    _emailController.dispose();
     _priceController.dispose();
+    _requestedItemController.dispose();
+    _reasonController.dispose();
+    _neededDateController.dispose();
     _priceRangeController.dispose();
+    _quantityController.dispose();
+    _companyController.dispose();
+    _churchIntroController.dispose();
+    _positionController.dispose();
+    _jobTypeController.dispose();
     _salaryController.dispose();
+    _qualificationsController.dispose();
+    _preferredQualificationsController.dispose();
+    _benefitsController.dispose();
+    _deadlineController.dispose();
+    _worshipTypeController.dispose();
+    _scheduleController.dispose();
+    _requirementsController.dispose();
+    _compensationController.dispose();
+    _nameController.dispose();
+    _teamNameController.dispose();
+    _experienceController.dispose();
+    _portfolioController.dispose();
+    _availableTimeController.dispose();
+    _introductionController.dispose();
+    _eventDateController.dispose();
+    _eventTimeController.dispose();
+    _organizerController.dispose();
+    _targetAudienceController.dispose();
+    _participationFeeController.dispose();
+    _contactPersonController.dispose();
+    _purchaseDateController.dispose();
     super.dispose();
   }
 
@@ -77,9 +165,12 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+        leading: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.close, color: Colors.black),
+          ),
         ),
         title: Text(
           widget.existingPost == null ? '글쓰기' : '수정하기',
@@ -125,168 +216,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     );
   }
 
+  /// 공통 필드 - 타입별로 다르게 표시하지 않음
   Widget _buildCommonFields() {
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.all(16.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 제목
-          TextFormField(
-            controller: _titleController,
-            decoration: InputDecoration(
-              hintText: '제목을 입력하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-            ),
-            style: FigmaTextStyles().body2,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '제목을 입력해주세요';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 16.h),
-          // 내용
-          TextFormField(
-            controller: _descriptionController,
-            decoration: InputDecoration(
-              hintText: '내용을 입력하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-            ),
-            style: FigmaTextStyles().body2,
-            maxLines: 8,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '내용을 입력해주세요';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 16.h),
-          // 이미지 선택
-          if (_shouldShowImagePicker()) ...[
-            _buildImagePicker(),
-            SizedBox(height: 16.h),
-          ],
-          // 지역
-          if (_shouldShowLocation()) ...[
-            TextFormField(
-              controller: _locationController,
-              decoration: InputDecoration(
-                labelText: '지역',
-                hintText: '지역을 입력하세요',
-                hintStyle: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.neutral200),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.neutral200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.primary600),
-                ),
-              ),
-              style: FigmaTextStyles().body2,
-            ),
-            SizedBox(height: 16.h),
-          ],
-          // 연락처
-          TextFormField(
-            controller: _contactPhoneController,
-            decoration: InputDecoration(
-              labelText: '연락처',
-              hintText: '연락처를 입력하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-            ),
-            style: FigmaTextStyles().body2,
-            keyboardType: TextInputType.phone,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '연락처를 입력해주세요';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 16.h),
-          // 이메일 (선택)
-          TextFormField(
-            controller: _contactEmailController,
-            decoration: InputDecoration(
-              labelText: '이메일 (선택)',
-              hintText: '이메일을 입력하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-            ),
-            style: FigmaTextStyles().body2,
-            keyboardType: TextInputType.emailAddress,
-          ),
-        ],
-      ),
-    );
+    // 공통 필드는 타입별 필드에서 각각 구현
+    return const SizedBox.shrink();
   }
 
+  /// 타입별 특수 필드
   Widget _buildTypeSpecificFields() {
     switch (widget.type) {
       case CommunityListType.freeSharing:
@@ -297,37 +233,225 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         return _buildRequestFields();
       case CommunityListType.jobPosting:
         return _buildJobPostingFields();
+      case CommunityListType.musicTeamRecruit:
+        return _buildMusicTeamRecruitFields();
+      case CommunityListType.musicTeamSeeking:
+        return _buildMusicTeamSeekingFields();
+      case CommunityListType.churchNews:
+        return _buildChurchNewsFields();
       default:
         return const SizedBox.shrink();
     }
   }
 
+  /// 무료나눔/물품판매 필드 (웹 기준)
   Widget _buildSharingFields({required bool isFree}) {
-    _isFree = isFree;
     return Container(
-      margin: EdgeInsets.only(top: 8.h),
       color: Colors.white,
       padding: EdgeInsets.all(16.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            isFree ? '무료 나눔 정보' : '판매 정보',
-            style: FigmaTextStyles().subtitle2.copyWith(
-                  color: NewAppColor.neutral900,
-                ),
+          // 1. 상품이미지 (웹: 0/12, 모바일: 0/5)
+          _buildImagePickerWithLabel(
+            label: '상품이미지',
+            required: true,
+            maxCount: 12,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
+
+          // 2. 카테고리 *
+          Text(
+            '카테고리 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(
+              hintText: '카테고리를 선택하세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            value: _selectedCategory,
+            items: const [
+              DropdownMenuItem(value: 'furniture', child: Text('가구')),
+              DropdownMenuItem(value: 'electronics', child: Text('전자제품')),
+              DropdownMenuItem(value: 'books', child: Text('도서')),
+              DropdownMenuItem(value: 'clothing', child: Text('의류')),
+              DropdownMenuItem(value: 'toys', child: Text('장난감')),
+              DropdownMenuItem(value: 'household', child: Text('생활용품')),
+              DropdownMenuItem(value: 'other', child: Text('기타')),
+            ],
+            onChanged: (value) => setState(() => _selectedCategory = value),
+            validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
+          ),
+          SizedBox(height: 24.h),
+
+          // 3. 제목 *
+          Text(
+            '제목 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              hintText: '나눔할 물품의 제목을 입력해주세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              counterText: '${_titleController.text.length}/100',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            onChanged: (value) => setState(() {}), // 글자수 업데이트
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '제목을 입력해주세요';
+              }
+              if (value.length > 100) {
+                return '제목은 최대 100자까지 입력 가능합니다';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 24.h),
+
+          // 4. 설명 *
+          Text(
+            '설명 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _descriptionController,
+            decoration: InputDecoration(
+              hintText: '나눔할 물품에 대한 상세한 설명을 입력해주세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              counterText: '${_descriptionController.text.length}/1000',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            maxLines: 8,
+            onChanged: (value) => setState(() {}), // 글자수 업데이트
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '설명을 입력해주세요';
+              }
+              if (value.length > 1000) {
+                return '설명은 최대 1000자까지 입력 가능합니다';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 24.h),
+
+          // 5. 상태 *
+          Text(
+            '상태 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(
+              hintText: '상품 상태를 선택하세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            value: _selectedCondition,
+            items: const [
+              DropdownMenuItem(value: 'new', child: Text('새 상품')),
+              DropdownMenuItem(value: 'like_new', child: Text('거의 새것')),
+              DropdownMenuItem(value: 'used', child: Text('사용감 있음')),
+            ],
+            onChanged: (value) => setState(() => _selectedCondition = value),
+            validator: (value) => value == null ? '상품 상태를 선택해주세요' : null,
+          ),
+          SizedBox(height: 24.h),
+
+          // 6. 판매 가격 * (물품판매만)
           if (!isFree) ...[
-            // 가격
+            Text(
+              '판매 가격 *',
+              style: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral900,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 8.h),
             TextFormField(
               controller: _priceController,
               decoration: InputDecoration(
-                labelText: '가격',
-                hintText: '가격을 입력하세요 (0: 가격협의)',
+                hintText: '숫자로만 입력 (예: 50000)',
                 hintStyle: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
+                  color: NewAppColor.neutral400,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
                   borderSide: BorderSide(color: NewAppColor.neutral200),
@@ -340,66 +464,78 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   borderRadius: BorderRadius.circular(8.r),
                   borderSide: BorderSide(color: NewAppColor.primary600),
                 ),
-                suffixText: '원',
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
               ),
               style: FigmaTextStyles().body2,
               keyboardType: TextInputType.number,
+              validator: (value) {
+                if (!isFree && (value == null || value.trim().isEmpty)) {
+                  return '판매 가격을 입력해주세요';
+                }
+                return null;
+              },
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 24.h),
           ],
-          // 배송 방법
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              labelText: '거래 방법',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
+
+          // 7. 구매 시기 (물품판매만)
+          if (!isFree) ...[
+            Text(
+              '구매 시기',
+              style: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral900,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            items: const [
-              DropdownMenuItem(value: '직거래', child: Text('직거래')),
-              DropdownMenuItem(value: '택배', child: Text('택배')),
-              DropdownMenuItem(value: '직거래/택배', child: Text('직거래/택배')),
-            ],
-            onChanged: (value) {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequestFields() {
-    return Container(
-      margin: EdgeInsets.only(top: 8.h),
-      color: Colors.white,
-      padding: EdgeInsets.all(16.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '요청 정보',
-            style: FigmaTextStyles().subtitle2.copyWith(
-                  color: NewAppColor.neutral900,
+            SizedBox(height: 8.h),
+            TextFormField(
+              controller: _purchaseDateController,
+              decoration: InputDecoration(
+                hintText: '예: 2023년 3월, 작년, 6개월 전',
+                hintStyle: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral400,
                 ),
+                counterText: '${_purchaseDateController.text.length}/50',
+                counterStyle: FigmaTextStyles().caption1.copyWith(
+                  color: NewAppColor.neutral500,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  borderSide: BorderSide(color: NewAppColor.neutral200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  borderSide: BorderSide(color: NewAppColor.neutral200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  borderSide: BorderSide(color: NewAppColor.primary600),
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+              ),
+              style: FigmaTextStyles().body2,
+              maxLength: 50,
+              onChanged: (value) => setState(() {}),
+            ),
+            SizedBox(height: 24.h),
+          ],
+
+          // 8 (무료나눔의 경우 6). 연락처 *
+          Text(
+            '연락처 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          SizedBox(height: 16.h),
-          // 희망 가격대
+          SizedBox(height: 8.h),
           TextFormField(
-            controller: _priceRangeController,
+            controller: _contactController,
             decoration: InputDecoration(
-              labelText: '희망 가격대 (선택)',
-              hintText: '예: 10,000원 ~ 20,000원',
+              hintText: '연락 가능한 전화번호를 입력해주세요',
               hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
+                color: NewAppColor.neutral400,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.r),
                 borderSide: BorderSide(color: NewAppColor.neutral200),
@@ -412,65 +548,35 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 borderRadius: BorderRadius.circular(8.r),
                 borderSide: BorderSide(color: NewAppColor.primary600),
               ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '연락처를 입력해주세요';
+              }
+              return null;
+            },
           ),
-          SizedBox(height: 16.h),
-          // 긴급도
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              labelText: '긴급도',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-            ),
-            value: 'normal',
-            items: const [
-              DropdownMenuItem(value: 'low', child: Text('낮음')),
-              DropdownMenuItem(value: 'normal', child: Text('보통')),
-              DropdownMenuItem(value: 'high', child: Text('높음')),
-              DropdownMenuItem(value: 'urgent', child: Text('긴급')),
-            ],
-            onChanged: (value) {},
-          ),
-        ],
-      ),
-    );
-  }
+          SizedBox(height: 24.h),
 
-  Widget _buildJobPostingFields() {
-    return Container(
-      margin: EdgeInsets.only(top: 8.h),
-      color: Colors.white,
-      padding: EdgeInsets.all(16.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+          // 9 (무료나눔의 경우 7). 이메일 (선택)
           Text(
-            '구인 정보',
-            style: FigmaTextStyles().subtitle2.copyWith(
-                  color: NewAppColor.neutral900,
-                ),
+            '이메일',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          SizedBox(height: 16.h),
-          // 급여
+          SizedBox(height: 8.h),
           TextFormField(
-            controller: _salaryController,
+            controller: _emailController,
             decoration: InputDecoration(
-              labelText: '급여 (선택)',
-              hintText: '예: 월 250만원',
+              hintText: '이메일 주소를 입력해주세요 (선택사항)',
               hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
+                color: NewAppColor.neutral400,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.r),
                 borderSide: BorderSide(color: NewAppColor.neutral200),
@@ -483,131 +589,134 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 borderRadius: BorderRadius.circular(8.r),
                 borderSide: BorderSide(color: NewAppColor.primary600),
               ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
+            keyboardType: TextInputType.emailAddress,
           ),
-          SizedBox(height: 16.h),
-          // 직무 유형
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              labelText: '직무 유형',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'pastor', child: Text('목회자')),
-              DropdownMenuItem(value: 'worship', child: Text('예배 사역')),
-              DropdownMenuItem(value: 'education', child: Text('교육 사역')),
-              DropdownMenuItem(value: 'admin', child: Text('행정')),
-              DropdownMenuItem(value: 'other', child: Text('기타')),
-            ],
-            onChanged: (value) {},
-          ),
+          SizedBox(height: 32.h),
         ],
       ),
     );
   }
 
-  Widget _buildImagePicker() {
+  /// 이미지 선택 위젯 (라벨 포함)
+  Widget _buildImagePickerWithLabel({
+    required String label,
+    required bool required,
+    required int maxCount,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Text(
-              '사진',
+              label,
               style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral700,
-                  ),
+                color: NewAppColor.neutral900,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            SizedBox(width: 4.w),
+            if (required)
+              Text(
+                ' *',
+                style: FigmaTextStyles().body2.copyWith(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
             Text(
-              '(최대 5장)',
-              style: FigmaTextStyles().caption3.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
+              '최대 ${maxCount}장, 각 파일 최대 10MB',
+              style: FigmaTextStyles().caption1.copyWith(
+                color: NewAppColor.neutral500,
+              ),
+            ),
+            Text(
+              '${_selectedImages.length}/$maxCount',
+              style: FigmaTextStyles().caption1.copyWith(
+                color: NewAppColor.neutral500,
+              ),
             ),
           ],
         ),
         SizedBox(height: 8.h),
         SizedBox(
-          height: 80.h,
+          height: 100.h,
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
               // 사진 추가 버튼
-              InkWell(
-                onTap: _pickImages,
-                child: Container(
-                  width: 80.w,
-                  height: 80.h,
-                  decoration: BoxDecoration(
-                    color: NewAppColor.neutral100,
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(
-                      color: NewAppColor.neutral200,
-                      width: 1,
+              if (_selectedImages.length < maxCount)
+                GestureDetector(
+                  onTap: _pickImages,
+                  child: Container(
+                    width: 100.w,
+                    height: 100.h,
+                    decoration: BoxDecoration(
+                      color: NewAppColor.neutral100,
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: NewAppColor.neutral200,
+                        style: BorderStyle.solid,
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add, size: 32.sp, color: NewAppColor.neutral400),
+                        SizedBox(height: 4.h),
+                        Text(
+                          '이미지 추가',
+                          style: FigmaTextStyles().caption1.copyWith(
+                            color: NewAppColor.neutral400,
+                          ),
+                        ),
+                        Text(
+                          '최대 10 MB',
+                          style: FigmaTextStyles().caption2.copyWith(
+                            color: NewAppColor.neutral400,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate_outlined,
-                        size: 24.sp,
-                        color: NewAppColor.neutral500,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        '${_selectedImages.length}/5',
-                        style: FigmaTextStyles().caption3.copyWith(
-                              color: NewAppColor.neutral500,
-                            ),
-                      ),
-                    ],
-                  ),
                 ),
-              ),
               // 선택된 이미지들
               ..._selectedImages.asMap().entries.map((entry) {
                 final index = entry.key;
                 final image = entry.value;
                 return Container(
+                  width: 100.w,
+                  height: 100.h,
                   margin: EdgeInsets.only(left: 8.w),
                   child: Stack(
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8.r),
-                        child: Image.network(
-                          image.path,
-                          width: 80.w,
-                          height: 80.h,
+                        child: Image.file(
+                          File(image.path),
+                          width: 100.w,
+                          height: 100.h,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 80.w,
-                              height: 80.h,
-                              color: NewAppColor.neutral200,
-                              child: const Icon(Icons.error),
-                            );
-                          },
                         ),
                       ),
                       Positioned(
                         top: 4.h,
                         right: 4.w,
-                        child: InkWell(
-                          onTap: () => _removeImage(index),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedImages.removeAt(index);
+                            });
+                          },
                           child: Container(
                             padding: EdgeInsets.all(4.r),
                             decoration: const BoxDecoration(
@@ -633,45 +742,1719 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     );
   }
 
-  bool _shouldShowImagePicker() {
-    return widget.type == CommunityListType.freeSharing ||
-        widget.type == CommunityListType.itemSale ||
-        widget.type == CommunityListType.churchNews;
+  /// 물품요청 필드 (웹 기준)
+  Widget _buildRequestFields() {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 섹션 타이틀
+          Text(
+            '요청 정보',
+            style: FigmaTextStyles().headline4.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 24.h),
+
+          // 1. 제목 *
+          Text(
+            '제목 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              hintText: '요청할 물품의 제목을 입력하세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '제목을 입력해주세요';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 24.h),
+
+          // 2. 요청 물품 * | 카테고리 * (Row)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '요청 물품 *',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _requestedItemController,
+                      decoration: InputDecoration(
+                        hintText: '구체적인 물품명을 입력하세요',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return '요청 물품을 입력해주세요';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '카테고리 *',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        hintText: '카테고리 선택',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      value: _selectedCategory,
+                      items: const [
+                        DropdownMenuItem(value: 'furniture', child: Text('가구')),
+                        DropdownMenuItem(value: 'electronics', child: Text('전자제품')),
+                        DropdownMenuItem(value: 'books', child: Text('도서')),
+                        DropdownMenuItem(value: 'clothing', child: Text('의류')),
+                        DropdownMenuItem(value: 'toys', child: Text('장난감')),
+                        DropdownMenuItem(value: 'household', child: Text('생활용품')),
+                        DropdownMenuItem(value: 'other', child: Text('기타')),
+                      ],
+                      onChanged: (value) => setState(() => _selectedCategory = value),
+                      validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // 3. 수량 | 우선순위 (Row)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '수량',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _quantityController,
+                      decoration: InputDecoration(
+                        hintText: '1',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '우선순위',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        hintText: '보통',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      value: _selectedUrgency,
+                      items: const [
+                        DropdownMenuItem(value: 'low', child: Text('낮음')),
+                        DropdownMenuItem(value: 'normal', child: Text('보통')),
+                        DropdownMenuItem(value: 'high', child: Text('높음')),
+                      ],
+                      onChanged: (value) => setState(() => _selectedUrgency = value!),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // 4. 필요일 * | 최대 예산 (Row)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '필요일 *',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _neededDateController,
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        hintText: '필요일을 선택해주세요',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        prefixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (date != null) {
+                          _neededDateController.text = date.toString().split(' ')[0];
+                        }
+                      },
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return '필요일을 선택해주세요';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '최대 예산 (선택)',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _priceRangeController,
+                      decoration: InputDecoration(
+                        hintText: '예: 50,000원',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // 5. 희망 지역
+          Text(
+            '희망 지역',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _locationController,
+            decoration: InputDecoration(
+              hintText: '거래 희망 지역을 입력하세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+          ),
+          SizedBox(height: 24.h),
+
+          // 6. 필요 이유
+          Text(
+            '필요 이유',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _reasonController,
+            decoration: InputDecoration(
+              hintText: '물품이 필요한 이유를 간단히 설명해주세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            maxLines: 4,
+          ),
+          SizedBox(height: 24.h),
+
+          // 7. 상세 설명
+          Text(
+            '상세 설명',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _descriptionController,
+            decoration: InputDecoration(
+              hintText: '원하는 물품의 상세 조건이나 상태를 설명해주세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            maxLines: 4,
+          ),
+          SizedBox(height: 24.h),
+
+          // 8. 연락처 * | 이메일 (Row)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '연락처 *',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _contactController,
+                      decoration: InputDecoration(
+                        hintText: '010-1234-5678',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return '연락처를 입력해주세요';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '이메일 (선택)',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        hintText: 'example@email.com',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 32.h),
+
+          // 물품 요청 안내
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: NewAppColor.primary100,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, color: NewAppColor.primary600, size: 20.sp),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '물품 요청 안내',
+                      style: FigmaTextStyles().subtitle2.copyWith(
+                        color: NewAppColor.primary700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                _buildInfoItem('• 구체적인 물품명과 조건을 명시하면 더 좋은 응답을 받을 수 있습니다.'),
+                SizedBox(height: 4.h),
+                _buildInfoItem('• 필요일을 정확히 입력하여 적절한 시점에 연락받으세요.'),
+                SizedBox(height: 4.h),
+                _buildInfoItem('• 예산 범위를 제시하면 적절한 거래가 이루어질 수 있습니다.'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  bool _shouldShowLocation() {
-    return widget.type != CommunityListType.myPosts;
+  /// 안내 항목
+  Widget _buildInfoItem(String text) {
+    return Text(
+      text,
+      style: FigmaTextStyles().caption1.copyWith(
+        color: NewAppColor.primary700,
+        height: 1.4,
+      ),
+    );
   }
 
+  /// 사역자모집 필드 (웹 기준)
+  Widget _buildJobPostingFields() {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ===== 섹션 1: 모집 정보 =====
+          Text(
+            '모집 정보',
+            style: FigmaTextStyles().headline4.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 24.h),
+
+          // 1. 모집 제목 *
+          Text(
+            '모집 제목 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              hintText: '예: 청년부 담당 전도사 모집',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '모집 제목을 입력해주세요';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 24.h),
+
+          // 2. 직책 * | 고용 형태 (Row)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '직책 *',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        hintText: '직책 선택',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      value: _selectedCategory,
+                      items: const [
+                        DropdownMenuItem(value: 'pastor', child: Text('목사')),
+                        DropdownMenuItem(value: 'minister', child: Text('전도사')),
+                        DropdownMenuItem(value: 'worship', child: Text('찬양사역자')),
+                        DropdownMenuItem(value: 'admin', child: Text('행정간사')),
+                        DropdownMenuItem(value: 'education', child: Text('교육간사')),
+                        DropdownMenuItem(value: 'other', child: Text('기타')),
+                      ],
+                      onChanged: (value) => setState(() => _selectedCategory = value),
+                      validator: (value) => value == null ? '직책을 선택해주세요' : null,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '고용 형태',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        hintText: '고용 형태',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      value: _selectedEmploymentType,
+                      items: const [
+                        DropdownMenuItem(value: 'full-time', child: Text('정규직')),
+                        DropdownMenuItem(value: 'contract', child: Text('계약직')),
+                        DropdownMenuItem(value: 'part-time', child: Text('시간제')),
+                        DropdownMenuItem(value: 'volunteer', child: Text('자원봉사')),
+                      ],
+                      onChanged: (value) => setState(() => _selectedEmploymentType = value),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // 3. 급여 조건 | 근무 지역 (Row with icons)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '급여 조건',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _salaryController,
+                      decoration: InputDecoration(
+                        hintText: '예: 월 300만원, 협의',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.only(left: 12.w, right: 8.w),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '₩',
+                                style: FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral400,
+                                  fontSize: 18.sp,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '근무 지역',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _locationController,
+                      decoration: InputDecoration(
+                        hintText: '예: 서울 강남구 (교회 주소 자동)',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        prefixIcon: Icon(Icons.location_on, color: NewAppColor.neutral400, size: 20.sp),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // 4. 지원 마감일 *
+          Text(
+            '지원 마감일 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _deadlineController,
+            readOnly: true,
+            decoration: InputDecoration(
+              hintText: '지원 마감일을 선택해주세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              prefixIcon: const Icon(Icons.calendar_today),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+              );
+              if (date != null) {
+                _deadlineController.text = date.toString().split(' ')[0];
+              }
+            },
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '지원 마감일을 선택해주세요';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 32.h),
+
+          // ===== 섹션 2: 상세 내용 =====
+          Text(
+            '상세 내용',
+            style: FigmaTextStyles().headline4.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 24.h),
+
+          // 5. 업무 내용
+          Text(
+            '업무 내용',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _descriptionController,
+            decoration: InputDecoration(
+              hintText: '담당하게 될 업무와 역할을 자세히 설명해주세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            maxLines: 6,
+          ),
+          SizedBox(height: 24.h),
+
+          // 6. 자격 요건
+          Text(
+            '자격 요건',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _qualificationsController,
+            decoration: InputDecoration(
+              hintText: '예: 신학대 졸업, 목사 안수, 청년 사역 경험',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            maxLines: 4,
+          ),
+          SizedBox(height: 24.h),
+
+          // 7. 우대 사항
+          Text(
+            '우대 사항',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _preferredQualificationsController,
+            decoration: InputDecoration(
+              hintText: '예: 청년 사역 경험, 찬양 가능',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            maxLines: 4,
+          ),
+          SizedBox(height: 24.h),
+
+          // 8. 복리후생
+          Text(
+            '복리후생',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _benefitsController,
+            decoration: InputDecoration(
+              hintText: '예: 4대보험, 연차, 숙소 제공',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            ),
+            style: FigmaTextStyles().body2,
+            maxLines: 4,
+          ),
+          SizedBox(height: 32.h),
+
+          // ===== 섹션 3: 연락처 정보 =====
+          Text(
+            '연락처 정보',
+            style: FigmaTextStyles().headline4.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 24.h),
+
+          // 9. 담당자 연락처 * | 이메일(선택) (Row)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '담당자 연락처 *',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _contactController,
+                      decoration: InputDecoration(
+                        hintText: '010-1234-5678',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return '연락처를 입력해주세요';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '이메일 (선택)',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        hintText: 'example@email.com',
+                        hintStyle: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.neutral200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: NewAppColor.primary600),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      style: FigmaTextStyles().body2,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 32.h),
+
+          // 사역자 모집 안내
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: NewAppColor.primary100,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.lightbulb_outline, color: NewAppColor.primary600, size: 20.sp),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '사역자 모집 안내',
+                      style: FigmaTextStyles().subtitle2.copyWith(
+                        color: NewAppColor.primary700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                _buildInfoItem('• 명확한 업무 내용과 자격 요건을 제시하면 적합한 지원자를 받을 수 있습니다.'),
+                SizedBox(height: 4.h),
+                _buildInfoItem('• 급여 조건과 복리후생을 구체적으로 명시해주세요.'),
+                SizedBox(height: 4.h),
+                _buildInfoItem('• 교회 소개를 통해 지원자가 교회 분위기를 파악할 수 있도록 해주세요.'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 행사팀모집 필드
+  Widget _buildMusicTeamRecruitFields() {
+    return Container(
+      margin: EdgeInsets.only(top: 8.h),
+      color: Colors.white,
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '모집 정보',
+            style: FigmaTextStyles().subtitle2.copyWith(
+                  color: NewAppColor.neutral900,
+                ),
+          ),
+          SizedBox(height: 16.h),
+          // 모집 유형
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(
+              labelText: '모집 유형',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            value: _selectedRecruitmentType,
+            items: const [
+              DropdownMenuItem(value: 'new_member', child: Text('정규 멤버')),
+              DropdownMenuItem(value: 'substitute', child: Text('임시 대타')),
+              DropdownMenuItem(value: 'project', child: Text('프로젝트')),
+              DropdownMenuItem(value: 'permanent', child: Text('상시 모집')),
+            ],
+            onChanged: (value) => setState(() => _selectedRecruitmentType = value!),
+          ),
+          SizedBox(height: 16.h),
+          // 예배 형태
+          TextFormField(
+            controller: _worshipTypeController,
+            decoration: InputDecoration(
+              labelText: '예배 형태 (선택)',
+              hintText: '예: 주일예배, 청년예배 등',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 필요 파트 (멀티 선택)
+          Text('필요 파트', style: FigmaTextStyles().body2),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: ['보컬', '건반', '기타', '베이스', '드럼', '관악기', '현악기']
+                .map((instrument) => FilterChip(
+                      label: Text(instrument),
+                      selected: _selectedInstruments.contains(instrument),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedInstruments.add(instrument);
+                          } else {
+                            _selectedInstruments.remove(instrument);
+                          }
+                        });
+                      },
+                    ))
+                .toList(),
+          ),
+          SizedBox(height: 16.h),
+          // 연습 일정
+          TextFormField(
+            controller: _scheduleController,
+            decoration: InputDecoration(
+              labelText: '연습 일정 (선택)',
+              hintText: '예: 매주 토요일 오후 2시',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 지원 자격
+          TextFormField(
+            controller: _requirementsController,
+            decoration: InputDecoration(
+              labelText: '지원 자격 (선택)',
+              hintText: '필요한 경력이나 실력을 입력하세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            maxLines: 3,
+          ),
+          SizedBox(height: 16.h),
+          // 보상/사례
+          TextFormField(
+            controller: _compensationController,
+            decoration: InputDecoration(
+              labelText: '보상/사례 (선택)',
+              hintText: '예: 회당 50,000원',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 활동 지역
+          TextFormField(
+            controller: _locationController,
+            decoration: InputDecoration(
+              labelText: '활동 지역',
+              hintText: '예: 서울 강남구',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '활동 지역을 입력해주세요';
+              }
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 행사팀지원 필드
+  Widget _buildMusicTeamSeekingFields() {
+    return Container(
+      margin: EdgeInsets.only(top: 8.h),
+      color: Colors.white,
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '지원 정보',
+            style: FigmaTextStyles().subtitle2.copyWith(
+                  color: NewAppColor.neutral900,
+                ),
+          ),
+          SizedBox(height: 16.h),
+          // 이름
+          TextFormField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              labelText: '이름',
+              hintText: '실명을 입력하세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '이름을 입력해주세요';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 16.h),
+          // 팀명 (선택)
+          TextFormField(
+            controller: _teamNameController,
+            decoration: InputDecoration(
+              labelText: '소속 팀명 (선택)',
+              hintText: '현재 소속된 팀이 있다면 입력하세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 전공 파트
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(
+              labelText: '전공 파트',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            value: _selectedInstrument,
+            items: const [
+              DropdownMenuItem(value: '보컬', child: Text('보컬')),
+              DropdownMenuItem(value: '건반', child: Text('건반')),
+              DropdownMenuItem(value: '기타', child: Text('기타')),
+              DropdownMenuItem(value: '베이스', child: Text('베이스')),
+              DropdownMenuItem(value: '드럼', child: Text('드럼')),
+              DropdownMenuItem(value: '관악기', child: Text('관악기')),
+              DropdownMenuItem(value: '현악기', child: Text('현악기')),
+            ],
+            onChanged: (value) => setState(() => _selectedInstrument = value),
+            validator: (value) => value == null ? '전공 파트를 선택해주세요' : null,
+          ),
+          SizedBox(height: 16.h),
+          // 호환 파트
+          Text('가능한 파트 (선택)', style: FigmaTextStyles().body2),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: ['보컬', '건반', '기타', '베이스', '드럼', '관악기', '현악기']
+                .map((instrument) => FilterChip(
+                      label: Text(instrument),
+                      selected: _compatibleInstruments.contains(instrument),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _compatibleInstruments.add(instrument);
+                          } else {
+                            _compatibleInstruments.remove(instrument);
+                          }
+                        });
+                      },
+                    ))
+                .toList(),
+          ),
+          SizedBox(height: 16.h),
+          // 경력
+          TextFormField(
+            controller: _experienceController,
+            decoration: InputDecoration(
+              labelText: '경력',
+              hintText: '예: 5년, 초보, 교회 찬양대 3년 등',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '경력을 입력해주세요';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 16.h),
+          // 포트폴리오 설명
+          TextFormField(
+            controller: _portfolioController,
+            decoration: InputDecoration(
+              labelText: '포트폴리오 설명',
+              hintText: '본인의 연주 경험이나 실력을 설명해주세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            maxLines: 4,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '포트폴리오 설명을 입력해주세요';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 16.h),
+          // 포트폴리오 파일 업로드
+          OutlinedButton.icon(
+            onPressed: () {
+              // TODO: 파일 업로드
+              AppToast.show(context, '파일 업로드 기능 준비 중', type: ToastType.info);
+            },
+            icon: const Icon(Icons.upload_file),
+            label: Text(_portfolioFileUrl == null ? '포트폴리오 파일 첨부 (선택)' : '파일 첨부됨'),
+          ),
+          SizedBox(height: 16.h),
+          // 선호 지역
+          Text('선호 지역', style: FigmaTextStyles().body2),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: ['서울', '경기', '인천', '대전', '대구', '부산', '광주', '전국']
+                .map((location) => FilterChip(
+                      label: Text(location),
+                      selected: _preferredLocations.contains(location),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _preferredLocations.add(location);
+                          } else {
+                            _preferredLocations.remove(location);
+                          }
+                        });
+                      },
+                    ))
+                .toList(),
+          ),
+          SizedBox(height: 16.h),
+          // 가능한 요일
+          Text('가능한 요일', style: FigmaTextStyles().body2),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: ['월', '화', '수', '목', '금', '토', '일']
+                .map((day) => FilterChip(
+                      label: Text(day),
+                      selected: _availableDays.contains(day),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _availableDays.add(day);
+                          } else {
+                            _availableDays.remove(day);
+                          }
+                        });
+                      },
+                    ))
+                .toList(),
+          ),
+          SizedBox(height: 16.h),
+          // 가능한 시간대
+          TextFormField(
+            controller: _availableTimeController,
+            decoration: InputDecoration(
+              labelText: '가능한 시간대 (선택)',
+              hintText: '예: 주중 저녁, 주말 오후 등',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 자기소개
+          TextFormField(
+            controller: _introductionController,
+            decoration: InputDecoration(
+              labelText: '자기소개 (선택)',
+              hintText: '간단한 자기소개를 입력하세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            maxLines: 3,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 교회소식 필드
+  Widget _buildChurchNewsFields() {
+    return Container(
+      margin: EdgeInsets.only(top: 8.h),
+      color: Colors.white,
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '행사 정보',
+            style: FigmaTextStyles().subtitle2.copyWith(
+                  color: NewAppColor.neutral900,
+                ),
+          ),
+          SizedBox(height: 16.h),
+          // 카테고리
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(
+              labelText: '카테고리',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            value: _selectedNewsCategory,
+            items: const [
+              DropdownMenuItem(value: 'worship', child: Text('예배')),
+              DropdownMenuItem(value: 'event', child: Text('행사')),
+              DropdownMenuItem(value: 'retreat', child: Text('수련회')),
+              DropdownMenuItem(value: 'mission', child: Text('선교')),
+              DropdownMenuItem(value: 'education', child: Text('교육')),
+              DropdownMenuItem(value: 'volunteer', child: Text('봉사')),
+              DropdownMenuItem(value: 'other', child: Text('기타')),
+            ],
+            onChanged: (value) => setState(() => _selectedNewsCategory = value),
+            validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
+          ),
+          SizedBox(height: 16.h),
+          // 중요도
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(
+              labelText: '중요도',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            value: _selectedPriority,
+            items: const [
+              DropdownMenuItem(value: 'urgent', child: Text('긴급')),
+              DropdownMenuItem(value: 'important', child: Text('중요')),
+              DropdownMenuItem(value: 'normal', child: Text('일반')),
+            ],
+            onChanged: (value) => setState(() => _selectedPriority = value!),
+          ),
+          SizedBox(height: 16.h),
+          // 행사 날짜
+          TextFormField(
+            controller: _eventDateController,
+            decoration: InputDecoration(
+              labelText: '행사 날짜 (선택)',
+              hintText: '예: 2024-10-15',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+              );
+              if (date != null) {
+                _eventDateController.text = date.toString().split(' ')[0];
+              }
+            },
+          ),
+          SizedBox(height: 16.h),
+          // 행사 시간
+          TextFormField(
+            controller: _eventTimeController,
+            decoration: InputDecoration(
+              labelText: '행사 시간 (선택)',
+              hintText: '예: 14:00',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 장소
+          TextFormField(
+            controller: _locationController,
+            decoration: InputDecoration(
+              labelText: '장소 (선택)',
+              hintText: '행사 장소를 입력하세요',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 주최
+          TextFormField(
+            controller: _organizerController,
+            decoration: InputDecoration(
+              labelText: '주최 (선택)',
+              hintText: '주최 부서나 단체',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 대상
+          TextFormField(
+            controller: _targetAudienceController,
+            decoration: InputDecoration(
+              labelText: '대상 (선택)',
+              hintText: '예: 청년부, 전교인 등',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 참가비
+          TextFormField(
+            controller: _participationFeeController,
+            decoration: InputDecoration(
+              labelText: '참가비 (선택)',
+              hintText: '예: 무료, 10,000원 등',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // 문의 담당자
+          TextFormField(
+            controller: _contactPersonController,
+            decoration: InputDecoration(
+              labelText: '문의 담당자 (선택)',
+              hintText: '담당자 이름',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 이미지 선택
   Future<void> _pickImages() async {
-    if (_selectedImages.length >= 5) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('최대 5장까지 선택할 수 있습니다')),
-      );
-      return;
-    }
-
     try {
-      final ImagePicker picker = ImagePicker();
-      final List<XFile> images = await picker.pickMultiImage();
-
+      final List<XFile> images = await _imagePicker.pickMultiImage();
       if (images.isNotEmpty) {
         setState(() {
-          final remaining = 5 - _selectedImages.length;
-          _selectedImages.addAll(images.take(remaining));
+          // 최대 5장까지만 추가
+          final remainingSlots = 5 - _selectedImages.length;
+          _selectedImages.addAll(images.take(remainingSlots));
         });
       }
     } catch (e) {
-      print('❌ COMMUNITY_CREATE: 이미지 선택 실패 - $e');
+      if (mounted) {
+        AppToast.show(
+          context,
+          '이미지 선택 실패: $e',
+          type: ToastType.error,
+        );
+      }
     }
   }
 
-  void _removeImage(int index) {
-    setState(() {
-      _selectedImages.removeAt(index);
-    });
-  }
-
+  /// 제출
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -680,101 +2463,53 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: 이미지 업로드 처리
+      // 1. 이미지 업로드
+      List<String> imageUrls = [];
+      if (_selectedImages.isNotEmpty) {
+        imageUrls = await _uploadImages();
+      }
 
-      // 타입별로 적절한 모델 생성 및 저장
+      // 2. 게시글 작성
+      bool success = false;
       switch (widget.type) {
         case CommunityListType.freeSharing:
         case CommunityListType.itemSale:
-          final sharingItem = SharingItem(
-            id: 0,
-            title: _titleController.text.trim(),
-            description: _descriptionController.text.trim(),
-            status: _selectedStatus,
-            authorId: 0, // 서비스에서 자동 설정
-            category: 'general',
-            condition: '보통', // 기본값
-            quantity: 1,
-            location: _locationController.text.trim(),
-            contactPhone: _contactPhoneController.text.trim(),
-            contactEmail: _contactEmailController.text.trim().isEmpty
-                ? null
-                : _contactEmailController.text.trim(),
-            isFree: _isFree,
-            price: _isFree
-                ? null
-                : int.tryParse(_priceController.text.replaceAll(',', '')),
-            images: [], // TODO: 업로드된 이미지 URL
-            createdAt: DateTime.now(),
-          );
-
-          final response =
-              await _communityService.createSharingItem(sharingItem);
-
-          if (mounted) {
-            if (response.success) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(response.message)),
-              );
-              Navigator.pop(context, true); // 목록 새로고침 트리거
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(response.message)),
-              );
-            }
-          }
+          success = await _submitSharing(imageUrls);
           break;
-
         case CommunityListType.itemRequest:
-          final requestItem = RequestItem(
-            id: 0,
-            title: _titleController.text.trim(),
-            description: _descriptionController.text.trim(),
-            status: _selectedStatus,
-            authorId: 0,
-            category: 'general',
-            location: _locationController.text.trim(),
-            contactPhone: _contactPhoneController.text.trim(),
-            contactEmail: _contactEmailController.text.trim().isEmpty
-                ? null
-                : _contactEmailController.text.trim(),
-            urgency: 'normal',
-            priceRange: _priceRangeController.text.trim().isEmpty
-                ? null
-                : _priceRangeController.text.trim(),
-            quantity: null,
-            createdAt: DateTime.now(),
-          );
-
-          final response =
-              await _communityService.createRequestItem(requestItem);
-
-          if (mounted) {
-            if (response.success) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(response.message)),
-              );
-              Navigator.pop(context, true);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(response.message)),
-              );
-            }
-          }
+          success = await _submitRequest(imageUrls);
           break;
-
+        case CommunityListType.jobPosting:
+          success = await _submitJobPosting();
+          break;
+        case CommunityListType.musicTeamRecruit:
+          success = await _submitMusicTeamRecruit();
+          break;
+        case CommunityListType.musicTeamSeeking:
+          success = await _submitMusicTeamSeeking();
+          break;
+        case CommunityListType.churchNews:
+          success = await _submitChurchNews(imageUrls);
+          break;
         default:
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('아직 지원하지 않는 기능입니다')),
-            );
-          }
+          success = false;
+      }
+
+      if (mounted) {
+        if (success) {
+          AppToast.show(context, '게시글이 등록되었습니다', type: ToastType.success);
+          Navigator.pop(context, true); // 성공 시 true 반환
+        } else {
+          AppToast.show(context, '게시글 등록에 실패했습니다', type: ToastType.error);
+        }
       }
     } catch (e) {
-      print('❌ COMMUNITY_CREATE: 게시글 작성 실패 - $e');
+      print('❌ 게시글 작성 실패: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('게시글 작성에 실패했습니다: $e')),
+        AppToast.show(
+          context,
+          '게시글 등록 중 오류가 발생했습니다: $e',
+          type: ToastType.error,
         );
       }
     } finally {
@@ -782,5 +2517,143 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  /// 이미지 업로드 (Supabase Storage)
+  Future<List<String>> _uploadImages() async {
+    // TODO: Supabase Storage에 이미지 업로드 구현
+    // docs/writing/mobile-api-free-sharing.md 참고
+    print('📸 이미지 업로드 시작: ${_selectedImages.length}장');
+
+    // 임시로 빈 배열 반환
+    AppToast.show(context, '이미지 업로드 기능 준비 중', type: ToastType.info);
+    return [];
+  }
+
+  /// 무료나눔/물품판매 제출
+  Future<bool> _submitSharing(List<String> imageUrls) async {
+    final isFree = widget.type == CommunityListType.freeSharing;
+
+    final response = await _communityService.createSharingItem(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      category: _selectedCategory!,
+      condition: _selectedCondition!,
+      quantity: _quantity,
+      location: _locationController.text.trim(),
+      images: imageUrls,
+      isFree: isFree,
+      price: isFree ? null : int.tryParse(_priceController.text),
+      deliveryMethod: _selectedDeliveryMethod,
+      purchaseDate: _purchaseDateController.text.trim().isEmpty
+          ? null
+          : _purchaseDateController.text.trim(),
+    );
+
+    return response.success;
+  }
+
+  /// 물품요청 제출
+  Future<bool> _submitRequest(List<String> imageUrls) async {
+    final response = await _communityService.createRequestItem(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      category: _selectedCategory ?? 'other',
+      requestedItem: _requestedItemController.text.trim(),
+      quantity: _quantity,
+      reason: _reasonController.text.trim(),
+      neededDate: _neededDateController.text.trim().isEmpty
+          ? null
+          : _neededDateController.text.trim(),
+      location: _locationController.text.trim(),
+      priceRange: _priceRangeController.text.trim(),
+      urgency: _selectedUrgency,
+      images: imageUrls,
+    );
+
+    return response.success;
+  }
+
+  /// 사역자모집 제출
+  Future<bool> _submitJobPosting() async {
+    final response = await _communityService.createJobPost(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      company: _companyController.text.trim(),
+      churchIntro: _churchIntroController.text.trim(),
+      position: _positionController.text.trim(),
+      jobType: _jobTypeController.text.trim(),
+      employmentType: _selectedEmploymentType ?? 'full-time',
+      salary: _salaryController.text.trim(),
+      qualifications: _qualificationsController.text.trim(),
+      location: _locationController.text.trim(),
+      deadline: _deadlineController.text.trim().isEmpty
+          ? null
+          : _deadlineController.text.trim(),
+    );
+
+    return response.success;
+  }
+
+  /// 행사팀모집 제출
+  Future<bool> _submitMusicTeamRecruit() async {
+    final response = await _communityService.createMusicTeamRecruitment(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      recruitmentType: _selectedRecruitmentType,
+      worshipType: _worshipTypeController.text.trim(),
+      instrumentsNeeded: _selectedInstruments,
+      schedule: _scheduleController.text.trim(),
+      location: _locationController.text.trim(),
+      requirements: _requirementsController.text.trim(),
+      compensation: _compensationController.text.trim(),
+    );
+
+    return response.success;
+  }
+
+  /// 행사팀지원 제출
+  Future<bool> _submitMusicTeamSeeking() async {
+    final response = await _communityService.createMusicTeamSeeker(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      name: _nameController.text.trim(),
+      teamName: _teamNameController.text.trim(),
+      instrument: _selectedInstrument!,
+      instruments: _compatibleInstruments,
+      experience: _experienceController.text.trim(),
+      portfolio: _portfolioController.text.trim(),
+      portfolioFile: _portfolioFileUrl,
+      preferredLocation: _preferredLocations,
+      availableDays: _availableDays,
+      availableTime: _availableTimeController.text.trim(),
+      introduction: _introductionController.text.trim(),
+    );
+
+    return response.success;
+  }
+
+  /// 교회소식 제출
+  Future<bool> _submitChurchNews(List<String> imageUrls) async {
+    final response = await _communityService.createChurchNews(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      category: _selectedNewsCategory!,
+      priority: _selectedPriority,
+      eventDate: _eventDateController.text.trim().isEmpty
+          ? null
+          : _eventDateController.text.trim(),
+      eventTime: _eventTimeController.text.trim().isEmpty
+          ? null
+          : _eventTimeController.text.trim(),
+      location: _locationController.text.trim(),
+      organizer: _organizerController.text.trim(),
+      targetAudience: _targetAudienceController.text.trim(),
+      participationFee: _participationFeeController.text.trim(),
+      contactPerson: _contactPersonController.text.trim(),
+      images: imageUrls,
+    );
+
+    return response.success;
   }
 }

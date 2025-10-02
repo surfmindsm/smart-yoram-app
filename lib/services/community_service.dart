@@ -83,7 +83,19 @@ class CommunityService {
   }
 
   /// 무료 나눔/물품 판매 작성
-  Future<ApiResponse<SharingItem>> createSharingItem(SharingItem item) async {
+  Future<ApiResponse<SharingItem>> createSharingItem({
+    required String title,
+    required String description,
+    required String category,
+    required String condition,
+    required int quantity,
+    required String location,
+    required List<String> images,
+    required bool isFree,
+    int? price,
+    String? deliveryMethod,
+    String? purchaseDate,
+  }) async {
     try {
       final userResponse = await _authService.getCurrentUser();
       final currentUser = userResponse.data;
@@ -96,17 +108,33 @@ class CommunityService {
         );
       }
 
-      final data = item.toJson();
-      data['church_id'] = currentUser.churchId;
-      data['author_id'] = currentUser.id;
-      // author_name은 DB 트리거나 뷰에서 자동으로 채워짐
-      data['created_at'] = DateTime.now().toIso8601String();
+      print('📝 COMMUNITY_SERVICE: 나눔/판매 작성 - $title');
+
+      final data = {
+        'title': title,
+        'description': description,
+        'category': category,
+        'condition': condition,
+        'quantity': quantity,
+        'location': location,
+        'images': images,
+        'is_free': isFree,
+        'price': price,
+        'delivery_method': deliveryMethod,
+        'purchase_date': purchaseDate,
+        'church_id': currentUser.churchId,
+        'author_id': currentUser.id,
+        'status': 'active',
+        'created_at': DateTime.now().toIso8601String(),
+      };
 
       final response = await _supabaseService.client
           .from('community_sharing')
           .insert(data)
           .select()
           .single();
+
+      print('✅ COMMUNITY_SERVICE: 나눔/판매 작성 성공');
 
       return ApiResponse(
         success: true,
@@ -188,7 +216,19 @@ class CommunityService {
   }
 
   /// 물품 요청 작성
-  Future<ApiResponse<RequestItem>> createRequestItem(RequestItem item) async {
+  Future<ApiResponse<RequestItem>> createRequestItem({
+    required String title,
+    required String description,
+    required String category,
+    required String requestedItem,
+    required int quantity,
+    required String reason,
+    String? neededDate,
+    required String location,
+    required String priceRange,
+    required String urgency,
+    required List<String> images,
+  }) async {
     try {
       final userResponse = await _authService.getCurrentUser();
       final currentUser = userResponse.data;
@@ -201,17 +241,33 @@ class CommunityService {
         );
       }
 
-      final data = item.toJson();
-      data['church_id'] = currentUser.churchId;
-      data['author_id'] = currentUser.id;
-      // author_name은 DB 트리거나 뷰에서 자동으로 채워짐
-      data['created_at'] = DateTime.now().toIso8601String();
+      print('📝 COMMUNITY_SERVICE: 물품 요청 작성 - $title');
+
+      final data = {
+        'title': title,
+        'description': description,
+        'category': category,
+        'requested_item': requestedItem,
+        'quantity': quantity,
+        'reason': reason,
+        'needed_date': neededDate,
+        'location': location,
+        'price_range': priceRange,
+        'urgency': urgency,
+        'images': images,
+        'church_id': currentUser.churchId,
+        'author_id': currentUser.id,
+        'status': 'active',
+        'created_at': DateTime.now().toIso8601String(),
+      };
 
       final response = await _supabaseService.client
           .from('community_requests')
           .insert(data)
           .select()
           .single();
+
+      print('✅ COMMUNITY_SERVICE: 물품 요청 작성 성공');
 
       return ApiResponse(
         success: true,
@@ -591,6 +647,288 @@ class CommunityService {
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 행사 소식 조회 실패 - $e');
       return null;
+    }
+  }
+
+  // ==========================================================================
+  // CREATE 메서드들 (글쓰기)
+  // ==========================================================================
+
+  /// 사역자 모집 글 작성
+  Future<ApiResponse<JobPost>> createJobPost({
+    required String title,
+    required String description,
+    required String company,
+    required String churchIntro,
+    required String position,
+    required String jobType,
+    required String employmentType,
+    required String salary,
+    required String qualifications,
+    required String location,
+    String? deadline,
+  }) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      print('📝 COMMUNITY_SERVICE: 사역자 모집 작성 - $title');
+
+      final data = {
+        'title': title,
+        'description': description,
+        'company': company,
+        'church_intro': churchIntro,
+        'position': position,
+        'job_type': jobType,
+        'employment_type': employmentType,
+        'salary': salary,
+        'qualifications': qualifications,
+        'location': location,
+        'deadline': deadline,
+        'church_id': currentUser.churchId,
+        'author_id': currentUser.id,
+        'status': 'active',
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      final response = await _supabaseService.client
+          .from('job_posts')
+          .insert(data)
+          .select()
+          .single();
+
+      print('✅ COMMUNITY_SERVICE: 사역자 모집 작성 성공');
+
+      return ApiResponse(
+        success: true,
+        message: '등록되었습니다',
+        data: JobPost.fromJson(response),
+      );
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 사역자 모집 작성 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '등록에 실패했습니다: $e',
+        data: null,
+      );
+    }
+  }
+
+  /// 행사팀 모집 글 작성
+  Future<ApiResponse<MusicTeamRecruitment>> createMusicTeamRecruitment({
+    required String title,
+    required String description,
+    required String recruitmentType,
+    required String worshipType,
+    required List<String> instrumentsNeeded,
+    required String schedule,
+    required String location,
+    required String requirements,
+    required String compensation,
+  }) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      print('📝 COMMUNITY_SERVICE: 행사팀 모집 작성 - $title');
+
+      final data = {
+        'title': title,
+        'description': description,
+        'recruitment_type': recruitmentType,
+        'worship_type': worshipType,
+        'instruments_needed': instrumentsNeeded,
+        'schedule': schedule,
+        'location': location,
+        'requirements': requirements,
+        'compensation': compensation,
+        'church_id': currentUser.churchId,
+        'author_id': currentUser.id,
+        'status': 'active',
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      final response = await _supabaseService.client
+          .from('community_music_teams')
+          .insert(data)
+          .select()
+          .single();
+
+      print('✅ COMMUNITY_SERVICE: 행사팀 모집 작성 성공');
+
+      return ApiResponse(
+        success: true,
+        message: '등록되었습니다',
+        data: MusicTeamRecruitment.fromJson(response),
+      );
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 행사팀 모집 작성 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '등록에 실패했습니다: $e',
+        data: null,
+      );
+    }
+  }
+
+  /// 행사팀 지원 글 작성
+  Future<ApiResponse<MusicTeamSeeker>> createMusicTeamSeeker({
+    required String title,
+    required String description,
+    required String name,
+    required String teamName,
+    required String instrument,
+    required List<String> instruments,
+    required String experience,
+    required String portfolio,
+    String? portfolioFile,
+    required List<String> preferredLocation,
+    required List<String> availableDays,
+    required String availableTime,
+    required String introduction,
+  }) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      print('📝 COMMUNITY_SERVICE: 행사팀 지원 작성 - $title');
+
+      final data = {
+        'title': title,
+        'description': description,
+        'name': name,
+        'team_name': teamName,
+        'instrument': instrument,
+        'instruments': instruments,
+        'experience': experience,
+        'portfolio': portfolio,
+        'portfolio_file': portfolioFile,
+        'preferred_location': preferredLocation,
+        'available_days': availableDays,
+        'available_time': availableTime,
+        'introduction': introduction,
+        'church_id': currentUser.churchId,
+        'author_id': currentUser.id,
+        'status': 'active',
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      final response = await _supabaseService.client
+          .from('music_team_seekers')
+          .insert(data)
+          .select()
+          .single();
+
+      print('✅ COMMUNITY_SERVICE: 행사팀 지원 작성 성공');
+
+      return ApiResponse(
+        success: true,
+        message: '등록되었습니다',
+        data: MusicTeamSeeker.fromJson(response),
+      );
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 행사팀 지원 작성 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '등록에 실패했습니다: $e',
+        data: null,
+      );
+    }
+  }
+
+  /// 교회 소식 글 작성
+  Future<ApiResponse<ChurchNews>> createChurchNews({
+    required String title,
+    required String description,
+    required String category,
+    required String priority,
+    String? eventDate,
+    String? eventTime,
+    required String location,
+    required String organizer,
+    required String targetAudience,
+    required String participationFee,
+    required String contactPerson,
+    required List<String> images,
+  }) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      print('📝 COMMUNITY_SERVICE: 교회 소식 작성 - $title');
+
+      final data = {
+        'title': title,
+        'description': description,
+        'category': category,
+        'priority': priority,
+        'event_date': eventDate,
+        'event_time': eventTime,
+        'location': location,
+        'organizer': organizer,
+        'target_audience': targetAudience,
+        'participation_fee': participationFee,
+        'contact_person': contactPerson,
+        'images': images,
+        'church_id': currentUser.churchId,
+        'author_id': currentUser.id,
+        'status': 'active',
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      final response = await _supabaseService.client
+          .from('church_news')
+          .insert(data)
+          .select()
+          .single();
+
+      print('✅ COMMUNITY_SERVICE: 교회 소식 작성 성공');
+
+      return ApiResponse(
+        success: true,
+        message: '등록되었습니다',
+        data: ChurchNews.fromJson(response),
+      );
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 교회 소식 작성 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '등록에 실패했습니다: $e',
+        data: null,
+      );
     }
   }
 }
