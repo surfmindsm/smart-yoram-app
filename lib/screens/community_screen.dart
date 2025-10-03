@@ -209,7 +209,38 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ];
     }
 
-    // 일반 사용자 및 교회 관리자
+    // member 권한: 기본 카테고리만 (사역자 모집, 행사팀 모집/지원 제외)
+    if (_currentUser!.isMember) {
+      return [
+        ...baseCategories,
+        CommunityCategory(
+          id: 'church-news',
+          title: '교회 소식',
+          subtitle: '교회 행사 및 소식',
+          icon: Icons.event_outlined,
+          color: Colors.purple,
+          backgroundColor: Colors.purple.shade50,
+        ),
+        CommunityCategory(
+          id: 'my-posts',
+          title: '내 게시글',
+          subtitle: '내가 작성한 글',
+          icon: Icons.edit_note_outlined,
+          color: NewAppColor.neutral700,
+          backgroundColor: NewAppColor.neutral200,
+        ),
+        CommunityCategory(
+          id: 'my-favorites',
+          title: '찜한 글',
+          subtitle: '내가 찜한 글',
+          icon: Icons.favorite_border,
+          color: Colors.pink,
+          backgroundColor: Colors.pink.shade50,
+        ),
+      ];
+    }
+
+    // 일반 사용자 및 교회 관리자 (member가 아닌 경우)
     return [
       ...baseCategories,
       CommunityCategory(
