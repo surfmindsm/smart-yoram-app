@@ -198,7 +198,7 @@ class SharingItem extends CommunityBasePost {
       images: json['images'] != null ? List<String>.from(json['images']) : [],
       location: json['location'] ?? '',
       churchLocation: json['church_location'],
-      contactPhone: json['contactPhone'] ?? json['contact_phone'] ?? '',
+      contactPhone: json['contactPhone'] ?? json['contact_phone'] ?? json['contact_info'] ?? '',
       contactEmail: json['contactEmail'] ?? json['contact_email'],
       isFree: json['is_free'] ?? true,
       price: json['price'] != null

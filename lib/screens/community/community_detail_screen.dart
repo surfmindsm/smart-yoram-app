@@ -7,6 +7,7 @@ import 'package:smart_yoram_app/services/community_service.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/wishlist_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// 커뮤니티 게시글 상세 화면 (공통)
 /// 모든 카테고리의 게시글을 표시할 수 있는 공통 화면
@@ -36,6 +37,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   User? _currentUser;
   bool _isFavorited = false;
   bool _isFavoriteLoading = false;
+  int _currentImageIndex = 0;
 
   @override
   void initState() {
@@ -105,6 +107,71 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     });
   }
 
+  Future<void> _toggleFavorite() async {
+    if (_isFavoriteLoading) return;
+
+    final postType = _getPostType();
+    if (postType == null || _post == null) return;
+
+    setState(() => _isFavoriteLoading = true);
+
+    try {
+      if (_isFavorited) {
+        // 찜하기 해제
+        await _wishlistService.removeFromWishlist(
+          postType: postType,
+          postId: widget.postId,
+        );
+      } else {
+        // 찜하기 추가
+        String title = '';
+        String? description = '';
+
+        // 타입별 제목과 설명 추출
+        if (_post is SharingItem) {
+          final post = _post as SharingItem;
+          title = post.title;
+          description = post.description;
+        } else if (_post is RequestItem) {
+          final post = _post as RequestItem;
+          title = post.title;
+          description = post.description;
+        } else if (_post is JobPost) {
+          final post = _post as JobPost;
+          title = post.title;
+          description = post.description;
+        } else if (_post is MusicTeamRecruitment) {
+          final post = _post as MusicTeamRecruitment;
+          title = post.title;
+          description = post.description;
+        } else if (_post is MusicTeamSeeker) {
+          final post = _post as MusicTeamSeeker;
+          title = post.title;
+          description = post.introduction;
+        } else if (_post is ChurchNews) {
+          final post = _post as ChurchNews;
+          title = post.title;
+          description = post.content ?? post.description;
+        }
+
+        await _wishlistService.addToWishlist(
+          postType: postType,
+          postId: widget.postId,
+          postTitle: title,
+          postDescription: description ?? '',
+        );
+      }
+
+      setState(() {
+        _isFavorited = !_isFavorited;
+        _isFavoriteLoading = false;
+      });
+    } catch (e) {
+      print('❌ COMMUNITY_DETAIL: 찜하기 토글 실패 - $e');
+      setState(() => _isFavoriteLoading = false);
+    }
+  }
+
   String? _getPostType() {
     switch (widget.tableName) {
       case 'community_sharing':
@@ -157,6 +224,28 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
         actions: [
+          Container(
+            margin: EdgeInsets.all(8.r),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(
+                _isFavorited ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorited ? Colors.red : Colors.black,
+              ),
+              onPressed: _toggleFavorite,
+              padding: EdgeInsets.zero,
+            ),
+          ),
           Container(
             margin: EdgeInsets.all(8.r),
             decoration: BoxDecoration(
@@ -297,14 +386,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       churchLocation = post.location;
     }
 
-    return Column(
-      children: [
-        // 이미지 갤러리 (최상단)
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
                 if (images.isNotEmpty) ...[
                   Stack(
                     children: [
@@ -312,22 +397,30 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                         height: 400.h,
                         child: PageView.builder(
                           itemCount: images.length,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentImageIndex = index;
+                            });
+                          },
                           itemBuilder: (context, index) {
-                            return Image.network(
-                              images[index],
-                              height: 400.h,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  height: 400.h,
-                                  color: NewAppColor.neutral100,
-                                  child: const Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.grey,
-                                  ),
-                                );
-                              },
+                            return GestureDetector(
+                              onTap: () => _showFullScreenImage(images, index),
+                              child: Image.network(
+                                images[index],
+                                height: 400.h,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    height: 400.h,
+                                    color: NewAppColor.neutral100,
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
+                              ),
                             );
                           },
                         ),
@@ -346,7 +439,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             borderRadius: BorderRadius.circular(20.r),
                           ),
                           child: Text(
-                            '1 / ${images.length}',
+                            '${_currentImageIndex + 1} / ${images.length}',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 14.sp,
@@ -459,86 +552,340 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     ],
                   ),
                 ),
-              ],
-            ),
+                // 연락처 정보 (물품 나눔/판매 게시글만)
+                if (_post is SharingItem) ...[
+                  Container(
+                    height: 8.h,
+                    color: NewAppColor.neutral100,
+                  ),
+                  Container(
+                    color: Colors.white,
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16.r),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '연락처 정보',
+                          style: TextStyle(
+                            color: NewAppColor.neutral900,
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        // 전화번호
+                        if ((_post as SharingItem).contactPhone.isNotEmpty)
+                          _buildContactItem(
+                            icon: Icons.phone_outlined,
+                            label: '전화번호',
+                            value: (_post as SharingItem).contactPhone,
+                            onTap: () => _showContactDialog((_post as SharingItem).contactPhone),
+                          ),
+                        // 이메일
+                        if ((_post as SharingItem).contactEmail != null &&
+                            (_post as SharingItem).contactEmail!.isNotEmpty) ...[
+                          SizedBox(height: 12.h),
+                          _buildContactItem(
+                            icon: Icons.email_outlined,
+                            label: '이메일',
+                            value: (_post as SharingItem).contactEmail!,
+                            onTap: () {
+                              // TODO: 이메일 보내기 기능
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildContactItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        padding: EdgeInsets.all(16.r),
+        decoration: BoxDecoration(
+          color: NewAppColor.neutral100,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: NewAppColor.neutral200,
+            width: 1,
           ),
         ),
-        // 하단 입력 바
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(
-                color: NewAppColor.neutral200,
-                width: 1,
+        child: Row(
+          children: [
+            Container(
+              width: 40.w,
+              height: 40.w,
+              decoration: BoxDecoration(
+                color: NewAppColor.primary100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: NewAppColor.primary600,
+                size: 20.sp,
               ),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: NewAppColor.neutral600,
+                      fontSize: 12.sp,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      color: NewAppColor.neutral900,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          child: SafeArea(
-            child: Row(
+            ),
+            if (onTap != null)
+              Icon(
+                Icons.chevron_right,
+                color: NewAppColor.neutral400,
+                size: 24.sp,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreenImage(List<String> images, int initialIndex) {
+    int currentIndex = initialIndex;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            backgroundColor: Colors.black,
+            appBar: AppBar(
+              backgroundColor: Colors.black,
+              leading: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+              elevation: 0,
+            ),
+            body: Stack(
               children: [
-                // 좋아요 아이콘
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.favorite_border,
-                    color: NewAppColor.neutral600,
-                    size: 24.sp,
+                // 이미지 뷰어
+                Center(
+                  child: PageView.builder(
+                    itemCount: images.length,
+                    controller: PageController(initialPage: initialIndex),
+                    onPageChanged: (index) {
+                      setState(() {
+                        currentIndex = index;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      return InteractiveViewer(
+                        panEnabled: true,
+                        minScale: 0.5,
+                        maxScale: 4.0,
+                        child: Image.network(
+                          images[index],
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.image_not_supported,
+                              color: Colors.white,
+                              size: 64,
+                            );
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ),
-                SizedBox(width: 8.w),
-                // 입력 필드
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                    decoration: BoxDecoration(
-                      color: NewAppColor.neutral100,
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Text(
-                      '안녕하세요. 관심 있어서 문의드려요.',
-                      style: TextStyle(
-                        color: NewAppColor.neutral500,
-                        fontSize: 14.sp,
-                        fontFamily: 'Pretendard Variable',
+                // 이미지 인디케이터 (하단)
+                Positioned(
+                  bottom: 40.h,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      images.length,
+                      (index) => Container(
+                        margin: EdgeInsets.symmetric(horizontal: 4.w),
+                        width: 8.w,
+                        height: 8.w,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: currentIndex == index
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.4),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(width: 8.w),
-                // 보내기 버튼
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                  decoration: BoxDecoration(
-                    color: NewAppColor.primary600,
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Text(
-                    '보내기',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Pretendard Variable',
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
+  void _showContactDialog(String phoneNumber) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 8.h),
+              Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral300,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Column(
+                  children: [
+                    Text(
+                      phoneNumber,
+                      style: TextStyle(
+                        color: NewAppColor.neutral900,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Pretendard Variable',
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    // 전화 걸기
+                    ListTile(
+                      leading: Container(
+                        width: 48.w,
+                        height: 48.w,
+                        decoration: BoxDecoration(
+                          color: NewAppColor.primary100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.phone,
+                          color: NewAppColor.primary600,
+                          size: 24.sp,
+                        ),
+                      ),
+                      title: Text(
+                        '전화 걸기',
+                        style: TextStyle(
+                          color: NewAppColor.neutral900,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Pretendard Variable',
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _makePhoneCall(phoneNumber);
+                      },
+                    ),
+                    // 메시지 보내기
+                    ListTile(
+                      leading: Container(
+                        width: 48.w,
+                        height: 48.w,
+                        decoration: BoxDecoration(
+                          color: NewAppColor.primary100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.message,
+                          color: NewAppColor.primary600,
+                          size: 24.sp,
+                        ),
+                      ),
+                      title: Text(
+                        '메시지 보내기',
+                        style: TextStyle(
+                          color: NewAppColor.neutral900,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Pretendard Variable',
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _sendMessage(phoneNumber);
+                      },
+                    ),
+                    SizedBox(height: 8.h),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _makePhoneCall(String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('전화를 걸 수 없습니다')),
+        );
+      }
+    }
+  }
+
+  void _sendMessage(String phoneNumber) async {
+    final Uri smsUri = Uri(scheme: 'sms', path: phoneNumber);
+    if (await canLaunchUrl(smsUri)) {
+      await launchUrl(smsUri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('메시지를 보낼 수 없습니다')),
+        );
+      }
+    }
+  }
 
   bool _canEdit() {
     if (_currentUser == null || _post == null) return false;
