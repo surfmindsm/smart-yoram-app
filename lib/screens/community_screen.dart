@@ -6,6 +6,7 @@ import 'package:smart_yoram_app/models/user.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_favorites_screen.dart';
+import 'package:smart_yoram_app/screens/settings_screen.dart';
 
 /// 커뮤니티 메인 화면
 /// 웹 명세서 기반 9개 카테고리 구조
@@ -21,6 +22,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   User? _currentUser;
   bool _isLoading = true;
+  String _selectedLocation = '신사동';
 
   @override
   void initState() {
@@ -87,45 +89,128 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
 
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-          '커뮤니티',
-          style: FigmaTextStyles().headline3.copyWith(
-                color: NewAppColor.neutral900,
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            // 지역 선택 드롭다운
+            InkWell(
+              onTap: _showLocationPicker,
+              child: Row(
+                children: [
+                  Text(
+                    _selectedLocation,
+                    style: TextStyle(
+                      color: NewAppColor.neutral900,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                  SizedBox(width: 4.w),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: NewAppColor.neutral900,
+                    size: 24.sp,
+                  ),
+                ],
               ),
+            ),
+          ],
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            color: NewAppColor.neutral200,
+        actions: [
+          // 햄버거 메뉴
+          IconButton(
+            icon: Icon(
+              Icons.menu,
+              color: NewAppColor.neutral900,
+              size: 28.sp,
+            ),
+            onPressed: () {},
           ),
-        ),
+          // 검색
+          IconButton(
+            icon: Icon(
+              Icons.search,
+              color: NewAppColor.neutral900,
+              size: 28.sp,
+            ),
+            onPressed: () {},
+          ),
+          // 알림
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.notifications_outlined,
+                  color: NewAppColor.neutral900,
+                  size: 28.sp,
+                ),
+                onPressed: () {},
+              ),
+              Positioned(
+                right: 8.w,
+                top: 8.h,
+                child: Container(
+                  width: 8.w,
+                  height: 8.h,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // community_admin인 경우 설정 버튼 표시
+          if (_currentUser!.isCommunityAdmin)
+            IconButton(
+              icon: Icon(
+                Icons.settings_outlined,
+                color: NewAppColor.neutral700,
+                size: 28.sp,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
-      body: _buildCategoryGrid(),
+      body: _buildCategoryList(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: 글쓰기 화면으로 이동
+        },
+        backgroundColor: NewAppColor.primary600,
+        child: Icon(Icons.add, color: Colors.white, size: 32.sp),
+      ),
     );
   }
 
-  /// 카테고리 그리드 빌드
-  Widget _buildCategoryGrid() {
-    // 웹 명세서 기반 9개 카테고리
+  /// 카테고리 리스트 빌드 (당근마켓 스타일)
+  Widget _buildCategoryList() {
     final categories = _getCategories();
 
-    return GridView.builder(
-      padding: EdgeInsets.all(16.r),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.0,
-        crossAxisSpacing: 12.w,
-        mainAxisSpacing: 12.h,
-      ),
+    return ListView.separated(
+      padding: EdgeInsets.symmetric(vertical: 8.h),
       itemCount: categories.length,
+      separatorBuilder: (context, index) => Divider(
+        height: 1,
+        thickness: 1,
+        indent: 72.w,
+        color: NewAppColor.neutral200,
+      ),
       itemBuilder: (context, index) {
         final category = categories[index];
-        return _CategoryCard(
+        return _CategoryListItem(
           category: category,
           onTap: () => _navigateToCategory(category),
         );
@@ -347,6 +432,56 @@ class _CommunityScreenState extends State<CommunityScreen> {
       );
     }
   }
+
+  /// 지역 선택 다이얼로그
+  void _showLocationPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+      ),
+      builder: (context) {
+        final locations = ['신사동', '역삼동', '논현동', '청담동', '압구정동'];
+
+        return Container(
+          padding: EdgeInsets.symmetric(vertical: 24.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '지역 선택',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Pretendard Variable',
+                ),
+              ),
+              SizedBox(height: 16.h),
+              ...locations.map((location) {
+                return ListTile(
+                  title: Text(
+                    location,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                  selected: _selectedLocation == location,
+                  selectedTileColor: NewAppColor.primary100,
+                  onTap: () {
+                    setState(() {
+                      _selectedLocation = location;
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// 커뮤니티 카테고리 모델
@@ -368,74 +503,73 @@ class CommunityCategory {
   });
 }
 
-/// 카테고리 카드 위젯
-class _CategoryCard extends StatelessWidget {
+/// 카테고리 리스트 아이템 (당근마켓 스타일)
+class _CategoryListItem extends StatelessWidget {
   final CommunityCategory category;
   final VoidCallback onTap;
 
-  const _CategoryCard({
+  const _CategoryListItem({
     required this.category,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16.r),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: NewAppColor.neutral200,
-              width: 1,
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        child: Row(
+          children: [
+            // 아이콘
+            Container(
+              width: 48.w,
+              height: 48.h,
+              decoration: BoxDecoration(
+                color: category.backgroundColor,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                category.icon,
+                size: 24.sp,
+                color: category.color,
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 아이콘
-              Container(
-                width: 56.w,
-                height: 56.h,
-                decoration: BoxDecoration(
-                  color: category.backgroundColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  category.icon,
-                  size: 28.sp,
-                  color: category.color,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              // 제목
-              Text(
-                category.title,
-                style: FigmaTextStyles().subtitle2.copyWith(
+            SizedBox(width: 16.w),
+            // 텍스트 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.title,
+                    style: TextStyle(
                       color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Pretendard Variable',
                     ),
-                textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    category.subtitle,
+                    style: TextStyle(
+                      color: NewAppColor.neutral600,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 4.h),
-              // 부제목
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                child: Text(
-                  category.subtitle,
-                  style: FigmaTextStyles().caption2.copyWith(
-                        color: NewAppColor.neutral500,
-                      ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+            ),
+            // 화살표
+            Icon(
+              Icons.chevron_right,
+              color: NewAppColor.neutral400,
+              size: 24.sp,
+            ),
+          ],
         ),
       ),
     );

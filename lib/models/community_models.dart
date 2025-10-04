@@ -122,6 +122,7 @@ class SharingItem extends CommunityBasePost {
   final int quantity;
   final List<String> images;
   final String location;
+  final String? churchLocation; // 교회 지역 (도시 + 구/동)
   final String contactPhone;
   final String? contactEmail;
   final bool isFree; // true: 무료나눔, false: 물품판매
@@ -148,6 +149,7 @@ class SharingItem extends CommunityBasePost {
     required this.quantity,
     this.images = const [],
     required this.location,
+    this.churchLocation,
     required this.contactPhone,
     this.contactEmail,
     this.isFree = true,
@@ -157,15 +159,30 @@ class SharingItem extends CommunityBasePost {
   });
 
   factory SharingItem.fromJson(Map<String, dynamic> json) {
+    // 조인된 author/church 데이터 파싱
+    String? authorName;
+    if (json['author'] != null && json['author'] is Map) {
+      authorName = json['author']['name'];
+    } else {
+      authorName = json['author_name'] ?? json['userName'];
+    }
+
+    String? churchName;
+    if (json['church'] != null && json['church'] is Map) {
+      churchName = json['church']['name'];
+    } else {
+      churchName = json['church_name'] ?? json['church'];
+    }
+
     return SharingItem(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
       description: json['description'],
       status: json['status'] ?? 'available',
       authorId: json['author_id'] ?? 0,
-      authorName: json['userName'] ?? json['author_name'],
+      authorName: authorName,
       churchId: json['church_id'],
-      churchName: json['church'],
+      churchName: churchName,
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
@@ -180,6 +197,7 @@ class SharingItem extends CommunityBasePost {
       quantity: json['quantity'] ?? 1,
       images: json['images'] != null ? List<String>.from(json['images']) : [],
       location: json['location'] ?? '',
+      churchLocation: json['church_location'],
       contactPhone: json['contactPhone'] ?? json['contact_phone'] ?? '',
       contactEmail: json['contactEmail'] ?? json['contact_email'],
       isFree: json['is_free'] ?? true,

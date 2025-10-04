@@ -50,13 +50,104 @@ class CommunityService {
       final response = await query;
       print('📋 COMMUNITY_SERVICE: 조회 결과 - ${(response as List).length}개');
 
-      if ((response as List).isNotEmpty) {
-        print('📋 COMMUNITY_SERVICE: 첫 번째 항목 - ${response[0]}');
+      final responseList = response as List;
+      if (responseList.isEmpty) return [];
+
+      print('📋 COMMUNITY_SERVICE: 첫 번째 항목 - ${responseList[0]}');
+
+      // 모든 author_id와 church_id 수집
+      final authorIds = responseList
+          .map((item) => item['author_id'] as int?)
+          .where((id) => id != null)
+          .toSet()
+          .toList();
+
+      final churchIds = responseList
+          .map((item) => item['church_id'] as int?)
+          .where((id) => id != null)
+          .toSet()
+          .toList();
+
+      print('📋 COMMUNITY_SERVICE: authorIds - $authorIds');
+      print('📋 COMMUNITY_SERVICE: churchIds - $churchIds');
+
+      // 한 번에 author 정보 조회 (users 테이블에서 full_name)
+      Map<int, String> authorNames = {};
+      if (authorIds.isNotEmpty) {
+        try {
+          print('📋 COMMUNITY_SERVICE: users 테이블 조회 시작 - ids: $authorIds');
+
+          final authorsResponse = await _supabaseService.client
+              .from('users')
+              .select('id, full_name')
+              .inFilter('id', authorIds);
+
+          print('📋 COMMUNITY_SERVICE: authorsResponse - $authorsResponse');
+
+          for (var author in authorsResponse as List) {
+            authorNames[author['id'] as int] = author['full_name'] as String;
+          }
+
+          print('📋 COMMUNITY_SERVICE: authorNames - $authorNames');
+        } catch (e, stackTrace) {
+          print('⚠️ COMMUNITY_SERVICE: authors 조회 실패 - $e');
+          print('⚠️ COMMUNITY_SERVICE: stackTrace - $stackTrace');
+        }
       }
 
-      return (response as List)
-          .map((item) => SharingItem.fromJson(item as Map<String, dynamic>))
-          .toList();
+      // 한 번에 church 정보 조회 (name, address)
+      Map<int, String> churchNames = {};
+      Map<int, String> churchLocations = {}; // 도시 + 구/동
+      if (churchIds.isNotEmpty) {
+        try {
+          final churchesResponse = await _supabaseService.client
+              .from('churches')
+              .select('id, name, address')
+              .inFilter('id', churchIds);
+
+          print('📋 COMMUNITY_SERVICE: churchesResponse - $churchesResponse');
+
+          for (var church in churchesResponse as List) {
+            churchNames[church['id'] as int] = church['name'] as String;
+
+            // 주소에서 도시 + 구/동만 추출
+            if (church['address'] != null) {
+              final location = _extractCityDistrict(church['address'] as String);
+              if (location != null) {
+                churchLocations[church['id'] as int] = location;
+              }
+            }
+          }
+
+          print('📋 COMMUNITY_SERVICE: churchNames - $churchNames');
+          print('📋 COMMUNITY_SERVICE: churchLocations - $churchLocations');
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: churches 조회 실패 - $e');
+        }
+      }
+
+      // 데이터 병합
+      final items = <SharingItem>[];
+      for (var item in responseList) {
+        final itemMap = item as Map<String, dynamic>;
+
+        // author_name 추가
+        if (itemMap['author_id'] != null) {
+          itemMap['author_name'] = authorNames[itemMap['author_id']];
+        }
+
+        // church_name, location 추가
+        if (itemMap['church_id'] != null) {
+          itemMap['church_name'] = churchNames[itemMap['church_id']];
+          itemMap['church_location'] = churchLocations[itemMap['church_id']];
+        }
+
+        print('📋 COMMUNITY_SERVICE: 병합된 항목 - author_name: ${itemMap['author_name']}, church_name: ${itemMap['church_name']}, location: ${itemMap['church_location']}');
+
+        items.add(SharingItem.fromJson(itemMap));
+      }
+
+      return items;
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 나눔/판매 목록 조회 실패 - $e');
       return [];
@@ -75,7 +166,45 @@ class CommunityService {
       // 조회수 증가
       await _incrementViewCount('community_sharing', id);
 
-      return SharingItem.fromJson(response as Map<String, dynamic>);
+      final itemMap = response as Map<String, dynamic>;
+
+      // author 정보 가져오기
+      if (itemMap['author_id'] != null) {
+        try {
+          final authorResponse = await _supabaseService.client
+              .from('users')
+              .select('full_name')
+              .eq('id', itemMap['author_id'])
+              .single();
+          itemMap['author_name'] = authorResponse['full_name'];
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
+        }
+      }
+
+      // church 정보 가져오기
+      if (itemMap['church_id'] != null) {
+        try {
+          final churchResponse = await _supabaseService.client
+              .from('churches')
+              .select('name, address')
+              .eq('id', itemMap['church_id'])
+              .single();
+          itemMap['church_name'] = churchResponse['name'];
+
+          // 주소에서 도시 + 구/동 추출
+          if (churchResponse['address'] != null) {
+            final location = _extractCityDistrict(churchResponse['address'] as String);
+            if (location != null) {
+              itemMap['church_location'] = location;
+            }
+          }
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
+        }
+      }
+
+      return SharingItem.fromJson(itemMap);
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 나눔/판매 상세 조회 실패 - $e');
       return null;
@@ -208,7 +337,45 @@ class CommunityService {
 
       await _incrementViewCount('community_requests', id);
 
-      return RequestItem.fromJson(response as Map<String, dynamic>);
+      final itemMap = response as Map<String, dynamic>;
+
+      // author 정보 가져오기
+      if (itemMap['author_id'] != null) {
+        try {
+          final authorResponse = await _supabaseService.client
+              .from('users')
+              .select('full_name')
+              .eq('id', itemMap['author_id'])
+              .single();
+          itemMap['author_name'] = authorResponse['full_name'];
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
+        }
+      }
+
+      // church 정보 가져오기
+      if (itemMap['church_id'] != null) {
+        try {
+          final churchResponse = await _supabaseService.client
+              .from('churches')
+              .select('name, address')
+              .eq('id', itemMap['church_id'])
+              .single();
+          itemMap['church_name'] = churchResponse['name'];
+
+          // 주소에서 도시 + 구/동 추출
+          if (churchResponse['address'] != null) {
+            final location = _extractCityDistrict(churchResponse['address'] as String);
+            if (location != null) {
+              itemMap['location'] = location;
+            }
+          }
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
+        }
+      }
+
+      return RequestItem.fromJson(itemMap);
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 물품 요청 상세 조회 실패 - $e');
       return null;
@@ -595,7 +762,45 @@ class CommunityService {
           .eq('id', id)
           .single();
 
-      return JobPost.fromJson(response);
+      final itemMap = response as Map<String, dynamic>;
+
+      // author 정보 가져오기
+      if (itemMap['author_id'] != null) {
+        try {
+          final authorResponse = await _supabaseService.client
+              .from('users')
+              .select('full_name')
+              .eq('id', itemMap['author_id'])
+              .single();
+          itemMap['author_name'] = authorResponse['full_name'];
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
+        }
+      }
+
+      // church 정보 가져오기
+      if (itemMap['church_id'] != null) {
+        try {
+          final churchResponse = await _supabaseService.client
+              .from('churches')
+              .select('name, address')
+              .eq('id', itemMap['church_id'])
+              .single();
+          itemMap['church_name'] = churchResponse['name'];
+
+          // 주소에서 도시 + 구/동 추출
+          if (churchResponse['address'] != null) {
+            final location = _extractCityDistrict(churchResponse['address'] as String);
+            if (location != null) {
+              itemMap['location'] = location;
+            }
+          }
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
+        }
+      }
+
+      return JobPost.fromJson(itemMap);
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 사역자 모집 조회 실패 - $e');
       return null;
@@ -611,7 +816,45 @@ class CommunityService {
           .eq('id', id)
           .single();
 
-      return MusicTeamRecruitment.fromJson(response);
+      final itemMap = response as Map<String, dynamic>;
+
+      // author 정보 가져오기
+      if (itemMap['author_id'] != null) {
+        try {
+          final authorResponse = await _supabaseService.client
+              .from('users')
+              .select('full_name')
+              .eq('id', itemMap['author_id'])
+              .single();
+          itemMap['author_name'] = authorResponse['full_name'];
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
+        }
+      }
+
+      // church 정보 가져오기
+      if (itemMap['church_id'] != null) {
+        try {
+          final churchResponse = await _supabaseService.client
+              .from('churches')
+              .select('name, address')
+              .eq('id', itemMap['church_id'])
+              .single();
+          itemMap['church_name'] = churchResponse['name'];
+
+          // 주소에서 도시 + 구/동 추출
+          if (churchResponse['address'] != null) {
+            final location = _extractCityDistrict(churchResponse['address'] as String);
+            if (location != null) {
+              itemMap['location'] = location;
+            }
+          }
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
+        }
+      }
+
+      return MusicTeamRecruitment.fromJson(itemMap);
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 행사팀 모집 조회 실패 - $e');
       return null;
@@ -627,7 +870,37 @@ class CommunityService {
           .eq('id', id)
           .single();
 
-      return MusicTeamSeeker.fromJson(response);
+      final itemMap = response as Map<String, dynamic>;
+
+      // author 정보 가져오기
+      if (itemMap['author_id'] != null) {
+        try {
+          final authorResponse = await _supabaseService.client
+              .from('users')
+              .select('full_name')
+              .eq('id', itemMap['author_id'])
+              .single();
+          itemMap['author_name'] = authorResponse['full_name'];
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
+        }
+      }
+
+      // church 정보 가져오기
+      if (itemMap['church_id'] != null) {
+        try {
+          final churchResponse = await _supabaseService.client
+              .from('churches')
+              .select('name, address')
+              .eq('id', itemMap['church_id'])
+              .single();
+          itemMap['church_name'] = churchResponse['name'];
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
+        }
+      }
+
+      return MusicTeamSeeker.fromJson(itemMap);
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 행사팀 지원 조회 실패 - $e');
       return null;
@@ -643,7 +916,45 @@ class CommunityService {
           .eq('id', id)
           .single();
 
-      return ChurchNews.fromJson(response);
+      final itemMap = response as Map<String, dynamic>;
+
+      // author 정보 가져오기
+      if (itemMap['author_id'] != null) {
+        try {
+          final authorResponse = await _supabaseService.client
+              .from('users')
+              .select('full_name')
+              .eq('id', itemMap['author_id'])
+              .single();
+          itemMap['author_name'] = authorResponse['full_name'];
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
+        }
+      }
+
+      // church 정보 가져오기
+      if (itemMap['church_id'] != null) {
+        try {
+          final churchResponse = await _supabaseService.client
+              .from('churches')
+              .select('name, address')
+              .eq('id', itemMap['church_id'])
+              .single();
+          itemMap['church_name'] = churchResponse['name'];
+
+          // 주소에서 도시 + 구/동 추출
+          if (churchResponse['address'] != null) {
+            final location = _extractCityDistrict(churchResponse['address'] as String);
+            if (location != null) {
+              itemMap['location'] = location;
+            }
+          }
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
+        }
+      }
+
+      return ChurchNews.fromJson(itemMap);
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 행사 소식 조회 실패 - $e');
       return null;
@@ -933,6 +1244,50 @@ class CommunityService {
         message: '등록에 실패했습니다: $e',
         data: null,
       );
+    }
+  }
+
+  /// 주소에서 도시 + 구/동 추출
+  /// 예: "서울특별시 강남구 신사동 123-45" → "강남구 신사동"
+  /// 예: "경기도 성남시 분당구 정자동" → "성남시 분당구"
+  String? _extractCityDistrict(String fullAddress) {
+    if (fullAddress.isEmpty) return null;
+
+    try {
+      // 공백으로 분리
+      final parts = fullAddress.split(' ');
+      if (parts.length < 2) return null;
+
+      // 첫 번째 파트가 광역시/도인 경우
+      final first = parts[0];
+
+      // 서울특별시, 부산광역시 등 → 구 + 동
+      if (first.contains('서울') || first.contains('부산') ||
+          first.contains('대구') || first.contains('인천') ||
+          first.contains('광주') || first.contains('대전') ||
+          first.contains('울산') || first.contains('세종')) {
+        // parts[1]은 구, parts[2]는 동
+        if (parts.length >= 3) {
+          return '${parts[1]} ${parts[2]}';
+        } else if (parts.length >= 2) {
+          return parts[1];
+        }
+      }
+
+      // 경기도, 충청도 등 → 시 + 구/동
+      if (first.contains('도')) {
+        if (parts.length >= 3) {
+          return '${parts[1]} ${parts[2]}';
+        } else if (parts.length >= 2) {
+          return parts[1];
+        }
+      }
+
+      // 기타: 앞 2개 파트 반환
+      return '${parts[0]} ${parts[1]}';
+    } catch (e) {
+      print('⚠️ COMMUNITY_SERVICE: 주소 파싱 실패 - $e');
+      return null;
     }
   }
 }

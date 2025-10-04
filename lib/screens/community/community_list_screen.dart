@@ -114,7 +114,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -139,21 +139,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               );
             },
           ),
-          // 등록 버튼
-          if (_canCreatePost()) ...[
-            IconButton(
-              icon: const Icon(Icons.add, color: Colors.black),
-              onPressed: _navigateToCreate,
-            ),
-          ],
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            color: NewAppColor.neutral200,
-          ),
-        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -162,14 +148,24 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               : RefreshIndicator(
                   onRefresh: _loadItems,
                   child: ListView.separated(
-                    padding: EdgeInsets.all(16.r),
                     itemCount: _items.length,
-                    separatorBuilder: (context, index) => SizedBox(height: 12.h),
+                    separatorBuilder: (context, index) => Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: NewAppColor.neutral200,
+                    ),
                     itemBuilder: (context, index) {
                       return _buildItemCard(_items[index]);
                     },
                   ),
                 ),
+      floatingActionButton: _canCreatePost()
+          ? FloatingActionButton(
+              onPressed: _navigateToCreate,
+              backgroundColor: NewAppColor.primary600,
+              child: Icon(Icons.add, color: Colors.white, size: 32.sp),
+            )
+          : null,
     );
   }
 
@@ -198,235 +194,166 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   Widget _buildItemCard(dynamic item) {
     // 공통 필드 추출
     String title = '';
-    String? subtitle = '';
     String? imageUrl;
-    String status = '';
     String date = '';
     int viewCount = 0;
     int likes = 0;
+    String? authorName;
     String? churchName;
-    String? location;
+    String? churchLocation; // 교회 지역 (도시 + 구/동)
 
     if (item is SharingItem) {
       title = item.title;
-      subtitle = item.description;
       imageUrl = item.images.isNotEmpty ? item.images.first : null;
-      status = item.statusDisplayName;
       date = item.formattedDate;
       viewCount = item.viewCount;
       likes = item.likes;
-      churchName = item.displayChurchName;
-      location = item.location;
+      authorName = item.authorName;
+      churchName = item.churchName;
+      churchLocation = item.churchLocation;
     } else if (item is RequestItem) {
       title = item.title;
-      subtitle = item.description;
-      status = item.statusDisplayName;
       date = item.formattedDate;
       viewCount = item.viewCount;
       likes = item.likes;
-      churchName = item.displayChurchName;
-      location = item.location;
+      authorName = item.authorName;
+      churchName = item.churchName;
+      churchLocation = item.location;
     } else if (item is JobPost) {
       title = item.title;
-      subtitle = item.description;
-      status = item.statusDisplayName;
       date = item.formattedDate;
       viewCount = item.viewCount;
       likes = item.likes;
-      churchName = item.displayChurchName;
-      location = item.location;
+      authorName = item.authorName;
+      churchName = item.churchName;
+      churchLocation = item.location;
     } else if (item is MusicTeamRecruitment) {
       title = item.title;
-      subtitle = item.description;
-      status = item.statusDisplayName;
       date = item.formattedDate;
       viewCount = item.viewCount;
       likes = item.likes;
-      churchName = item.displayChurchName;
-      location = item.location;
+      authorName = item.authorName;
+      churchName = item.churchName;
+      churchLocation = item.location;
     } else if (item is MusicTeamSeeker) {
       title = item.title;
-      subtitle = item.introduction;
-      status = item.statusDisplayName;
       date = item.formattedDate;
       viewCount = item.viewCount;
       likes = item.likes;
-      churchName = item.displayChurchName;
+      authorName = item.authorName;
+      churchName = item.churchName;
     } else if (item is ChurchNews) {
       title = item.title;
-      subtitle = item.description;
       imageUrl = item.images?.isNotEmpty == true ? item.images!.first : null;
-      status = item.statusDisplayName;
       date = item.formattedDate;
       viewCount = item.viewCount;
       likes = item.likes;
-      churchName = item.displayChurchName;
-      location = item.location;
+      authorName = item.authorName;
+      churchName = item.churchName;
+      churchLocation = item.location;
     } else if (item is Map<String, dynamic>) {
       // myPosts의 경우
       title = item['title'] ?? '';
-      subtitle = item['description'] ?? item['content'];
-      status = item['status'] ?? '';
       date = _formatDate(item['created_at']);
       viewCount = item['view_count'] ?? 0;
       likes = item['likes'] ?? 0;
+      authorName = item['author_name'];
       churchName = item['church_name'];
-      location = item['location'];
+      churchLocation = item['church_location'];
     }
 
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12.r),
-      child: InkWell(
-        onTap: () => _navigateToDetail(item),
-        borderRadius: BorderRadius.circular(12.r),
-        child: Container(
-          padding: EdgeInsets.all(16.r),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(
-              color: NewAppColor.neutral200,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 상단: 상태 뱃지 + 날짜
-              Row(
+    final hasImage = imageUrl != null;
+
+    return InkWell(
+      onTap: () => _navigateToDetail(item),
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 게시글 정보 (왼쪽)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(status).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Text(
-                      status,
-                      style: FigmaTextStyles().caption3.copyWith(
-                            color: _getStatusColor(status),
-                          ),
-                    ),
-                  ),
-                  const Spacer(),
+                  // 제목
                   Text(
-                    date,
-                    style: FigmaTextStyles().caption3.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.h),
-              // 제목
-              Text(
-                title,
-                style: FigmaTextStyles().subtitle2.copyWith(
+                    title,
+                    style: TextStyle(
                       color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard Variable',
+                      height: 1.4,
                     ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (subtitle != null && subtitle.isNotEmpty) ...[
-                SizedBox(height: 8.h),
-                Text(
-                  subtitle,
-                  style: FigmaTextStyles().body3.copyWith(
-                        color: NewAppColor.neutral600,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4.h),
+                  // 작성자 · 교회명 · 지역 · 시간
+                  Text(
+                    [
+                      if (authorName != null && authorName.isNotEmpty) authorName,
+                      if (churchName != null && churchName.isNotEmpty) churchName,
+                      if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
+                      date,
+                    ].join(' · '),
+                    style: TextStyle(
+                      color: NewAppColor.neutral600,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                  // 조회수
+                  SizedBox(height: 8.h),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.remove_red_eye_outlined,
+                        size: 16.sp,
+                        color: NewAppColor.neutral500,
                       ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              // 이미지가 있으면 표시
-              if (imageUrl != null) ...[
-                SizedBox(height: 12.h),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Image.network(
-                    imageUrl,
-                    height: 120.h,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 120.h,
-                        color: NewAppColor.neutral100,
-                        child: const Icon(
-                          Icons.image_not_supported,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-              SizedBox(height: 12.h),
-              // 하단: 교회명, 지역, 조회수, 좋아요
-              Row(
-                children: [
-                  if (churchName != null) ...[
-                    Icon(
-                      Icons.church_outlined,
-                      size: 14.sp,
-                      color: NewAppColor.neutral400,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      churchName,
-                      style: FigmaTextStyles().caption3.copyWith(
-                            color: NewAppColor.neutral500,
-                          ),
-                    ),
-                    SizedBox(width: 8.w),
-                  ],
-                  if (location != null) ...[
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 14.sp,
-                      color: NewAppColor.neutral400,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      location,
-                      style: FigmaTextStyles().caption3.copyWith(
-                            color: NewAppColor.neutral500,
-                          ),
-                    ),
-                  ],
-                  const Spacer(),
-                  Icon(
-                    Icons.visibility_outlined,
-                    size: 14.sp,
-                    color: NewAppColor.neutral400,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '$viewCount',
-                    style: FigmaTextStyles().caption3.copyWith(
+                      SizedBox(width: 4.w),
+                      Text(
+                        '$viewCount',
+                        style: TextStyle(
                           color: NewAppColor.neutral500,
+                          fontSize: 13.sp,
+                          fontFamily: 'Pretendard Variable',
                         ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Icon(
-                    Icons.favorite_border,
-                    size: 14.sp,
-                    color: NewAppColor.neutral400,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '$likes',
-                    style: FigmaTextStyles().caption3.copyWith(
-                          color: NewAppColor.neutral500,
-                        ),
+                      ),
+                    ],
                   ),
                 ],
+              ),
+            ),
+            // 썸네일 이미지 (오른쪽)
+            if (hasImage) ...[
+              SizedBox(width: 16.w),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8.r),
+                child: Image.network(
+                  imageUrl,
+                  width: 120.w,
+                  height: 120.w,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 120.w,
+                      height: 120.w,
+                      color: NewAppColor.neutral200,
+                      child: Icon(
+                        Icons.image_outlined,
+                        size: 48.sp,
+                        color: NewAppColor.neutral400,
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
-          ),
+          ],
         ),
       ),
     );
