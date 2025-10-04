@@ -3107,6 +3107,18 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       return;
     }
 
+    // 무료나눔/물품판매는 사진 필수
+    if ((widget.type == CommunityListType.freeSharing ||
+         widget.type == CommunityListType.itemSale) &&
+        _selectedImages.isEmpty) {
+      AppToast.show(
+        context,
+        '최소 1장 이상의 사진을 등록해주세요',
+        type: ToastType.error,
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
