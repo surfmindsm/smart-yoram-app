@@ -61,6 +61,7 @@ abstract class CommunityBasePost {
   final String status;
   final int authorId;
   final String? authorName;
+  final String? authorProfilePhotoUrl;
   final int? churchId;
   final String? churchName;
   final int viewCount;
@@ -76,6 +77,7 @@ abstract class CommunityBasePost {
     required this.status,
     required this.authorId,
     this.authorName,
+    this.authorProfilePhotoUrl,
     this.churchId,
     this.churchName,
     this.viewCount = 0,
@@ -137,6 +139,7 @@ class SharingItem extends CommunityBasePost {
     required super.status,
     required super.authorId,
     super.authorName,
+    super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
     super.viewCount,
@@ -161,10 +164,13 @@ class SharingItem extends CommunityBasePost {
   factory SharingItem.fromJson(Map<String, dynamic> json) {
     // 조인된 author/church 데이터 파싱
     String? authorName;
+    String? authorProfilePhotoUrl;
     if (json['author'] != null && json['author'] is Map) {
       authorName = json['author']['name'];
+      authorProfilePhotoUrl = json['author']['profile_photo_url'];
     } else {
       authorName = json['author_name'] ?? json['userName'];
+      authorProfilePhotoUrl = json['author_profile_photo_url'];
     }
 
     String? churchName;
@@ -181,6 +187,7 @@ class SharingItem extends CommunityBasePost {
       status: json['status'] ?? 'available',
       authorId: json['author_id'] ?? 0,
       authorName: authorName,
+      authorProfilePhotoUrl: authorProfilePhotoUrl,
       churchId: json['church_id'],
       churchName: churchName,
       viewCount: json['view_count'] ?? 0,

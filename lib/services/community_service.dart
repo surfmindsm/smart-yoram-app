@@ -168,15 +168,28 @@ class CommunityService {
 
       final itemMap = response as Map<String, dynamic>;
 
-      // author 정보 가져오기
+      // author 정보 가져오기 (users와 members 조인)
       if (itemMap['author_id'] != null) {
         try {
-          final authorResponse = await _supabaseService.client
+          // users 테이블에서 기본 정보 조회
+          final userResponse = await _supabaseService.client
               .from('users')
-              .select('full_name')
+              .select('full_name, id')
               .eq('id', itemMap['author_id'])
               .single();
-          itemMap['author_name'] = authorResponse['full_name'];
+          itemMap['author_name'] = userResponse['full_name'];
+
+          // members 테이블에서 프로필 이미지 조회
+          try {
+            final memberResponse = await _supabaseService.client
+                .from('members')
+                .select('profile_photo_url')
+                .eq('user_id', itemMap['author_id'])
+                .single();
+            itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+          } catch (e) {
+            print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
+          }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
         }

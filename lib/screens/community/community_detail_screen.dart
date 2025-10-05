@@ -325,6 +325,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String date = '';
     int viewCount = 0;
     String? authorName = '';
+    String? authorProfilePhotoUrl = '';
     String? churchName = '';
     String? churchLocation = '';
 
@@ -337,6 +338,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       date = post.formattedDate;
       viewCount = post.viewCount;
       authorName = post.authorName;
+      authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
       churchLocation = post.churchLocation;
     } else if (_post is RequestItem) {
@@ -457,20 +459,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   padding: EdgeInsets.all(16.r),
                   child: Row(
                     children: [
-                      // 프로필 아이콘
-                      Container(
-                        width: 48.w,
-                        height: 48.w,
-                        decoration: BoxDecoration(
-                          color: NewAppColor.neutral200,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          color: NewAppColor.neutral500,
-                          size: 24.sp,
-                        ),
-                      ),
+                      // 프로필 이미지
+                      _buildProfileImage(authorProfilePhotoUrl),
                       SizedBox(width: 12.w),
                       // 작성자 정보
                       Expanded(
@@ -605,6 +595,59 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     );
   }
 
+
+  Widget _buildProfileImage(String? profilePhotoUrl) {
+    // 프로필 이미지 URL 변환
+    String? fullUrl = _getFullProfilePhotoUrl(profilePhotoUrl);
+
+    return Container(
+      width: 48.w,
+      height: 48.w,
+      decoration: BoxDecoration(
+        color: NewAppColor.neutral200,
+        shape: BoxShape.circle,
+      ),
+      child: fullUrl != null && fullUrl.isNotEmpty
+          ? ClipOval(
+              child: Image.network(
+                fullUrl,
+                width: 48.w,
+                height: 48.w,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.person,
+                    color: NewAppColor.neutral500,
+                    size: 24.sp,
+                  );
+                },
+              ),
+            )
+          : Icon(
+              Icons.person,
+              color: NewAppColor.neutral500,
+              size: 24.sp,
+            ),
+    );
+  }
+
+  String? _getFullProfilePhotoUrl(String? profilePhotoUrl) {
+    if (profilePhotoUrl == null || profilePhotoUrl.isEmpty) return null;
+
+    // 이미 전체 URL이면 그대로 반환
+    if (profilePhotoUrl.startsWith('http')) return profilePhotoUrl;
+
+    // Supabase Storage public URL 생성
+    const supabaseUrl = 'https://adzhdsajdamrflvybhxq.supabase.co';
+
+    // profilePhotoUrl이 상대경로일 경우
+    final cleanPath = profilePhotoUrl.startsWith('/')
+        ? profilePhotoUrl.substring(1)
+        : profilePhotoUrl;
+
+    // Supabase Storage public URL 형식
+    return '$supabaseUrl/storage/v1/object/public/member-photos/$cleanPath';
+  }
 
   Widget _buildContactItem({
     required IconData icon,
