@@ -6,6 +6,7 @@ import 'package:smart_yoram_app/models/community_models.dart';
 import 'package:smart_yoram_app/services/community_service.dart';
 import 'package:smart_yoram_app/screens/community/community_detail_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_create_screen.dart';
+import 'package:smart_yoram_app/utils/location_data.dart';
 
 /// 커뮤니티 목록 화면 (공통)
 /// 모든 카테고리에서 재사용 가능한 목록 화면
@@ -47,6 +48,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedCategory;
   String? _selectedStatus;
+  String? _selectedCity; // 도/시 필터
+  String? _selectedDistrict; // 시/군/구 필터
 
   @override
   void initState() {
@@ -111,6 +114,55 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
   }
 
+  /// 필터링된 아이템 목록
+  List<dynamic> get _filteredItems {
+    List<dynamic> filtered = _items;
+
+    // 위치 필터 (도/시)
+    if (_selectedCity != null) {
+      filtered = filtered.where((item) {
+        String? location;
+        if (item is SharingItem) {
+          location = item.location;
+        } else if (item is RequestItem) {
+          location = item.location;
+        } else if (item is JobPost) {
+          location = item.location;
+        } else if (item is MusicTeamRecruitment) {
+          location = item.location;
+        } else if (item is ChurchNews) {
+          location = item.location;
+        }
+
+        if (location == null || location.isEmpty) return false;
+        return location.startsWith(_selectedCity!);
+      }).toList();
+    }
+
+    // 위치 필터 (시/군/구)
+    if (_selectedDistrict != null) {
+      filtered = filtered.where((item) {
+        String? location;
+        if (item is SharingItem) {
+          location = item.location;
+        } else if (item is RequestItem) {
+          location = item.location;
+        } else if (item is JobPost) {
+          location = item.location;
+        } else if (item is MusicTeamRecruitment) {
+          location = item.location;
+        } else if (item is ChurchNews) {
+          location = item.location;
+        }
+
+        if (location == null || location.isEmpty) return false;
+        return location.contains(_selectedDistrict!);
+      }).toList();
+    }
+
+    return filtered;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,24 +193,35 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _items.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadItems,
-                  child: ListView.separated(
-                    itemCount: _items.length,
-                    separatorBuilder: (context, index) => Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: NewAppColor.neutral200,
-                    ),
-                    itemBuilder: (context, index) {
-                      return _buildItemCard(_items[index]);
-                    },
-                  ),
-                ),
+      body: Column(
+        children: [
+          // 위치 필터 (무료나눔, 물품판매에만 표시)
+          if (widget.type == CommunityListType.freeSharing ||
+              widget.type == CommunityListType.itemSale)
+            _buildLocationFilters(),
+          // 목록
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredItems.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: _loadItems,
+                        child: ListView.separated(
+                          itemCount: _filteredItems.length,
+                          separatorBuilder: (context, index) => Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: NewAppColor.neutral200,
+                          ),
+                          itemBuilder: (context, index) {
+                            return _buildItemCard(_filteredItems[index]);
+                          },
+                        ),
+                      ),
+          ),
+        ],
+      ),
       floatingActionButton: _canCreatePost()
           ? FloatingActionButton(
               onPressed: _navigateToCreate,
@@ -210,7 +273,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       likes = item.likes;
       authorName = item.authorName;
       churchName = item.churchName;
-      churchLocation = item.churchLocation;
+      churchLocation = item.location; // 사용자가 입력한 주소
     } else if (item is RequestItem) {
       title = item.title;
       date = item.formattedDate;
@@ -470,5 +533,137 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         _loadItems();
       }
     });
+  }
+
+  /// 위치 필터 UI
+  Widget _buildLocationFilters() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(
+          bottom: BorderSide(
+            color: NewAppColor.neutral200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // 도/시 선택
+          Expanded(
+            child: Container(
+              height: 40.h,
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              decoration: BoxDecoration(
+                border: Border.all(color: NewAppColor.neutral300),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String?>(
+                  value: _selectedCity,
+                  hint: Text(
+                    '전체 도/시',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: NewAppColor.neutral900,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                  isExpanded: true,
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('전체 도/시'),
+                    ),
+                    ...LocationData.getCities().map((city) {
+                      return DropdownMenuItem<String?>(
+                        value: city,
+                        child: Text(
+                          city,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: NewAppColor.neutral900,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCity = value;
+                      _selectedDistrict = null; // 도/시 변경 시 구 초기화
+                    });
+                  },
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 8.w),
+          // 시/군/구 선택
+          Expanded(
+            child: Container(
+              height: 40.h,
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: _selectedCity == null
+                      ? NewAppColor.neutral200
+                      : NewAppColor.neutral300,
+                ),
+                borderRadius: BorderRadius.circular(8.r),
+                color: _selectedCity == null
+                    ? NewAppColor.neutral100
+                    : Colors.white,
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String?>(
+                  value: _selectedDistrict,
+                  hint: Text(
+                    '전체 구',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: _selectedCity == null
+                          ? NewAppColor.neutral400
+                          : NewAppColor.neutral900,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                  isExpanded: true,
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('전체 구'),
+                    ),
+                    if (_selectedCity != null)
+                      ...LocationData.getDistricts(_selectedCity!).map((district) {
+                        return DropdownMenuItem<String?>(
+                          value: district,
+                          child: Text(
+                            district,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: NewAppColor.neutral900,
+                              fontFamily: 'Pretendard Variable',
+                            ),
+                          ),
+                        );
+                      }),
+                  ],
+                  onChanged: _selectedCity == null
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedDistrict = value;
+                          });
+                        },
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
