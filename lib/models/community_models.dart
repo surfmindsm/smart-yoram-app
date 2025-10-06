@@ -232,6 +232,38 @@ class SharingItem extends CommunityBasePost {
     };
   }
 
+  @override
+  String get statusDisplayName {
+    final statusLower = status.toLowerCase();
+
+    // 무료나눔
+    if (isFree) {
+      switch (statusLower) {
+        case 'active':
+          return '나눔 가능';
+        case 'ing':
+          return '예약중';
+        case 'completed':
+          return '나눔 완료';
+        default:
+          return status;
+      }
+    }
+
+    // 물품판매
+    switch (statusLower) {
+      case 'active':
+        return '판매중';
+      case 'ing':
+        return '예약중';
+      case 'completed':
+      case 'sold':
+        return '판매 완료';
+      default:
+        return status;
+    }
+  }
+
   String get formattedPrice {
     if (isFree) return '무료';
     if (price == null || price == 0) return '가격 협의';

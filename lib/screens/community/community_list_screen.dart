@@ -371,9 +371,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       // 테이블 이름과 isFree 정보 전달
       final tableName = item['tableName'] ?? item['table'];
       final isFree = item['is_free'] == true;
-      print('🏷️ Status Label - tableName: $tableName, isFree: $isFree, status: ${item['status']}');
       statusLabel = _getStatusLabel(item['status'], tableName: tableName, isFree: isFree);
-      print('🏷️ Result Label: $statusLabel');
 
       // 이미지 추출 (images 필드가 있는 경우)
       if (item['images'] != null) {
@@ -400,7 +398,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     final hasImage = imageUrl != null;
-    final isMyPost = _currentUser != null && authorId != null && _currentUser!.id == authorId;
 
     return InkWell(
       onTap: () => _navigateToDetail(item),
@@ -521,20 +518,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                       ),
                     );
                   },
-                ),
-              ),
-            ],
-            // 내 글인 경우 메뉴 버튼
-            if (isMyPost) ...[
-              SizedBox(width: 8.w),
-              IconButton(
-                icon: Icon(Icons.more_vert, size: 20.sp),
-                color: NewAppColor.neutral600,
-                onPressed: () => _showItemMenu(item),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(
-                  minWidth: 32.w,
-                  minHeight: 32.w,
                 ),
               ),
             ],
@@ -893,167 +876,5 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         ],
       ),
     );
-  }
-
-  /// 게시글 메뉴 표시
-  void _showItemMenu(dynamic item) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: const Text('수정'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _editItem(item);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('삭제', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _deleteItem(item);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// 게시글 수정
-  void _editItem(dynamic item) {
-    // 게시글 타입에 따라 CommunityListType 결정
-    CommunityListType type = widget.type;
-
-    // 내 글 관리나 찜한 글에서 수정하는 경우, 실제 게시글 타입을 파악
-    if (widget.type == CommunityListType.myPosts ||
-        widget.type == CommunityListType.myFavorites) {
-      if (item is SharingItem) {
-        type = item.isFree
-            ? CommunityListType.freeSharing
-            : CommunityListType.itemSale;
-      } else if (item is RequestItem) {
-        type = CommunityListType.itemRequest;
-      } else if (item is JobPost) {
-        type = CommunityListType.jobPosting;
-      } else if (item is MusicTeamRecruitment) {
-        type = CommunityListType.musicTeamRecruit;
-      } else if (item is MusicTeamSeeker) {
-        type = CommunityListType.musicTeamSeeking;
-      } else if (item is ChurchNews) {
-        type = CommunityListType.churchNews;
-      } else if (item is Map) {
-        // Map 타입인 경우 tableName으로 판단
-        final tableName = item['tableName'] as String?;
-        if (tableName == 'community_sharing') {
-          type = (item['is_free'] == true)
-              ? CommunityListType.freeSharing
-              : CommunityListType.itemSale;
-        } else if (tableName == 'community_requests') {
-          type = CommunityListType.itemRequest;
-        } else if (tableName == 'job_posts') {
-          type = CommunityListType.jobPosting;
-        } else if (tableName == 'community_music_teams') {
-          type = CommunityListType.musicTeamRecruit;
-        } else if (tableName == 'music_team_seekers') {
-          type = CommunityListType.musicTeamSeeking;
-        } else if (tableName == 'church_news') {
-          type = CommunityListType.churchNews;
-        }
-      }
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CommunityCreateScreen(
-          type: type,
-          categoryTitle: widget.title,
-          existingPost: item,
-        ),
-      ),
-    ).then((result) {
-      // 수정 후 돌아오면 목록 새로고침
-      if (result == true) {
-        _loadItems();
-      }
-    });
-  }
-
-  /// 게시글 삭제
-  Future<void> _deleteItem(dynamic item) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('게시글 삭제'),
-          content: const Text('정말 삭제하시겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('삭제', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true && mounted) {
-      // 게시글 ID와 테이블명 추출
-      int postId = 0;
-      String tableName = '';
-
-      if (item is SharingItem) {
-        postId = item.id;
-        tableName = 'community_sharing';
-      } else if (item is RequestItem) {
-        postId = item.id;
-        tableName = 'community_requests';
-      } else if (item is JobPost) {
-        postId = item.id;
-        tableName = 'job_posts';
-      } else if (item is MusicTeamRecruitment) {
-        postId = item.id;
-        tableName = 'community_music_teams';
-      } else if (item is MusicTeamSeeker) {
-        postId = item.id;
-        tableName = 'music_team_seekers';
-      } else if (item is ChurchNews) {
-        postId = item.id;
-        tableName = 'church_news';
-      } else if (item is Map<String, dynamic>) {
-        postId = item['id'] ?? 0;
-        tableName = item['table_name'] ?? '';
-      }
-
-      if (postId > 0 && tableName.isNotEmpty) {
-        final response = await _communityService.deletePost(tableName, postId);
-
-        if (mounted) {
-          if (response.success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response.message)),
-            );
-            // 목록 새로고침
-            _loadItems();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response.message)),
-            );
-          }
-        }
-      }
-    }
   }
 }
