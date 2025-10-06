@@ -164,7 +164,72 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   }
 
   void _loadExistingPost() {
-    // TODO: 기존 게시글 데이터 로드
+    final post = widget.existingPost;
+    if (post == null) return;
+
+    // 타입별 필드 로드 (기본 필드만)
+    if (post is SharingItem) {
+      _titleController.text = post.title;
+      _descriptionController.text = post.description ?? '';
+      _locationController.text = post.location ?? '';
+      _selectedCategory = post.category;
+      _selectedCondition = post.condition;
+      _quantity = post.quantity;
+      if (!post.isFree && post.price != null) {
+        _priceController.text = post.price.toString();
+      }
+      _selectedDeliveryMethod = post.deliveryMethod;
+      _purchaseDateController.text = post.purchaseDate ?? '';
+      // 이미지는 URL 목록이므로 변환 불가 - 스킵
+    } else if (post is RequestItem) {
+      _titleController.text = post.title;
+      _descriptionController.text = post.description ?? '';
+      _locationController.text = post.location ?? '';
+      _requestedItemController.text = post.requestedItem ?? '';
+      _reasonController.text = post.reason ?? '';
+      _neededDateController.text = post.neededDate ?? '';
+      _priceRangeController.text = post.priceRange ?? '';
+      _quantityController.text = post.quantity?.toString() ?? '';
+      _selectedUrgency = post.urgency ?? 'normal';
+    } else if (post is JobPost) {
+      _titleController.text = post.title;
+      _descriptionController.text = post.description ?? '';
+      _locationController.text = post.location ?? '';
+      _companyController.text = post.company ?? '';
+      _churchIntroController.text = post.churchIntro ?? '';
+      _positionController.text = post.position ?? '';
+      _jobTypeController.text = post.jobType ?? '';
+      _selectedEmploymentType = post.employmentType;
+      _salaryController.text = post.salary ?? '';
+      _deadlineController.text = post.deadline ?? '';
+    } else if (post is MusicTeamRecruitment) {
+      _titleController.text = post.title;
+      _descriptionController.text = post.description ?? '';
+      _locationController.text = post.location ?? '';
+      _selectedRecruitmentType = post.recruitmentType;
+      _worshipTypeController.text = post.worshipType ?? '';
+      _scheduleController.text = post.schedule ?? '';
+      _requirementsController.text = post.requirements ?? '';
+      _compensationController.text = post.compensation ?? '';
+    } else if (post is MusicTeamSeeker) {
+      _titleController.text = post.title;
+      _descriptionController.text = post.description ?? '';
+      _nameController.text = post.name ?? '';
+      _teamNameController.text = post.teamName ?? '';
+      _selectedInstrument = post.instrument;
+      _experienceController.text = post.experience ?? '';
+      _portfolioController.text = post.portfolio ?? '';
+      _availableDays = post.availableDays ?? [];
+      _availableTimeController.text = post.availableTime ?? '';
+      _introductionController.text = post.introduction ?? '';
+    } else if (post is ChurchNews) {
+      _titleController.text = post.title;
+      _descriptionController.text = post.content ?? post.description ?? '';
+      _locationController.text = post.location ?? '';
+      // 이미지는 URL 목록이므로 변환 불가 - 스킵
+    }
+
+    setState(() {});
   }
 
   @override

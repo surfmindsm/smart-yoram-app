@@ -8,6 +8,8 @@ import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/wishlist_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
+import 'package:smart_yoram_app/screens/community/community_create_screen.dart';
 
 /// 커뮤니티 게시글 상세 화면 (공통)
 /// 모든 카테고리의 게시글을 표시할 수 있는 공통 화면
@@ -971,8 +973,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       if (isFree) {
         // 무료나눔: 나눔가능, 예약중, 나눔완료
         return [
-          {'value': 'available', 'label': '나눔가능'},
-          {'value': 'reserved', 'label': '예약중'},
+          {'value': 'active', 'label': '나눔가능'},
+          {'value': 'ing', 'label': '예약중'},
           {'value': 'completed', 'label': '나눔완료'},
         ];
       } else {
@@ -1202,7 +1204,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     if (isCompleted) {
       // 완료/마감 상태에서 진행중으로 변경
       if (widget.tableName == 'community_sharing') {
-        newStatus = (_post as SharingItem).isFree ? 'available' : 'active';
+        newStatus = 'active'; // 무료나눔/물품판매 모두 active
       } else if (widget.tableName == 'community_requests') {
         newStatus = 'requesting';
       } else if (widget.tableName == 'job_posts' ||
@@ -1244,10 +1246,49 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   }
 
   void _editPost() {
-    // TODO: 게시글 수정
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('수정 기능은 준비 중입니다')),
-    );
+    // 게시글 타입에 따라 CommunityListType 결정
+    CommunityListType? typeOrNull;
+
+    if (_post is SharingItem) {
+      typeOrNull = (_post as SharingItem).isFree
+          ? CommunityListType.freeSharing
+          : CommunityListType.itemSale;
+    } else if (_post is RequestItem) {
+      typeOrNull = CommunityListType.itemRequest;
+    } else if (_post is JobPost) {
+      typeOrNull = CommunityListType.jobPosting;
+    } else if (_post is MusicTeamRecruitment) {
+      typeOrNull = CommunityListType.musicTeamRecruit;
+    } else if (_post is MusicTeamSeeker) {
+      typeOrNull = CommunityListType.musicTeamSeeking;
+    } else if (_post is ChurchNews) {
+      typeOrNull = CommunityListType.churchNews;
+    }
+
+    if (typeOrNull == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('수정할 수 없는 게시글입니다')),
+      );
+      return;
+    }
+
+    final type = typeOrNull; // non-null after check
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommunityCreateScreen(
+          type: type,
+          categoryTitle: widget.categoryTitle,
+          existingPost: _post,
+        ),
+      ),
+    ).then((result) {
+      // 수정 후 돌아오면 데이터 새로고침
+      if (result == true) {
+        _loadData();
+      }
+    });
   }
 
   Future<void> _deletePost() async {
