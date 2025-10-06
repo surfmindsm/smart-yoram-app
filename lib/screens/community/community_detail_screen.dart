@@ -978,10 +978,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           {'value': 'completed', 'label': '나눔완료'},
         ];
       } else {
-        // 물품판매: 판매중, 거래완료
+        // 물품판매: 판매중, 예약중, 판매완료
         return [
           {'value': 'active', 'label': '판매중'},
-          {'value': 'completed', 'label': '거래완료'},
+          {'value': 'ing', 'label': '예약중'},
+          {'value': 'completed', 'label': '판매 완료'},
         ];
       }
     } else if (_post is RequestItem) {
