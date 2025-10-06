@@ -50,8 +50,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
   // 검색 및 필터
   final TextEditingController _searchController = TextEditingController();
-  String? _selectedCategory;
-  String? _selectedStatus;
+  String? _selectedCategory; // 카테고리 필터 (가구, 전자제품 등)
+  String? _selectedStatus; // 상태 필터 (나눔가능, 예약중, 완료)
   String? _selectedCity; // 도/시 필터
   String? _selectedDistrict; // 시/군/구 필터
 
@@ -129,6 +129,26 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   /// 필터링된 아이템 목록
   List<dynamic> get _filteredItems {
     List<dynamic> filtered = _items;
+
+    // 상태 필터 (무료나눔/물품판매)
+    if (_selectedStatus != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
+      filtered = filtered.where((item) {
+        if (item is SharingItem) {
+          return item.status.toLowerCase() == _selectedStatus!.toLowerCase();
+        }
+        return false;
+      }).toList();
+    }
+
+    // 카테고리 필터 (무료나눔/물품판매)
+    if (_selectedCategory != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
+      filtered = filtered.where((item) {
+        if (item is SharingItem) {
+          return item.category == _selectedCategory;
+        }
+        return false;
+      }).toList();
+    }
 
     // 위치 필터 (도/시)
     if (_selectedCity != null) {
@@ -216,6 +236,10 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               widget.type == CommunityListType.musicTeamSeeking ||
               widget.type == CommunityListType.churchNews)
             _buildLocationFilters(),
+          // 상태 + 카테고리 필터 (무료나눔/물품판매)
+          if (widget.type == CommunityListType.freeSharing ||
+              widget.type == CommunityListType.itemSale)
+            _buildStatusAndCategoryFilters(),
           // 목록
           Expanded(
             child: _isLoading
@@ -874,6 +898,133 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 상태 + 카테고리 필터 (무료나눔/물품판매)
+  Widget _buildStatusAndCategoryFilters() {
+    // 상태 옵션
+    final List<Map<String, String>> statusOptions = widget.type == CommunityListType.freeSharing
+        ? [
+            {'value': 'active', 'label': '나눔 가능'},
+            {'value': 'ing', 'label': '예약중'},
+            {'value': 'completed', 'label': '나눔 완료'},
+          ]
+        : [
+            {'value': 'active', 'label': '판매중'},
+            {'value': 'ing', 'label': '예약중'},
+            {'value': 'completed', 'label': '판매 완료'},
+          ];
+
+    // 카테고리 옵션
+    final List<String> categoryOptions = [
+      '가구',
+      '전자제품',
+      '도서',
+      '의류',
+      '장난감',
+      '생활용품',
+      '기타',
+    ];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: NewAppColor.neutral200, width: 1),
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // 전체 칩
+            _buildFilterChip(
+              label: '전체',
+              isSelected: _selectedStatus == null && _selectedCategory == null,
+              onTap: () {
+                setState(() {
+                  _selectedStatus = null;
+                  _selectedCategory = null;
+                });
+              },
+            ),
+            SizedBox(width: 8.w),
+
+            // 상태 필터 칩들
+            ...statusOptions.map((option) {
+              final value = option['value']!;
+              final label = option['label']!;
+              return Padding(
+                padding: EdgeInsets.only(right: 8.w),
+                child: _buildFilterChip(
+                  label: label,
+                  isSelected: _selectedStatus == value,
+                  onTap: () {
+                    setState(() {
+                      _selectedStatus = _selectedStatus == value ? null : value;
+                    });
+                  },
+                ),
+              );
+            }),
+
+            // 구분선
+            Container(
+              width: 1,
+              height: 24.h,
+              color: NewAppColor.neutral300,
+              margin: EdgeInsets.symmetric(horizontal: 8.w),
+            ),
+
+            // 카테고리 필터 칩들
+            ...categoryOptions.map((category) {
+              return Padding(
+                padding: EdgeInsets.only(right: 8.w),
+                child: _buildFilterChip(
+                  label: category,
+                  isSelected: _selectedCategory == category,
+                  onTap: () {
+                    setState(() {
+                      _selectedCategory = _selectedCategory == category ? null : category;
+                    });
+                  },
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 필터 칩 위젯
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isSelected ? NewAppColor.neutral900 : NewAppColor.neutral100,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+            color: isSelected ? NewAppColor.neutral900 : NewAppColor.neutral300,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: FigmaTextStyles().body2.copyWith(
+            color: isSelected ? Colors.white : NewAppColor.neutral700,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
       ),
     );
   }
