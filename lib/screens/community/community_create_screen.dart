@@ -108,6 +108,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
   bool _isLoading = false;
   List<XFile> _selectedImages = [];
+  List<String> _existingImageUrls = []; // 기존 이미지 URL 목록
   String _selectedStatus = 'active';
 
   @override
@@ -167,7 +168,92 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     final post = widget.existingPost;
     if (post == null) return;
 
-    // 타입별 필드 로드 (기본 필드만)
+    // Map 타입인 경우 (myPosts에서 온 경우)
+    if (post is Map<String, dynamic>) {
+      final tableName = post['tableName'] as String? ?? post['table'] as String?;
+
+      // 공통 필드
+      _titleController.text = post['title'] ?? '';
+      _descriptionController.text = post['description'] ?? '';
+      _locationController.text = post['location'] ?? '';
+
+      // 이미지 로드
+      if (post['images'] != null) {
+        if (post['images'] is List) {
+          _existingImageUrls = List<String>.from(post['images']);
+        } else if (post['images'] is String) {
+          _existingImageUrls = [post['images'] as String];
+        }
+      }
+
+      // 상태 로드
+      if (post['status'] != null) {
+        _selectedStatus = post['status'] as String;
+      }
+
+      // 테이블별 처리
+      if (tableName == 'community_sharing') {
+        _selectedCategory = post['category'];
+        _selectedCondition = post['condition'];
+        _quantity = post['quantity'] ?? 1;
+        final isFree = post['is_free'] == true;
+        if (!isFree && post['price'] != null) {
+          _priceController.text = post['price'].toString();
+        }
+        _selectedDeliveryMethod = post['delivery_method'];
+        _purchaseDateController.text = post['purchase_date'] ?? '';
+        _contactController.text = post['contact_info'] ?? post['contact_phone'] ?? '';
+        _emailController.text = post['contact_email'] ?? '';
+      } else if (tableName == 'community_requests') {
+        _requestedItemController.text = post['requested_item'] ?? '';
+        _reasonController.text = post['reason'] ?? '';
+        _neededDateController.text = post['needed_date'] ?? '';
+        _priceRangeController.text = post['price_range'] ?? '';
+        _quantityController.text = post['quantity']?.toString() ?? '';
+        _selectedUrgency = post['urgency'] ?? 'normal';
+        _contactController.text = post['contact_info'] ?? post['contact_phone'] ?? '';
+        _emailController.text = post['contact_email'] ?? '';
+      } else if (tableName == 'job_posts') {
+        _companyController.text = post['company'] ?? '';
+        _churchIntroController.text = post['church_intro'] ?? '';
+        _positionController.text = post['position'] ?? '';
+        _jobTypeController.text = post['job_type'] ?? '';
+        _selectedEmploymentType = post['employment_type'];
+        _salaryController.text = post['salary'] ?? '';
+        _deadlineController.text = post['deadline'] ?? '';
+        _contactController.text = post['contact_phone'] ?? '';
+        _emailController.text = post['contact_email'] ?? '';
+      } else if (tableName == 'community_music_teams') {
+        _selectedRecruitmentType = post['recruitment_type'];
+        _worshipTypeController.text = post['worship_type'] ?? '';
+        _scheduleController.text = post['schedule'] ?? '';
+        _requirementsController.text = post['requirements'] ?? '';
+        _compensationController.text = post['compensation'] ?? '';
+        _contactController.text = post['contact_phone'] ?? '';
+        _emailController.text = post['contact_email'] ?? '';
+      } else if (tableName == 'music_team_seekers') {
+        _nameController.text = post['name'] ?? '';
+        _teamNameController.text = post['team_name'] ?? '';
+        _selectedInstrument = post['instrument'];
+        _experienceController.text = post['experience'] ?? '';
+        _portfolioController.text = post['portfolio'] ?? '';
+        _availableDays = post['available_days'] != null
+            ? List<String>.from(post['available_days'])
+            : [];
+        _availableTimeController.text = post['available_time'] ?? '';
+        _introductionController.text = post['introduction'] ?? '';
+        _contactController.text = post['contact_phone'] ?? '';
+        _emailController.text = post['contact_email'] ?? '';
+      } else if (tableName == 'church_news') {
+        _contactController.text = post['contact_phone'] ?? '';
+        _emailController.text = post['contact_email'] ?? '';
+      }
+
+      setState(() {});
+      return;
+    }
+
+    // 타입별 필드 로드 (모델 객체인 경우)
     if (post is SharingItem) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
@@ -180,6 +266,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       }
       _selectedDeliveryMethod = post.deliveryMethod;
       _purchaseDateController.text = post.purchaseDate ?? '';
+      _contactController.text = post.contactPhone;
+      _emailController.text = post.contactEmail ?? '';
       // 이미지는 URL 목록이므로 변환 불가 - 스킵
     } else if (post is RequestItem) {
       _titleController.text = post.title;
@@ -191,6 +279,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _priceRangeController.text = post.priceRange ?? '';
       _quantityController.text = post.quantity?.toString() ?? '';
       _selectedUrgency = post.urgency ?? 'normal';
+      _contactController.text = post.contactPhone;
+      _emailController.text = post.contactEmail ?? '';
     } else if (post is JobPost) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
@@ -202,6 +292,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _selectedEmploymentType = post.employmentType;
       _salaryController.text = post.salary ?? '';
       _deadlineController.text = post.deadline ?? '';
+      _contactController.text = post.contactPhone ?? '';
+      _emailController.text = post.contactEmail ?? '';
     } else if (post is MusicTeamRecruitment) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
@@ -211,6 +303,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _scheduleController.text = post.schedule ?? '';
       _requirementsController.text = post.requirements ?? '';
       _compensationController.text = post.compensation ?? '';
+      _contactController.text = post.contactPhone;
+      _emailController.text = post.contactEmail ?? '';
     } else if (post is MusicTeamSeeker) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
@@ -222,10 +316,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _availableDays = post.availableDays ?? [];
       _availableTimeController.text = post.availableTime ?? '';
       _introductionController.text = post.introduction ?? '';
+      _contactController.text = post.contactPhone;
+      _emailController.text = post.contactEmail ?? '';
     } else if (post is ChurchNews) {
       _titleController.text = post.title;
       _descriptionController.text = post.content ?? post.description ?? '';
       _locationController.text = post.location ?? '';
+      _contactController.text = post.contactPhone ?? '';
+      _emailController.text = post.contactEmail ?? '';
       // 이미지는 URL 목록이므로 변환 불가 - 스킵
     }
 
@@ -298,7 +396,36 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
   /// 타입별 특수 필드
   Widget _buildTypeSpecificFields() {
-    switch (widget.type) {
+    // 실제 타입 결정 (myPosts, myFavorites 등에서 수정하는 경우)
+    CommunityListType actualType = widget.type;
+
+    if (widget.type == CommunityListType.myPosts ||
+        widget.type == CommunityListType.myFavorites) {
+      // existingPost가 Map인 경우 tableName 정보로 타입 판단
+      if (widget.existingPost is Map<String, dynamic>) {
+        final post = widget.existingPost as Map<String, dynamic>;
+        final tableName = post['tableName'] as String? ?? post['table'] as String?;
+        final isFree = post['is_free'] == true;
+
+        if (tableName == 'community_sharing') {
+          actualType = isFree
+              ? CommunityListType.freeSharing
+              : CommunityListType.itemSale;
+        } else if (tableName == 'community_requests') {
+          actualType = CommunityListType.itemRequest;
+        } else if (tableName == 'job_posts') {
+          actualType = CommunityListType.jobPosting;
+        } else if (tableName == 'community_music_teams') {
+          actualType = CommunityListType.musicTeamRecruit;
+        } else if (tableName == 'music_team_seekers') {
+          actualType = CommunityListType.musicTeamSeeking;
+        } else if (tableName == 'church_news') {
+          actualType = CommunityListType.churchNews;
+        }
+      }
+    }
+
+    switch (actualType) {
       case CommunityListType.freeSharing:
         return _buildSharingFields(isFree: true);
       case CommunityListType.itemSale:
@@ -365,13 +492,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             ),
             value: _selectedCategory,
             items: const [
-              DropdownMenuItem(value: 'furniture', child: Text('가구')),
-              DropdownMenuItem(value: 'electronics', child: Text('전자제품')),
-              DropdownMenuItem(value: 'books', child: Text('도서')),
-              DropdownMenuItem(value: 'clothing', child: Text('의류')),
-              DropdownMenuItem(value: 'toys', child: Text('장난감')),
-              DropdownMenuItem(value: 'household', child: Text('생활용품')),
-              DropdownMenuItem(value: 'other', child: Text('기타')),
+              DropdownMenuItem(value: '가구', child: Text('가구')),
+              DropdownMenuItem(value: '전자제품', child: Text('전자제품')),
+              DropdownMenuItem(value: '도서', child: Text('도서')),
+              DropdownMenuItem(value: '의류', child: Text('의류')),
+              DropdownMenuItem(value: '장난감', child: Text('장난감')),
+              DropdownMenuItem(value: '생활용품', child: Text('생활용품')),
+              DropdownMenuItem(value: '기타', child: Text('기타')),
             ],
             onChanged: (value) => setState(() => _selectedCategory = value),
             validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
@@ -500,9 +627,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             ),
             value: _selectedCondition,
             items: const [
-              DropdownMenuItem(value: 'new', child: Text('새 상품')),
-              DropdownMenuItem(value: 'like_new', child: Text('거의 새것')),
-              DropdownMenuItem(value: 'used', child: Text('사용감 있음')),
+              DropdownMenuItem(value: '새상품', child: Text('새 상품')),
+              DropdownMenuItem(value: '거의새것', child: Text('거의 새것')),
+              DropdownMenuItem(value: '양호', child: Text('양호')),
+              DropdownMenuItem(value: '사용감있음', child: Text('사용감 있음')),
             ],
             onChanged: (value) => setState(() => _selectedCondition = value),
             validator: (value) => value == null ? '상품 상태를 선택해주세요' : null,
@@ -713,7 +841,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               ),
             ),
             Text(
-              '${_selectedImages.length}/$maxCount',
+              '${_existingImageUrls.length + _selectedImages.length}/$maxCount',
               style: FigmaTextStyles().caption1.copyWith(
                 color: NewAppColor.neutral500,
               ),
@@ -727,7 +855,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             scrollDirection: Axis.horizontal,
             children: [
               // 사진 추가 버튼
-              if (_selectedImages.length < maxCount)
+              if ((_existingImageUrls.length + _selectedImages.length) < maxCount)
                 GestureDetector(
                   onTap: _pickImages,
                   child: Container(
@@ -763,7 +891,59 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     ),
                   ),
                 ),
-              // 선택된 이미지들
+              // 기존 이미지들 (URL)
+              ..._existingImageUrls.asMap().entries.map((entry) {
+                final index = entry.key;
+                final imageUrl = entry.value;
+                return Container(
+                  width: 100.w,
+                  height: 100.h,
+                  margin: EdgeInsets.only(left: 8.w),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.r),
+                        child: Image.network(
+                          imageUrl,
+                          width: 100.w,
+                          height: 100.h,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[300],
+                              child: Icon(Icons.image, size: 40.sp, color: Colors.grey),
+                            );
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        top: 4.h,
+                        right: 4.w,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _existingImageUrls.removeAt(index);
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(4.r),
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.close,
+                              size: 16.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              // 새로 선택된 이미지들 (파일)
               ..._selectedImages.asMap().entries.map((entry) {
                 final index = entry.key;
                 final image = entry.value;
@@ -956,13 +1136,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       ),
                       value: _selectedCategory,
                       items: const [
-                        DropdownMenuItem(value: 'furniture', child: Text('가구')),
-                        DropdownMenuItem(value: 'electronics', child: Text('전자제품')),
-                        DropdownMenuItem(value: 'books', child: Text('도서')),
-                        DropdownMenuItem(value: 'clothing', child: Text('의류')),
-                        DropdownMenuItem(value: 'toys', child: Text('장난감')),
-                        DropdownMenuItem(value: 'household', child: Text('생활용품')),
-                        DropdownMenuItem(value: 'other', child: Text('기타')),
+                        DropdownMenuItem(value: '가구', child: Text('가구')),
+                        DropdownMenuItem(value: '전자제품', child: Text('전자제품')),
+                        DropdownMenuItem(value: '도서', child: Text('도서')),
+                        DropdownMenuItem(value: '의류', child: Text('의류')),
+                        DropdownMenuItem(value: '장난감', child: Text('장난감')),
+                        DropdownMenuItem(value: '생활용품', child: Text('생활용품')),
+                        DropdownMenuItem(value: '기타', child: Text('기타')),
                       ],
                       onChanged: (value) => setState(() => _selectedCategory = value),
                       validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
