@@ -368,9 +368,12 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       churchName = item['church_name'];
       churchLocation = item['church_location'];
       status = item['status'];
-      // isFree 정보 전달 (무료나눔인지 판단)
+      // 테이블 이름과 isFree 정보 전달
+      final tableName = item['tableName'] ?? item['table'];
       final isFree = item['is_free'] == true;
-      statusLabel = _getStatusLabel(item['status'], isFree: isFree);
+      print('🏷️ Status Label - tableName: $tableName, isFree: $isFree, status: ${item['status']}');
+      statusLabel = _getStatusLabel(item['status'], tableName: tableName, isFree: isFree);
+      print('🏷️ Result Label: $statusLabel');
 
       // 이미지 추출 (images 필드가 있는 경우)
       if (item['images'] != null) {
@@ -563,36 +566,108 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
   }
 
-  String _getStatusLabel(String? status, {bool isFree = false}) {
+  String _getStatusLabel(String? status, {String? tableName, bool isFree = false}) {
     if (status == null) return '';
 
-    switch (status.toLowerCase()) {
-      case 'active':
-        // 무료나눔인지 물품판매인지 구분
-        if (widget.type == CommunityListType.freeSharing || isFree) {
-          return '나눔가능';
-        } else if (widget.type == CommunityListType.itemSale) {
+    final statusLower = status.toLowerCase();
+
+    // 무료나눔 상태
+    if (tableName == 'community_sharing' && isFree) {
+      switch (statusLower) {
+        case 'active':
+          return '나눔 가능';
+        case 'ing':
+          return '예약중';
+        case 'completed':
+          return '나눔 완료';
+        default:
+          return status;
+      }
+    }
+
+    // 물품판매 상태
+    if (tableName == 'community_sharing' && !isFree) {
+      switch (statusLower) {
+        case 'active':
           return '판매중';
-        }
+        case 'ing':
+          return '예약중';
+        case 'completed':
+        case 'sold':
+          return '판매 완료';
+        default:
+          return status;
+      }
+    }
+
+    // 물품요청 상태
+    if (tableName == 'community_requests') {
+      switch (statusLower) {
+        case 'active':
+        case 'requesting':
+          return '요청중';
+        case 'completed':
+          return '완료';
+        case 'closed':
+          return '마감';
+        default:
+          return status;
+      }
+    }
+
+    // 구인구직 상태
+    if (tableName == 'job_posts') {
+      switch (statusLower) {
+        case 'active':
+        case 'open':
+          return '모집중';
+        case 'completed':
+        case 'closed':
+          return '마감';
+        default:
+          return status;
+      }
+    }
+
+    // 찬양팀 모집/구함 상태
+    if (tableName == 'community_music_teams' || tableName == 'music_team_seekers') {
+      switch (statusLower) {
+        case 'active':
+        case 'open':
+          return '모집중';
+        case 'completed':
+        case 'closed':
+          return '마감';
+        default:
+          return status;
+      }
+    }
+
+    // 교회소식 상태
+    if (tableName == 'church_news') {
+      switch (statusLower) {
+        case 'active':
+          return '게시중';
+        case 'completed':
+        case 'closed':
+          return '종료';
+        default:
+          return status;
+      }
+    }
+
+    // 기본값 (tableName이 없거나 매칭되지 않는 경우)
+    switch (statusLower) {
+      case 'active':
         return '진행중';
       case 'completed':
-        // 무료나눔인 경우
-        if (widget.type == CommunityListType.freeSharing || isFree) {
-          return '나눔완료';
-        } else if (widget.type == CommunityListType.itemSale) {
-          return '거래완료';
-        }
         return '완료';
       case 'closed':
         return '마감';
       case 'cancelled':
         return '취소';
-      case 'ing': // 예약중
+      case 'ing':
         return '예약중';
-      case 'requesting':
-        return '요청중';
-      case 'open':
-        return '모집중';
       default:
         return status;
     }
