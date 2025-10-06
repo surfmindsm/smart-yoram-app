@@ -457,40 +457,49 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 Container(
                   color: Colors.white,
                   padding: EdgeInsets.all(16.r),
-                  child: Row(
+                  child: Column(
                     children: [
-                      // 프로필 이미지
-                      _buildProfileImage(authorProfilePhotoUrl),
-                      SizedBox(width: 12.w),
-                      // 작성자 정보
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              authorName ?? '알 수 없음',
-                              style: TextStyle(
-                                color: NewAppColor.neutral900,
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Pretendard Variable',
-                              ),
+                      Row(
+                        children: [
+                          // 프로필 이미지
+                          _buildProfileImage(authorProfilePhotoUrl),
+                          SizedBox(width: 12.w),
+                          // 작성자 정보
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  authorName ?? '알 수 없음',
+                                  style: TextStyle(
+                                    color: NewAppColor.neutral900,
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Pretendard Variable',
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  [
+                                    if (churchName != null && churchName.isNotEmpty) churchName,
+                                    if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
+                                  ].join(' · '),
+                                  style: TextStyle(
+                                    color: NewAppColor.neutral600,
+                                    fontSize: 13.sp,
+                                    fontFamily: 'Pretendard Variable',
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              [
-                                if (churchName != null && churchName.isNotEmpty) churchName,
-                                if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
-                              ].join(' · '),
-                              style: TextStyle(
-                                color: NewAppColor.neutral600,
-                                fontSize: 13.sp,
-                                fontFamily: 'Pretendard Variable',
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                      // 작성자인 경우 상태 변경 드롭다운 표시
+                      if (_isAuthor()) ...[
+                        SizedBox(height: 12.h),
+                        _buildStatusDropdown(),
+                      ],
                     ],
                   ),
                 ),
@@ -946,7 +955,198 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     return false;
   }
 
+  /// 작성자 여부 확인
+  bool _isAuthor() {
+    if (_currentUser == null || _post == null) return false;
+    if (_post is CommunityBasePost) {
+      return (_post as CommunityBasePost).authorId == _currentUser!.id;
+    }
+    return false;
+  }
+
+  /// 타입별 상태 옵션 가져오기
+  List<Map<String, String>> _getStatusOptions() {
+    if (_post is SharingItem) {
+      final isFree = (_post as SharingItem).isFree;
+      if (isFree) {
+        // 무료나눔: 나눔가능, 예약중, 나눔완료
+        return [
+          {'value': 'available', 'label': '나눔가능'},
+          {'value': 'reserved', 'label': '예약중'},
+          {'value': 'completed', 'label': '나눔완료'},
+        ];
+      } else {
+        // 물품판매: 판매중, 거래완료
+        return [
+          {'value': 'active', 'label': '판매중'},
+          {'value': 'completed', 'label': '거래완료'},
+        ];
+      }
+    } else if (_post is RequestItem) {
+      // 물품요청: 요청중, 완료
+      return [
+        {'value': 'requesting', 'label': '요청중'},
+        {'value': 'completed', 'label': '완료'},
+      ];
+    } else if (_post is JobPost) {
+      // 사역자모집: 모집중, 마감
+      return [
+        {'value': 'open', 'label': '모집중'},
+        {'value': 'closed', 'label': '마감'},
+      ];
+    } else if (_post is MusicTeamRecruitment) {
+      // 행사팀모집: 모집중, 마감
+      return [
+        {'value': 'open', 'label': '모집중'},
+        {'value': 'closed', 'label': '마감'},
+      ];
+    } else if (_post is MusicTeamSeeker) {
+      // 행사팀지원: 지원가능, 완료
+      return [
+        {'value': 'available', 'label': '지원가능'},
+        {'value': 'completed', 'label': '완료'},
+      ];
+    } else if (_post is ChurchNews) {
+      // 교회소식: 진행중, 완료
+      return [
+        {'value': 'active', 'label': '진행중'},
+        {'value': 'completed', 'label': '완료'},
+      ];
+    }
+    return [];
+  }
+
+  /// 상태 변경 드롭다운 위젯
+  Widget _buildStatusDropdown() {
+    final options = _getStatusOptions();
+    if (options.isEmpty) return const SizedBox.shrink();
+
+    final currentStatus = (_post as CommunityBasePost).status;
+
+    // 현재 상태가 옵션에 없으면 첫 번째 옵션으로 설정
+    final validStatus = options.any((opt) => opt['value'] == currentStatus)
+        ? currentStatus
+        : options.first['value']!;
+
+    // 드롭다운 아이템 생성 (상태 옵션 + 취소)
+    final dropdownItems = [
+      ...options.map((option) {
+        return DropdownMenuItem<String?>(
+          value: option['value'],
+          child: Text(option['label']!),
+        );
+      }),
+      DropdownMenuItem<String?>(
+        value: null, // null 값으로 취소 표시
+        child: Row(
+          children: [
+            Icon(Icons.close, size: 16.sp, color: NewAppColor.neutral600),
+            SizedBox(width: 8.w),
+            Text(
+              '취소',
+              style: TextStyle(
+                color: NewAppColor.neutral600,
+                fontFamily: 'Pretendard Variable',
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.neutral100,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: NewAppColor.neutral300),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, size: 18.sp, color: NewAppColor.neutral700),
+          SizedBox(width: 8.w),
+          Text(
+            '상태:',
+            style: TextStyle(
+              color: NewAppColor.neutral700,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard Variable',
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: DropdownButton<String?>(
+              value: validStatus,
+              isExpanded: true,
+              underline: const SizedBox.shrink(),
+              style: TextStyle(
+                color: NewAppColor.neutral900,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Pretendard Variable',
+              ),
+              items: dropdownItems,
+              onChanged: (newStatus) {
+                // null이면 취소 선택 (아무것도 하지 않음)
+                if (newStatus == null) return;
+
+                // 같은 상태면 아무것도 하지 않음
+                if (newStatus == currentStatus) return;
+
+                // 상태 변경
+                _updateStatus(newStatus);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 상태 업데이트
+  Future<void> _updateStatus(String newStatus) async {
+    if (_post == null) return;
+
+    // 상태 업데이트 API 호출
+    final response = await _communityService.updatePostStatus(
+      tableName: widget.tableName,
+      postId: widget.postId,
+      newStatus: newStatus,
+    );
+
+    if (mounted) {
+      if (response.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.message)),
+        );
+        // 데이터 다시 로드
+        _loadData();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.message)),
+        );
+      }
+    }
+  }
+
   void _showPostMenu() {
+    // 작성자 확인
+    final isAuthor = _currentUser != null &&
+                     _post != null &&
+                     (_post as CommunityBasePost).authorId == _currentUser!.id;
+
+    if (!isAuthor) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('게시글 작성자만 수정할 수 있습니다')),
+      );
+      return;
+    }
+
+    // 현재 상태 확인
+    final currentStatus = (_post as CommunityBasePost).status;
+    final isCompleted = currentStatus == 'completed' || currentStatus == 'closed';
+
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -954,6 +1154,19 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // 상태 변경
+              ListTile(
+                leading: Icon(
+                  isCompleted ? Icons.restart_alt : Icons.check_circle_outline,
+                  color: isCompleted ? NewAppColor.primary600 : NewAppColor.success600,
+                ),
+                title: Text(isCompleted ? '진행중으로 변경' : '완료로 변경'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _togglePostStatus();
+                },
+              ),
+              const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: const Text('수정'),
@@ -975,6 +1188,59 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         );
       },
     );
+  }
+
+  /// 게시글 상태 토글 (완료 <-> 진행중)
+  Future<void> _togglePostStatus() async {
+    if (_post == null) return;
+
+    final currentStatus = (_post as CommunityBasePost).status;
+    final isCompleted = currentStatus == 'completed' || currentStatus == 'closed';
+
+    // 새로운 상태 결정
+    String newStatus;
+    if (isCompleted) {
+      // 완료/마감 상태에서 진행중으로 변경
+      if (widget.tableName == 'community_sharing') {
+        newStatus = (_post as SharingItem).isFree ? 'available' : 'active';
+      } else if (widget.tableName == 'community_requests') {
+        newStatus = 'requesting';
+      } else if (widget.tableName == 'job_posts' ||
+                 widget.tableName == 'community_music_teams') {
+        newStatus = 'open';
+      } else {
+        newStatus = 'active';
+      }
+    } else {
+      // 진행중에서 완료/마감으로 변경
+      if (widget.tableName == 'job_posts' ||
+          widget.tableName == 'community_music_teams') {
+        newStatus = 'closed';
+      } else {
+        newStatus = 'completed';
+      }
+    }
+
+    // 상태 업데이트 API 호출
+    final response = await _communityService.updatePostStatus(
+      tableName: widget.tableName,
+      postId: widget.postId,
+      newStatus: newStatus,
+    );
+
+    if (mounted) {
+      if (response.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.message)),
+        );
+        // 데이터 다시 로드
+        _loadData();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.message)),
+        );
+      }
+    }
   }
 
   void _editPost() {

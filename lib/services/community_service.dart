@@ -1303,4 +1303,69 @@ class CommunityService {
       return null;
     }
   }
+
+  // ==========================================================================
+  // 상태 업데이트
+  // ==========================================================================
+
+  /// 게시글 상태 업데이트
+  /// tableName: 테이블명 (community_sharing, community_requests, job_posts 등)
+  /// postId: 게시글 ID
+  /// newStatus: 새로운 상태 값
+  Future<ApiResponse<bool>> updatePostStatus({
+    required String tableName,
+    required int postId,
+    required String newStatus,
+  }) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: false,
+        );
+      }
+
+      print('🔄 COMMUNITY_SERVICE: 상태 업데이트 - $tableName/$postId → $newStatus');
+
+      // 게시글 소유자 확인
+      final post = await _supabaseService.client
+          .from(tableName)
+          .select('author_id')
+          .eq('id', postId)
+          .single();
+
+      if (post['author_id'] != currentUser.id) {
+        return ApiResponse(
+          success: false,
+          message: '권한이 없습니다',
+          data: false,
+        );
+      }
+
+      // 상태 업데이트
+      await _supabaseService.client
+          .from(tableName)
+          .update({'status': newStatus, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('id', postId);
+
+      print('✅ COMMUNITY_SERVICE: 상태 업데이트 완료');
+
+      return ApiResponse(
+        success: true,
+        message: '상태가 변경되었습니다',
+        data: true,
+      );
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 상태 업데이트 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '상태 변경에 실패했습니다: $e',
+        data: false,
+      );
+    }
+  }
 }

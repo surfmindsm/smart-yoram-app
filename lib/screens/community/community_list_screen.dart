@@ -195,9 +195,14 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       ),
       body: Column(
         children: [
-          // 위치 필터 (무료나눔, 물품판매에만 표시)
+          // 위치 필터
           if (widget.type == CommunityListType.freeSharing ||
-              widget.type == CommunityListType.itemSale)
+              widget.type == CommunityListType.itemSale ||
+              widget.type == CommunityListType.itemRequest ||
+              widget.type == CommunityListType.jobPosting ||
+              widget.type == CommunityListType.musicTeamRecruit ||
+              widget.type == CommunityListType.musicTeamSeeking ||
+              widget.type == CommunityListType.churchNews)
             _buildLocationFilters(),
           // 목록
           Expanded(
@@ -265,6 +270,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     String? churchName;
     String? churchLocation; // 교회 지역 (도시 + 구/동)
     String? priceText; // 가격 정보
+    String? status; // 상태
+    String? statusLabel; // 상태 표시 텍스트
 
     if (item is SharingItem) {
       title = item.title;
@@ -275,6 +282,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorName = item.authorName;
       churchName = item.churchName;
       churchLocation = item.location; // 사용자가 입력한 주소
+      status = item.status;
+      statusLabel = item.statusDisplayName;
       // 무료나눔이 아닌 경우만 가격 표시
       if (!item.isFree) {
         priceText = item.formattedPrice;
@@ -287,6 +296,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorName = item.authorName;
       churchName = item.churchName;
       churchLocation = item.location;
+      status = item.status;
+      statusLabel = item.statusDisplayName;
     } else if (item is JobPost) {
       title = item.title;
       date = item.formattedDate;
@@ -295,6 +306,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorName = item.authorName;
       churchName = item.churchName;
       churchLocation = item.location;
+      status = item.status;
+      statusLabel = item.statusDisplayName;
     } else if (item is MusicTeamRecruitment) {
       title = item.title;
       date = item.formattedDate;
@@ -303,6 +316,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorName = item.authorName;
       churchName = item.churchName;
       churchLocation = item.location;
+      status = item.status;
+      statusLabel = item.statusDisplayName;
     } else if (item is MusicTeamSeeker) {
       title = item.title;
       date = item.formattedDate;
@@ -310,6 +325,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       likes = item.likes;
       authorName = item.authorName;
       churchName = item.churchName;
+      status = item.status;
+      statusLabel = item.statusDisplayName;
     } else if (item is ChurchNews) {
       title = item.title;
       imageUrl = item.images?.isNotEmpty == true ? item.images!.first : null;
@@ -319,6 +336,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorName = item.authorName;
       churchName = item.churchName;
       churchLocation = item.location;
+      status = item.status;
+      statusLabel = item.statusDisplayName;
     } else if (item is Map<String, dynamic>) {
       // myPosts의 경우
       title = item['title'] ?? '';
@@ -328,6 +347,31 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorName = item['author_name'];
       churchName = item['church_name'];
       churchLocation = item['church_location'];
+      status = item['status'];
+      statusLabel = _getStatusLabel(item['status']);
+
+      // 이미지 추출 (images 필드가 있는 경우)
+      if (item['images'] != null) {
+        if (item['images'] is List && (item['images'] as List).isNotEmpty) {
+          imageUrl = (item['images'] as List).first.toString();
+        } else if (item['images'] is String && (item['images'] as String).isNotEmpty) {
+          // JSON 문자열인 경우 파싱 시도
+          try {
+            final parsed = item['images'] as String;
+            if (parsed.startsWith('[') && parsed.endsWith(']')) {
+              // 간단한 JSON 배열 파싱
+              final urls = parsed.substring(1, parsed.length - 1).split(',');
+              if (urls.isNotEmpty) {
+                imageUrl = urls.first.trim().replaceAll('"', '').replaceAll("'", '');
+              }
+            } else {
+              imageUrl = parsed;
+            }
+          } catch (e) {
+            print('이미지 URL 파싱 실패: $e');
+          }
+        }
+      }
     }
 
     final hasImage = imageUrl != null;
@@ -344,6 +388,26 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 상태 칩
+                  if (statusLabel != null && status != null) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        statusLabel,
+                        style: TextStyle(
+                          color: _getStatusColor(status),
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Pretendard Variable',
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                  ],
                   // 제목
                   Text(
                     title,
@@ -440,26 +504,51 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     );
   }
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(String? status) {
+    if (status == null) return NewAppColor.primary600;
+
     switch (status.toLowerCase()) {
       case 'active':
-      case '진행중':
-      case '나눔가능':
-      case '모집중':
-      case '요청중':
+      case 'available':
         return NewAppColor.success600;
       case 'completed':
-      case '완료':
-      case '마감':
+      case 'closed':
         return NewAppColor.neutral500;
       case 'cancelled':
-      case '취소':
         return Colors.red;
       case 'reserved':
-      case '예약중':
         return NewAppColor.warning600;
+      case 'requesting':
+        return NewAppColor.primary600;
+      case 'open':
+        return NewAppColor.success600;
       default:
         return NewAppColor.primary600;
+    }
+  }
+
+  String _getStatusLabel(String? status) {
+    if (status == null) return '';
+
+    switch (status.toLowerCase()) {
+      case 'active':
+        return '판매중';
+      case 'available':
+        return '나눔가능';
+      case 'completed':
+        return '완료';
+      case 'closed':
+        return '마감';
+      case 'cancelled':
+        return '취소';
+      case 'reserved':
+        return '예약중';
+      case 'requesting':
+        return '요청중';
+      case 'open':
+        return '모집중';
+      default:
+        return status;
     }
   }
 
