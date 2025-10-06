@@ -264,6 +264,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     String? authorName;
     String? churchName;
     String? churchLocation; // 교회 지역 (도시 + 구/동)
+    String? priceText; // 가격 정보
 
     if (item is SharingItem) {
       title = item.title;
@@ -274,6 +275,10 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorName = item.authorName;
       churchName = item.churchName;
       churchLocation = item.location; // 사용자가 입력한 주소
+      // 무료나눔이 아닌 경우만 가격 표시
+      if (!item.isFree) {
+        priceText = item.formattedPrice;
+      }
     } else if (item is RequestItem) {
       title = item.title;
       date = item.formattedDate;
@@ -352,6 +357,19 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  // 가격 (물품 판매/나눔인 경우)
+                  if (priceText != null) ...[
+                    SizedBox(height: 6.h),
+                    Text(
+                      priceText,
+                      style: TextStyle(
+                        color: NewAppColor.neutral900,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard Variable',
+                      ),
+                    ),
+                  ],
                   SizedBox(height: 4.h),
                   // 작성자 · 교회명 · 지역 · 시간
                   Text(

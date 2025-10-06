@@ -90,19 +90,26 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
+      body: SafeArea(
+        child: Column(
           children: [
-            // 지역 선택 드롭다운
-            InkWell(
-              onTap: _showLocationPicker,
+            // 상단 헤더
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: NewAppColor.neutral200,
+                    width: 1,
+                  ),
+                ),
+              ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _selectedLocation,
+                    '커뮤니티',
                     style: TextStyle(
                       color: NewAppColor.neutral900,
                       fontSize: 20.sp,
@@ -110,87 +117,62 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       fontFamily: 'Pretendard Variable',
                     ),
                   ),
-                  SizedBox(width: 4.w),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: NewAppColor.neutral900,
-                    size: 24.sp,
+                  Row(
+                    children: [
+                      // 내 글 관리
+                      TextButton.icon(
+                        onPressed: _navigateToMyPosts,
+                        icon: Icon(
+                          Icons.edit_note,
+                          size: 20.sp,
+                          color: NewAppColor.neutral700,
+                        ),
+                        label: Text(
+                          '내 글',
+                          style: TextStyle(
+                            color: NewAppColor.neutral700,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      // 내가 찜한 글
+                      TextButton.icon(
+                        onPressed: _navigateToFavorites,
+                        icon: Icon(
+                          Icons.favorite_border,
+                          size: 20.sp,
+                          color: NewAppColor.neutral700,
+                        ),
+                        label: Text(
+                          '찜',
+                          style: TextStyle(
+                            color: NewAppColor.neutral700,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+            // 카테고리 리스트
+            Expanded(
+              child: _buildCategoryList(),
+            ),
           ],
         ),
-        actions: [
-          // 햄버거 메뉴
-          IconButton(
-            icon: Icon(
-              Icons.menu,
-              color: NewAppColor.neutral900,
-              size: 28.sp,
-            ),
-            onPressed: () {},
-          ),
-          // 검색
-          IconButton(
-            icon: Icon(
-              Icons.search,
-              color: NewAppColor.neutral900,
-              size: 28.sp,
-            ),
-            onPressed: () {},
-          ),
-          // 알림
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.notifications_outlined,
-                  color: NewAppColor.neutral900,
-                  size: 28.sp,
-                ),
-                onPressed: () {},
-              ),
-              Positioned(
-                right: 8.w,
-                top: 8.h,
-                child: Container(
-                  width: 8.w,
-                  height: 8.h,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // community_admin인 경우 설정 버튼 표시
-          if (_currentUser!.isCommunityAdmin)
-            IconButton(
-              icon: Icon(
-                Icons.settings_outlined,
-                color: NewAppColor.neutral700,
-                size: 28.sp,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-      body: _buildCategoryList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: 글쓰기 화면으로 이동
-        },
-        backgroundColor: NewAppColor.primary600,
-        child: Icon(Icons.add, color: Colors.white, size: 32.sp),
       ),
     );
   }
@@ -275,22 +257,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
           color: Colors.purple,
           backgroundColor: Colors.purple.shade50,
         ),
-        CommunityCategory(
-          id: 'my-posts',
-          title: '내 게시글',
-          subtitle: '내가 작성한 글',
-          icon: Icons.edit_note_outlined,
-          color: NewAppColor.neutral700,
-          backgroundColor: NewAppColor.neutral200,
-        ),
-        CommunityCategory(
-          id: 'my-favorites',
-          title: '찜한 글',
-          subtitle: '내가 찜한 글',
-          icon: Icons.favorite_border,
-          color: Colors.pink,
-          backgroundColor: Colors.pink.shade50,
-        ),
       ];
     }
 
@@ -305,22 +271,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
           icon: Icons.event_outlined,
           color: Colors.purple,
           backgroundColor: Colors.purple.shade50,
-        ),
-        CommunityCategory(
-          id: 'my-posts',
-          title: '내 게시글',
-          subtitle: '내가 작성한 글',
-          icon: Icons.edit_note_outlined,
-          color: NewAppColor.neutral700,
-          backgroundColor: NewAppColor.neutral200,
-        ),
-        CommunityCategory(
-          id: 'my-favorites',
-          title: '찜한 글',
-          subtitle: '내가 찜한 글',
-          icon: Icons.favorite_border,
-          color: Colors.pink,
-          backgroundColor: Colors.pink.shade50,
         ),
       ];
     }
@@ -359,22 +309,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
         icon: Icons.event_outlined,
         color: Colors.purple,
         backgroundColor: Colors.purple.shade50,
-      ),
-      CommunityCategory(
-        id: 'my-posts',
-        title: '내 글 관리',
-        subtitle: '내가 작성한 글',
-        icon: Icons.edit_note_outlined,
-        color: NewAppColor.neutral700,
-        backgroundColor: NewAppColor.neutral200,
-      ),
-      CommunityCategory(
-        id: 'my-favorites',
-        title: '내가 찜한 글',
-        subtitle: '내가 찜한 글',
-        icon: Icons.favorite_border,
-        color: Colors.pink,
-        backgroundColor: Colors.pink.shade50,
       ),
     ];
   }
@@ -431,6 +365,30 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
       );
     }
+  }
+
+  /// 내 글 관리로 이동
+  void _navigateToMyPosts() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CommunityListScreen(
+          categoryId: 'my-posts',
+          title: '내 글 관리',
+          type: CommunityListType.myPosts,
+        ),
+      ),
+    );
+  }
+
+  /// 찜한 글로 이동
+  void _navigateToFavorites() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CommunityFavoritesScreen(),
+      ),
+    );
   }
 
   /// 지역 선택 다이얼로그
