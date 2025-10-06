@@ -153,9 +153,11 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     // 위치 필터 (도/시)
     if (_selectedCity != null) {
       filtered = filtered.where((item) {
+        String? province;
         String? location;
         if (item is SharingItem) {
-          location = item.location;
+          province = item.province;
+          location = item.location; // 레거시 필드
         } else if (item is RequestItem) {
           location = item.location;
         } else if (item is JobPost) {
@@ -166,17 +168,24 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           location = item.location;
         }
 
-        if (location == null || location.isEmpty) return false;
-        return location.startsWith(_selectedCity!);
+        // SharingItem은 province 우선, 없으면 location
+        if (province != null && province.isNotEmpty) {
+          return province == _selectedCity;
+        } else if (location != null && location.isNotEmpty) {
+          return location.startsWith(_selectedCity!);
+        }
+        return false;
       }).toList();
     }
 
     // 위치 필터 (시/군/구)
     if (_selectedDistrict != null) {
       filtered = filtered.where((item) {
+        String? district;
         String? location;
         if (item is SharingItem) {
-          location = item.location;
+          district = item.district;
+          location = item.location; // 레거시 필드
         } else if (item is RequestItem) {
           location = item.location;
         } else if (item is JobPost) {
@@ -187,8 +196,13 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           location = item.location;
         }
 
-        if (location == null || location.isEmpty) return false;
-        return location.contains(_selectedDistrict!);
+        // SharingItem은 district 우선, 없으면 location
+        if (district != null && district.isNotEmpty) {
+          return district == _selectedDistrict;
+        } else if (location != null && location.isNotEmpty) {
+          return location.contains(_selectedDistrict!);
+        }
+        return false;
       }).toList();
     }
 
@@ -309,6 +323,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     String? priceText; // 가격 정보
     String? status; // 상태
     String? statusLabel; // 상태 표시 텍스트
+    bool deliveryAvailable = false; // 택배 가능 여부
 
     if (item is SharingItem) {
       title = item.title;
@@ -319,7 +334,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorId = item.authorId;
       authorName = item.authorName;
       churchName = item.churchName;
-      churchLocation = item.location; // 사용자가 입력한 주소
+      churchLocation = item.displayLocation; // province + district
+      deliveryAvailable = item.deliveryAvailable;
       status = item.status;
       statusLabel = item.statusDisplayName;
       // 무료나눔이 아닌 경우만 가격 표시
@@ -437,21 +453,45 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                 children: [
                   // 상태 칩
                   if (statusLabel != null && status != null) ...[
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Text(
-                        statusLabel,
-                        style: TextStyle(
-                          color: _getStatusColor(status),
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Pretendard Variable',
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(status).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            statusLabel,
+                            style: TextStyle(
+                              color: _getStatusColor(status),
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Pretendard Variable',
+                            ),
+                          ),
                         ),
-                      ),
+                        // 택배 가능 배지 (상태 칩 옆)
+                        if (deliveryAvailable) ...[
+                          SizedBox(width: 4.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.primary100,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Text(
+                              '택배가능',
+                              style: TextStyle(
+                                color: NewAppColor.primary700,
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Pretendard Variable',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     SizedBox(height: 6.h),
                   ],

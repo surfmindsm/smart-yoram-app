@@ -123,7 +123,10 @@ class SharingItem extends CommunityBasePost {
   final String condition; // 양호, 보통, 사용감있음, 새상품
   final int quantity;
   final List<String> images;
-  final String location;
+  final String? province; // 도/시 (예: 서울특별시, 경기도)
+  final String? district; // 시/군/구 (예: 강남구, 수원시)
+  final bool deliveryAvailable; // 택배 가능 여부
+  final String? location; // 레거시 필드 (하위 호환성)
   final String? churchLocation; // 교회 지역 (도시 + 구/동)
   final String contactPhone;
   final String? contactEmail;
@@ -151,7 +154,10 @@ class SharingItem extends CommunityBasePost {
     required this.condition,
     required this.quantity,
     this.images = const [],
-    required this.location,
+    this.province,
+    this.district,
+    this.deliveryAvailable = false,
+    this.location,
     this.churchLocation,
     required this.contactPhone,
     this.contactEmail,
@@ -203,7 +209,10 @@ class SharingItem extends CommunityBasePost {
       condition: json['condition'] ?? '',
       quantity: json['quantity'] ?? 1,
       images: json['images'] != null ? List<String>.from(json['images']) : [],
-      location: json['location'] ?? '',
+      province: json['province'],
+      district: json['district'],
+      deliveryAvailable: json['delivery_available'] ?? false,
+      location: json['location'],
       churchLocation: json['church_location'],
       contactPhone: json['contactPhone'] ?? json['contact_phone'] ?? json['contact_info'] ?? '',
       contactEmail: json['contactEmail'] ?? json['contact_email'],
@@ -224,12 +233,29 @@ class SharingItem extends CommunityBasePost {
       'condition': condition,
       'quantity': quantity,
       'images': images,
+      'province': province,
+      'district': district,
+      'delivery_available': deliveryAvailable,
       'location': location,
       'is_free': isFree,
       'price': price,
       'delivery_method': deliveryMethod,
       'purchase_date': purchaseDate,
     };
+  }
+
+  /// 주소 표시 (province + district)
+  String get displayLocation {
+    if (province != null && district != null) {
+      return '$province $district';
+    } else if (province != null) {
+      return province!;
+    } else if (district != null) {
+      return district!;
+    } else if (location != null && location!.isNotEmpty) {
+      return location!; // 레거시 필드 사용
+    }
+    return '주소 정보 없음';
   }
 
   @override
