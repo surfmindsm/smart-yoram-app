@@ -114,7 +114,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   @override
   void initState() {
     super.initState();
+    print('🔍 initState 호출됨 - existingPost: ${widget.existingPost != null ? "있음" : "없음"}');
     if (widget.existingPost != null) {
+      print('📦 existingPost 내용: ${widget.existingPost}');
       _loadExistingPost();
     }
   }
@@ -184,6 +186,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         } else if (post['images'] is String) {
           _existingImageUrls = [post['images'] as String];
         }
+        print('📸 기존 이미지 로드됨: ${_existingImageUrls.length}장 - $_existingImageUrls');
       }
 
       // 상태 로드
@@ -268,7 +271,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _purchaseDateController.text = post.purchaseDate ?? '';
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
-      // 이미지는 URL 목록이므로 변환 불가 - 스킵
+      _selectedStatus = post.status;
+      // 이미지 로드
+      _existingImageUrls = List<String>.from(post.images);
+      print('📸 기존 이미지 로드됨 (SharingItem): ${_existingImageUrls.length}장 - $_existingImageUrls');
     } else if (post is RequestItem) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
@@ -281,6 +287,12 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _selectedUrgency = post.urgency ?? 'normal';
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
+      _selectedStatus = post.status;
+      // 이미지 로드
+      if (post.images != null) {
+        _existingImageUrls = List<String>.from(post.images!);
+        print('📸 기존 이미지 로드됨 (RequestItem): ${_existingImageUrls.length}장 - $_existingImageUrls');
+      }
     } else if (post is JobPost) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
@@ -324,7 +336,12 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _locationController.text = post.location ?? '';
       _contactController.text = post.contactPhone ?? '';
       _emailController.text = post.contactEmail ?? '';
-      // 이미지는 URL 목록이므로 변환 불가 - 스킵
+      _selectedStatus = post.status;
+      // 이미지 로드
+      if (post.images != null) {
+        _existingImageUrls = List<String>.from(post.images!);
+        print('📸 기존 이미지 로드됨 (ChurchNews): ${_existingImageUrls.length}장 - $_existingImageUrls');
+      }
     }
 
     setState(() {});
@@ -908,10 +925,34 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                           width: 100.w,
                           height: 100.h,
                           fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey[200],
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
                           errorBuilder: (context, error, stackTrace) {
+                            print('❌ 이미지 로드 실패: $imageUrl, 에러: $error');
                             return Container(
                               color: Colors.grey[300],
-                              child: Icon(Icons.image, size: 40.sp, color: Colors.grey),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.broken_image, size: 40.sp, color: Colors.grey),
+                                  Text(
+                                    '이미지 로드 실패',
+                                    style: TextStyle(fontSize: 10.sp, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
                             );
                           },
                         ),
