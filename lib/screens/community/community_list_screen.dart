@@ -54,6 +54,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   String? _selectedStatus; // 상태 필터 (나눔가능, 예약중, 완료)
   String? _selectedCity; // 도/시 필터
   String? _selectedDistrict; // 시/군/구 필터
+  bool? _deliveryAvailableFilter; // 택배가능 필터
 
   @override
   void initState() {
@@ -213,6 +214,16 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           return district == _selectedDistrict;
         } else if (location != null && location.isNotEmpty) {
           return location.contains(_selectedDistrict!);
+        }
+        return false;
+      }).toList();
+    }
+
+    // 택배가능 필터 (무료나눔/물품판매)
+    if (_deliveryAvailableFilter != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
+      filtered = filtered.where((item) {
+        if (item is SharingItem) {
+          return item.deliveryAvailable == _deliveryAvailableFilter;
         }
         return false;
       }).toList();
@@ -1023,11 +1034,12 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             // 전체 칩
             _buildFilterChip(
               label: '전체',
-              isSelected: _selectedStatus == null && _selectedCategory == null,
+              isSelected: _selectedStatus == null && _selectedCategory == null && _deliveryAvailableFilter == null,
               onTap: () {
                 setState(() {
                   _selectedStatus = null;
                   _selectedCategory = null;
+                  _deliveryAvailableFilter = null;
                 });
               },
             ),
@@ -1050,6 +1062,18 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                 ),
               );
             }),
+
+            // 택배가능 필터
+            _buildFilterChip(
+              label: '택배가능',
+              isSelected: _deliveryAvailableFilter == true,
+              onTap: () {
+                setState(() {
+                  _deliveryAvailableFilter = _deliveryAvailableFilter == true ? null : true;
+                });
+              },
+            ),
+            SizedBox(width: 8.w),
 
             // 구분선
             Container(
