@@ -113,6 +113,18 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           break;
       }
 
+      print('📋 COMMUNITY_LIST: 로드된 아이템 수 - ${items.length}');
+      if (items.isNotEmpty && items.first is SharingItem) {
+        final statusCounts = <String, int>{};
+        for (var item in items) {
+          if (item is SharingItem) {
+            final status = item.status.toLowerCase();
+            statusCounts[status] = (statusCounts[status] ?? 0) + 1;
+          }
+        }
+        print('📋 COMMUNITY_LIST: 상태별 개수 - $statusCounts');
+      }
+
       setState(() {
         _items = items;
         _isLoading = false;
@@ -438,6 +450,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     final hasImage = imageUrl != null;
+    final isCompleted = status != null && (status.toLowerCase() == 'completed' || status.toLowerCase() == 'closed' || status.toLowerCase() == 'sold');
 
     return InkWell(
       onTap: () => _navigateToDetail(item),
@@ -451,47 +464,23 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 상태 칩
-                  if (statusLabel != null && status != null) ...[
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(status).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Text(
-                            statusLabel,
-                            style: TextStyle(
-                              color: _getStatusColor(status),
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Pretendard Variable',
-                            ),
-                          ),
+                  // 상태 칩 (이미지가 없고, 예약중/완료인 경우만)
+                  if (statusLabel != null && status != null && _shouldShowStatus(status) && !hasImage) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        statusLabel,
+                        style: TextStyle(
+                          color: _getStatusColor(status),
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Pretendard Variable',
                         ),
-                        // 택배 가능 배지 (상태 칩 옆)
-                        if (deliveryAvailable) ...[
-                          SizedBox(width: 4.w),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.primary100,
-                              borderRadius: BorderRadius.circular(4.r),
-                            ),
-                            child: Text(
-                              '택배가능',
-                              style: TextStyle(
-                                color: NewAppColor.primary700,
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Pretendard Variable',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                      ),
                     ),
                     SizedBox(height: 6.h),
                   ],
@@ -499,7 +488,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      color: NewAppColor.neutral900,
+                      color: isCompleted ? NewAppColor.neutral500 : NewAppColor.neutral900,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w500,
                       fontFamily: 'Pretendard Variable',
@@ -514,7 +503,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                     Text(
                       priceText,
                       style: TextStyle(
-                        color: NewAppColor.neutral900,
+                        color: isCompleted ? NewAppColor.neutral500 : NewAppColor.neutral900,
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w700,
                         fontFamily: 'Pretendard Variable',
@@ -531,7 +520,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                       date,
                     ].join(' · '),
                     style: TextStyle(
-                      color: NewAppColor.neutral600,
+                      color: isCompleted ? NewAppColor.neutral400 : NewAppColor.neutral600,
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w400,
                       fontFamily: 'Pretendard Variable',
@@ -563,26 +552,77 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             // 썸네일 이미지 (오른쪽)
             if (hasImage) ...[
               SizedBox(width: 16.w),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8.r),
-                child: Image.network(
-                  imageUrl,
-                  width: 120.w,
-                  height: 120.w,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 120.w,
-                      height: 120.w,
-                      color: NewAppColor.neutral200,
-                      child: Icon(
-                        Icons.image_outlined,
-                        size: 48.sp,
-                        color: NewAppColor.neutral400,
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8.r),
+                    child: Opacity(
+                      opacity: isCompleted ? 0.5 : 1.0,
+                      child: Image.network(
+                        imageUrl,
+                        width: 120.w,
+                        height: 120.w,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 120.w,
+                            height: 120.w,
+                            color: NewAppColor.neutral200,
+                            child: Icon(
+                              Icons.image_outlined,
+                              size: 48.sp,
+                              color: NewAppColor.neutral400,
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                  // 상태 칩 (예약중, 완료만 표시)
+                  if (status != null && statusLabel != null && _shouldShowStatus(status))
+                    Positioned(
+                      top: 8.h,
+                      left: 8.w,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(status),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Text(
+                          statusLabel,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                      ),
+                    ),
+                  // 택배가능 배지 (우측 상단)
+                  if (deliveryAvailable)
+                    Positioned(
+                      top: 8.h,
+                      right: 8.w,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: NewAppColor.primary600,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Text(
+                          '택배가능',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ],
@@ -1038,6 +1078,15 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         ),
       ),
     );
+  }
+
+  /// 상태 칩을 표시할지 여부 (예약중, 완료만)
+  bool _shouldShowStatus(String status) {
+    final statusLower = status.toLowerCase();
+    return statusLower == 'ing' ||
+           statusLower == 'completed' ||
+           statusLower == 'closed' ||
+           statusLower == 'sold';
   }
 
   /// 필터 칩 위젯

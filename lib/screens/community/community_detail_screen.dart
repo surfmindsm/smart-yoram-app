@@ -248,25 +248,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               padding: EdgeInsets.zero,
             ),
           ),
-          Container(
-            margin: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.share_outlined, color: Colors.black),
-              onPressed: () {},
-              padding: EdgeInsets.zero,
-            ),
-          ),
           if (_canEdit())
             Container(
               margin: EdgeInsets.all(8.r),
@@ -944,12 +925,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   bool _canEdit() {
     if (_currentUser == null || _post == null) return false;
 
-    // 관리자는 모든 게시글 수정 가능
-    if (_currentUser!.isChurchAdmin || _currentUser!.isCommunityAdmin) {
-      return true;
-    }
-
-    // 본인 게시글만 수정 가능
+    // 본인 게시글만 수정 가능 (관리자 권한 제거)
     if (_post is CommunityBasePost) {
       return (_post as CommunityBasePost).authorId == _currentUser!.id;
     }
