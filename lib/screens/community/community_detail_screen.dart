@@ -323,7 +323,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       authorName = post.authorName;
       authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
-      churchLocation = post.churchLocation;
+      churchLocation = post.displayLocation; // province + district
     } else if (_post is RequestItem) {
       final post = _post as RequestItem;
       title = post.title;
