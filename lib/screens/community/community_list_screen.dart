@@ -51,11 +51,11 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   // 검색 및 필터
   final TextEditingController _searchController = TextEditingController();
   String? _selectedCategory; // 카테고리 필터 (가구, 전자제품 등)
-  String? _selectedStatus; // 상태 필터 (나눔가능, 예약중, 완료)
   String? _selectedCity; // 도/시 필터
   String? _selectedDistrict; // 시/군/구 필터
   bool? _deliveryAvailableFilter; // 택배가능 필터
   String _priceFilter = 'all'; // 가격 필터: all(전체), free(무료), paid(판매)
+  bool _hideCompleted = false; // 판매/나눔 완료 제거 필터
 
   @override
   void initState() {
@@ -167,11 +167,12 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       print('📊 FILTER: 가격 필터 적용 후 = ${filtered.length}');
     }
 
-    // 상태 필터 (무료나눔/물품판매)
-    if (_selectedStatus != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
+    // 판매/나눔 완료 제거 필터
+    if (_hideCompleted && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
       filtered = filtered.where((item) {
         if (item is SharingItem) {
-          return item.status.toLowerCase() == _selectedStatus!.toLowerCase();
+          final status = item.status.toLowerCase();
+          return status != 'completed' && status != 'closed' && status != 'sold';
         }
         return false;
       }).toList();
@@ -541,8 +542,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                       priceText,
                       style: TextStyle(
                         color: isCompleted ? NewAppColor.neutral500 : NewAppColor.neutral900,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
                         fontFamily: 'Pretendard Variable',
                       ),
                     ),
@@ -1021,19 +1022,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
   /// 상태 + 카테고리 필터 (무료나눔/물품판매)
   Widget _buildStatusAndCategoryFilters() {
-    // 상태 옵션
-    final List<Map<String, String>> statusOptions = widget.type == CommunityListType.freeSharing
-        ? [
-            {'value': 'active', 'label': '나눔 가능'},
-            {'value': 'ing', 'label': '예약중'},
-            {'value': 'completed', 'label': '나눔 완료'},
-          ]
-        : [
-            {'value': 'active', 'label': '판매중'},
-            {'value': 'ing', 'label': '예약중'},
-            {'value': 'completed', 'label': '판매 완료'},
-          ];
-
     // 카테고리 옵션
     final List<String> categoryOptions = [
       '가구',
@@ -1060,13 +1048,13 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             // 전체 칩
             _buildFilterChip(
               label: '전체',
-              isSelected: _selectedStatus == null && _selectedCategory == null && _deliveryAvailableFilter == null && _priceFilter == 'all',
+              isSelected: _selectedCategory == null && _deliveryAvailableFilter == null && _priceFilter == 'all' && !_hideCompleted,
               onTap: () {
                 setState(() {
-                  _selectedStatus = null;
                   _selectedCategory = null;
                   _deliveryAvailableFilter = null;
                   _priceFilter = 'all';
+                  _hideCompleted = false;
                 });
               },
             ),
@@ -1084,7 +1072,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             ),
             SizedBox(width: 8.w),
             _buildFilterChip(
-              label: '판매',
+              label: '유료',
               isSelected: _priceFilter == 'paid',
               onTap: () {
                 setState(() {
@@ -1094,23 +1082,17 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             ),
             SizedBox(width: 8.w),
 
-            // 상태 필터 칩들
-            ...statusOptions.map((option) {
-              final value = option['value']!;
-              final label = option['label']!;
-              return Padding(
-                padding: EdgeInsets.only(right: 8.w),
-                child: _buildFilterChip(
-                  label: label,
-                  isSelected: _selectedStatus == value,
-                  onTap: () {
-                    setState(() {
-                      _selectedStatus = _selectedStatus == value ? null : value;
-                    });
-                  },
-                ),
-              );
-            }),
+            // 판매 완료 제거 필터
+            _buildFilterChip(
+              label: '완료 제거',
+              isSelected: _hideCompleted,
+              onTap: () {
+                setState(() {
+                  _hideCompleted = !_hideCompleted;
+                });
+              },
+            ),
+            SizedBox(width: 8.w),
 
             // 택배가능 필터
             _buildFilterChip(
