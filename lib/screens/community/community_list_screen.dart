@@ -55,7 +55,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   String? _selectedDistrict; // 시/군/구 필터
   bool? _deliveryAvailableFilter; // 택배가능 필터
   String _priceFilter = 'all'; // 가격 필터: all(전체), free(무료), paid(판매)
-  bool _hideCompleted = false; // 판매/나눔 완료 제거 필터
+  bool _hideCompleted = false; // 판매/나눔/요청 완료 제거 필터
 
   @override
   void initState() {
@@ -167,21 +167,29 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       print('📊 FILTER: 가격 필터 적용 후 = ${filtered.length}');
     }
 
-    // 판매/나눔 완료 제거 필터
-    if (_hideCompleted && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
+    // 판매/나눔/요청 완료 제거 필터
+    if (_hideCompleted) {
       filtered = filtered.where((item) {
         if (item is SharingItem) {
           final status = item.status.toLowerCase();
           return status != 'completed' && status != 'closed' && status != 'sold';
+        } else if (item is RequestItem) {
+          final status = item.status.toLowerCase();
+          return status != 'completed' && status != 'closed';
         }
-        return false;
+        return true;
       }).toList();
     }
 
-    // 카테고리 필터 (무료나눔/물품판매)
-    if (_selectedCategory != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
+    // 카테고리 필터 (무료나눔/물품판매/물품요청)
+    if (_selectedCategory != null &&
+        (widget.type == CommunityListType.freeSharing ||
+         widget.type == CommunityListType.itemSale ||
+         widget.type == CommunityListType.itemRequest)) {
       filtered = filtered.where((item) {
         if (item is SharingItem) {
+          return item.category == _selectedCategory;
+        } else if (item is RequestItem) {
           return item.category == _selectedCategory;
         }
         return false;
@@ -302,6 +310,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           if (widget.type == CommunityListType.freeSharing ||
               widget.type == CommunityListType.itemSale)
             _buildStatusAndCategoryFilters(),
+          // 물품 요청 필터
+          if (widget.type == CommunityListType.itemRequest)
+            _buildRequestFilters(),
           // 목록
           Expanded(
             child: _isLoading
@@ -400,7 +411,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorId = item.authorId;
       authorName = item.authorName;
       churchName = item.churchName;
-      churchLocation = item.location;
+      churchLocation = item.displayLocation;
       status = item.status;
       statusLabel = item.statusDisplayName;
     } else if (item is JobPost) {
@@ -1101,6 +1112,85 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               onTap: () {
                 setState(() {
                   _deliveryAvailableFilter = _deliveryAvailableFilter == true ? null : true;
+                });
+              },
+            ),
+            SizedBox(width: 8.w),
+
+            // 구분선
+            Container(
+              width: 1,
+              height: 24.h,
+              color: NewAppColor.neutral300,
+              margin: EdgeInsets.symmetric(horizontal: 8.w),
+            ),
+
+            // 카테고리 필터 칩들
+            ...categoryOptions.map((category) {
+              return Padding(
+                padding: EdgeInsets.only(right: 8.w),
+                child: _buildFilterChip(
+                  label: category,
+                  isSelected: _selectedCategory == category,
+                  onTap: () {
+                    setState(() {
+                      _selectedCategory = _selectedCategory == category ? null : category;
+                    });
+                  },
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 물품 요청 필터
+  Widget _buildRequestFilters() {
+    // 카테고리 옵션
+    final List<String> categoryOptions = [
+      '가구',
+      '전자제품',
+      '도서',
+      '의류',
+      '장난감',
+      '생활용품',
+      '기타',
+    ];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(
+          bottom: BorderSide(color: NewAppColor.neutral200, width: 1),
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // 전체 칩
+            _buildFilterChip(
+              label: '전체',
+              isSelected: !_hideCompleted && _selectedCategory == null,
+              onTap: () {
+                setState(() {
+                  _hideCompleted = false;
+                  _selectedCategory = null;
+                });
+              },
+            ),
+            SizedBox(width: 8.w),
+
+            // 완료 제거 필터
+            _buildFilterChip(
+              label: '완료 제거',
+              isSelected: _hideCompleted,
+              onTap: () {
+                setState(() {
+                  _hideCompleted = !_hideCompleted;
                 });
               },
             ),

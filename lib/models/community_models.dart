@@ -311,12 +311,15 @@ class RequestItem extends CommunityBasePost {
   final int? quantity;
   final String? reason; // 요청 사유
   final String? neededDate; // 필요일
-  final String location;
+  final String? province; // 도/시 (예: 서울특별시, 경기도)
+  final String? district; // 시/군/구 (예: 강남구, 수원시)
+  final String? location; // 레거시 필드 (하위 호환성)
   final String? priceRange; // 희망 가격대
   final String contactPhone;
   final String? contactEmail;
   final String urgency; // low, normal, medium, high
   final List<String>? images; // 참고 이미지
+  final bool deliveryAvailable; // 택배 가능 여부
 
   RequestItem({
     required super.id,
@@ -337,24 +340,42 @@ class RequestItem extends CommunityBasePost {
     this.quantity,
     this.reason,
     this.neededDate,
-    required this.location,
+    this.province,
+    this.district,
+    this.location,
     this.priceRange,
     required this.contactPhone,
     this.contactEmail,
     this.urgency = 'normal',
     this.images,
+    this.deliveryAvailable = false,
   });
 
   factory RequestItem.fromJson(Map<String, dynamic> json) {
+    // 조인된 author/church 데이터 파싱
+    String? authorName;
+    if (json['author'] != null && json['author'] is Map) {
+      authorName = json['author']['name'];
+    } else {
+      authorName = json['author_name'] ?? json['userName'];
+    }
+
+    String? churchName;
+    if (json['church'] != null && json['church'] is Map) {
+      churchName = json['church']['name'];
+    } else {
+      churchName = json['church_name'] ?? json['church'];
+    }
+
     return RequestItem(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
       description: json['description'],
       status: json['status'] ?? 'requesting',
       authorId: json['author_id'] ?? 0,
-      authorName: json['userName'] ?? json['author_name'],
+      authorName: authorName,
       churchId: json['church_id'],
-      churchName: json['church'],
+      churchName: churchName,
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
@@ -369,12 +390,15 @@ class RequestItem extends CommunityBasePost {
       quantity: json['quantity'],
       reason: json['reason'],
       neededDate: json['neededDate'] ?? json['needed_date'],
-      location: json['location'] ?? '',
+      province: json['province'],
+      district: json['district'],
+      location: json['location'],
       priceRange: json['priceRange'] ?? json['price_range'],
       contactPhone: json['contactPhone'] ?? json['contact_phone'] ?? '',
       contactEmail: json['contactEmail'] ?? json['contact_email'],
       urgency: json['urgency'] ?? 'normal',
       images: json['images'] != null ? List<String>.from(json['images']) : null,
+      deliveryAvailable: json['delivery_available'] ?? false,
     );
   }
 
@@ -387,14 +411,47 @@ class RequestItem extends CommunityBasePost {
       'quantity': quantity,
       'reason': reason,
       'needed_date': neededDate,
+      'province': province,
+      'district': district,
       'location': location,
       'price_range': priceRange,
       'urgency': urgency,
       'images': images,
+      'delivery_available': deliveryAvailable,
     };
   }
 
   UrgencyLevel get urgencyLevel => UrgencyLevel.fromValue(urgency);
+
+  /// 주소 표시 (province + district)
+  String get displayLocation {
+    if (province != null && district != null) {
+      return '$province $district';
+    } else if (province != null) {
+      return province!;
+    } else if (district != null) {
+      return district!;
+    } else if (location != null && location!.isNotEmpty) {
+      return location!; // 레거시 필드 사용
+    }
+    return '주소 정보 없음';
+  }
+
+  @override
+  String get statusDisplayName {
+    final statusLower = status.toLowerCase();
+    switch (statusLower) {
+      case 'active':
+      case 'requesting':
+        return '요청중';
+      case 'completed':
+        return '완료';
+      case 'closed':
+        return '마감';
+      default:
+        return status;
+    }
+  }
 }
 
 // ============================================================================

@@ -317,7 +317,7 @@ class CommunityService {
 
       dynamic query = _supabaseService.client
           .from('community_requests')
-          .select();
+          .select('*');
 
       if (category != null) query = query.eq('category', category);
       if (urgency != null) query = query.eq('urgency', urgency);
@@ -330,9 +330,61 @@ class CommunityService {
 
       final response = await query;
 
-      return (response as List)
-          .map((item) => RequestItem.fromJson(item as Map<String, dynamic>))
-          .toList();
+      print('📋 COMMUNITY_SERVICE: 물품 요청 조회 결과 - ${(response as List).length}개');
+
+      // author와 church 정보를 별도로 조회하여 추가
+      final List<RequestItem> items = [];
+      for (var itemData in response) {
+        final Map<String, dynamic> data = Map<String, dynamic>.from(itemData);
+
+        print('📋 COMMUNITY_SERVICE: 원본 데이터 - author_id: ${data['author_id']}, church_id: ${data['church_id']}, location: ${data['location']}');
+
+        // author 정보 조회
+        if (data['author_id'] != null) {
+          try {
+            final authorResponse = await _supabaseService.client
+                .from('users')
+                .select('full_name')
+                .eq('id', data['author_id'])
+                .maybeSingle();
+
+            print('📋 COMMUNITY_SERVICE: author 조회 결과 - $authorResponse');
+
+            if (authorResponse != null) {
+              data['author_name'] = authorResponse['full_name'];
+            }
+          } catch (e) {
+            print('⚠️ COMMUNITY_SERVICE: author 정보 조회 실패 - $e');
+          }
+        }
+
+        // church 정보 조회
+        if (data['church_id'] != null) {
+          try {
+            final churchResponse = await _supabaseService.client
+                .from('churches')
+                .select('name')
+                .eq('id', data['church_id'])
+                .maybeSingle();
+
+            print('📋 COMMUNITY_SERVICE: church 조회 결과 - $churchResponse');
+
+            if (churchResponse != null) {
+              data['church_name'] = churchResponse['name'];
+            }
+          } catch (e) {
+            print('⚠️ COMMUNITY_SERVICE: church 정보 조회 실패 - $e');
+          }
+        }
+
+        print('📋 COMMUNITY_SERVICE: 최종 데이터 - author_name: ${data['author_name']}, church_name: ${data['church_name']}, location: ${data['location']}');
+
+        final requestItem = RequestItem.fromJson(data);
+        print('📋 COMMUNITY_SERVICE: RequestItem 생성됨 - authorName: ${requestItem.authorName}, churchName: ${requestItem.churchName}, location: ${requestItem.location}');
+        items.add(requestItem);
+      }
+
+      return items;
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 물품 요청 목록 조회 실패 - $e');
       return [];
