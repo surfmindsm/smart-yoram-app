@@ -204,20 +204,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
   List<CommunityCategory> _getCategories() {
     final baseCategories = [
       CommunityCategory(
-        id: 'free-sharing',
-        title: '무료 나눔',
-        subtitle: '나눔하고 싶은 물품',
-        icon: Icons.card_giftcard_outlined,
-        color: NewAppColor.success600,
-        backgroundColor: NewAppColor.success200,
-      ),
-      CommunityCategory(
-        id: 'item-sale',
+        id: 'sharing-market',
         title: '물품 판매',
-        subtitle: '판매하고 싶은 물품',
-        icon: Icons.sell_outlined,
-        color: NewAppColor.warning600,
-        backgroundColor: NewAppColor.warning200,
+        subtitle: '나눔하고 판매하는 물품',
+        icon: Icons.storefront_outlined,
+        color: NewAppColor.primary600,
+        backgroundColor: NewAppColor.primary200,
       ),
       CommunityCategory(
         id: 'item-request',
@@ -318,11 +310,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
     CommunityListType? listType;
 
     switch (category.id) {
-      case 'free-sharing':
-        listType = CommunityListType.freeSharing;
-        break;
-      case 'item-sale':
-        listType = CommunityListType.itemSale;
+      case 'sharing-market':
+        listType = CommunityListType.freeSharing; // 통합된 나눔/판매 (임시로 freeSharing 사용)
         break;
       case 'item-request':
         listType = CommunityListType.itemRequest;

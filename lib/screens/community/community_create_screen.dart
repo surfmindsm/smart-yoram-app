@@ -110,6 +110,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   List<XFile> _selectedImages = [];
   List<String> _existingImageUrls = []; // 기존 이미지 URL 목록
   String _selectedStatus = 'active';
+  bool _isFreeSharing = false; // 무료나눔 체크박스 상태
 
   @override
   void initState() {
@@ -199,8 +200,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         _selectedCategory = post['category'];
         _selectedCondition = post['condition'];
         _quantity = post['quantity'] ?? 1;
-        final isFree = post['is_free'] == true;
-        if (!isFree && post['price'] != null) {
+        _isFreeSharing = post['is_free'] == true;
+        if (!_isFreeSharing && post['price'] != null) {
           _priceController.text = post['price'].toString();
         }
         _selectedDeliveryMethod = post['delivery_method'];
@@ -264,7 +265,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _selectedCategory = post.category;
       _selectedCondition = post.condition;
       _quantity = post.quantity;
-      if (!post.isFree && post.price != null) {
+      _isFreeSharing = post.isFree;
+      if (!_isFreeSharing && post.price != null) {
         _priceController.text = post.price.toString();
       }
       _selectedDeliveryMethod = post.deliveryMethod;
@@ -444,9 +446,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
     switch (actualType) {
       case CommunityListType.freeSharing:
-        return _buildSharingFields(isFree: true);
       case CommunityListType.itemSale:
-        return _buildSharingFields(isFree: false);
+        return _buildSharingFields();
       case CommunityListType.itemRequest:
         return _buildRequestFields();
       case CommunityListType.jobPosting:
@@ -463,7 +464,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   }
 
   /// 무료나눔/물품판매 필드 (웹 기준)
-  Widget _buildSharingFields({required bool isFree}) {
+  Widget _buildSharingFields() {
     return Container(
       color: Colors.white,
       padding: EdgeInsets.all(16.r),
@@ -654,59 +655,108 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 6. 판매 가격 * (물품판매만)
-          if (!isFree) ...[
-            Text(
-              '판매 가격 *',
-              style: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral900,
-                fontWeight: FontWeight.w500,
-              ),
+          // 6. 판매 가격
+          Text(
+            '판매 가격',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
             ),
-            SizedBox(height: 8.h),
-            TextFormField(
-              controller: _priceController,
-              decoration: InputDecoration(
-                hintText: '숫자로만 입력 (예: 50000)',
-                hintStyle: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral400,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.neutral200),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.neutral200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.primary600),
-                ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+          ),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _priceController,
+            enabled: !_isFreeSharing, // 무료나눔 체크 시 비활성화
+            decoration: InputDecoration(
+              hintText: _isFreeSharing ? '무료나눔' : '숫자로만 입력 (예: 50000)',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral400,
               ),
-              style: FigmaTextStyles().body2,
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (!isFree && (value == null || value.trim().isEmpty)) {
-                  return '판매 가격을 입력해주세요';
-                }
-                return null;
-              },
+              filled: _isFreeSharing,
+              fillColor: _isFreeSharing ? NewAppColor.neutral100 : Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(color: NewAppColor.primary600),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
-            SizedBox(height: 24.h),
-          ],
+            style: FigmaTextStyles().body2.copyWith(
+              color: _isFreeSharing ? NewAppColor.neutral400 : NewAppColor.neutral900,
+            ),
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              if (!_isFreeSharing && (value == null || value.trim().isEmpty)) {
+                return '판매 가격을 입력해주세요';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 12.h),
 
-          // 7. 구매 시기 (물품판매만)
-          if (!isFree) ...[
-            Text(
-              '구매 시기',
-              style: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral900,
-                fontWeight: FontWeight.w500,
+          // 무료나눔 체크박스
+          Row(
+            children: [
+              SizedBox(
+                width: 20.w,
+                height: 20.h,
+                child: Checkbox(
+                  value: _isFreeSharing,
+                  onChanged: (value) {
+                    setState(() {
+                      _isFreeSharing = value ?? false;
+                      if (_isFreeSharing) {
+                        _priceController.clear(); // 무료나눔 체크 시 가격 초기화
+                      }
+                    });
+                  },
+                  activeColor: NewAppColor.primary600,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ),
               ),
+              SizedBox(width: 8.w),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isFreeSharing = !_isFreeSharing;
+                    if (_isFreeSharing) {
+                      _priceController.clear();
+                    }
+                  });
+                },
+                child: Text(
+                  '무료 나눔',
+                  style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // 7. 구매 시기
+          Text(
+            '구매 시기',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
             ),
-            SizedBox(height: 8.h),
+          ),
+          SizedBox(height: 8.h),
             TextFormField(
               controller: _purchaseDateController,
               decoration: InputDecoration(
@@ -736,8 +786,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               maxLength: 50,
               onChanged: (value) => setState(() {}),
             ),
-            SizedBox(height: 24.h),
-          ],
+          SizedBox(height: 24.h),
 
           // 8 (무료나눔의 경우 6). 연락처 *
           Text(
@@ -3477,8 +3526,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
   /// 무료나눔/물품판매 제출
   Future<bool> _submitSharing(List<String> imageUrls) async {
-    final isFree = widget.type == CommunityListType.freeSharing;
-
     final response = await _communityService.createSharingItem(
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
@@ -3487,8 +3534,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       quantity: _quantity,
       location: _locationController.text.trim(),
       images: imageUrls,
-      isFree: isFree,
-      price: isFree ? null : int.tryParse(_priceController.text),
+      isFree: _isFreeSharing,
+      price: _isFreeSharing ? null : int.tryParse(_priceController.text),
       deliveryMethod: _selectedDeliveryMethod,
       purchaseDate: _purchaseDateController.text.trim().isEmpty
           ? null

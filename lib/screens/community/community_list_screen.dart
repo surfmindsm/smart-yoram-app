@@ -55,6 +55,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   String? _selectedCity; // 도/시 필터
   String? _selectedDistrict; // 시/군/구 필터
   bool? _deliveryAvailableFilter; // 택배가능 필터
+  String _priceFilter = 'all'; // 가격 필터: all(전체), free(무료), paid(판매)
 
   @override
   void initState() {
@@ -84,10 +85,11 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
       switch (widget.type) {
         case CommunityListType.freeSharing:
-          items = await _communityService.getSharingItems(isFree: true);
+          // 이제 무료나눔과 물품판매를 통합했으므로 전체 아이템 가져오기
+          items = await _communityService.getSharingItems();
           break;
         case CommunityListType.itemSale:
-          items = await _communityService.getSharingItems(isFree: false);
+          items = await _communityService.getSharingItems();
           break;
         case CommunityListType.itemRequest:
           items = await _communityService.getRequestItems();
@@ -142,6 +144,28 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   /// 필터링된 아이템 목록
   List<dynamic> get _filteredItems {
     List<dynamic> filtered = _items;
+
+    print('📊 FILTER: 전체 아이템 수 = ${_items.length}, priceFilter = $_priceFilter');
+    if (_items.isNotEmpty && _items.first is SharingItem) {
+      final freeCount = _items.where((item) => item is SharingItem && item.isFree).length;
+      final paidCount = _items.where((item) => item is SharingItem && !item.isFree).length;
+      print('📊 FILTER: 무료 = $freeCount, 유료 = $paidCount');
+    }
+
+    // 가격 필터 (무료나눔/물품판매)
+    if ((widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale) && _priceFilter != 'all') {
+      filtered = filtered.where((item) {
+        if (item is SharingItem) {
+          if (_priceFilter == 'free') {
+            return item.isFree;
+          } else if (_priceFilter == 'paid') {
+            return !item.isFree;
+          }
+        }
+        return false;
+      }).toList();
+      print('📊 FILTER: 가격 필터 적용 후 = ${filtered.length}');
+    }
 
     // 상태 필터 (무료나눔/물품판매)
     if (_selectedStatus != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
@@ -361,8 +385,10 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       deliveryAvailable = item.deliveryAvailable;
       status = item.status;
       statusLabel = item.statusDisplayName;
-      // 무료나눔이 아닌 경우만 가격 표시
-      if (!item.isFree) {
+      // 가격 표시: 무료나눔이면 "무료 나눔", 아니면 가격
+      if (item.isFree) {
+        priceText = '무료 나눔';
+      } else {
         priceText = item.formattedPrice;
       }
     } else if (item is RequestItem) {
@@ -1034,12 +1060,35 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             // 전체 칩
             _buildFilterChip(
               label: '전체',
-              isSelected: _selectedStatus == null && _selectedCategory == null && _deliveryAvailableFilter == null,
+              isSelected: _selectedStatus == null && _selectedCategory == null && _deliveryAvailableFilter == null && _priceFilter == 'all',
               onTap: () {
                 setState(() {
                   _selectedStatus = null;
                   _selectedCategory = null;
                   _deliveryAvailableFilter = null;
+                  _priceFilter = 'all';
+                });
+              },
+            ),
+            SizedBox(width: 8.w),
+
+            // 무료/판매 필터 칩
+            _buildFilterChip(
+              label: '무료',
+              isSelected: _priceFilter == 'free',
+              onTap: () {
+                setState(() {
+                  _priceFilter = _priceFilter == 'free' ? 'all' : 'free';
+                });
+              },
+            ),
+            SizedBox(width: 8.w),
+            _buildFilterChip(
+              label: '판매',
+              isSelected: _priceFilter == 'paid',
+              onTap: () {
+                setState(() {
+                  _priceFilter = _priceFilter == 'paid' ? 'all' : 'paid';
                 });
               },
             ),
