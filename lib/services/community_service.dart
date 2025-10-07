@@ -339,9 +339,10 @@ class CommunityService {
 
         print('📋 COMMUNITY_SERVICE: 원본 데이터 - author_id: ${data['author_id']}, church_id: ${data['church_id']}, location: ${data['location']}');
 
-        // author 정보 조회
+        // author 정보 조회 (users 테이블에서 full_name, members 테이블에서 profile_photo_url)
         if (data['author_id'] != null) {
           try {
+            // users 테이블에서 full_name 조회
             final authorResponse = await _supabaseService.client
                 .from('users')
                 .select('full_name')
@@ -352,6 +353,17 @@ class CommunityService {
 
             if (authorResponse != null) {
               data['author_name'] = authorResponse['full_name'];
+            }
+
+            // members 테이블에서 profile_photo_url 조회
+            final memberResponse = await _supabaseService.client
+                .from('members')
+                .select('profile_photo_url')
+                .eq('user_id', data['author_id'])
+                .maybeSingle();
+
+            if (memberResponse != null) {
+              data['author_profile_photo_url'] = memberResponse['profile_photo_url'];
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: author 정보 조회 실패 - $e');
@@ -404,15 +416,31 @@ class CommunityService {
 
       final itemMap = response as Map<String, dynamic>;
 
-      // author 정보 가져오기
+      // author 정보 가져오기 (users와 members 테이블에서)
       if (itemMap['author_id'] != null) {
         try {
+          // users 테이블에서 full_name 조회
           final authorResponse = await _supabaseService.client
               .from('users')
               .select('full_name')
               .eq('id', itemMap['author_id'])
               .single();
           itemMap['author_name'] = authorResponse['full_name'];
+
+          // members 테이블에서 profile_photo_url 조회
+          try {
+            final memberResponse = await _supabaseService.client
+                .from('members')
+                .select('profile_photo_url')
+                .eq('user_id', itemMap['author_id'])
+                .maybeSingle();
+
+            if (memberResponse != null) {
+              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+            }
+          } catch (e) {
+            print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
+          }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
         }

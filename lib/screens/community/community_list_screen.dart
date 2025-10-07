@@ -377,6 +377,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     int likes = 0;
     int? authorId; // 작성자 ID
     String? authorName;
+    String? authorProfilePhotoUrl; // 프로필 사진
     String? churchName;
     String? churchLocation; // 교회 지역 (도시 + 구/동)
     String? priceText; // 가격 정보
@@ -392,6 +393,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       likes = item.likes;
       authorId = item.authorId;
       authorName = item.authorName;
+      authorProfilePhotoUrl = item.authorProfilePhotoUrl;
       churchName = item.churchName;
       churchLocation = item.displayLocation; // province + district
       deliveryAvailable = item.deliveryAvailable;
@@ -410,6 +412,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       likes = item.likes;
       authorId = item.authorId;
       authorName = item.authorName;
+      authorProfilePhotoUrl = item.authorProfilePhotoUrl;
       churchName = item.churchName;
       churchLocation = item.displayLocation;
       status = item.status;
@@ -559,21 +562,56 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                       ),
                     ),
                   ],
-                  SizedBox(height: 4.h),
-                  // 작성자 · 교회명 · 지역 · 시간
-                  Text(
-                    [
-                      if (authorName != null && authorName.isNotEmpty) authorName,
-                      if (churchName != null && churchName.isNotEmpty) churchName,
-                      if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
-                      date,
-                    ].join(' · '),
-                    style: TextStyle(
-                      color: isCompleted ? NewAppColor.neutral400 : NewAppColor.neutral600,
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Pretendard Variable',
-                    ),
+                  SizedBox(height: 8.h),
+                  // 작성자 프로필 사진 + 작성자 · 교회명 · 지역 · 시간
+                  Row(
+                    children: [
+                      // 프로필 사진
+                      if (authorProfilePhotoUrl != null && authorProfilePhotoUrl.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(right: 8.w),
+                          child: ClipOval(
+                            child: Image.network(
+                              authorProfilePhotoUrl,
+                              width: 20.w,
+                              height: 20.w,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 20.w,
+                                  height: 20.w,
+                                  decoration: BoxDecoration(
+                                    color: NewAppColor.neutral300,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 12.sp,
+                                    color: NewAppColor.neutral500,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      // 텍스트 정보
+                      Expanded(
+                        child: Text(
+                          [
+                            if (authorName != null && authorName.isNotEmpty) authorName,
+                            if (churchName != null && churchName.isNotEmpty) churchName,
+                            if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
+                            date,
+                          ].join(' · '),
+                          style: TextStyle(
+                            color: isCompleted ? NewAppColor.neutral400 : NewAppColor.neutral600,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   // 조회수
                   SizedBox(height: 8.h),

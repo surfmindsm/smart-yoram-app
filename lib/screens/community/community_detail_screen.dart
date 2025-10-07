@@ -311,6 +311,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? authorProfilePhotoUrl = '';
     String? churchName = '';
     String? churchLocation = '';
+    String? category; // 카테고리
+    String? status; // 상태
 
     // 타입별 필드 매핑
     if (_post is SharingItem) {
@@ -324,6 +326,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
       churchLocation = post.displayLocation; // province + district
+      category = post.category;
+      status = post.statusDisplayName;
     } else if (_post is RequestItem) {
       final post = _post as RequestItem;
       title = post.title;
@@ -331,8 +335,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       date = post.formattedDate;
       viewCount = post.viewCount;
       authorName = post.authorName;
+      authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
-      churchLocation = post.location;
+      churchLocation = post.displayLocation;
+      category = post.category;
+      status = post.statusDisplayName;
     } else if (_post is JobPost) {
       final post = _post as JobPost;
       title = post.title;
@@ -375,6 +382,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+                // 이미지가 있는 경우에만 이미지 슬라이더 표시
                 if (images.isNotEmpty) ...[
                   Stack(
                     children: [
@@ -435,6 +443,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       ),
                     ],
                   ),
+                ] else ...[
+                  // 이미지가 없는 경우 상단 여백만 추가 (AppBar 높이만큼)
+                  SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
                 ],
                 // 작성자 정보 카드
                 Container(
@@ -1309,4 +1320,5 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       }
     }
   }
+
 }
