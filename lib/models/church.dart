@@ -8,6 +8,8 @@ class Church {
   final String? phone;
   final String? email;
   final String? pastorName;
+  final String? homepageUrl;       // 교회 홈페이지 URL
+  final String? youtubeChannel;    // 유튜브 채널 URL
   final String? subscriptionStatus;
   final DateTime? subscriptionEndDate;
   final int? memberLimit;
@@ -25,6 +27,8 @@ class Church {
     this.phone,
     this.email,
     this.pastorName,
+    this.homepageUrl,
+    this.youtubeChannel,
     this.subscriptionStatus,
     this.subscriptionEndDate,
     this.memberLimit,
@@ -44,14 +48,16 @@ class Church {
       phone: json['phone'] as String?,
       email: json['email'] as String?,
       pastorName: json['pastor_name'] as String?,
+      homepageUrl: json['homepage_url'] as String?,
+      youtubeChannel: json['youtube_channel'] as String?,
       subscriptionStatus: json['subscription_status'] as String?,
-      subscriptionEndDate: json['subscription_end_date'] != null 
+      subscriptionEndDate: json['subscription_end_date'] != null
           ? DateTime.parse(json['subscription_end_date'] as String)
           : null,
       memberLimit: json['member_limit'] as int?,
       isActive: json['is_active'] as bool? ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] != null 
+      updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : null,
     );
@@ -68,6 +74,8 @@ class Church {
       'phone': phone,
       'email': email,
       'pastor_name': pastorName,
+      'homepage_url': homepageUrl,
+      'youtube_channel': youtubeChannel,
       'subscription_status': subscriptionStatus,
       'subscription_end_date': subscriptionEndDate?.toIso8601String(),
       'member_limit': memberLimit,
@@ -92,6 +100,8 @@ class ChurchCreateRequest {
   final String? phone;
   final String? email;
   final String? pastorName;
+  final String? homepageUrl;
+  final String? youtubeChannel;
   final String? subscriptionStatus;
   final DateTime? subscriptionEndDate;
   final int? memberLimit;
@@ -105,6 +115,8 @@ class ChurchCreateRequest {
     this.phone,
     this.email,
     this.pastorName,
+    this.homepageUrl,
+    this.youtubeChannel,
     this.subscriptionStatus,
     this.subscriptionEndDate,
     this.memberLimit,
@@ -120,6 +132,8 @@ class ChurchCreateRequest {
       'phone': phone,
       'email': email,
       'pastor_name': pastorName,
+      'homepage_url': homepageUrl,
+      'youtube_channel': youtubeChannel,
       'subscription_status': subscriptionStatus,
       'subscription_end_date': subscriptionEndDate?.toIso8601String(),
       'member_limit': memberLimit,
@@ -136,6 +150,8 @@ class ChurchUpdateRequest {
   final String? phone;
   final String? email;
   final String? pastorName;
+  final String? homepageUrl;
+  final String? youtubeChannel;
   final String? subscriptionStatus;
   final DateTime? subscriptionEndDate;
   final int? memberLimit;
@@ -150,6 +166,8 @@ class ChurchUpdateRequest {
     this.phone,
     this.email,
     this.pastorName,
+    this.homepageUrl,
+    this.youtubeChannel,
     this.subscriptionStatus,
     this.subscriptionEndDate,
     this.memberLimit,
@@ -166,6 +184,8 @@ class ChurchUpdateRequest {
     if (phone != null) data['phone'] = phone;
     if (email != null) data['email'] = email;
     if (pastorName != null) data['pastor_name'] = pastorName;
+    if (homepageUrl != null) data['homepage_url'] = homepageUrl;
+    if (youtubeChannel != null) data['youtube_channel'] = youtubeChannel;
     if (subscriptionStatus != null) data['subscription_status'] = subscriptionStatus;
     if (subscriptionEndDate != null) data['subscription_end_date'] = subscriptionEndDate!.toIso8601String();
     if (memberLimit != null) data['member_limit'] = memberLimit;
