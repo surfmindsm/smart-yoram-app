@@ -46,6 +46,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
   bool _isLoading = true;
   List<dynamic> _items = [];
+  List<dynamic> _filteredItemsCache = []; // 캐시된 필터링 결과
   User? _currentUser;
 
   // 검색 및 필터
@@ -131,6 +132,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       setState(() {
         _items = items;
         _isLoading = false;
+        _updateFilteredItems();
       });
     } catch (e) {
       print('❌ COMMUNITY_LIST: 목록 로드 실패 - $e');
@@ -141,16 +143,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
   }
 
-  /// 필터링된 아이템 목록
-  List<dynamic> get _filteredItems {
+  /// 필터링된 아이템 목록 재계산
+  void _updateFilteredItems() {
     List<dynamic> filtered = _items;
-
-    print('📊 FILTER: 전체 아이템 수 = ${_items.length}, priceFilter = $_priceFilter');
-    if (_items.isNotEmpty && _items.first is SharingItem) {
-      final freeCount = _items.where((item) => item is SharingItem && item.isFree).length;
-      final paidCount = _items.where((item) => item is SharingItem && !item.isFree).length;
-      print('📊 FILTER: 무료 = $freeCount, 유료 = $paidCount');
-    }
 
     // 가격 필터 (무료나눔/물품판매)
     if ((widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale) && _priceFilter != 'all') {
@@ -164,7 +159,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         }
         return false;
       }).toList();
-      print('📊 FILTER: 가격 필터 적용 후 = ${filtered.length}');
     }
 
     // 판매/나눔/요청 완료 제거 필터
@@ -262,7 +256,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       }).toList();
     }
 
-    return filtered;
+    _filteredItemsCache = filtered;
   }
 
   @override
@@ -317,19 +311,19 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _filteredItems.isEmpty
+                : _filteredItemsCache.isEmpty
                     ? _buildEmptyState()
                     : RefreshIndicator(
                         onRefresh: _loadItems,
                         child: ListView.separated(
-                          itemCount: _filteredItems.length,
+                          itemCount: _filteredItemsCache.length,
                           separatorBuilder: (context, index) => Divider(
                             height: 1,
                             thickness: 1,
                             color: NewAppColor.neutral200,
                           ),
                           itemBuilder: (context, index) {
-                            return _buildItemCard(_filteredItems[index]);
+                            return _buildItemCard(_filteredItemsCache[index]);
                           },
                         ),
                       ),
@@ -996,6 +990,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                     setState(() {
                       _selectedCity = value;
                       _selectedDistrict = null; // 도/시 변경 시 구 초기화
+                      _updateFilteredItems();
                     });
                   },
                 ),
@@ -1058,6 +1053,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                       : (value) {
                           setState(() {
                             _selectedDistrict = value;
+                            _updateFilteredItems();
                           });
                         },
                 ),
@@ -1104,6 +1100,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                   _deliveryAvailableFilter = null;
                   _priceFilter = 'all';
                   _hideCompleted = false;
+                  _updateFilteredItems();
                 });
               },
             ),
@@ -1116,6 +1113,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               onTap: () {
                 setState(() {
                   _priceFilter = _priceFilter == 'free' ? 'all' : 'free';
+                  _updateFilteredItems();
                 });
               },
             ),
@@ -1126,6 +1124,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               onTap: () {
                 setState(() {
                   _priceFilter = _priceFilter == 'paid' ? 'all' : 'paid';
+                  _updateFilteredItems();
                 });
               },
             ),
@@ -1138,6 +1137,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               onTap: () {
                 setState(() {
                   _hideCompleted = !_hideCompleted;
+                  _updateFilteredItems();
                 });
               },
             ),
@@ -1150,6 +1150,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               onTap: () {
                 setState(() {
                   _deliveryAvailableFilter = _deliveryAvailableFilter == true ? null : true;
+                  _updateFilteredItems();
                 });
               },
             ),
@@ -1173,6 +1174,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                   onTap: () {
                     setState(() {
                       _selectedCategory = _selectedCategory == category ? null : category;
+                      _updateFilteredItems();
                     });
                   },
                 ),
@@ -1217,6 +1219,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                 setState(() {
                   _hideCompleted = false;
                   _selectedCategory = null;
+                  _updateFilteredItems();
                 });
               },
             ),
@@ -1229,6 +1232,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               onTap: () {
                 setState(() {
                   _hideCompleted = !_hideCompleted;
+                  _updateFilteredItems();
                 });
               },
             ),
@@ -1252,6 +1256,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                   onTap: () {
                     setState(() {
                       _selectedCategory = _selectedCategory == category ? null : category;
+                      _updateFilteredItems();
                     });
                   },
                 ),

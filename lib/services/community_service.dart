@@ -338,70 +338,90 @@ class CommunityService {
 
       final response = await query;
 
-      print('📋 COMMUNITY_SERVICE: 물품 요청 조회 결과 - ${(response as List).length}개');
+      final responseList = response as List;
+      print('📋 COMMUNITY_SERVICE: 물품 요청 조회 결과 - ${responseList.length}개');
 
-      // author와 church 정보를 별도로 조회하여 추가
+      if (responseList.isEmpty) return [];
+
+      // 모든 author_id와 church_id 수집
+      final authorIds = responseList
+          .map((item) => item['author_id'] as int?)
+          .where((id) => id != null)
+          .toSet()
+          .toList();
+
+      final churchIds = responseList
+          .map((item) => item['church_id'] as int?)
+          .where((id) => id != null)
+          .toSet()
+          .toList();
+
+      // 한 번에 author 정보 조회 (users 테이블)
+      Map<int, String> authorNames = {};
+      Map<int, String?> authorPhotos = {};
+
+      if (authorIds.isNotEmpty) {
+        try {
+          final authorsResponse = await _supabaseService.client
+              .from('users')
+              .select('id, full_name')
+              .inFilter('id', authorIds);
+
+          for (var author in authorsResponse as List) {
+            authorNames[author['id'] as int] = author['full_name'] as String;
+          }
+
+          // members 테이블에서 profile_photo_url 일괄 조회
+          final membersResponse = await _supabaseService.client
+              .from('members')
+              .select('user_id, profile_photo_url')
+              .inFilter('user_id', authorIds);
+
+          for (var member in membersResponse as List) {
+            authorPhotos[member['user_id'] as int] = member['profile_photo_url'] as String?;
+          }
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: authors 조회 실패 - $e');
+        }
+      }
+
+      // 한 번에 church 정보 조회
+      Map<int, String> churchNames = {};
+
+      if (churchIds.isNotEmpty) {
+        try {
+          final churchesResponse = await _supabaseService.client
+              .from('churches')
+              .select('id, name')
+              .inFilter('id', churchIds);
+
+          for (var church in churchesResponse as List) {
+            churchNames[church['id'] as int] = church['name'] as String;
+          }
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: churches 조회 실패 - $e');
+        }
+      }
+
+      // 데이터 조합
       final List<RequestItem> items = [];
-      for (var itemData in response) {
+      for (var itemData in responseList) {
         final Map<String, dynamic> data = Map<String, dynamic>.from(itemData);
 
-        print('📋 COMMUNITY_SERVICE: 원본 데이터 - author_id: ${data['author_id']}, church_id: ${data['church_id']}, location: ${data['location']}');
-
-        // author 정보 조회 (users 테이블에서 full_name, members 테이블에서 profile_photo_url)
+        // author 정보 추가
         if (data['author_id'] != null) {
-          try {
-            // users 테이블에서 full_name 조회
-            final authorResponse = await _supabaseService.client
-                .from('users')
-                .select('full_name')
-                .eq('id', data['author_id'])
-                .maybeSingle();
-
-            print('📋 COMMUNITY_SERVICE: author 조회 결과 - $authorResponse');
-
-            if (authorResponse != null) {
-              data['author_name'] = authorResponse['full_name'];
-            }
-
-            // members 테이블에서 profile_photo_url 조회
-            final memberResponse = await _supabaseService.client
-                .from('members')
-                .select('profile_photo_url')
-                .eq('user_id', data['author_id'])
-                .maybeSingle();
-
-            if (memberResponse != null) {
-              data['author_profile_photo_url'] = memberResponse['profile_photo_url'];
-            }
-          } catch (e) {
-            print('⚠️ COMMUNITY_SERVICE: author 정보 조회 실패 - $e');
-          }
+          final authorId = data['author_id'] as int;
+          data['author_name'] = authorNames[authorId];
+          data['author_profile_photo_url'] = authorPhotos[authorId];
         }
 
-        // church 정보 조회
+        // church 정보 추가
         if (data['church_id'] != null) {
-          try {
-            final churchResponse = await _supabaseService.client
-                .from('churches')
-                .select('name')
-                .eq('id', data['church_id'])
-                .maybeSingle();
-
-            print('📋 COMMUNITY_SERVICE: church 조회 결과 - $churchResponse');
-
-            if (churchResponse != null) {
-              data['church_name'] = churchResponse['name'];
-            }
-          } catch (e) {
-            print('⚠️ COMMUNITY_SERVICE: church 정보 조회 실패 - $e');
-          }
+          final churchId = data['church_id'] as int;
+          data['church_name'] = churchNames[churchId];
         }
 
-        print('📋 COMMUNITY_SERVICE: 최종 데이터 - author_name: ${data['author_name']}, church_name: ${data['church_name']}, location: ${data['location']}');
-
-        final requestItem = RequestItem.fromJson(data);
-        print('📋 COMMUNITY_SERVICE: RequestItem 생성됨 - authorName: ${requestItem.authorName}, churchName: ${requestItem.churchName}, location: ${requestItem.location}');
-        items.add(requestItem);
+        items.add(RequestItem.fromJson(data));
       }
 
       return items;
