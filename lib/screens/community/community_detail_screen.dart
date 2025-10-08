@@ -545,8 +545,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     ],
                   ),
                 ),
-                // 연락처 정보 (물품 나눔/판매 게시글만)
-                if (_post is SharingItem) ...[
+                // 연락처 정보 (물품 나눔/판매, 물품 요청 게시글)
+                if (_post is SharingItem || _post is RequestItem) ...[
                   Container(
                     height: 8.h,
                     color: NewAppColor.neutral100,
@@ -569,21 +569,42 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                         ),
                         SizedBox(height: 16.h),
                         // 전화번호
-                        if ((_post as SharingItem).contactPhone.isNotEmpty)
+                        if (_post is SharingItem && (_post as SharingItem).contactPhone.isNotEmpty)
                           _buildContactItem(
                             icon: Icons.phone_outlined,
                             label: '전화번호',
                             value: (_post as SharingItem).contactPhone,
                             onTap: () => _showContactDialog((_post as SharingItem).contactPhone),
                           ),
+                        if (_post is RequestItem && (_post as RequestItem).contactPhone.isNotEmpty)
+                          _buildContactItem(
+                            icon: Icons.phone_outlined,
+                            label: '전화번호',
+                            value: (_post as RequestItem).contactPhone,
+                            onTap: () => _showContactDialog((_post as RequestItem).contactPhone),
+                          ),
                         // 이메일
-                        if ((_post as SharingItem).contactEmail != null &&
+                        if (_post is SharingItem &&
+                            (_post as SharingItem).contactEmail != null &&
                             (_post as SharingItem).contactEmail!.isNotEmpty) ...[
                           SizedBox(height: 12.h),
                           _buildContactItem(
                             icon: Icons.email_outlined,
                             label: '이메일',
                             value: (_post as SharingItem).contactEmail!,
+                            onTap: () {
+                              // TODO: 이메일 보내기 기능
+                            },
+                          ),
+                        ],
+                        if (_post is RequestItem &&
+                            (_post as RequestItem).contactEmail != null &&
+                            (_post as RequestItem).contactEmail!.isNotEmpty) ...[
+                          SizedBox(height: 12.h),
+                          _buildContactItem(
+                            icon: Icons.email_outlined,
+                            label: '이메일',
+                            value: (_post as RequestItem).contactEmail!,
                             onTap: () {
                               // TODO: 이메일 보내기 기능
                             },

@@ -9,6 +9,7 @@ import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:smart_yoram_app/components/index.dart';
+import 'package:smart_yoram_app/utils/location_data.dart';
 
 /// 커뮤니티 게시글 작성/수정 화면 (공통)
 /// docs/writing/ API 명세서 기반 구현
@@ -48,6 +49,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   final TextEditingController _priceController = TextEditingController();
   String? _selectedDeliveryMethod; // 직거래, 택배, 협의
   final TextEditingController _purchaseDateController = TextEditingController();
+
+  // 지역 선택 (도/시, 시/군/구)
+  String? _selectedProvince; // 도/시
+  String? _selectedDistrict; // 시/군/구
+  bool _deliveryAvailable = false; // 택배 가능 여부
 
   // 물품요청 전용
   final TextEditingController _requestedItemController = TextEditingController();
@@ -274,6 +280,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
       _selectedStatus = post.status;
+      // 지역 정보 로드
+      _selectedProvince = post.province;
+      _selectedDistrict = post.district;
+      _deliveryAvailable = post.deliveryAvailable ?? false;
       // 이미지 로드
       _existingImageUrls = List<String>.from(post.images);
       print('📸 기존 이미지 로드됨 (SharingItem): ${_existingImageUrls.length}장 - $_existingImageUrls');
@@ -290,6 +300,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
       _selectedStatus = post.status;
+      // 지역 정보 로드
+      _selectedProvince = post.province;
+      _selectedDistrict = post.district;
+      _deliveryAvailable = post.deliveryAvailable ?? false;
       // 이미지 로드
       if (post.images != null) {
         _existingImageUrls = List<String>.from(post.images!);
@@ -308,6 +322,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _deadlineController.text = post.deadline ?? '';
       _contactController.text = post.contactPhone ?? '';
       _emailController.text = post.contactEmail ?? '';
+      // 지역 정보 로드
+      _selectedProvince = post.province;
+      _selectedDistrict = post.district;
+      _deliveryAvailable = post.deliveryAvailable ?? false;
     } else if (post is MusicTeamRecruitment) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
@@ -489,25 +507,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              hintText: '카테고리를 선택하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
-            ),
+            decoration: _buildInputDecoration(hintText: '카테고리를 선택하세요'),
             value: _selectedCategory,
             items: const [
               DropdownMenuItem(value: '가구', child: Text('가구')),
@@ -534,25 +534,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '나눔할 물품의 제목을 입력해주세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
               counterText: '${_titleController.text.length}/100',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             onChanged: (value) => setState(() {}), // 글자수 업데이트
@@ -579,25 +563,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '나눔할 물품에 대한 상세한 설명을 입력해주세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
               counterText: '${_descriptionController.text.length}/1000',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             maxLines: 8,
@@ -624,25 +592,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              hintText: '상품 상태를 선택하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
-            ),
+            decoration: _buildInputDecoration(hintText: '상품 상태를 선택하세요'),
             value: _selectedCondition,
             items: const [
               DropdownMenuItem(value: '새상품', child: Text('새 상품')),
@@ -667,30 +617,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           TextFormField(
             controller: _priceController,
             enabled: !_isFreeSharing, // 무료나눔 체크 시 비활성화
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: _isFreeSharing ? '무료나눔' : '숫자로만 입력 (예: 50000)',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              filled: _isFreeSharing,
-              fillColor: _isFreeSharing ? NewAppColor.neutral100 : Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2.copyWith(
               color: _isFreeSharing ? NewAppColor.neutral400 : NewAppColor.neutral900,
@@ -788,6 +716,117 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             ),
           SizedBox(height: 24.h),
 
+          // 7-1. 거래 지역
+          Text(
+            '거래 지역',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              // 도/시 선택
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedProvince,
+                  hint: Text(
+                    '도/시 선택',
+                    style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral400,
+                    ),
+                  ),
+                  decoration: _buildInputDecoration(hintText: ''),
+                  items: LocationData.getCities().map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city,
+                      child: Text(
+                        city,
+                        style: FigmaTextStyles().body2,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedProvince = value;
+                      _selectedDistrict = null; // 도/시 변경 시 시/군/구 초기화
+                    });
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+              // 시/군/구 선택
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedDistrict,
+                  hint: Text(
+                    '시/군/구 선택',
+                    style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral400,
+                    ),
+                  ),
+                  decoration: _buildInputDecoration(hintText: ''),
+                  items: _selectedProvince != null
+                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                          return DropdownMenuItem<String>(
+                            value: district,
+                            child: Text(
+                              district,
+                              style: FigmaTextStyles().body2,
+                            ),
+                          );
+                        }).toList()
+                      : [],
+                  onChanged: _selectedProvince == null
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedDistrict = value;
+                          });
+                        },
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          // 택배 가능 체크박스
+          Row(
+            children: [
+              SizedBox(
+                width: 20.w,
+                height: 20.h,
+                child: Checkbox(
+                  value: _deliveryAvailable,
+                  onChanged: (value) {
+                    setState(() {
+                      _deliveryAvailable = value ?? false;
+                    });
+                  },
+                  activeColor: NewAppColor.primary600,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _deliveryAvailable = !_deliveryAvailable;
+                  });
+                },
+                child: Text(
+                  '택배 가능',
+                  style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
           // 8 (무료나눔의 경우 6). 연락처 *
           Text(
             '연락처 *',
@@ -799,24 +838,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _contactController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '연락 가능한 전화번호를 입력해주세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             keyboardType: TextInputType.phone,
@@ -840,24 +863,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _emailController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '이메일 주소를 입력해주세요 (선택사항)',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             keyboardType: TextInputType.emailAddress,
@@ -1115,24 +1122,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '요청할 물품의 제목을 입력하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             validator: (value) {
@@ -1161,24 +1152,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _requestedItemController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '구체적인 물품명을 입력하세요',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                       validator: (value) {
@@ -1205,24 +1180,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     ),
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '카테고리 선택',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       value: _selectedCategory,
                       items: const [
@@ -1261,24 +1220,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _quantityController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '1',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                       keyboardType: TextInputType.number,
@@ -1300,24 +1243,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     ),
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '보통',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       value: _selectedUrgency,
                       items: const [
@@ -1352,25 +1279,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     TextFormField(
                       controller: _neededDateController,
                       readOnly: true,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '필요일을 선택해주세요',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
                         prefixIcon: const Icon(Icons.calendar_today),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                       onTap: () async {
@@ -1409,24 +1320,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _priceRangeController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '예: 50,000원',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                       keyboardType: TextInputType.number,
@@ -1438,37 +1333,114 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 5. 희망 지역
+          // 5. 거래 지역
           Text(
-            '희망 지역',
+            '거래 지역',
             style: FigmaTextStyles().body2.copyWith(
               color: NewAppColor.neutral900,
               fontWeight: FontWeight.w500,
             ),
           ),
           SizedBox(height: 8.h),
-          TextFormField(
-            controller: _locationController,
-            decoration: InputDecoration(
-              hintText: '거래 희망 지역을 입력하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
+          Row(
+            children: [
+              // 도/시 선택
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedProvince,
+                  hint: Text(
+                    '도/시 선택',
+                    style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral400,
+                    ),
+                  ),
+                  decoration: _buildInputDecoration(hintText: ''),
+                  items: LocationData.getCities().map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city,
+                      child: Text(
+                        city,
+                        style: FigmaTextStyles().body2,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedProvince = value;
+                      _selectedDistrict = null; // 도/시 변경 시 시/군/구 초기화
+                    });
+                  },
+                ),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
+              SizedBox(width: 8.w),
+              // 시/군/구 선택
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedDistrict,
+                  hint: Text(
+                    '시/군/구 선택',
+                    style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral400,
+                    ),
+                  ),
+                  decoration: _buildInputDecoration(hintText: ''),
+                  items: _selectedProvince != null
+                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                          return DropdownMenuItem<String>(
+                            value: district,
+                            child: Text(
+                              district,
+                              style: FigmaTextStyles().body2,
+                            ),
+                          );
+                        }).toList()
+                      : [],
+                  onChanged: _selectedProvince == null
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedDistrict = value;
+                          });
+                        },
+                ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          // 택배 가능 체크박스
+          Row(
+            children: [
+              SizedBox(
+                width: 20.w,
+                height: 20.h,
+                child: Checkbox(
+                  value: _deliveryAvailable,
+                  onChanged: (value) {
+                    setState(() {
+                      _deliveryAvailable = value ?? false;
+                    });
+                  },
+                  activeColor: NewAppColor.primary600,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
+              SizedBox(width: 8.w),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _deliveryAvailable = !_deliveryAvailable;
+                  });
+                },
+                child: Text(
+                  '택배 가능',
+                  style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral900,
+                  ),
+                ),
               ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
-            ),
-            style: FigmaTextStyles().body2,
+            ],
           ),
           SizedBox(height: 24.h),
 
@@ -1483,24 +1455,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _reasonController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '물품이 필요한 이유를 간단히 설명해주세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             maxLines: 4,
@@ -1518,24 +1474,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '원하는 물품의 상세 조건이나 상태를 설명해주세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+              counterText: '${_descriptionController.text.length}/1000',
             ),
             style: FigmaTextStyles().body2,
             maxLines: 4,
@@ -1559,24 +1500,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '010-1234-5678',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                       keyboardType: TextInputType.phone,
@@ -1605,24 +1530,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _emailController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: 'example@email.com',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                       keyboardType: TextInputType.emailAddress,
@@ -1711,24 +1620,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '예: 청년부 담당 전도사 모집',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             validator: (value) {
@@ -1756,24 +1649,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     ),
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '직책 선택',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       value: _selectedCategory,
                       items: const [
@@ -1804,24 +1681,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     ),
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '고용 형태',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       value: _selectedEmploymentType,
                       items: const [
@@ -1856,11 +1717,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _salaryController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '예: 월 300만원, 협의',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
                         prefixIcon: Padding(
                           padding: EdgeInsets.only(left: 12.w, right: 8.w),
                           child: Row(
@@ -1876,63 +1734,121 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                             ],
                           ),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                     ),
                   ],
                 ),
               ),
-              SizedBox(width: 16.w),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // 3-1. 근무 지역
+          Text(
+            '근무 지역',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              // 도/시 선택
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '근무 지역',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
+                child: DropdownButtonFormField<String>(
+                  value: _selectedProvince,
+                  hint: Text(
+                    '도/시 선택',
+                    style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral400,
                     ),
-                    SizedBox(height: 8.h),
-                    TextFormField(
-                      controller: _locationController,
-                      decoration: InputDecoration(
-                        hintText: '예: 서울 강남구 (교회 주소 자동)',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        prefixIcon: Icon(Icons.location_on, color: NewAppColor.neutral400, size: 20.sp),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                  ),
+                  decoration: _buildInputDecoration(hintText: ''),
+                  items: LocationData.getCities().map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city,
+                      child: Text(
+                        city,
+                        style: FigmaTextStyles().body2,
                       ),
-                      style: FigmaTextStyles().body2,
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedProvince = value;
+                      _selectedDistrict = null; // 도/시 변경 시 시/군/구 초기화
+                    });
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+              // 시/군/구 선택
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedDistrict,
+                  hint: Text(
+                    '시/군/구 선택',
+                    style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral400,
                     ),
-                  ],
+                  ),
+                  decoration: _buildInputDecoration(hintText: ''),
+                  items: _selectedProvince != null
+                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                          return DropdownMenuItem<String>(
+                            value: district,
+                            child: Text(
+                              district,
+                              style: FigmaTextStyles().body2,
+                            ),
+                          );
+                        }).toList()
+                      : [],
+                  onChanged: _selectedProvince == null
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedDistrict = value;
+                          });
+                        },
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          // 택배 가능 체크박스
+          Row(
+            children: [
+              SizedBox(
+                width: 20.w,
+                height: 20.h,
+                child: Checkbox(
+                  value: _deliveryAvailable,
+                  onChanged: (value) {
+                    setState(() {
+                      _deliveryAvailable = value ?? false;
+                    });
+                  },
+                  activeColor: NewAppColor.primary600,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _deliveryAvailable = !_deliveryAvailable;
+                  });
+                },
+                child: Text(
+                  '택배 가능',
+                  style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral900,
+                  ),
                 ),
               ),
             ],
@@ -1951,25 +1867,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           TextFormField(
             controller: _deadlineController,
             readOnly: true,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '지원 마감일을 선택해주세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
               prefixIcon: const Icon(Icons.calendar_today),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             onTap: () async {
@@ -2013,24 +1913,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '담당하게 될 업무와 역할을 자세히 설명해주세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             maxLines: 6,
@@ -2048,24 +1932,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _qualificationsController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '예: 신학대 졸업, 목사 안수, 청년 사역 경험',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             maxLines: 4,
@@ -2083,24 +1951,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _preferredQualificationsController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '예: 청년 사역 경험, 찬양 가능',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             maxLines: 4,
@@ -2118,24 +1970,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _benefitsController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '예: 4대보험, 연차, 숙소 제공',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral400,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary600),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
             ),
             style: FigmaTextStyles().body2,
             maxLines: 4,
@@ -2169,24 +2005,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '010-1234-5678',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                       keyboardType: TextInputType.phone,
@@ -2215,24 +2035,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _emailController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: 'example@email.com',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.primary600),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       style: FigmaTextStyles().body2,
                       keyboardType: TextInputType.emailAddress,
@@ -2311,25 +2115,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '예: 주일예배 피아니스트 모집',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
               counterText: '${_titleController.text.length}/100',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary500, width: 2),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 100,
             onChanged: (value) => setState(() {}),
@@ -2347,17 +2135,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '행사 유형 선택',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             value: _selectedEventType,
             items: const [
@@ -2388,17 +2167,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '팀 형태 선택',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             value: _selectedTeamType,
             items: const [
@@ -2435,25 +2205,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     TextFormField(
                       controller: _eventDateController,
                       readOnly: true,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '행사 날짜를 선택해주세요',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral400,
-                            ),
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.only(left: 12.w, right: 8.w),
-                          child: Icon(Icons.calendar_today, size: 20.r, color: NewAppColor.neutral500),
-                        ),
-                        prefixIconConstraints: BoxConstraints(minWidth: 40.w),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral300),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                        prefixIcon: const Icon(Icons.calendar_today),
                       ),
                       onTap: () async {
                         final date = await showDatePicker(
@@ -2487,25 +2241,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _rehearsalTimeController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '예: 매주 토요일 오후 2시',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral400,
-                            ),
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.only(left: 12.w, right: 8.w),
-                          child: Icon(Icons.access_time, size: 20.r, color: NewAppColor.neutral500),
-                        ),
-                        prefixIconConstraints: BoxConstraints(minWidth: 40.w),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral300),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                        prefixIcon: const Icon(Icons.access_time),
                       ),
                     ),
                   ],
@@ -2515,9 +2253,66 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 5. 장소
+          // 5. 지역
           Text(
-            '장소',
+            '지역 *',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedProvince,
+                  decoration: _buildInputDecoration(
+                    hintText: '도/시 선택',
+                  ),
+                  items: LocationData.getCities().map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city,
+                      child: Text(city),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedProvince = value;
+                      _selectedDistrict = null;
+                    });
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedDistrict,
+                  decoration: _buildInputDecoration(
+                    hintText: '시/군/구 선택',
+                  ),
+                  items: _selectedProvince != null
+                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                          return DropdownMenuItem<String>(
+                            value: district,
+                            child: Text(district),
+                          );
+                        }).toList()
+                      : [],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedDistrict = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+
+          // 상세 주소
+          Text(
+            '상세 주소',
             style: FigmaTextStyles().body2.copyWith(
                   color: NewAppColor.neutral900,
                   fontWeight: FontWeight.w500,
@@ -2526,25 +2321,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _locationController,
-            decoration: InputDecoration(
-              hintText: '교회 주소나 지역을 입력하세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
-              prefixIcon: Padding(
-                padding: EdgeInsets.only(left: 12.w, right: 8.w),
-                child: Icon(Icons.location_on, size: 20.r, color: NewAppColor.neutral500),
-              ),
-              prefixIconConstraints: BoxConstraints(minWidth: 40.w),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            decoration: _buildInputDecoration(
+              hintText: '예: ○○교회, ○○센터 2층',
+              prefixIcon: const Icon(Icons.location_on),
             ),
           ),
           SizedBox(height: 32.h),
@@ -2570,24 +2349,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '행사 내용, 분위기, 특별한 요구사항 등을 자세히 설명해주세요',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.primary500, width: 2),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLines: 5,
           ),
@@ -2604,20 +2367,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _requirementsController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '예: 3년 이상 연주 경험, 악보 시창 가능',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLines: 3,
           ),
@@ -2634,20 +2385,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           TextFormField(
             controller: _compensationController,
-            decoration: InputDecoration(
+            decoration: _buildInputDecoration(
               hintText: '예: 회당 5만원, 봉사, 협의',
-              hintStyle: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: BorderSide(color: NewAppColor.neutral300),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
           ),
           SizedBox(height: 32.h),
@@ -2679,20 +2418,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: '010-1234-5678',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral400,
-                            ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral300),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                       ),
                       keyboardType: TextInputType.phone,
                       validator: (value) => value?.trim().isEmpty ?? true ? '연락처를 입력해주세요' : null,
@@ -2715,20 +2442,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _emailController,
-                      decoration: InputDecoration(
+                      decoration: _buildInputDecoration(
                         hintText: 'example@email.com',
-                        hintStyle: FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral400,
-                            ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: NewAppColor.neutral300),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                       ),
                       keyboardType: TextInputType.emailAddress,
                     ),
@@ -2799,37 +2514,55 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: TextFormField(
-                  controller: _titleController,
-                  decoration: InputDecoration(
-                    labelText: '지원서 제목 *',
-                    hintText: '지원서 제목을 입력하세요',
-                    counterText: '${_titleController.text.length}/100',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '지원서 제목 *',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  maxLength: 100,
-                  onChanged: (value) => setState(() {}),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return '지원서 제목을 입력해주세요';
-                    }
-                    return null;
-                  },
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _titleController,
+                      decoration: _buildInputDecoration(
+                        hintText: '지원서 제목을 입력하세요',
+                        counterText: '${_titleController.text.length}/100',
+                      ),
+                      maxLength: 100,
+                      onChanged: (value) => setState(() {}),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return '지원서 제목을 입력해주세요';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                 ),
               ),
               SizedBox(width: 16.w),
               Expanded(
-                child: TextFormField(
-                  controller: _teamNameController,
-                  decoration: InputDecoration(
-                    labelText: '현재 활동 팀명 (선택)',
-                    hintText: '팀명을 입력하세요',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '현재 활동 팀명 (선택)',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _teamNameController,
+                      decoration: _buildInputDecoration(
+                        hintText: '팀명을 입력하세요',
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -2837,12 +2570,17 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 16.h),
 
           // 2. 팀 형태 *
+          Text(
+            '팀 형태 *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              labelText: '팀 형태 *',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+            decoration: _buildInputDecoration(
+              hintText: '팀 형태 선택',
             ),
             value: _selectedTeamType,
             items: const [
@@ -2862,44 +2600,134 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 16.h),
 
           // 3. 연주 경력
+          Text(
+            '연주 경력',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _experienceController,
-            decoration: InputDecoration(
-              labelText: '연주 경력',
+            decoration: _buildInputDecoration(
               hintText: '찬양팀, 워십팀, 밴드 등 경력을 쓰면 좋은 결과 생길 수 있습니다.',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
             ),
             maxLines: 5,
           ),
           SizedBox(height: 16.h),
 
-          // 4. 활동 가능 지역
-          TextFormField(
-            controller: _locationController,
-            decoration: InputDecoration(
-              labelText: '활동 가능 지역',
-              hintText: '주소 또는 시/군 이름 입력',
-              prefixIcon: Icon(Icons.location_on_outlined, size: 20.r, color: NewAppColor.neutral600),
-              suffixIcon: TextButton(
-                onPressed: () {
-                  // TODO: 지역 추가 기능
-                  AppToast.show(context, '지역 추가 기능 준비 중', type: ToastType.info);
-                },
-                child: Text(
-                  '추가',
-                  style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.primary500,
-                        fontWeight: FontWeight.w600,
-                      ),
+          // 4. 활동 가능 지역 (복수 선택 가능)
+          Text(
+            '활동 가능 지역 (복수 선택 가능)',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral700,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedProvince,
+                  decoration: _buildInputDecoration(
+                    hintText: '도/시 선택',
+                  ),
+                  hint: const Text('도/시 선택'),
+                  items: LocationData.getCities().map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city,
+                      child: Text(city),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedProvince = value;
+                      _selectedDistrict = null;
+                    });
+                  },
                 ),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedDistrict,
+                  decoration: _buildInputDecoration(
+                    hintText: '시/군/구 선택',
+                  ),
+                  hint: const Text('시/군/구 선택'),
+                  items: _selectedProvince != null
+                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                          return DropdownMenuItem<String>(
+                            value: district,
+                            child: Text(district),
+                          );
+                        }).toList()
+                      : [],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedDistrict = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                if (_selectedProvince != null && _selectedDistrict != null) {
+                  final location = '$_selectedProvince $_selectedDistrict';
+                  if (!_preferredLocations.contains(location)) {
+                    setState(() {
+                      _preferredLocations.add(location);
+                      _selectedProvince = null;
+                      _selectedDistrict = null;
+                    });
+                  } else {
+                    AppToast.show(context, '이미 추가된 지역입니다', type: ToastType.warning);
+                  }
+                } else {
+                  AppToast.show(context, '도/시와 시/군/구를 선택해주세요', type: ToastType.warning);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: NewAppColor.primary500,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+              ),
+              child: Text(
+                '추가',
+                style: FigmaTextStyles().body2.copyWith(color: Colors.white),
               ),
             ),
           ),
+
+          // 선택된 지역 목록
+          if (_preferredLocations.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: _preferredLocations.map((location) {
+                return Chip(
+                  label: Text(location),
+                  deleteIcon: Icon(Icons.close, size: 18.r),
+                  onDeleted: () {
+                    setState(() {
+                      _preferredLocations.remove(location);
+                    });
+                  },
+                  backgroundColor: NewAppColor.primary100,
+                  labelStyle: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.primary700,
+                      ),
+                );
+              }).toList(),
+            ),
+          ],
           SizedBox(height: 16.h),
 
           // 5. 활동 가능 요일
@@ -2949,12 +2777,17 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 16.h),
 
           // 6. 활동 가능 시간대
+          Text(
+            '활동 가능 시간대',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              labelText: '활동 가능 시간대',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+            decoration: _buildInputDecoration(
+              hintText: '활동 가능 시간대',
             ),
             value: _selectedTimeSlot,
             items: const [
@@ -2980,14 +2813,18 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 16.h),
 
           // 1. YouTube 링크 (선택)
+          Text(
+            'YouTube 링크 (선택)',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _youtubeController,
-            decoration: InputDecoration(
-              labelText: 'YouTube 링크 (선택)',
+            decoration: _buildInputDecoration(
               hintText: 'YouTube 연주 영상 주소를 입력하세요',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
             ),
           ),
           SizedBox(height: 16.h),
@@ -3074,36 +2911,54 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: TextFormField(
-                  controller: _contactController,
-                  decoration: InputDecoration(
-                    labelText: '연락처 *',
-                    hintText: '010-1234-5678',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '연락처 *',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return '연락처를 입력해주세요';
-                    }
-                    return null;
-                  },
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _contactController,
+                      decoration: _buildInputDecoration(
+                        hintText: '010-1234-5678',
+                      ),
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return '연락처를 입력해주세요';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                 ),
               ),
               SizedBox(width: 16.w),
               Expanded(
-                child: TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: '이메일 (선택)',
-                    hintText: 'example@email.com',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '이메일 (선택)',
+                      style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: _buildInputDecoration(
+                        hintText: 'example@email.com',
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -3116,66 +2971,35 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   /// 교회소식 필드 (행사 소식 등록)
   Widget _buildChurchNewsFields() {
     return Container(
-      margin: EdgeInsets.only(top: 8.h),
       color: Colors.white,
       padding: EdgeInsets.all(16.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 행사 이미지 (0/12)
+          _buildImagePickerWithLabel(
+            label: '행사 이미지',
+            required: false,
+            maxCount: 12,
+          ),
+          SizedBox(height: 24.h),
+
+          // 카테고리 *
           Text(
-            '행사 이미지 (0/12)',
-            style: FigmaTextStyles().body1.copyWith(
+            '카테고리 *',
+            style: FigmaTextStyles().body2.copyWith(
                   color: NewAppColor.neutral900,
                   fontWeight: FontWeight.w500,
                 ),
           ),
           SizedBox(height: 8.h),
-          GestureDetector(
-            onTap: () {
-              // TODO: 이미지 선택
-              AppToast.show(context, '이미지 선택 기능 준비 중', type: ToastType.info);
-            },
-            child: Container(
-              width: 164.w,
-              height: 164.w,
-              decoration: BoxDecoration(
-                border: Border.all(color: NewAppColor.neutral300, width: 1),
-                borderRadius: BorderRadius.circular(8.r),
-                color: NewAppColor.neutral100,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add, size: 40.r, color: NewAppColor.neutral400),
-                  SizedBox(height: 8.h),
-                  Text(
-                    '이미지 추가',
-                    style: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral600,
-                        ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    '최대 10 MB',
-                    style: FigmaTextStyles().body2.copyWith(
-                          fontSize: 12.sp,
-                          color: NewAppColor.neutral500,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(height: 24.h),
-
-          // 카테고리 *
           DropdownButtonFormField<String>(
             decoration: InputDecoration(
-              labelText: '카테고리 *',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              hintText: '카테고리 선택',
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             value: _selectedNewsCategory,
             items: const [
@@ -3190,18 +3014,29 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             onChanged: (value) => setState(() => _selectedNewsCategory = value),
             validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 제목 *
+          Text(
+            '제목 *',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
             decoration: InputDecoration(
-              labelText: '제목 *',
               hintText: '행사 소식의 제목을 입력하세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
               counterText: '${_titleController.text.length}/100',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 100,
             onChanged: (value) => setState(() {}),
@@ -3212,18 +3047,29 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 내용 *
+          Text(
+            '내용 *',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
             decoration: InputDecoration(
-              labelText: '내용 *',
               hintText: '행사 소식의 상세 내용을 입력하세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
               counterText: '${_descriptionController.text.length}/1000',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLines: 6,
             maxLength: 1000,
@@ -3235,15 +3081,24 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 우선순위 *
+          Text(
+            '우선순위 *',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
             decoration: InputDecoration(
-              labelText: '우선순위 *',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              hintText: '일반',
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             value: _selectedPriority,
             items: const [
@@ -3253,19 +3108,27 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             ],
             onChanged: (value) => setState(() => _selectedPriority = value!),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 행사일
+          Text(
+            '행사일',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _newsEventDateController,
             readOnly: true,
             decoration: InputDecoration(
-              labelText: '행사일',
               hintText: '날짜를 선택해주세요',
               prefixIcon: Icon(Icons.calendar_today, size: 20.r, color: NewAppColor.neutral600),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             onTap: () async {
               final date = await showDatePicker(
@@ -3281,48 +3144,137 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               }
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 행사 시간
+          Text(
+            '행사 시간',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _newsEventTimeController,
             decoration: InputDecoration(
-              labelText: '행사 시간',
               hintText: '-- --:--',
               suffixIcon: Icon(Icons.access_time, size: 20.r, color: NewAppColor.neutral600),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
-          // 장소
+          // 지역
+          Text(
+            '지역',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedProvince,
+                  decoration: InputDecoration(
+                    hintText: '도/시 선택',
+                    filled: true,
+                    fillColor: NewAppColor.neutral100,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  ),
+                  items: LocationData.getCities().map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city,
+                      child: Text(city),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedProvince = value;
+                      _selectedDistrict = null;
+                    });
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedDistrict,
+                  decoration: InputDecoration(
+                    hintText: '시/군/구 선택',
+                    filled: true,
+                    fillColor: NewAppColor.neutral100,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  ),
+                  items: _selectedProvince != null
+                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                          return DropdownMenuItem<String>(
+                            value: district,
+                            child: Text(district),
+                          );
+                        }).toList()
+                      : [],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedDistrict = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24.h),
+
+          // 상세 주소
+          Text(
+            '상세 주소',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _locationController,
             decoration: InputDecoration(
-              labelText: '장소',
-              hintText: '행사가 열리는 장소',
+              hintText: '예: ○○교회, ○○센터 2층',
               counterText: '${_locationController.text.length}/100',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 100,
             onChanged: (value) => setState(() {}),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 주최자/부서 *
+          Text(
+            '주최자/부서 *',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _organizerController,
             decoration: InputDecoration(
-              labelText: '주최자/부서 *',
               hintText: '행사를 주최하는 부서나 담당자',
               counterText: '${_organizerController.text.length}/50',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 50,
             onChanged: (value) => setState(() {}),
@@ -3333,84 +3285,146 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 대상
+          Text(
+            '대상',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _targetAudienceController,
             decoration: InputDecoration(
-              labelText: '대상',
               hintText: '예: 전체, 청년부, 장년부 등',
               counterText: '${_targetAudienceController.text.length}/50',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 50,
             onChanged: (value) => setState(() {}),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 참가비
+          Text(
+            '참가비',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _participationFeeController,
             decoration: InputDecoration(
-              labelText: '참가비',
               hintText: '예: 무료, 10,000원 등',
               counterText: '${_participationFeeController.text.length}/50',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 50,
             onChanged: (value) => setState(() {}),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 담당자
+          Text(
+            '담당자',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _contactPersonController,
             decoration: InputDecoration(
-              labelText: '담당자',
               hintText: '문의 담당자 이름',
               counterText: '${_contactPersonController.text.length}/50',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 50,
             onChanged: (value) => setState(() {}),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 연락처
+          Text(
+            '연락처',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _contactController,
             decoration: InputDecoration(
-              labelText: '연락처',
               hintText: '010-0000-0000',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             keyboardType: TextInputType.phone,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // 이메일
+          Text(
+            '이메일',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          SizedBox(height: 8.h),
           TextFormField(
             controller: _emailController,
             decoration: InputDecoration(
-              labelText: '이메일',
               hintText: 'contact@church.com',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              filled: true,
+              fillColor: NewAppColor.neutral100,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             keyboardType: TextInputType.emailAddress,
           ),
         ],
       ),
+    );
+  }
+
+  /// 공통 InputDecoration (보더 없는 스타일)
+  InputDecoration _buildInputDecoration({
+    required String hintText,
+    String? counterText,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: FigmaTextStyles().body2.copyWith(
+        color: NewAppColor.neutral400,
+      ),
+      counterText: counterText,
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: NewAppColor.neutral100,
+      border: InputBorder.none,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
     );
   }
 
@@ -3532,7 +3546,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       category: _selectedCategory!,
       condition: _selectedCondition!,
       quantity: _quantity,
-      location: _locationController.text.trim(),
+      province: _selectedProvince,
+      district: _selectedDistrict,
+      deliveryAvailable: _deliveryAvailable,
       images: imageUrls,
       isFree: _isFreeSharing,
       price: _isFreeSharing ? null : int.tryParse(_priceController.text),
@@ -3540,6 +3556,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       purchaseDate: _purchaseDateController.text.trim().isEmpty
           ? null
           : _purchaseDateController.text.trim(),
+      contactPhone: _contactController.text.trim(),
+      contactEmail: _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim(),
     );
 
     return response.success;
@@ -3557,10 +3577,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       neededDate: _neededDateController.text.trim().isEmpty
           ? null
           : _neededDateController.text.trim(),
-      location: _locationController.text.trim(),
+      province: _selectedProvince,
+      district: _selectedDistrict,
+      deliveryAvailable: _deliveryAvailable,
       priceRange: _priceRangeController.text.trim(),
       urgency: _selectedUrgency,
       images: imageUrls,
+      contactPhone: _contactController.text.trim(),
+      contactEmail: _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim(),
     );
 
     return response.success;
@@ -3578,10 +3604,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       employmentType: _selectedEmploymentType ?? 'full-time',
       salary: _salaryController.text.trim(),
       qualifications: _qualificationsController.text.trim(),
-      location: _locationController.text.trim(),
+      province: _selectedProvince,
+      district: _selectedDistrict,
+      deliveryAvailable: _deliveryAvailable,
       deadline: _deadlineController.text.trim().isEmpty
           ? null
           : _deadlineController.text.trim(),
+      contactPhone: _contactController.text.trim(),
+      contactEmail: _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim(),
     );
 
     return response.success;

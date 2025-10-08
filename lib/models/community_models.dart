@@ -474,7 +474,10 @@ class JobPost extends CommunityBasePost {
   final List<String>? benefits; // 복리후생
   final List<String>? qualifications; // 지원 자격
   final List<String>? requiredDocuments; // 제출 서류
-  final String location;
+  final String? location;
+  final String? province;
+  final String? district;
+  final bool? deliveryAvailable;
   final String? deadline; // 마감일
   final String? contactPhone;
   final String? contactEmail;
@@ -503,7 +506,10 @@ class JobPost extends CommunityBasePost {
     this.benefits,
     this.qualifications,
     this.requiredDocuments,
-    required this.location,
+    this.location,
+    this.province,
+    this.district,
+    this.deliveryAvailable,
     this.deadline,
     this.contactPhone,
     this.contactEmail,
@@ -539,6 +545,9 @@ class JobPost extends CommunityBasePost {
       qualifications: json['qualifications'] != null ? List<String>.from(json['qualifications']) : null,
       requiredDocuments: json['requiredDocuments'] != null ? List<String>.from(json['requiredDocuments']) : null,
       location: json['location'] ?? '',
+      province: json['province'],
+      district: json['district'],
+      deliveryAvailable: json['delivery_available'] ?? false,
       deadline: json['deadline'] ?? json['application_deadline'],
       contactPhone: json['contactPhone'] ?? json['contact_phone'],
       contactEmail: json['contactEmail'] ?? json['contact_email'],
