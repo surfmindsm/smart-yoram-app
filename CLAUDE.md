@@ -67,11 +67,20 @@ dart run build_runner build
   - `api_config.dart`: API endpoints and configurations
 - **`models/`**: Data models with barrel export in `models.dart`
 - **`services/`**: Business logic and API integration with barrel export in `services.dart`
+  - Services follow a consistent pattern: fetch data from Supabase, transform to models, cache where appropriate
+  - **IMPORTANT**: Always use batch queries (`.inFilter()`) instead of individual queries to avoid N+1 problems
 - **`screens/`**: UI screens with `main_navigation.dart` as the root navigation controller
+  - `community/`: Community features (sharing, requests, job postings, music teams, news)
+    - `community_list_screen.dart`: Generic list screen for all community types with filtering
+    - `community_detail_screen.dart`: Generic detail view supporting multiple content types
+    - `community_create_screen.dart`: Unified creation form handling all community post types
 - **`components/`**: Reusable UI components library
 - **`widgets/`**: Custom widgets specific to app functionality
 - **`resource/`**: Design system (colors, typography, themes)
+  - `color_style_new.dart`: NewAppColor palette
+  - `text_style_new.dart`: FigmaTextStyles for typography
 - **`utils/`**: Utility functions and helpers
+  - `location_data.dart`: Korean administrative divisions (cities, districts)
 
 #### `/docs/`
 - Privacy policy guidelines and push notification implementation docs
@@ -86,6 +95,13 @@ dart run build_runner build
 6. **Prayer Requests**: Community prayer management
 7. **Push Notifications**: FCM-based messaging system
 8. **Pastoral Care**: Request and tracking system with location services
+9. **Community Features**:
+   - Free Sharing / Item Sales (unified with `is_free` flag)
+   - Item Requests
+   - Job Postings (사역자 모집)
+   - Music Team Recruitment (행사팀 모집)
+   - Music Team Seeking (행사팀 지원)
+   - Church News (행사 소식)
 
 ## Important Dependencies
 
@@ -154,6 +170,55 @@ dart run build_runner build
 ### Code Generation
 - Run `dart run build_runner build` after modifying providers
 - Use `--delete-conflicting-outputs` flag if conflicts occur
+
+### UI Consistency
+- All form inputs should use the `_buildInputDecoration` helper method pattern
+- Standard decoration: borderless with filled background (`NewAppColor.neutral100`)
+- Example pattern in `community_create_screen.dart`:
+  ```dart
+  InputDecoration _buildInputDecoration({
+    required String hintText,
+    String? counterText,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: FigmaTextStyles().body2.copyWith(
+        color: NewAppColor.neutral400,
+      ),
+      counterText: counterText,
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: NewAppColor.neutral100,
+      border: InputBorder.none,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+    );
+  }
+  ```
+
+### Performance Optimization
+- **Avoid N+1 queries**: Use `.inFilter()` for batch fetching related data (authors, churches, etc.)
+- **Cache filtered results**: Use cached variables instead of computed getters in StatefulWidget build methods
+- **Update filters explicitly**: Call update methods only when filter values change, not on every build
+- Example pattern from `community_list_screen.dart`:
+  ```dart
+  // Bad: Computed getter called multiple times per build
+  List<dynamic> get _filteredItems { /* filtering logic */ }
+
+  // Good: Cached variable updated only when filters change
+  List<dynamic> _filteredItemsCache = [];
+  void _updateFilteredItems() {
+    _filteredItemsCache = /* filtering logic */;
+  }
+  ```
+
+### Community Screen Architecture
+- `CommunityListScreen` is a generic list screen supporting multiple content types via `CommunityListType` enum
+- Filtering is unified across types: location, category, status, price (for sharing/sales), delivery availability
+- `CommunityDetailScreen` handles display logic polymorphically based on item type
+- `CommunityCreateScreen` contains all creation forms in a single file, switching via category selection
 
 ## Testing Strategy
 - Widget tests for UI components

@@ -774,6 +774,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         case 'active':
         case 'requesting':
           return '요청중';
+        case 'ing':
+          return '예약중';
         case 'completed':
           return '완료';
         case 'closed':
