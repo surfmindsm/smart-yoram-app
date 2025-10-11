@@ -1,8 +1,4 @@
-import 'dart:io';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:smart_yoram_app/config/api_config.dart';
 import 'package:smart_yoram_app/models/api_response.dart';
 
 /// 회원가입 관련 서비스
@@ -97,24 +93,57 @@ class SignupService {
   }
 
   /// 이메일 중복 체크 (Supabase 직접 쿼리)
+  /// users, church_applications, community_applications 테이블 모두 확인
   Future<bool> checkEmailExists(String email) async {
     try {
-      final response = await _supabase
+      // 1. users 테이블 확인
+      final userExists = await _supabase
           .from('users')
           .select('email')
           .eq('email', email)
           .maybeSingle();
 
-      print('🔍 SIGNUP: 이메일 중복 체크 - 결과: ${response != null}');
+      if (userExists != null) {
+        print('🔍 SIGNUP: 이메일 중복 체크 - users 테이블에서 발견');
+        return true;
+      }
 
-      return response != null;
+      // 2. church_applications 테이블 확인 (pending 또는 approved 상태)
+      final churchAppExists = await _supabase
+          .from('church_applications')
+          .select('email')
+          .eq('email', email)
+          .inFilter('status', ['pending', 'approved'])
+          .maybeSingle();
+
+      if (churchAppExists != null) {
+        print('🔍 SIGNUP: 이메일 중복 체크 - church_applications 테이블에서 발견');
+        return true;
+      }
+
+      // 3. community_applications 테이블 확인 (pending 또는 approved 상태)
+      final communityAppExists = await _supabase
+          .from('community_applications')
+          .select('email')
+          .eq('email', email)
+          .inFilter('status', ['pending', 'approved'])
+          .maybeSingle();
+
+      if (communityAppExists != null) {
+        print('🔍 SIGNUP: 이메일 중복 체크 - community_applications 테이블에서 발견');
+        return true;
+      }
+
+      print('🔍 SIGNUP: 이메일 중복 체크 - 중복 없음');
+      return false;
     } catch (e) {
       print('❌ SIGNUP: 이메일 중복 체크 오류 - $e');
-      return false;
+      // 오류 발생 시 안전하게 true 반환 (중복으로 간주하여 가입 차단)
+      return true;
     }
   }
 
-  /// 교회 가입 신청
+  /// 교회 가입 신청 (Supabase Edge Function 사용)
   Future<ApiResponse<Map<String, dynamic>>> submitChurchApplication({
     required String churchName,
     required String pastorName,
@@ -122,95 +151,104 @@ class SignupService {
     required String email,
     required String phone,
     required String address,
+    required String description,
     required bool agreeTerms,
     required bool agreePrivacy,
     required bool agreeMarketing,
+    String? businessNo,
     String? website,
+    String? homepageUrl,
+    String? youtubeChannel,
     int? establishedYear,
     String? denomination,
     int? memberCount,
-    List<File>? attachments,
   }) async {
     try {
-      final url = Uri.parse('${ApiConfig.baseUrl}/church/applications');
+      // 1단계: 신청서 제출
+      final response = await _supabase.functions.invoke(
+        'church-applications',
+        body: {
+          // 필수 필드
+          'church_name': churchName,
+          'pastor_name': pastorName,
+          'admin_name': adminName,
+          'email': email,
+          'phone': phone,
+          'address': address,
+          'description': description,
+          'agree_terms': agreeTerms,
+          'agree_privacy': agreePrivacy,
 
-      // FormData 생성
-      final request = http.MultipartRequest('POST', url);
+          // 선택 필드 (약관 동의)
+          'agree_marketing': agreeMarketing,
 
-      // 필수 필드
-      request.fields['church_name'] = churchName;
-      request.fields['pastor_name'] = pastorName;
-      request.fields['admin_name'] = adminName;
-      request.fields['email'] = email;
-      request.fields['phone'] = phone;
-      request.fields['address'] = address;
-      request.fields['description'] = ''; // 빈 문자열
-      request.fields['agree_terms'] = agreeTerms.toString();
-      request.fields['agree_privacy'] = agreePrivacy.toString();
-      request.fields['agree_marketing'] = agreeMarketing.toString();
+          // 선택 필드 (기타)
+          if (businessNo != null && businessNo.isNotEmpty)
+            'business_no': businessNo,
+          if (website != null && website.isNotEmpty)
+            'website': website,
+          if (homepageUrl != null && homepageUrl.isNotEmpty)
+            'homepage_url': homepageUrl,
+          if (youtubeChannel != null && youtubeChannel.isNotEmpty)
+            'youtube_channel': youtubeChannel,
+          if (establishedYear != null)
+            'established_year': establishedYear,
+          if (denomination != null && denomination.isNotEmpty)
+            'denomination': denomination,
+          if (memberCount != null)
+            'member_count': memberCount,
+        },
+      );
 
-      // 선택 필드
-      if (website != null && website.isNotEmpty) {
-        request.fields['website'] = website;
-      }
-      if (establishedYear != null) {
-        request.fields['established_year'] = establishedYear.toString();
-      }
-      if (denomination != null && denomination.isNotEmpty) {
-        request.fields['denomination'] = denomination;
-      }
-      if (memberCount != null) {
-        request.fields['member_count'] = memberCount.toString();
-      }
+      print('🏛️ SIGNUP: 교회 가입 신청 - 상태: ${response.status}');
 
-      // 첨부파일
-      if (attachments != null && attachments.isNotEmpty) {
-        for (var i = 0; i < attachments.length; i++) {
-          final file = attachments[i];
-          final stream = http.ByteStream(file.openRead());
-          final length = await file.length();
-          final multipartFile = http.MultipartFile(
-            'attachments',
-            stream,
-            length,
-            filename: file.path.split('/').last,
-          );
-          request.files.add(multipartFile);
+      if (response.status == 201 || response.status == 200) {
+        final data = response.data;
+        final applicationId = data['data']?['application_id'];
+
+        // 2단계: 관리자에게 알림 이메일 발송
+        if (applicationId != null) {
+          try {
+            print('📧 SIGNUP: 관리자 알림 이메일 발송 중...');
+
+            final notifyResponse = await _supabase.functions.invoke(
+              'notify-application',
+              body: {
+                'type': 'church',
+                'applicantEmail': email,
+                'applicantName': adminName,
+                'organizationName': churchName,
+                'applicationId': applicationId,
+              },
+            );
+
+            if (notifyResponse.status == 200) {
+              print('✅ SIGNUP: 관리자 알림 이메일 발송 완료');
+            } else {
+              print('⚠️ SIGNUP: 관리자 알림 이메일 발송 실패 (신청은 완료됨)');
+            }
+          } catch (notifyError) {
+            print('⚠️ SIGNUP: 알림 발송 오류 (신청은 완료됨) - $notifyError');
+            // 알림 발송 실패해도 신청은 성공으로 처리
+          }
         }
-      }
 
-      print('🏛️ SIGNUP: 교회 가입 신청 전송');
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      print('🏛️ SIGNUP: 교회 가입 신청 응답 - 상태: ${response.statusCode}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
         return ApiResponse<Map<String, dynamic>>(
           success: data['success'] ?? true,
-          message: '교회 가입 신청이 성공적으로 제출되었습니다.',
+          message: data['message'] ?? '신청서가 성공적으로 제출되었습니다.',
           data: data['data'],
         );
-      } else if (response.statusCode == 422) {
-        final error = jsonDecode(response.body);
+      } else if (response.status == 400) {
+        final data = response.data;
         return ApiResponse<Map<String, dynamic>>(
           success: false,
-          message: error['message'] ?? '입력 데이터 검증에 실패했습니다.',
-          data: null,
-        );
-      } else if (response.statusCode == 413) {
-        return ApiResponse<Map<String, dynamic>>(
-          success: false,
-          message: '첨부파일 크기가 너무 큽니다. 파일 크기를 줄이거나 개수를 줄여주세요.',
+          message: data['message'] ?? '필수 필드가 누락되었거나 약관에 동의하지 않았습니다.',
           data: null,
         );
       } else {
-        final error = jsonDecode(response.body);
         return ApiResponse<Map<String, dynamic>>(
           success: false,
-          message: error['message'] ?? '가입 신청 중 오류가 발생했습니다.',
+          message: '신청서 제출에 실패했습니다.',
           data: null,
         );
       }
@@ -224,7 +262,7 @@ class SignupService {
     }
   }
 
-  /// 커뮤니티 가입 신청
+  /// 커뮤니티 가입 신청 (Supabase Edge Function 사용)
   Future<ApiResponse<Map<String, dynamic>>> submitCommunityApplication({
     required String applicantType,
     required String organizationName,
@@ -239,90 +277,86 @@ class SignupService {
     String? serviceArea,
     String? address,
     String? website,
-    List<File>? attachments,
   }) async {
     try {
-      final url = Uri.parse('${ApiConfig.baseUrl}/community/applications');
+      // 1단계: 신청서 제출
+      final response = await _supabase.functions.invoke(
+        'community-applications',
+        body: {
+          // 필수 필드
+          'applicant_type': applicantType,
+          'organization_name': organizationName,
+          'contact_person': contactPerson,
+          'email': email,
+          'phone': phone,
+          'description': description,
+          'agree_terms': agreeTerms,
+          'agree_privacy': agreePrivacy,
 
-      // FormData 생성
-      final request = http.MultipartRequest('POST', url);
+          // 선택 필드 (약관 동의)
+          'agree_marketing': agreeMarketing,
 
-      // 필수 필드
-      request.fields['applicant_type'] = applicantType;
-      request.fields['organization_name'] = organizationName;
-      request.fields['contact_person'] = contactPerson;
-      request.fields['email'] = email;
-      request.fields['phone'] = phone;
-      request.fields['description'] = description;
-      request.fields['agree_terms'] = agreeTerms.toString();
-      request.fields['agree_privacy'] = agreePrivacy.toString();
-      request.fields['agree_marketing'] = agreeMarketing.toString();
+          // 선택 필드 (기타)
+          if (businessNumber != null && businessNumber.isNotEmpty)
+            'business_number': businessNumber,
+          if (serviceArea != null && serviceArea.isNotEmpty)
+            'service_area': serviceArea,
+          if (address != null && address.isNotEmpty)
+            'address': address,
+          if (website != null && website.isNotEmpty)
+            'website': website,
+        },
+      );
 
-      // 임시 비밀번호 (승인 후 실제 비밀번호 발송)
-      request.fields['password'] = 'temp_password_will_be_sent_after_approval';
+      print('🤝 SIGNUP: 커뮤니티 가입 신청 - 상태: ${response.status}');
 
-      // 선택 필드
-      if (businessNumber != null && businessNumber.isNotEmpty) {
-        request.fields['business_number'] = businessNumber;
-      }
-      if (serviceArea != null && serviceArea.isNotEmpty) {
-        request.fields['service_area'] = serviceArea;
-      }
-      if (address != null && address.isNotEmpty) {
-        request.fields['address'] = address;
-      }
-      if (website != null && website.isNotEmpty) {
-        request.fields['website'] = website;
-      }
+      if (response.status == 201 || response.status == 200) {
+        final data = response.data;
+        final applicationId = data['data']?['application_id'];
 
-      // 첨부파일
-      if (attachments != null && attachments.isNotEmpty) {
-        for (var i = 0; i < attachments.length; i++) {
-          final file = attachments[i];
-          final stream = http.ByteStream(file.openRead());
-          final length = await file.length();
-          final multipartFile = http.MultipartFile(
-            'attachments',
-            stream,
-            length,
-            filename: file.path.split('/').last,
-          );
-          request.files.add(multipartFile);
+        // 2단계: 관리자에게 알림 이메일 발송
+        if (applicationId != null) {
+          try {
+            print('📧 SIGNUP: 관리자 알림 이메일 발송 중...');
+
+            final notifyResponse = await _supabase.functions.invoke(
+              'notify-application',
+              body: {
+                'type': 'community',
+                'applicantEmail': email,
+                'applicantName': contactPerson,
+                'organizationName': organizationName,
+                'applicationId': applicationId,
+              },
+            );
+
+            if (notifyResponse.status == 200) {
+              print('✅ SIGNUP: 관리자 알림 이메일 발송 완료');
+            } else {
+              print('⚠️ SIGNUP: 관리자 알림 이메일 발송 실패 (신청은 완료됨)');
+            }
+          } catch (notifyError) {
+            print('⚠️ SIGNUP: 알림 발송 오류 (신청은 완료됨) - $notifyError');
+            // 알림 발송 실패해도 신청은 성공으로 처리
+          }
         }
-      }
 
-      print('🤝 SIGNUP: 커뮤니티 가입 신청 전송');
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      print('🤝 SIGNUP: 커뮤니티 가입 신청 응답 - 상태: ${response.statusCode}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
         return ApiResponse<Map<String, dynamic>>(
           success: data['success'] ?? true,
-          message: '커뮤니티 이용 신청이 성공적으로 제출되었습니다.',
+          message: data['message'] ?? '신청서가 성공적으로 제출되었습니다.',
           data: data['data'],
         );
-      } else if (response.statusCode == 422) {
-        final error = jsonDecode(response.body);
+      } else if (response.status == 400) {
+        final data = response.data;
         return ApiResponse<Map<String, dynamic>>(
           success: false,
-          message: error['message'] ?? '입력 데이터 검증에 실패했습니다.',
-          data: null,
-        );
-      } else if (response.statusCode == 413) {
-        return ApiResponse<Map<String, dynamic>>(
-          success: false,
-          message: '첨부파일 크기가 너무 큽니다. 파일 크기를 줄이거나 개수를 줄여주세요.',
+          message: data['message'] ?? '필수 필드가 누락되었거나 약관에 동의하지 않았습니다.',
           data: null,
         );
       } else {
-        final error = jsonDecode(response.body);
         return ApiResponse<Map<String, dynamic>>(
           success: false,
-          message: error['message'] ?? '가입 신청 중 오류가 발생했습니다.',
+          message: '신청서 제출에 실패했습니다.',
           data: null,
         );
       }

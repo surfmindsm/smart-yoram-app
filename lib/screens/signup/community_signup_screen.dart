@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/components/email_verification_field.dart';
-import 'package:smart_yoram_app/components/file_upload_field.dart';
 import 'package:smart_yoram_app/services/signup_service.dart';
 
 /// 커뮤니티 가입 신청 화면
@@ -41,10 +39,7 @@ class _CommunitySignupScreenState extends State<CommunitySignupScreen> {
   // 섹션 4: 상세 소개
   final TextEditingController _descriptionController = TextEditingController();
 
-  // 섹션 5: 첨부파일
-  List<File> _attachments = [];
-
-  // 섹션 6: 약관 동의
+  // 섹션 5: 약관 동의
   bool _agreeTerms = false;
   bool _agreePrivacy = false;
   bool _agreeMarketing = false;
@@ -100,7 +95,7 @@ class _CommunitySignupScreenState extends State<CommunitySignupScreen> {
     });
 
     try {
-      // 레거시 API를 통해 커뮤니티 가입 신청
+      // Supabase Edge Function을 통해 커뮤니티 가입 신청
       final result = await _signupService.submitCommunityApplication(
         applicantType: _selectedApplicantType!,
         organizationName: _organizationNameController.text.trim(),
@@ -123,7 +118,6 @@ class _CommunitySignupScreenState extends State<CommunitySignupScreen> {
         website: _websiteController.text.trim().isNotEmpty
             ? _websiteController.text.trim()
             : null,
-        attachments: _attachments.isNotEmpty ? _attachments : null,
       );
 
       if (mounted) {
@@ -410,34 +404,7 @@ class _CommunitySignupScreenState extends State<CommunitySignupScreen> {
 
                 SizedBox(height: 24.h),
 
-                // 섹션 5: 첨부파일
-                _buildSection(
-                  title: '첨부파일',
-                  children: [
-                    Text(
-                      '사업자등록증, 회사소개서, 포트폴리오 등',
-                      style: figmaStyles.captionText1.copyWith(
-                        color: NewAppColor.neutral500,
-                        fontFamily: 'Pretendard Variable',
-                        letterSpacing: -0.30,
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    FileUploadField(
-                      onFilesChanged: (files) {
-                        setState(() {
-                          _attachments = files;
-                        });
-                      },
-                      maxFiles: 5,
-                      maxFileSizeMB: 5,
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 24.h),
-
-                // 섹션 6: 약관 동의
+                // 섹션 5: 약관 동의
                 _buildSection(
                   title: '약관 동의',
                   children: [
@@ -772,14 +739,15 @@ class _CommunitySignupScreenState extends State<CommunitySignupScreen> {
     );
   }
 
-  // 신청자 유형 목록
+  // 신청자 유형 목록 (API 문서 기준)
   List<Map<String, String>> _getApplicantTypes() {
     return [
-      {'value': 'company', 'label': '업체/회사'},
-      {'value': 'individual', 'label': '개인사업자'},
-      {'value': 'musician', 'label': '연주자/음악가'},
-      {'value': 'minister', 'label': '사역자'},
-      {'value': 'organization', 'label': '단체/기관'},
+      {'value': 'individual', 'label': '개인 사용자'},
+      {'value': 'company', 'label': '기업/회사'},
+      {'value': 'musician', 'label': '음악사역자'},
+      {'value': 'minister', 'label': '목회자/전도사'},
+      {'value': 'organization', 'label': '비영리단체'},
+      {'value': 'church_admin', 'label': '교회 관계자'},
       {'value': 'other', 'label': '기타'},
     ];
   }

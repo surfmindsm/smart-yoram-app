@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/components/email_verification_field.dart';
-import 'package:smart_yoram_app/components/file_upload_field.dart';
 import 'package:smart_yoram_app/services/signup_service.dart';
 
 /// 교회 관리자 가입 신청 화면
@@ -36,13 +34,14 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
   bool _isEmailVerified = false;
 
   // 섹션 3: 추가 정보
-  final TextEditingController _memberCountController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _businessNoController = TextEditingController();
   final TextEditingController _websiteController = TextEditingController();
+  final TextEditingController _homepageUrlController = TextEditingController();
+  final TextEditingController _youtubeChannelController = TextEditingController();
+  final TextEditingController _memberCountController = TextEditingController();
 
-  // 섹션 4: 첨부파일
-  List<File> _attachments = [];
-
-  // 섹션 5: 약관 동의
+  // 섹션 4: 약관 동의
   bool _agreeTerms = false;
   bool _agreePrivacy = false;
   bool _agreeMarketing = false;
@@ -59,8 +58,12 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
     _adminNameController.dispose();
     _adminPhoneController.dispose();
     _emailController.dispose();
-    _memberCountController.dispose();
+    _descriptionController.dispose();
+    _businessNoController.dispose();
     _websiteController.dispose();
+    _homepageUrlController.dispose();
+    _youtubeChannelController.dispose();
+    _memberCountController.dispose();
     super.dispose();
   }
 
@@ -94,19 +97,29 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
     });
 
     try {
-      // 레거시 API를 통해 교회 가입 신청
+      // Supabase Edge Function을 통해 교회 가입 신청
       final result = await _signupService.submitChurchApplication(
         churchName: _churchNameController.text.trim(),
         pastorName: _pastorNameController.text.trim(),
         adminName: _adminNameController.text.trim(),
         email: _emailController.text.trim(),
-        phone: _churchPhoneController.text.trim(),
+        phone: _adminPhoneController.text.trim(),
         address: _churchAddressController.text.trim(),
+        description: _descriptionController.text.trim(),
         agreeTerms: _agreeTerms,
         agreePrivacy: _agreePrivacy,
         agreeMarketing: _agreeMarketing,
+        businessNo: _businessNoController.text.trim().isNotEmpty
+            ? _businessNoController.text.trim()
+            : null,
         website: _websiteController.text.trim().isNotEmpty
             ? _websiteController.text.trim()
+            : null,
+        homepageUrl: _homepageUrlController.text.trim().isNotEmpty
+            ? _homepageUrlController.text.trim()
+            : null,
+        youtubeChannel: _youtubeChannelController.text.trim().isNotEmpty
+            ? _youtubeChannelController.text.trim()
             : null,
         establishedYear: _establishedYearController.text.trim().isNotEmpty
             ? int.tryParse(_establishedYearController.text.trim())
@@ -115,7 +128,6 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
         memberCount: _memberCountController.text.trim().isNotEmpty
             ? int.tryParse(_memberCountController.text.trim())
             : null,
-        attachments: _attachments.isNotEmpty ? _attachments : null,
       );
 
       if (mounted) {
@@ -328,42 +340,110 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
 
                 SizedBox(height: 24.h),
 
-                // 섹션 3: 추가 정보
+                // 섹션 3: 교회 소개
                 _buildSection(
-                  title: '추가 정보',
+                  title: '교회 소개',
                   children: [
-                    _buildTextField(
-                      label: '교인 수 (교적부 등록 예정)',
-                      controller: _memberCountController,
-                      hintText: '대략적인 교인 수',
-                      keyboardType: TextInputType.number,
-                      isRequired: false,
-                    ),
-                    SizedBox(height: 16.h),
-                    _buildTextField(
-                      label: '홈페이지',
-                      controller: _websiteController,
-                      hintText: '홈페이지 또는 유튜브 주소',
-                      keyboardType: TextInputType.url,
-                      isRequired: false,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '교회 소개',
+                              style: figmaStyles.bodyText2.copyWith(
+                                color: NewAppColor.neutral900,
+                                fontFamily: 'Pretendard Variable',
+                                letterSpacing: -0.35,
+                              ),
+                            ),
+                            Text(
+                              ' *',
+                              style: figmaStyles.bodyText2.copyWith(
+                                color: NewAppColor.danger600,
+                                fontFamily: 'Pretendard Variable',
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Container(
+                          padding: EdgeInsets.all(16.w),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: NewAppColor.primary300,
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: TextFormField(
+                            controller: _descriptionController,
+                            maxLines: 5,
+                            decoration: InputDecoration(
+                              hintText: '교회 소개 및 특징을 자세히 작성해주세요',
+                              hintStyle: figmaStyles.body1.copyWith(
+                                color: NewAppColor.neutral200,
+                                fontFamily: 'Pretendard Variable',
+                                letterSpacing: -0.38,
+                              ),
+                              border: InputBorder.none,
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return '교회 소개를 입력해주세요';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
 
                 SizedBox(height: 24.h),
 
-                // 섹션 4: 첨부파일
+                // 섹션 4: 추가 정보
                 _buildSection(
-                  title: '첨부파일',
+                  title: '추가 정보',
                   children: [
-                    FileUploadField(
-                      onFilesChanged: (files) {
-                        setState(() {
-                          _attachments = files;
-                        });
-                      },
-                      maxFiles: 5,
-                      maxFileSizeMB: 5,
+                    _buildTextField(
+                      label: '사업자등록번호',
+                      controller: _businessNoController,
+                      hintText: '123-45-67890',
+                      isRequired: false,
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildTextField(
+                      label: '웹사이트',
+                      controller: _websiteController,
+                      hintText: 'https://church.org',
+                      keyboardType: TextInputType.url,
+                      isRequired: false,
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildTextField(
+                      label: '홈페이지 URL',
+                      controller: _homepageUrlController,
+                      hintText: 'https://church.org',
+                      keyboardType: TextInputType.url,
+                      isRequired: false,
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildTextField(
+                      label: '유튜브 채널',
+                      controller: _youtubeChannelController,
+                      hintText: 'https://youtube.com/@church',
+                      keyboardType: TextInputType.url,
+                      isRequired: false,
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildTextField(
+                      label: '교인 수',
+                      controller: _memberCountController,
+                      hintText: '대략적인 교인 수',
+                      keyboardType: TextInputType.number,
+                      isRequired: false,
                     ),
                   ],
                 ),
