@@ -542,7 +542,6 @@ class CommunityService {
         'requested_item': requestedItem,
         'quantity': quantity,
         'reason': reason,
-        'needed_date': neededDate,
         'province': province,
         'district': district,
         'delivery_available': deliveryAvailable ?? false,
@@ -556,6 +555,11 @@ class CommunityService {
         'status': 'active',
         'created_at': DateTime.now().toIso8601String(),
       };
+
+      // needed_date가 있으면 추가 (테이블에 컬럼이 있는 경우)
+      if (neededDate != null) {
+        data['needed_date'] = neededDate;
+      }
 
       final response = await _supabaseService.client
           .from('community_requests')
