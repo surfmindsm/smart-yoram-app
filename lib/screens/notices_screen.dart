@@ -106,14 +106,6 @@ class _NoticesScreenState extends State<NoticesScreen>
           announcements = announcementList;
           isLoading = false;
         });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('공지사항 ${announcementList.length}개를 불러왔습니다'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
       }
     } catch (e) {
       print('❌ API 호출 실패: $e');

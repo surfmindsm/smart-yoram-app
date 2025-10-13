@@ -917,7 +917,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(context);
               AppToast.show(
                 context,
-                '다운로드가 완료되었습니다.',
+                '문제가 신고되었습니다.',
                 type: ToastType.success,
               );
             },

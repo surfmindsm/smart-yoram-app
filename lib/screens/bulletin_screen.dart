@@ -687,13 +687,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
       final response =
           await _bulletinService.downloadBulletin(bulletin.id);
 
-      if (response.success) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${bulletin.title} 다운로드 완료')),
-          );
-        }
-      } else {
+      if (!response.success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('다운로드 실패: ${response.message}')),
