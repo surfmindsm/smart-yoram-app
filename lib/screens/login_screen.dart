@@ -71,7 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (_saveId) {
         // 아이디 저장
-        await prefs.setString('saved_username', _usernameController.text.trim());
+        await prefs.setString(
+            'saved_username', _usernameController.text.trim());
         await prefs.setBool('save_id_enabled', true);
         print('📱 LOGIN: 아이디 저장 완료 - ${_usernameController.text.trim()}');
       } else {
@@ -144,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                SizedBox(height: 150.h),
+                SizedBox(height: 80.h),
 
                 // 메인 컨텐츠 영역
                 Padding(
@@ -160,15 +161,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '스마트 교회요람',
-                                style: figmaStyles.display5.copyWith(
-                                  color: NewAppColor.neutral900,
-                                  fontFamily: 'Pretendard Variable',
-                                  letterSpacing: -0.80,
-                                ),
+                              Image.asset(
+                                'assets/images/logo_type3_white.png',
+                                height: 96.h,
+                                fit: BoxFit.contain,
+                                alignment: Alignment.centerLeft,
                               ),
-                              SizedBox(height: 4.h),
+                              SizedBox(height: 24.h),
                               Text(
                                 '교회 생활의 새로운 시작',
                                 style: figmaStyles.headline4.copyWith(
