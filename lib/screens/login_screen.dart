@@ -150,14 +150,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 // 메인 컨텐츠 영역
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Container(
-                    width: 358.w,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                         // 타이틀 섹션
-                        Container(
-                          width: 197.w,
+                        SizedBox(
+                          width: double.infinity,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -209,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 SizedBox(height: 8.h),
                                 Container(
-                                  width: 358.w,
+                                  width: double.infinity,
                                   height: 54.h,
                                   padding: EdgeInsets.all(16.w),
                                   decoration: BoxDecoration(
@@ -271,9 +269,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 SizedBox(height: 8.h),
                                 Container(
-                                  width: 358.w,
-                                  height: 54.h,
-                                  padding: EdgeInsets.all(16.w),
+                                  width: double.infinity,
                                   decoration: BoxDecoration(
                                     border: Border.all(
                                       color: NewAppColor.primary300,
@@ -281,62 +277,53 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                     borderRadius: BorderRadius.circular(8.r),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextFormField(
-                                          controller: _passwordController,
-                                          focusNode: _passwordFocusNode,
-                                          obscureText: obscurePassword,
-                                          textInputAction: TextInputAction.done,
-                                          onFieldSubmitted: (_) {
-                                            if (((_loginType == 'email' &&
-                                                        _isEmailValid) ||
-                                                    (_loginType == 'phone' &&
-                                                        _isPhoneValid)) &&
-                                                _isPasswordValid &&
-                                                !isLoading) {
-                                              _login();
-                                            }
-                                          },
-                                          decoration: InputDecoration(
-                                            hintText: 'password',
-                                            hintStyle:
-                                                figmaStyles.body1.copyWith(
-                                              color: NewAppColor.neutral200,
-                                              fontFamily: 'Pretendard Variable',
-                                              letterSpacing: -0.38,
-                                            ),
-                                            border: InputBorder.none,
-                                          ),
-                                          validator: (value) {
-                                            if (value == null ||
-                                                value.isEmpty) {
-                                              return '비밀번호를 입력하세요';
-                                            }
-                                            if (value.length < 6) {
-                                              return '비밀번호는 6자 이상이어야 합니다';
-                                            }
-                                            return null;
-                                          },
-                                        ),
+                                  child: TextFormField(
+                                    controller: _passwordController,
+                                    focusNode: _passwordFocusNode,
+                                    obscureText: obscurePassword,
+                                    textInputAction: TextInputAction.done,
+                                    onFieldSubmitted: (_) {
+                                      if (((_loginType == 'email' &&
+                                                  _isEmailValid) ||
+                                              (_loginType == 'phone' &&
+                                                  _isPhoneValid)) &&
+                                          _isPasswordValid &&
+                                          !isLoading) {
+                                        _login();
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: 'password',
+                                      hintStyle:
+                                          figmaStyles.body1.copyWith(
+                                        color: NewAppColor.neutral200,
+                                        fontFamily: 'Pretendard Variable',
+                                        letterSpacing: -0.38,
                                       ),
-                                      GestureDetector(
-                                        onTap: () => setState(() =>
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          obscurePassword
+                                              ? Icons.visibility_off
+                                              : Icons.visibility,
+                                          size: 20.sp,
+                                          color: NewAppColor.neutral700,
+                                        ),
+                                        onPressed: () => setState(() =>
                                             obscurePassword = !obscurePassword),
-                                        child: Container(
-                                          width: 24.w,
-                                          height: 24.h,
-                                          child: Icon(
-                                            obscurePassword
-                                                ? Icons.visibility_off
-                                                : Icons.visibility,
-                                            size: 20.w,
-                                            color: NewAppColor.neutral500,
-                                          ),
-                                        ),
                                       ),
-                                    ],
+                                    ),
+                                    validator: (value) {
+                                      if (value == null ||
+                                          value.isEmpty) {
+                                        return '비밀번호를 입력하세요';
+                                      }
+                                      if (value.length < 6) {
+                                        return '비밀번호는 6자 이상이어야 합니다';
+                                      }
+                                      return null;
+                                    },
                                   ),
                                 ),
                               ],
@@ -358,22 +345,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                         height: 20.h,
                                         decoration: BoxDecoration(
                                           color: _saveId
-                                              ? NewAppColor.primary100
+                                              ? NewAppColor.primary600
                                               : Colors.white,
                                           border: Border.all(
                                             color: _saveId
-                                                ? NewAppColor.primary100
-                                                : Color(0xFFE5E5EC),
-                                            width: 1,
+                                                ? NewAppColor.primary600
+                                                : NewAppColor.neutral300,
+                                            width: 1.5,
                                           ),
                                           borderRadius:
-                                              BorderRadius.circular(100.r),
+                                              BorderRadius.circular(4.r),
                                         ),
                                         child: _saveId
                                             ? Icon(
                                                 Icons.check,
                                                 size: 14.w,
-                                                color: NewAppColor.primary600,
+                                                color: Colors.white,
                                               )
                                             : null,
                                       ),
@@ -504,7 +491,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                ),
                 SizedBox(height: 40.h), // 하단 여백 추가
               ],
             ),
