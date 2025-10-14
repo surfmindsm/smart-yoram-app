@@ -142,6 +142,9 @@ class _MembersScreenState extends State<MembersScreen>
       } else {
         filteredMembers = List.from(baseList);
       }
+
+      // 가나다 순으로 정렬
+      filteredMembers.sort((a, b) => a.name.compareTo(b.name));
     });
   }
 
@@ -294,73 +297,88 @@ class _MembersScreenState extends State<MembersScreen>
     }
 
     if (filteredMembers.isEmpty) {
-      return Center(
-        child: SizedBox(
-          width: 272.w,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 48.w,
-                height: 48.h,
-                clipBehavior: Clip.antiAlias,
-                decoration: const BoxDecoration(),
-                child: SvgPicture.asset(
-                  'assets/icons/members_empty.svg',
-                  width: 48.w,
-                  height: 48.h,
-                  colorFilter: ColorFilter.mode(
-                    NewAppColor.neutral800,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              SizedBox(
-                width: double.infinity,
+      return RefreshIndicator(
+        onRefresh: () => _loadMembers(),
+        color: NewAppColor.primary600,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height - 300.h,
+            child: Center(
+              child: SizedBox(
+                width: 272.w,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      '교인 정보가 없습니다',
-                      textAlign: TextAlign.center,
-                      style: FigmaTextStyles().title3.copyWith(
-                            color: NewAppColor.neutral800,
-                          ),
+                    Container(
+                      width: 48.w,
+                      height: 48.h,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: const BoxDecoration(),
+                      child: SvgPicture.asset(
+                        'assets/icons/members_empty.svg',
+                        width: 48.w,
+                        height: 48.h,
+                        colorFilter: ColorFilter.mode(
+                          NewAppColor.neutral800,
+                          BlendMode.srcIn,
+                        ),
+                      ),
                     ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      '다른 카테고리를 선택하거나 검색어를 변경해보세요',
-                      textAlign: TextAlign.center,
-                      style: FigmaTextStyles().body2.copyWith(
-                            color: NewAppColor.neutral500,
+                    SizedBox(height: 12.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            '교인 정보가 없습니다',
+                            textAlign: TextAlign.center,
+                            style: FigmaTextStyles().title3.copyWith(
+                                  color: NewAppColor.neutral800,
+                                ),
                           ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '다른 카테고리를 선택하거나 검색어를 변경해보세요',
+                            textAlign: TextAlign.center,
+                            style: FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral500,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       );
     }
 
-    return ListView.separated(
-      padding: EdgeInsets.all(20.w),
-      itemCount: filteredMembers.length,
-      separatorBuilder: (context, index) => SizedBox(height: 8.h),
-      itemBuilder: (context, index) {
-        // 안전한 인덱스 체크 추가
-        if (index >= filteredMembers.length) {
-          return const SizedBox.shrink();
-        }
-        final member = filteredMembers[index];
-        return _buildMemberCard(member);
-      },
+    return RefreshIndicator(
+      onRefresh: () => _loadMembers(),
+      color: NewAppColor.primary600,
+      child: ListView.separated(
+        padding: EdgeInsets.all(20.w),
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: filteredMembers.length,
+        separatorBuilder: (context, index) => SizedBox(height: 8.h),
+        itemBuilder: (context, index) {
+          // 안전한 인덱스 체크 추가
+          if (index >= filteredMembers.length) {
+            return const SizedBox.shrink();
+          }
+          final member = filteredMembers[index];
+          return _buildMemberCard(member);
+        },
+      ),
     );
   }
 

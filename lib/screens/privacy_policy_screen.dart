@@ -85,12 +85,12 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    '이메일: privacy@churchround.com',
+                    '이메일: surfmind.sm@gmail.com',
                     style: TextStyle(fontSize: 14.sp, color: AppColor.secondary07),
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    '전화: 02-1234-5678',
+                    '전화: 010-6617-1875',
                     style: TextStyle(fontSize: 14.sp, color: AppColor.secondary07),
                   ),
                   SizedBox(height: 12.h),
@@ -195,8 +195,8 @@ Church Round (이하 "앱")은 사용자의 개인정보를 중요하게 생각�
 10. 개인정보보호 담당자
 
 담당자: 개인정보보호 담당자
-이메일: privacy@churchround.com
-전화: 02-1234-5678
+이메일: surfmind.sm@gmail.com
+전화: 010-6617-1875
 
 11. 개인정보처리방침 변경
 
