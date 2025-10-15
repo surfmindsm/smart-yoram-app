@@ -41,4 +41,25 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end
+
+  # Fix ReachabilitySwift PrivacyInfo.xcprivacy
+  reachability_privacy_path = File.join(installer.sandbox.root, 'ReachabilitySwift', 'Sources', 'PrivacyInfo.xcprivacy')
+  if File.exist?(reachability_privacy_path)
+    privacy_content = <<-XML
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>
+    XML
+    File.write(reachability_privacy_path, privacy_content)
+    puts "Fixed ReachabilitySwift PrivacyInfo.xcprivacy"
+  end
 end
