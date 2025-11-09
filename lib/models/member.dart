@@ -6,7 +6,8 @@ class Member {
   final DateTime? birthdate;
   final String phone;
   final String? address;
-  final String? position; // 직분: 목사, 장로, 집사, 권사, 전도사, 교사, 부장, 회장
+  final String? position; // 직분 코드 (영문): PASTOR, ELDER, DEACON 등
+  final String? positionCategory; // 주소록 카테고리: CLERGY, ELDER, DEACONESS, DEACON, YOUTH, CHILDREN, MEMBER
   final String? department; // 부서: WORSHIP, EDUCATION, MISSION, YOUTH, CHILDREN
   final String? district; // 구역: 텍스트 입력 (예: "1구역")
   final String? organizationId; // 조직 ID (UUID)
@@ -31,6 +32,7 @@ class Member {
     required this.phone,
     this.address,
     this.position,
+    this.positionCategory,
     this.department,
     this.district,
     this.organizationId,
@@ -59,6 +61,7 @@ class Member {
       phone: json['phone'] ?? '',
       address: json['address'],
       position: json['position'],
+      positionCategory: json['position_category'], // 주소록 카테고리
       department: json['department'],
       district: json['district'],
       organizationId: json['organization_id'],
@@ -94,6 +97,7 @@ class Member {
       'phone': phone,
       'address': address,
       'position': position,
+      'position_category': positionCategory,
       'department': department,
       'district': district,
       'organization_id': organizationId,
@@ -116,11 +120,49 @@ class Member {
     if (birthdate == null) return null;
     final now = DateTime.now();
     int age = now.year - birthdate!.year;
-    if (now.month < birthdate!.month || 
+    if (now.month < birthdate!.month ||
         (now.month == birthdate!.month && now.day < birthdate!.day)) {
       age--;
     }
     return age;
+  }
+
+  // 직분 한글 레이블 (화면 표시용)
+  String get positionLabel {
+    // MemberPosition import 필요
+    // return MemberPosition.getLabel(position);
+    // 임시로 하위 호환성 유지
+    const labels = {
+      'PASTOR': '목사',
+      'EVANGELIST': '전도사',
+      'EDUCATION_EVANGELIST': '교육전도사',
+      'CLERGY': '교역자',
+      'ELDER': '장로',
+      'RETIRED_ELDER': '은퇴장로',
+      'DEACONESS': '권사',
+      'RETIRED_DEACONESS': '은퇴권사',
+      'DEACON': '집사',
+      'ORDAINED_DEACON': '안수집사',
+      'TEACHER': '교사',
+      'MEMBER': '성도',
+    };
+    if (position == null || position!.isEmpty) return '성도';
+    return labels[position] ?? position!;
+  }
+
+  // 카테고리 한글 레이블 (주소록 탭)
+  String get categoryLabel {
+    const labels = {
+      'CLERGY': '교역자',
+      'ELDER': '장로',
+      'DEACONESS': '권사',
+      'DEACON': '집사',
+      'YOUTH': '청년',
+      'CHILDREN': '교회학교',
+      'MEMBER': '성도',
+    };
+    if (positionCategory == null || positionCategory!.isEmpty) return '성도';
+    return labels[positionCategory] ?? positionCategory!;
   }
 
   // 프로필 사진 전체 URL (Supabase Storage)
@@ -248,19 +290,8 @@ class MemberUpdateRequest {
   }
 }
 
-// 직분 옵션 (웹과 동일)
-class MemberPositionOptions {
-  static const List<String> positions = [
-    '목사',
-    '장로',
-    '집사',
-    '권사',
-    '전도사',
-    '교사',
-    '부장',
-    '회장',
-  ];
-}
+// MemberPositionOptions 클래스는 제거되었습니다.
+// 대신 lib/constants/member_positions.dart의 MemberPosition 클래스를 사용하세요.
 
 // 부서 옵션 (웹과 동일)
 class MemberDepartmentOptions {

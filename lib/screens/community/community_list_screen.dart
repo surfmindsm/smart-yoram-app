@@ -1132,6 +1132,14 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             ),
             SizedBox(width: 8.w),
 
+            // 구분선
+            Container(
+              width: 1,
+              height: 24.h,
+              color: NewAppColor.neutral300,
+              margin: EdgeInsets.symmetric(horizontal: 8.w),
+            ),
+
             // 판매 완료 제거 필터
             _buildFilterChip(
               label: '완료 제거',
@@ -1292,10 +1300,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         decoration: BoxDecoration(
           color: isSelected ? NewAppColor.neutral900 : NewAppColor.neutral100,
           borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(
-            color: isSelected ? NewAppColor.neutral900 : NewAppColor.neutral300,
-            width: 1,
-          ),
         ),
         child: Text(
           label,

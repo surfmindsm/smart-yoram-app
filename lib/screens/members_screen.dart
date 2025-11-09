@@ -10,6 +10,7 @@ import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../widgets/member_detail_modal.dart';
 import '../components/index.dart' hide IconButton;
+import '../constants/member_positions.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -28,7 +29,8 @@ class _MembersScreenState extends State<MembersScreen>
   List<Member> filteredMembers = [];
   bool isLoading = true;
 
-  final List<String> tabs = ['전체', '목사', '장로', '집사', '권사', '전도사', '교사'];
+  // 주소록 탭 목록 (백엔드 정책에 따라)
+  final List<String> tabs = MemberPosition.addressBookTabs;
 
   @override
   void initState() {
@@ -107,29 +109,19 @@ class _MembersScreenState extends State<MembersScreen>
 
       List<Member> baseList = allMembers;
 
-      // 탭에 따른 필터링 (웹 명세에 맞춤)
-      switch (currentTab) {
-        case 0: // 전체
-          baseList = List.from(allMembers);
-          break;
-        case 1: // 목사
-          baseList = allMembers.where((m) => m.position == '목사').toList();
-          break;
-        case 2: // 장로
-          baseList = allMembers.where((m) => m.position == '장로').toList();
-          break;
-        case 3: // 집사
-          baseList = allMembers.where((m) => m.position == '집사').toList();
-          break;
-        case 4: // 권사
-          baseList = allMembers.where((m) => m.position == '권사').toList();
-          break;
-        case 5: // 전도사
-          baseList = allMembers.where((m) => m.position == '전도사').toList();
-          break;
-        case 6: // 교사
-          baseList = allMembers.where((m) => m.position == '교사').toList();
-          break;
+      // 탭에 따른 필터링 (position_category 사용)
+      if (currentTab == 0) {
+        // 전체 탭
+        baseList = List.from(allMembers);
+      } else {
+        // 선택된 카테고리로 필터링
+        final selectedCategory = MemberPosition.addressBookCategories[currentTab - 1];
+        baseList = allMembers.where((m) {
+          // positionCategory가 없으면 클라이언트 측에서 계산
+          final category = m.positionCategory ??
+              MemberPosition.getPositionCategory(m.position, m.birthdate);
+          return category == selectedCategory;
+        }).toList();
       }
 
       // 검색 필터링
@@ -137,7 +129,7 @@ class _MembersScreenState extends State<MembersScreen>
         filteredMembers = baseList.where((member) {
           return member.name.toLowerCase().contains(query) ||
               member.phone.contains(query) ||
-              (member.position?.toLowerCase().contains(query) ?? false);
+              member.positionLabel.toLowerCase().contains(query);
         }).toList();
       } else {
         filteredMembers = List.from(baseList);
@@ -491,7 +483,7 @@ class _MembersScreenState extends State<MembersScreen>
                           SizedBox(
                             width: 195.w,
                             child: Text(
-                              member.position ?? '성도',
+                              member.positionLabel,
                               style: TextStyle(
                                 color: NewAppColor.neutral600,
                                 fontSize: 11.sp,

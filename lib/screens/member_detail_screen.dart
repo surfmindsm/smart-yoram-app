@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../models/member.dart';
 import '../services/member_service.dart';
+import '../constants/member_positions.dart';
 
 class MemberDetailScreen extends StatefulWidget {
   final Member member;
@@ -28,18 +29,17 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   late TextEditingController _addressController;
   
   String _selectedGender = '남';
-  String _selectedPosition = '성도';
+  String _selectedPosition = 'MEMBER'; // 영문 코드 사용
   String _selectedStatus = 'active';
   String _selectedDistrict = '';
   DateTime? _selectedBirthDate;
   DateTime? _selectedRegistrationDate;
-  
+
   bool _isEditing = false;
   bool _isSaving = false;
   File? _selectedImage;
-  
+
   final List<String> _genderOptions = ['남', '여'];
-  final List<String> _positionOptions = ['교역자', '장로', '권사', '집사', '성도'];
   final List<String> _statusOptions = ['active', 'inactive', 'transferred'];
   final List<String> _districtOptions = ['1구역', '2구역', '3구역', '4구역', '5구역'];
 
@@ -49,9 +49,10 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     _nameController = TextEditingController(text: widget.member.name);
     _phoneController = TextEditingController(text: widget.member.phone);
     _addressController = TextEditingController(text: widget.member.address ?? '');
-    
+
     _selectedGender = widget.member.gender;
-    _selectedPosition = widget.member.position ?? '성도';
+    // position은 영문 코드로 저장되어 있음 (PASTOR, ELDER 등)
+    _selectedPosition = widget.member.position ?? 'MEMBER';
     _selectedStatus = widget.member.memberStatus;
     _selectedDistrict = widget.member.district ?? '1구역';
     _selectedBirthDate = widget.member.birthdate;
@@ -157,7 +158,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             
             // 교회 정보
             _buildSectionTitle('교회 정보'),
-            _buildDropdownField('직분', _selectedPosition, _positionOptions),
+            _buildPositionDropdown(),
             _buildDropdownField('상태', _selectedStatus, _statusOptions),
             _buildDropdownField('구역', _selectedDistrict, _districtOptions),
             _buildDateField('등록일', _selectedRegistrationDate, _selectRegistrationDate),
@@ -261,6 +262,53 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     );
   }
 
+  Widget _buildPositionDropdown() {
+    // 현재 position이 userOptions에 없으면 추가 (기존 특수 직분 보존)
+    List<Map<String, String>> availableOptions = List.from(MemberPosition.userOptions);
+
+    // 현재 선택된 직분이 userOptions에 없는 경우 detailOptions에서 찾아서 추가
+    bool isCurrentPositionInUserOptions = MemberPosition.userOptions.any(
+      (option) => option['value'] == _selectedPosition
+    );
+
+    if (!isCurrentPositionInUserOptions) {
+      final currentPositionOption = MemberPosition.detailOptions.firstWhere(
+        (option) => option['value'] == _selectedPosition,
+        orElse: () => {'value': 'MEMBER', 'label': '성도'},
+      );
+      // 현재 직분을 옵션 목록에 추가 (성도 다음에 배치)
+      availableOptions.insert(1, currentPositionOption);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('직분', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _selectedPosition,
+            items: availableOptions.map((option) {
+              return DropdownMenuItem<String>(
+                value: option['value']!,
+                child: Text(option['label']!),
+              );
+            }).toList(),
+            onChanged: _isEditing
+                ? (newValue) {
+                    setState(() {
+                      _selectedPosition = newValue!;
+                    });
+                  }
+                : null,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDropdownField(String label, String value, List<String> items) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -277,8 +325,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             )).toList(),
             onChanged: _isEditing ? (newValue) {
               setState(() {
-                if (label == '직분') _selectedPosition = newValue!;
-                else if (label == '상태') _selectedStatus = newValue!;
+                if (label == '상태') _selectedStatus = newValue!;
                 else if (label == '구역') _selectedDistrict = newValue!;
               });
             } : null,
