@@ -220,6 +220,15 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                           fontFamily: 'Pretendard Variable',
                         ),
                       ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        '가입 승인 후 churchround.com에서 교회 관리 기능을 사용하실 수 있습니다.',
+                        style: figmaStyles.body2.copyWith(
+                          color: NewAppColor.primary600,
+                          fontFamily: 'Pretendard Variable',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),

@@ -115,7 +115,8 @@ class _MembersScreenState extends State<MembersScreen>
         baseList = List.from(allMembers);
       } else {
         // 선택된 카테고리로 필터링
-        final selectedCategory = MemberPosition.addressBookCategories[currentTab - 1];
+        final selectedCategory =
+            MemberPosition.addressBookCategories[currentTab - 1];
         baseList = allMembers.where((m) {
           // positionCategory가 없으면 클라이언트 측에서 계산
           final category = m.positionCategory ??
@@ -206,27 +207,28 @@ class _MembersScreenState extends State<MembersScreen>
           // 탭바
           Container(
             height: 56.h,
-            margin: EdgeInsets.symmetric(horizontal: 22.w),
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: NewAppColor.neutral200,
+                  color: Colors.transparent,
                   width: 2.0,
                 ),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(tabs.length, (index) {
-                final isSelected = _tabController.index == index;
-                return Expanded(
-                  child: GestureDetector(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 22.w),
+              child: Row(
+                children: List.generate(tabs.length, (index) {
+                  final isSelected = _tabController.index == index;
+                  return GestureDetector(
                     onTap: () {
                       _tabController.animateTo(index);
                       _filterMembers();
                     },
                     child: Container(
                       height: 56.h,
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
                       decoration: BoxDecoration(
                         border: isSelected
                             ? Border(
@@ -249,9 +251,9 @@ class _MembersScreenState extends State<MembersScreen>
                         ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
           ),
 
