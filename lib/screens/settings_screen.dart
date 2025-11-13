@@ -996,12 +996,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 await _authService.logout();
 
                 if (mounted) {
-                  AppToast.show(
-                    context,
-                    '로그아웃되었습니다.',
-                    type: ToastType.success,
-                  );
-
+                  // 토스트 없이 바로 로그인 화면으로 이동
                   Navigator.pushNamedAndRemoveUntil(
                     context,
                     '/login',
@@ -1010,10 +1005,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  AppToast.show(
-                    context,
-                    '로그아웃 오류: $e',
-                    type: ToastType.error,
+                  // 에러 발생 시에만 SnackBar로 표시 (context가 유효한 상태)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('로그아웃 오류: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }

@@ -193,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // 입력 필드들
                         Column(
                           children: [
-                            // 이메일 입력 필드
+                            // 이메일/전화번호 입력 필드
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [

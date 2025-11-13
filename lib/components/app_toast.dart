@@ -48,8 +48,13 @@ class AppToast {
   }
 
   static void hide() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    try {
+      _overlayEntry?.remove();
+    } catch (e) {
+      // Overlay가 이미 제거된 경우 무시
+    } finally {
+      _overlayEntry = null;
+    }
   }
 
   static _ToastConfig _getToastConfig(ToastType type) {
