@@ -33,6 +33,12 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
+
+        <!-- 16KB 페이지 크기 지원 선언 (Android 15+) -->
+        <property
+            android:name="android.app.supports_16k_pages"
+            android:value="true" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
