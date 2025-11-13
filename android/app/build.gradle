@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.surfmind.yoram"
     compileSdk = 36
-    ndkVersion = "27.0.12077973"  // 16KB 페이지 크기 지원을 위한 최신 NDK
+    ndkVersion = "28.0.12674087"  // 16KB 페이지 크기 지원을 위한 NDK r28
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -33,7 +33,7 @@ android {
         applicationId = "com.surfmind.yoram"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdkVersion = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

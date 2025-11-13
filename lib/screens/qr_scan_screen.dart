@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
 import '../utils/permission_utils.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+// import 'package:mobile_scanner/mobile_scanner.dart'; // 16KB 이슈로 제거
 import '../services/qr_service.dart';
 import '../models/qr_code.dart';
 
@@ -14,7 +13,7 @@ class QRScanScreen extends StatefulWidget {
 
 class _QRScanScreenState extends State<QRScanScreen> {
   final QRService _qrService = QRService();
-  MobileScannerController? _scannerController;
+  // MobileScannerController? _scannerController; // 16KB 이슈로 제거
   bool _isScanning = false;
   bool _hasPermission = false;
   bool _flashEnabled = false;
@@ -29,7 +28,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
 
   @override
   void dispose() {
-    _scannerController?.dispose();
+    // _scannerController?.dispose(); // 16KB 이슈로 제거
     super.dispose();
   }
 
@@ -38,45 +37,11 @@ class _QRScanScreenState extends State<QRScanScreen> {
     setState(() {
       _hasPermission = hasPermission;
     });
-
-    if (hasPermission && mounted) {
-      _scannerController = MobileScannerController();
-    }
+    // mobile_scanner 제거로 스캐너 초기화 생략
   }
 
-  void _onQRCodeDetected(BarcodeCapture capture) async {
-    if (_isScanning) return;
-    
-    final List<Barcode> barcodes = capture.barcodes;
-    if (barcodes.isEmpty) return;
-    
-    final String code = barcodes.first.rawValue ?? '';
-    if (code.isEmpty) return;
-
-    setState(() {
-      _isScanning = true;
-      _scannedCode = code;
-    });
-
-    try {
-      final response = await _qrService.scanQRCode(code);
-      
-      if (response.success && response.data != null && mounted) {
-        _scanResult = response.data;
-        _showAttendanceSuccess();
-      } else {
-        _showAttendanceError(response.message);
-      }
-    } catch (e) {
-      _showAttendanceError('네트워크 오류: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isScanning = false;
-        });
-      }
-    }
-  }
+  // mobile_scanner 제거로 _onQRCodeDetected 메서드 제거됨
+  // QR 스캔 기능은 _startScan() 메서드의 시뮬레이션으로 대체
 
   @override
   Widget build(BuildContext context) {
@@ -94,12 +59,9 @@ class _QRScanScreenState extends State<QRScanScreen> {
       ),
       body: Stack(
         children: [
-          // QR 스캔 영역
-          if (_hasPermission && _scannerController != null)
-            MobileScanner(
-              controller: _scannerController!,
-              onDetect: _onQRCodeDetected,
-            )
+          // QR 스캔 영역 (mobile_scanner 제거로 카메라 미리보기 비활성화)
+          if (false) // mobile_scanner 제거로 항상 false
+            Container() // 플레이스홀더
           else
             Container(
               width: double.infinity,
@@ -258,18 +220,13 @@ class _QRScanScreenState extends State<QRScanScreen> {
   }
 
   void _toggleFlash() async {
-    if (_scannerController != null) {
-      try {
-        await _scannerController!.toggleTorch();
-        setState(() {
-          _flashEnabled = !_flashEnabled;
-        });
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('플래시 제어 오류: $e')),
-        );
-      }
-    }
+    // mobile_scanner 제거로 플래시 기능 비활성화
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('QR 스캔 기능이 일시적으로 비활성화되어 플래시를 사용할 수 없습니다'),
+        backgroundColor: Colors.orange,
+      ),
+    );
   }
 
   void _showMyQR() {

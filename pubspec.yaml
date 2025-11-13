@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.2+28
+version: 1.0.2+32
 
 environment:
   sdk: ^3.3.0
@@ -39,7 +39,7 @@ dependencies:
   # lucide_icons_flutter: ^3.1.0  # Material Icons 사용으로 제거
   
   # 디바이스 정보 획득
-  device_info_plus: ^10.1.2
+  device_info_plus: ^11.3.0
   package_info_plus: ^8.1.0
   flutter_svg: ^2.0.7
   google_fonts: ^6.1.0
@@ -72,7 +72,7 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # QR 코드 관련
-  mobile_scanner: ^5.0.0
+  # mobile_scanner: ^5.0.0  # 16KB 이슈로 제거 (libbarhopper_v3.so 미지원)
   permission_handler: ^11.3.1
   
   # 네트워크 관련
@@ -83,7 +83,7 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   
   # 데이터 처리 및 유틸리티
-  intl: ^0.19.0
+  intl: ^0.20.0
   path_provider: ^2.1.1
   
   # 푸시 알림
@@ -110,7 +110,7 @@ dependencies:
   # PDF 뷰어 및 이미지 관련
   cached_network_image: ^3.3.1
   photo_view: ^0.15.0
-  syncfusion_flutter_pdfviewer: ^26.2.14
+  syncfusion_flutter_pdfviewer: ^28.2.7
   
   # PDF 뷰어 패키지 추가
   
