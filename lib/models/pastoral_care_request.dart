@@ -1,7 +1,7 @@
 import 'member.dart';
 
 class PastoralCareRequest {
-  final int id;
+  final String id; // UUID
   final int churchId;
   final int? memberId;
   final String requesterName;
@@ -28,6 +28,10 @@ class PastoralCareRequest {
   final DateTime? updatedAt;
   final DateTime? completedAt;
   final Member? member; // 요청자 정보
+  // 추가 필드 (Edge Function 응답)
+  final String? organizationName;
+  final String? department;
+  final String? profilePhotoUrl;
 
   const PastoralCareRequest({
     required this.id,
@@ -56,6 +60,9 @@ class PastoralCareRequest {
     this.updatedAt,
     this.completedAt,
     this.member,
+    this.organizationName,
+    this.department,
+    this.profilePhotoUrl,
   });
 
   // 하위 호환성을 위한 getter
@@ -66,7 +73,7 @@ class PastoralCareRequest {
 
   factory PastoralCareRequest.fromJson(Map<String, dynamic> json) {
     return PastoralCareRequest(
-      id: json['id'] ?? 0,
+      id: json['id']?.toString() ?? '',
       churchId: json['church_id'] ?? 0,
       memberId: json['member_id'],
       requesterName: json['requester_name'] ?? '',
@@ -114,6 +121,9 @@ class PastoralCareRequest {
       member: json['member'] != null
           ? Member.fromJson(json['member'] as Map<String, dynamic>)
           : null,
+      organizationName: json['organization_name'],
+      department: json['department'],
+      profilePhotoUrl: json['profile_photo_url'],
     );
   }
 
@@ -173,6 +183,8 @@ class PastoralCareRequest {
         return '대기중';
       case 'approved':
         return '승인됨';
+      case 'scheduled':
+        return '예정됨';
       case 'in_progress':
         return '진행중';
       case 'completed':
@@ -187,9 +199,11 @@ class PastoralCareRequest {
   /// 우선순위별 한글명 반환
   String get priorityDisplayName {
     switch (priority.toLowerCase()) {
+      case 'urgent':
+        return '긴급';
       case 'high':
         return '높음';
-      case 'medium':
+      case 'normal':
         return '보통';
       case 'low':
         return '낮음';
@@ -201,10 +215,17 @@ class PastoralCareRequest {
   /// 신청 유형별 한글명 반환
   String get requestTypeDisplayName {
     switch (requestType.toLowerCase()) {
-      case 'visit':
-        return '심방';
+      case 'general':
+        return '일반 심방';
+      case 'urgent':
+        return '긴급 심방';
+      case 'hospital':
+        return '병원 심방';
       case 'counseling':
         return '상담';
+      // 하위 호환성
+      case 'visit':
+        return '심방';
       case 'prayer':
         return '기도';
       case 'emergency':
@@ -230,7 +251,8 @@ class PastoralCareRequestCreate {
   final String title;
   final String description;
   final String? preferredDate;
-  final String? preferredTime;
+  final String? preferredTimeStart;
+  final String? preferredTimeEnd;
   final String? contactInfo;
   final bool isUrgent;
   final String? requesterName;
@@ -247,7 +269,8 @@ class PastoralCareRequestCreate {
     required this.title,
     required this.description,
     this.preferredDate,
-    this.preferredTime,
+    this.preferredTimeStart,
+    this.preferredTimeEnd,
     this.contactInfo,
     this.isUrgent = false,
     this.requesterName,
@@ -262,20 +285,21 @@ class PastoralCareRequestCreate {
     final Map<String, dynamic> json = {
       'request_type': requestType,
       'priority': priority,
-      'title': title,
-      'description': description,
       'request_content': description,  // API에서 요구하는 필드
       'is_urgent': isUrgent,
       'requester_name': requesterName ?? '',
       'requester_phone': requesterPhone ?? '',
     };
-    
+
     // null이 아닌 경우만 추가
     if (preferredDate != null && preferredDate!.isNotEmpty) {
       json['preferred_date'] = preferredDate;
     }
-    if (preferredTime != null && preferredTime!.isNotEmpty) {
-      json['preferred_time'] = preferredTime;
+    if (preferredTimeStart != null && preferredTimeStart!.isNotEmpty) {
+      json['preferred_time_start'] = preferredTimeStart;
+    }
+    if (preferredTimeEnd != null && preferredTimeEnd!.isNotEmpty) {
+      json['preferred_time_end'] = preferredTimeEnd;
     }
     if (contactInfo != null && contactInfo!.isNotEmpty) {
       json['contact_info'] = contactInfo;
@@ -294,7 +318,7 @@ class PastoralCareRequestCreate {
     if (longitude != null) {
       json['longitude'] = longitude;
     }
-    
+
     return json;
   }
 }
@@ -349,34 +373,34 @@ class PastoralCareRequestUpdate {
 
 /// 심방 신청 유형 상수
 class PastoralCareRequestType {
-  static const String visit = 'visit';
+  static const String general = 'general';
+  static const String urgent = 'urgent';
+  static const String hospital = 'hospital';
   static const String counseling = 'counseling';
-  static const String prayer = 'prayer';
-  static const String emergency = 'emergency';
-  static const String other = 'other';
 
-  static const List<String> all = [visit, counseling, prayer, emergency, other];
-  
+  static const List<String> all = [general, urgent, hospital, counseling];
+
   static const Map<String, String> displayNames = {
-    visit: '심방',
+    general: '일반 심방',
+    urgent: '긴급 심방',
+    hospital: '병원 심방',
     counseling: '상담',
-    prayer: '기도',
-    emergency: '응급상황',
-    other: '기타',
   };
 }
 
 /// 우선순위 상수
 class PastoralCarePriority {
+  static const String urgent = 'urgent';
   static const String high = 'high';
-  static const String medium = 'medium';
+  static const String normal = 'normal';
   static const String low = 'low';
 
-  static const List<String> all = [high, medium, low];
-  
+  static const List<String> all = [urgent, high, normal, low];
+
   static const Map<String, String> displayNames = {
+    urgent: '긴급',
     high: '높음',
-    medium: '보통',
+    normal: '보통',
     low: '낮음',
   };
 }

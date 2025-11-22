@@ -73,7 +73,7 @@ class PastoralCareCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (request.priority == 'high') ...[
+                if (request.priority == 'urgent' || request.priority == 'high') ...[
                   SizedBox(width: 8.w),
                   Container(
                     padding:
@@ -83,7 +83,7 @@ class PastoralCareCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: Text(
-                      '긴급',
+                      request.priority == 'urgent' ? '긴급' : '높음',
                       style: const FigmaTextStyles().caption2.copyWith(
                         color: const Color(0xFFC62828),
                         fontWeight: FontWeight.w600,
@@ -160,6 +160,8 @@ class PastoralCareCard extends StatelessWidget {
         return '대기';
       case 'approved':
         return '승인';
+      case 'scheduled':
+        return '예정';
       case 'in_progress':
         return '진행중';
       case 'completed':
@@ -173,16 +175,21 @@ class PastoralCareCard extends StatelessWidget {
 
   String _getRequestTypeLabel(String type) {
     switch (type) {
-      case 'visit':
-        return '심방';
+      case 'general':
+        return '일반 심방';
+      case 'urgent':
+        return '긴급 심방';
+      case 'hospital':
+        return '병원 심방';
       case 'counseling':
         return '상담';
+      // 하위 호환성
+      case 'visit':
+        return '심방';
       case 'prayer':
         return '기도';
       case 'emergency':
         return '응급';
-      case 'general':
-        return '일반';
       default:
         return type;
     }

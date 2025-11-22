@@ -170,5 +170,5 @@ class SupabaseConfig {
   static const String sendSmsFunction = '/send-sms';
   static const String emailVerificationFunction = '/email-verification';
   static const String dailyVersesFunction = '/daily-verses';
-  static const String pastoralCareFunction = '/pastoral-care-requests';
+  static const String pastoralCareFunction = '/pastoral-care';
 }

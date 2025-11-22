@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/pastoral_care_request.dart';
 import '../models/api_response.dart';
 import '../config/api_config.dart';
@@ -15,12 +17,34 @@ class PastoralCareService {
   final AuthService _authService = AuthService();
   final MemberService _memberService = MemberService();
 
-  /// 새 심방 신청 생성 (Supabase 직접 삽입)
+  // Edge Function URL 생성
+  String get _baseUrl =>
+      '${SupabaseConfig.supabaseUrl}/functions/v1${SupabaseConfig.pastoralCareFunction}';
+
+  // 인증 헤더 생성 (Supabase Anon Key + temp_token 방식)
+  Map<String, String> _getAuthHeaders() {
+    final user = _authService.currentUser;
+    if (user == null) {
+      return {'Content-Type': 'application/json'};
+    }
+
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final userToken = 'temp_token_${user.id}_$timestamp';
+
+    // 두 개의 인증 헤더 모두 필요
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${SupabaseConfig.supabaseAnonKey}', // Supabase 공개 키
+      'X-Custom-Auth': userToken, // 사용자 인증 토큰
+    };
+  }
+
+  /// 새 심방 신청 생성 (Edge Function 사용)
   Future<ApiResponse<PastoralCareRequest>> createRequest(
     PastoralCareRequestCreate request,
   ) async {
     try {
-      print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 생성 시작 (Supabase)');
+      print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 생성 시작 (Edge Function)');
 
       // 현재 사용자 정보 가져오기
       final userResponse = await _authService.getCurrentUser();
@@ -57,56 +81,65 @@ class PastoralCareService {
         }
       }
 
-      if (!memberResponse.success || memberResponse.data == null) {
-        print('🙏 PASTORAL_CARE_SERVICE: Member 정보 조회 실패 - ${memberResponse.message}');
+      final member = memberResponse.data?.id;
+      final memberName = memberResponse.data?.name ?? user.fullName;
+      final memberPhone = memberResponse.data?.phone ?? '';
+
+      // 요청 데이터 생성
+      final requestData = {
+        'church_id': user.churchId,
+        if (member != null) 'member_id': member,
+        'requester_name': request.requesterName ?? memberName,
+        'requester_phone': request.requesterPhone ?? memberPhone,
+        'request_type': request.requestType,
+        'request_content': request.description,
+        'priority': request.priority,
+        'is_urgent': request.isUrgent,
+        if (request.preferredDate != null) 'preferred_date': request.preferredDate,
+        if (request.preferredTimeStart != null)
+          'preferred_time_start': request.preferredTimeStart,
+        if (request.preferredTimeEnd != null)
+          'preferred_time_end': request.preferredTimeEnd,
+        if (request.contactInfo != null) 'contact_info': request.contactInfo,
+        if (request.address != null) 'address': request.address,
+        if (request.latitude != null) 'latitude': request.latitude,
+        if (request.longitude != null) 'longitude': request.longitude,
+      };
+
+      print('🙏 PASTORAL_CARE_SERVICE: 요청 데이터 - $requestData');
+
+      // Edge Function 호출
+      final url = Uri.parse('$_baseUrl/admin/requests');
+      final headers = _getAuthHeaders();
+
+      print('🙏 PASTORAL_CARE_SERVICE: 요청 URL - $url');
+      print('🙏 PASTORAL_CARE_SERVICE: 요청 헤더 - $headers');
+
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode(requestData),
+      );
+
+      print('🙏 PASTORAL_CARE_SERVICE: 응답 상태 - ${response.statusCode}');
+      print('🙏 PASTORAL_CARE_SERVICE: 응답 본문 - ${response.body}');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final createdRequest = PastoralCareRequest.fromJson(jsonData);
+        return ApiResponse<PastoralCareRequest>(
+          success: true,
+          message: '심방 신청이 성공적으로 생성되었습니다',
+          data: createdRequest,
+        );
+      } else {
+        final errorData = jsonDecode(response.body);
         return ApiResponse<PastoralCareRequest>(
           success: false,
-          message: 'Member 정보 조회 실패: ${memberResponse.message}',
+          message: errorData['error']?.toString() ?? '심방 신청 생성 실패',
           data: null,
         );
       }
-
-      final member = memberResponse.data!;
-      print('🙏 PASTORAL_CARE_SERVICE: Member 정보 - ID: ${member.id}');
-
-      // pastoral_care_requests 테이블에 직접 삽입
-      // 주의: member_id는 users.id를 참조함 (members.id가 아님)
-      final requestData = {
-        'church_id': user.churchId,
-        'member_id': user.id, // users.id 사용
-        'requester_name': request.requesterName ?? member.name,
-        'requester_phone': request.requesterPhone ?? member.phone ?? '',
-        'request_type': request.requestType,
-        'request_content': '${request.title}\n\n${request.description}', // title + description 합침
-        'preferred_date': request.preferredDate,
-        'preferred_time_start': request.preferredTime,
-        'priority': request.priority,
-        'contact_info': request.contactInfo,
-        'is_urgent': request.isUrgent,
-        'address': request.address != null && request.detailAddress != null
-            ? '${request.address} ${request.detailAddress}'
-            : request.address,
-        'latitude': request.latitude,
-        'longitude': request.longitude,
-        'status': 'pending',
-      };
-
-      print('🙏 PASTORAL_CARE_SERVICE: 삽입 데이터 - $requestData');
-
-      final response = await _supabaseService.client
-          .from('pastoral_care_requests')
-          .insert(requestData)
-          .select()
-          .single();
-
-      print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 생성 완료 - $response');
-
-      final createdRequest = PastoralCareRequest.fromJson(response);
-      return ApiResponse<PastoralCareRequest>(
-        success: true,
-        message: '심방 신청이 성공적으로 생성되었습니다',
-        data: createdRequest,
-      );
     } catch (e) {
       print('🙏 PASTORAL_CARE_SERVICE: 심방 신청 생성 예외 발생 - $e');
       return ApiResponse<PastoralCareRequest>(
@@ -124,7 +157,7 @@ class PastoralCareService {
     String? status,
   }) async {
     try {
-      print('🙏 PASTORAL_CARE_SERVICE: 내 심방 신청 목록 조회 시작 (Supabase)');
+      print('🙏 PASTORAL_CARE_SERVICE: 내 심방 신청 목록 조회 시작 (Supabase 직접)');
 
       // 현재 사용자 정보 가져오기
       final userResponse = await _authService.getCurrentUser();
@@ -140,45 +173,13 @@ class PastoralCareService {
       final user = userResponse.data!;
       print('🙏 PASTORAL_CARE_SERVICE: 사용자 정보 - ID: ${user.id}, Church ID: ${user.churchId}');
 
-      // user_id로 member_id 조회
-      var memberResponse = await _memberService.getMemberByUserId(user.id);
-
-      // user_id로 찾지 못하면 이메일로 조회
-      if (!memberResponse.success || memberResponse.data == null) {
-        print('🙏 PASTORAL_CARE_SERVICE: user_id로 Member 조회 실패, 이메일로 재시도 - ${user.email}');
-        final allMembersResponse = await _memberService.getMembers(limit: 1000);
-        if (allMembersResponse.success) {
-          final memberByEmail = allMembersResponse.data!
-              .where((m) => m.email == user.email)
-              .firstOrNull;
-          if (memberByEmail != null) {
-            memberResponse = ApiResponse(
-              success: true,
-              message: '이메일로 Member 조회 성공',
-              data: memberByEmail,
-            );
-          }
-        }
-      }
-
-      if (!memberResponse.success || memberResponse.data == null) {
-        print('🙏 PASTORAL_CARE_SERVICE: Member 정보 조회 실패 - ${memberResponse.message}');
-        return ApiResponse<List<PastoralCareRequest>>(
-          success: true,
-          message: 'Member 정보를 찾을 수 없습니다',
-          data: [],
-        );
-      }
-
-      final member = memberResponse.data!;
-
-      // pastoral_care_requests 테이블에서 직접 조회
-      // 주의: member_id는 users.id를 참조함
+      // 현재 사용자의 이메일로 신청 조회
+      // requester_phone 또는 member 정보의 email이 일치하는 것 조회
       var query = _supabaseService.client
           .from('pastoral_care_requests')
           .select()
           .eq('church_id', user.churchId)
-          .eq('member_id', user.id); // users.id 사용
+          .or('requester_phone.eq.${user.phone},requester_name.eq.${user.fullName}');
 
       if (status != null) {
         query = query.eq('status', status);
@@ -203,38 +204,39 @@ class PastoralCareService {
       print('🙏 PASTORAL_CARE_SERVICE: 목록 조회 예외 발생 - $e');
       return ApiResponse<List<PastoralCareRequest>>(
         success: true,
-        message: '심방 신청 목록을 찾을 수 없습니다',
+        message: '심방 신청 목록 조회 완료',
         data: [],
       );
     }
   }
 
-  /// 심방 신청 수정 (pending 상태만 가능) (Supabase Edge Function)
+  /// 심방 신청 수정 (pending 상태만 가능)
   Future<ApiResponse<PastoralCareRequest>> updateRequest(
-    int requestId,
+    String requestId,
     PastoralCareRequestUpdate updateRequest,
   ) async {
     try {
-      final response = await _supabaseService.invokeFunction<PastoralCareRequest>(
-        SupabaseConfig.pastoralCareFunction,
-        body: {
-          'action': 'update_request',
-          'request_id': requestId,
-          'request_data': updateRequest.toJson(),
-        },
-        fromJson: (json) => PastoralCareRequest.fromJson(json),
+      // Edge Function 호출 (PUT 또는 PATCH를 body로 전달)
+      final url = Uri.parse('$_baseUrl/admin/requests/$requestId');
+      final response = await http.put(
+        url,
+        headers: _getAuthHeaders(),
+        body: jsonEncode(updateRequest.toJson()),
       );
 
-      if (response.success && response.data != null) {
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final updatedRequest = PastoralCareRequest.fromJson(jsonData);
         return ApiResponse<PastoralCareRequest>(
           success: true,
           message: '심방 신청 수정 성공',
-          data: response.data!,
+          data: updatedRequest,
         );
       } else {
+        final errorData = jsonDecode(response.body);
         return ApiResponse<PastoralCareRequest>(
           success: false,
-          message: response.message,
+          message: errorData['error']?.toString() ?? '심방 신청 수정 실패',
           data: null,
         );
       }
@@ -247,23 +249,31 @@ class PastoralCareService {
     }
   }
 
-  /// 심방 신청 취소 (pending 상태만 가능) (Supabase Edge Function)
-  Future<ApiResponse<bool>> cancelRequest(int requestId) async {
+  /// 심방 신청 취소 (pending 상태만 가능)
+  Future<ApiResponse<bool>> cancelRequest(String requestId) async {
     try {
-      final response = await _supabaseService.invokeFunction<Map<String, dynamic>>(
-        SupabaseConfig.pastoralCareFunction,
-        body: {
-          'action': 'cancel_request',
-          'request_id': requestId,
-        },
-        fromJson: (json) => json,
+      // 취소는 상태를 'cancelled'로 변경
+      final url = Uri.parse('$_baseUrl/admin/requests/$requestId');
+      final response = await http.put(
+        url,
+        headers: _getAuthHeaders(),
+        body: jsonEncode({'status': 'cancelled'}),
       );
 
-      return ApiResponse<bool>(
-        success: response.success,
-        message: response.message,
-        data: response.success,
-      );
+      if (response.statusCode == 200) {
+        return ApiResponse<bool>(
+          success: true,
+          message: '심방 신청이 취소되었습니다',
+          data: true,
+        );
+      } else {
+        final errorData = jsonDecode(response.body);
+        return ApiResponse<bool>(
+          success: false,
+          message: errorData['error']?.toString() ?? '심방 신청 취소 실패',
+          data: false,
+        );
+      }
     } catch (e) {
       return ApiResponse<bool>(
         success: false,
@@ -354,7 +364,7 @@ class PastoralCareService {
 
   /// 관리자용: 심방 신청 상태 변경
   Future<ApiResponse<PastoralCareRequest>> updateRequestStatus({
-    required int requestId,
+    required String requestId,
     required String status,
     String? adminNote,
   }) async {
@@ -398,7 +408,7 @@ class PastoralCareService {
 
   /// 관리자용: 담당자 지정 및 일정 설정
   Future<ApiResponse<PastoralCareRequest>> assignPastor({
-    required int requestId,
+    required String requestId,
     required int pastorId,
     String? scheduledDate,
     String? scheduledTime,

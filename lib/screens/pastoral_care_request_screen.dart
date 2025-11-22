@@ -33,10 +33,13 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   final _contactController = TextEditingController();
   final _preferredDateController = TextEditingController();
   final _preferredTimeController = TextEditingController();
+  final _preferredTimeEndController = TextEditingController();
   final _addressController = TextEditingController();
   final _detailAddressController = TextEditingController();
 
   bool _isUrgent = false;
+  String _selectedRequestType = PastoralCareRequestType.general;
+  String _selectedPriority = PastoralCarePriority.normal;
 
   // 지도 관련 변수들
   double? _latitude;
@@ -64,6 +67,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     _contactController.dispose();
     _preferredDateController.dispose();
     _preferredTimeController.dispose();
+    _preferredTimeEndController.dispose();
     _addressController.dispose();
     _detailAddressController.dispose();
     _debounceTimer?.cancel();
@@ -198,16 +202,19 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
           : '010-0000-0000';
 
       final request = PastoralCareRequestCreate(
-        requestType: PastoralCareRequestType.visit,
-        priority: PastoralCarePriority.medium,
+        requestType: _selectedRequestType,
+        priority: _selectedPriority,
         title: '심방 신청',
         description: _descriptionController.text.trim(),
         preferredDate: _preferredDateController.text.trim().isEmpty
             ? null
-            : _preferredDateController.text.trim(),
-        preferredTime: _preferredTimeController.text.trim().isEmpty
+            : _preferredDateController.text.trim().split(' ')[0], // 날짜만 추출
+        preferredTimeStart: _preferredTimeController.text.trim().isEmpty
             ? null
             : _preferredTimeController.text.trim(),
+        preferredTimeEnd: _preferredTimeEndController.text.trim().isEmpty
+            ? null
+            : _preferredTimeEndController.text.trim(),
         contactInfo: _contactController.text.trim().isEmpty
             ? null
             : _contactController.text.trim(),
@@ -269,10 +276,13 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     _contactController.clear();
     _preferredDateController.clear();
     _preferredTimeController.clear();
+    _preferredTimeEndController.clear();
     _addressController.clear();
     _detailAddressController.clear();
     setState(() {
       _isUrgent = false;
+      _selectedRequestType = PastoralCareRequestType.general;
+      _selectedPriority = PastoralCarePriority.normal;
       _latitude = null;
       _longitude = null;
     });
@@ -284,24 +294,22 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     String? initialTime;
 
     if (_preferredDateController.text.isNotEmpty) {
-      final parts = _preferredDateController.text.split(' ');
-      if (parts.isNotEmpty) {
-        try {
-          final dateParts = parts[0].split('-');
-          if (dateParts.length == 3) {
-            initialDate = DateTime(
-              int.parse(dateParts[0]),
-              int.parse(dateParts[1]),
-              int.parse(dateParts[2]),
-            );
-          }
-          if (parts.length > 1) {
-            initialTime = parts[1];
-          }
-        } catch (e) {
-          // 파싱 오류시 무시
+      try {
+        final dateParts = _preferredDateController.text.split('-');
+        if (dateParts.length == 3) {
+          initialDate = DateTime(
+            int.parse(dateParts[0]),
+            int.parse(dateParts[1]),
+            int.parse(dateParts[2]),
+          );
         }
+      } catch (e) {
+        // 파싱 오류시 무시
       }
+    }
+
+    if (_preferredTimeController.text.isNotEmpty) {
+      initialTime = _preferredTimeController.text;
     }
 
     final result = await Navigator.of(context).push(
@@ -319,8 +327,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
       setState(() {
         _preferredDateController.text =
-            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} $time';
-        // 이전 시간 컨트롤러도 업데이트 (백엔드 호환성)
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
         _preferredTimeController.text = time;
       });
     }
@@ -479,6 +486,56 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   ),
                   SizedBox(height: 16.h),
 
+                  // 심방 유형 선택
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '심방 유형*',
+                        style: const FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: NewAppColor.neutral200,
+                            width: 1,
+                          ),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedRequestType,
+                            isExpanded: true,
+                            items: PastoralCareRequestType.all.map((type) {
+                              return DropdownMenuItem(
+                                value: type,
+                                child: Text(
+                                  PastoralCareRequestType.displayNames[type] ?? type,
+                                  style: const FigmaTextStyles().body2.copyWith(
+                                    color: NewAppColor.neutral900,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _selectedRequestType = value;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+
                   // 내용
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -631,12 +688,12 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   ),
                   SizedBox(height: 16.h),
 
-                  // 희망 날짜/시간
+                  // 희망 날짜
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '희망 날짜/시간',
+                        '희망 날짜',
                         style: const FigmaTextStyles().body2.copyWith(
                               color: NewAppColor.neutral900,
                               fontWeight: FontWeight.w500,
@@ -645,10 +702,50 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       SizedBox(height: 8.h),
                       AppInput(
                         controller: _preferredDateController,
-                        placeholder: 'DD/MM/YYYY',
+                        placeholder: 'YYYY-MM-DD',
                         readOnly: true,
                         suffixIcon: Icons.calendar_today,
                         onTap: _selectDateTime,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 희망 시작 시간
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '희망 시작 시간',
+                        style: const FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                      SizedBox(height: 8.h),
+                      AppInput(
+                        controller: _preferredTimeController,
+                        placeholder: 'HH:MM (예: 14:00)',
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 희망 종료 시간
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '희망 종료 시간',
+                        style: const FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                      SizedBox(height: 8.h),
+                      AppInput(
+                        controller: _preferredTimeEndController,
+                        placeholder: 'HH:MM (예: 15:00)',
                       ),
                     ],
                   ),
@@ -1374,6 +1471,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         return NewAppColor.warning600;
       case 'approved':
         return NewAppColor.primary600;
+      case 'scheduled':
+        return NewAppColor.primary700;
       case 'in_progress':
         return NewAppColor.success600;
       case 'completed':
