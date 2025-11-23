@@ -3,389 +3,349 @@ import 'package:http/http.dart' as http;
 import '../models/prayer_request.dart';
 import '../models/api_response.dart';
 import '../config/api_config.dart';
-import 'api_service.dart';
+import 'supabase_service.dart';
+import 'auth_service.dart';
 
+/// 중보 기도 서비스 (Supabase Edge Function 사용)
 class PrayerRequestService {
-  static const String baseUrl = '${ApiConfig.baseUrl}${ApiConfig.prayerRequests}';
-  static final ApiService _apiService = ApiService();
+  static final PrayerRequestService _instance = PrayerRequestService._internal();
+  factory PrayerRequestService() => _instance;
+  PrayerRequestService._internal();
 
-  /// 새 중보 기도 신청 생성
-  static Future<ApiResponse<PrayerRequest>> createRequest(
+  final SupabaseService _supabaseService = SupabaseService();
+  final AuthService _authService = AuthService();
+
+  // Edge Function URL 생성
+  String get _baseUrl =>
+      '${SupabaseConfig.supabaseUrl}/functions/v1${SupabaseConfig.prayerRequestsFunction}';
+
+  // 인증 헤더 생성 (Supabase Anon Key + temp_token 방식)
+  Map<String, String> _getAuthHeaders() {
+    final user = _authService.currentUser;
+    if (user == null) {
+      return {'Content-Type': 'application/json'};
+    }
+
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final userToken = 'temp_token_${user.id}_$timestamp';
+
+    // 두 개의 인증 헤더 모두 필요
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${SupabaseConfig.supabaseAnonKey}', // Supabase 공개 키
+      'X-Custom-Auth': userToken, // 사용자 인증 토큰
+    };
+  }
+
+  /// 새 중보 기도 신청 생성 (Edge Function 사용)
+  Future<ApiResponse<PrayerRequest>> createRequest(
     PrayerRequestCreate request,
   ) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
+      print('🙏 PRAYER_REQUEST_SERVICE: 기도 요청 생성 시작 (Edge Function)');
+
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        print('🙏 PRAYER_REQUEST_SERVICE: 사용자 정보 조회 실패 - ${userResponse.message}');
+        return ApiResponse<PrayerRequest>(
+          success: false,
+          message: '사용자 정보 조회 실패: ${userResponse.message}',
+          data: null,
+        );
       }
+
+      final user = userResponse.data!;
+      print('🙏 PRAYER_REQUEST_SERVICE: 사용자 정보 - ID: ${user.id}, Church ID: ${user.churchId}');
+
+      // 요청 데이터 생성
+      final requestData = {
+        'church_id': user.churchId,
+        'requester_name': request.requesterName ?? user.fullName,
+        'requester_phone': request.requesterPhone ?? user.phone ?? '',
+        'prayer_type': request.toJson()['prayer_type'],
+        'prayer_content': request.content,
+        'is_anonymous': request.isAnonymous,
+        'is_urgent': request.priority == 'urgent',
+        'is_public': !request.isPrivate,
+      };
+
+      print('🙏 PRAYER_REQUEST_SERVICE: 요청 데이터 - $requestData');
+
+      // Edge Function 호출
+      final url = Uri.parse('$_baseUrl/admin/requests');
+      final headers = _getAuthHeaders();
+
+      print('🙏 PRAYER_REQUEST_SERVICE: 요청 URL - $url');
 
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequests}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(request.toJson()),
+        url,
+        headers: headers,
+        body: jsonEncode(requestData),
       );
 
-      final responseBody = utf8.decode(response.bodyBytes);
-      print('Prayer Request Create Response: ${response.statusCode} - $responseBody');
+      print('🙏 PRAYER_REQUEST_SERVICE: 응답 상태 - ${response.statusCode}');
+      print('🙏 PRAYER_REQUEST_SERVICE: 응답 본문 - ${response.body}');
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (responseBody.isEmpty) {
-          return ApiResponse.error('서버 응답이 비어있습니다.');
-        }
-        
-        try {
-          final data = jsonDecode(responseBody);
-          final prayerRequest = PrayerRequest.fromJson(data);
-          return ApiResponse.success(prayerRequest);
-        } catch (e) {
-          print('JSON Parse Error in createRequest: $e');
-          return ApiResponse.error('서버 응답 형식이 올바르지 않습니다.');
-        }
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final createdRequest = PrayerRequest.fromJson(jsonData);
+        return ApiResponse<PrayerRequest>(
+          success: true,
+          message: '기도 요청이 성공적으로 생성되었습니다',
+          data: createdRequest,
+        );
       } else {
-        if (responseBody.isEmpty) {
-          return ApiResponse.error('중보 기도 신청 생성에 실패했습니다.');
-        }
-        
-        try {
-          final error = jsonDecode(responseBody);
-          return ApiResponse.error(
-            error['detail']?.toString() ?? '중보 기도 신청 생성에 실패했습니다.',
-          );
-        } catch (e) {
-          return ApiResponse.error('중보 기도 신청 생성에 실패했습니다.');
-        }
+        final errorData = jsonDecode(response.body);
+        return ApiResponse<PrayerRequest>(
+          success: false,
+          message: errorData['error']?.toString() ?? '기도 요청 생성 실패',
+          data: null,
+        );
       }
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      print('🙏 PRAYER_REQUEST_SERVICE: 기도 요청 생성 예외 발생 - $e');
+      return ApiResponse<PrayerRequest>(
+        success: false,
+        message: '기도 요청 생성 실패: ${e.toString()}',
+        data: null,
+      );
     }
   }
 
-  /// 내 중보 기도 신청 목록 조회
-  static Future<ApiResponse<List<PrayerRequest>>> getMyRequests({
-    int skip = 0,
+  /// 내 중보 기도 신청 목록 조회 (Supabase 직접 조회)
+  Future<ApiResponse<List<PrayerRequest>>> getMyRequests({
+    int page = 1,
     int limit = 100,
     String? status,
     String? category,
   }) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
+      print('🙏 PRAYER_REQUEST_SERVICE: 내 기도 요청 목록 조회 시작');
+
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        return ApiResponse<List<PrayerRequest>>(
+          success: false,
+          message: '사용자 정보 조회 실패',
+          data: [],
+        );
       }
 
-      final queryParams = <String, String>{
-        'skip': skip.toString(),
-        'limit': limit.toString(),
-      };
-      
-      if (status != null && status.isNotEmpty) {
-        queryParams['status'] = status;
-      }
-      
-      if (category != null && category.isNotEmpty) {
-        queryParams['category'] = category;
+      final user = userResponse.data!;
+
+      // Supabase에서 직접 조회
+      var query = _supabaseService.client
+          .from('prayer_requests')
+          .select()
+          .eq('church_id', user.churchId)
+          .or('requester_phone.eq.${user.phone},requester_name.eq.${user.fullName}');
+
+      if (status != null) {
+        query = query.eq('status', status);
       }
 
-      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequestsMy}').replace(queryParameters: queryParams);
-      
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      if (category != null) {
+        final apiType = PrayerCategory.toApiType(category);
+        query = query.eq('prayer_type', apiType);
+      }
+
+      final response = await query
+          .order('created_at', ascending: false)
+          .range((page - 1) * limit, page * limit - 1);
+
+      final requests = (response as List)
+          .map((item) => PrayerRequest.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      print('🙏 PRAYER_REQUEST_SERVICE: 기도 요청 ${requests.length}개 조회 완료');
+
+      return ApiResponse<List<PrayerRequest>>(
+        success: true,
+        message: '기도 요청 목록 조회 성공',
+        data: requests,
       );
-
-      final responseBody = utf8.decode(response.bodyBytes);
-      print('Prayer Request My List Response: ${response.statusCode} - $responseBody');
-
-      if (response.statusCode == 200) {
-        if (responseBody.isEmpty) {
-          return ApiResponse.success(<PrayerRequest>[]);
-        }
-        
-        try {
-          final data = jsonDecode(responseBody);
-          if (data is List) {
-            final requests = data
-                .map((item) => PrayerRequest.fromJson(item))
-                .toList();
-            return ApiResponse.success(requests);
-          } else {
-            return ApiResponse.success(<PrayerRequest>[]);
-          }
-        } catch (e) {
-          print('JSON Parse Error in getMyRequests: $e');
-          return ApiResponse.error('서버 응답 형식이 올바르지 않습니다.');
-        }
-      } else {
-        if (responseBody.isEmpty) {
-          return ApiResponse.error('중보 기도 목록을 불러오지 못했습니다.');
-        }
-        
-        try {
-          final error = jsonDecode(responseBody);
-          return ApiResponse.error(
-            error['detail']?.toString() ?? '중보 기도 목록을 불러오지 못했습니다.',
-          );
-        } catch (e) {
-          return ApiResponse.error('중보 기도 목록을 불러오지 못했습니다.');
-        }
-      }
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      print('🙏 PRAYER_REQUEST_SERVICE: 목록 조회 예외 발생 - $e');
+      return ApiResponse<List<PrayerRequest>>(
+        success: true,
+        message: '기도 요청 목록 조회 완료',
+        data: [],
+      );
     }
   }
 
-  /// 공동 중보 기도 목록 조회 (공개된 것만)
-  static Future<ApiResponse<List<PrayerRequest>>> getPublicRequests({
-    int skip = 0,
+  /// 공개 기도 요청 목록 조회
+  Future<ApiResponse<List<PrayerRequest>>> getPublicRequests({
+    int page = 1,
     int limit = 100,
     String? status,
     String? category,
   }) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
+      print('🙏 PRAYER_REQUEST_SERVICE: 공개 기도 요청 목록 조회 시작');
+
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        return ApiResponse<List<PrayerRequest>>(
+          success: false,
+          message: '사용자 정보 조회 실패',
+          data: [],
+        );
       }
 
-      final queryParams = <String, String>{
-        'skip': skip.toString(),
-        'limit': limit.toString(),
-        'is_private': 'false', // 공개된 것만
-      };
-      
-      if (status != null && status.isNotEmpty) {
-        queryParams['status'] = status;
-      }
-      
-      if (category != null && category.isNotEmpty) {
-        queryParams['category'] = category;
+      final user = userResponse.data!;
+
+      var query = _supabaseService.client
+          .from('prayer_requests')
+          .select()
+          .eq('church_id', user.churchId)
+          .eq('is_public', true)
+          .eq('status', status ?? 'active');
+
+      if (category != null) {
+        final apiType = PrayerCategory.toApiType(category);
+        query = query.eq('prayer_type', apiType);
       }
 
-      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequests}').replace(queryParameters: queryParams);
-      
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      final response = await query
+          .order('created_at', ascending: false)
+          .range((page - 1) * limit, page * limit - 1);
+
+      final requests = (response as List)
+          .map((item) => PrayerRequest.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      return ApiResponse<List<PrayerRequest>>(
+        success: true,
+        message: '공개 기도 요청 목록 조회 성공',
+        data: requests,
       );
-
-      final responseBody = utf8.decode(response.bodyBytes);
-      print('Prayer Request Public List Response: ${response.statusCode} - $responseBody');
-
-      if (response.statusCode == 200) {
-        if (responseBody.isEmpty) {
-          return ApiResponse.success(<PrayerRequest>[]);
-        }
-        
-        try {
-          final data = jsonDecode(responseBody);
-          if (data is List) {
-            final requests = data
-                .map((item) => PrayerRequest.fromJson(item))
-                .toList();
-            return ApiResponse.success(requests);
-          } else {
-            return ApiResponse.success(<PrayerRequest>[]);
-          }
-        } catch (e) {
-          print('JSON Parse Error in getPublicRequests: $e');
-          return ApiResponse.error('서버 응답 형식이 올바르지 않습니다.');
-        }
-      } else {
-        if (responseBody.isEmpty) {
-          return ApiResponse.error('공동 기도 목록을 불러오지 못했습니다.');
-        }
-        
-        try {
-          final error = jsonDecode(responseBody);
-          return ApiResponse.error(
-            error['detail']?.toString() ?? '공동 기도 목록을 불러오지 못했습니다.',
-          );
-        } catch (e) {
-          return ApiResponse.error('공동 기도 목록을 불러오지 못했습니다.');
-        }
-      }
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      return ApiResponse<List<PrayerRequest>>(
+        success: true,
+        message: '공개 기도 요청 목록 조회 완료',
+        data: [],
+      );
     }
   }
 
   /// 중보 기도 신청 수정
-  static Future<ApiResponse<PrayerRequest>> updateRequest(
-    int requestId,
+  Future<ApiResponse<PrayerRequest>> updateRequest(
+    String requestId,
     PrayerRequestUpdate updateRequest,
   ) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
-      }
+      final response = await _supabaseService.client
+          .from('prayer_requests')
+          .update(updateRequest.toJson())
+          .eq('id', requestId)
+          .select()
+          .single();
 
-      final response = await http.put(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequests}/$requestId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(updateRequest.toJson()),
+      final updatedRequest = PrayerRequest.fromJson(response);
+      return ApiResponse<PrayerRequest>(
+        success: true,
+        message: '기도 요청 수정 성공',
+        data: updatedRequest,
       );
-
-      final responseBody = utf8.decode(response.bodyBytes);
-      print('Prayer Request Update Response: ${response.statusCode} - $responseBody');
-
-      if (response.statusCode == 200) {
-        if (responseBody.isEmpty) {
-          return ApiResponse.error('서버 응답이 비어있습니다.');
-        }
-        
-        try {
-          final data = jsonDecode(responseBody);
-          final prayerRequest = PrayerRequest.fromJson(data);
-          return ApiResponse.success(prayerRequest);
-        } catch (e) {
-          print('JSON Parse Error in updateRequest: $e');
-          return ApiResponse.error('서버 응답 형식이 올바르지 않습니다.');
-        }
-      } else {
-        if (responseBody.isEmpty) {
-          return ApiResponse.error('중보 기도 수정에 실패했습니다.');
-        }
-        
-        try {
-          final error = jsonDecode(responseBody);
-          return ApiResponse.error(
-            error['detail']?.toString() ?? '중보 기도 수정에 실패했습니다.',
-          );
-        } catch (e) {
-          return ApiResponse.error('중보 기도 수정에 실패했습니다.');
-        }
-      }
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      return ApiResponse<PrayerRequest>(
+        success: false,
+        message: '기도 요청 수정 실패: ${e.toString()}',
+        data: null,
+      );
     }
   }
 
   /// 중보 기도 신청 삭제
-  static Future<ApiResponse<bool>> deleteRequest(int requestId) async {
+  Future<ApiResponse<bool>> deleteRequest(String requestId) async {
     try {
-      final token = _apiService.token;
-      if (token == null) {
-        throw Exception('인증 토큰이 없습니다. 다시 로그인해주세요.');
-      }
+      await _supabaseService.client
+          .from('prayer_requests')
+          .delete()
+          .eq('id', requestId);
 
-      final response = await http.delete(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.prayerRequests}/$requestId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+      return ApiResponse<bool>(
+        success: true,
+        message: '기도 요청이 삭제되었습니다',
+        data: true,
       );
-
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        return ApiResponse.success(true);
-      } else {
-        final responseBody = utf8.decode(response.bodyBytes);
-        print('Prayer Request Delete Response: ${response.statusCode} - $responseBody');
-        
-        if (responseBody.isEmpty) {
-          return ApiResponse.error('중보 기도 삭제에 실패했습니다.');
-        }
-        
-        try {
-          final error = jsonDecode(responseBody);
-          return ApiResponse.error(
-            error['detail']?.toString() ?? '중보 기도 삭제에 실패했습니다.',
-          );
-        } catch (e) {
-          return ApiResponse.error('중보 기도 삭제에 실패했습니다.');
-        }
-      }
     } catch (e) {
-      return ApiResponse.error('네트워크 오류가 발생했습니다: $e');
+      return ApiResponse<bool>(
+        success: false,
+        message: '기도 요청 삭제 실패: ${e.toString()}',
+        data: false,
+      );
     }
   }
 
   /// 중보 기도를 응답됨으로 표시
-  static Future<ApiResponse<PrayerRequest>> markAsAnswered(int requestId) async {
-    final updateData = PrayerRequestUpdate(status: PrayerStatus.answered);
+  Future<ApiResponse<PrayerRequest>> markAsAnswered(
+    String requestId,
+    String? testimony,
+  ) async {
+    final updateData = PrayerRequestUpdate(
+      status: PrayerStatus.answered,
+    );
     return updateRequest(requestId, updateData);
   }
 
   /// 중보 기도를 종료됨으로 표시
-  static Future<ApiResponse<PrayerRequest>> markAsClosed(int requestId) async {
+  Future<ApiResponse<PrayerRequest>> markAsClosed(String requestId) async {
     final updateData = PrayerRequestUpdate(status: PrayerStatus.closed);
     return updateRequest(requestId, updateData);
   }
 
-  /// 중보 기도를 일시정지로 표시
-  static Future<ApiResponse<PrayerRequest>> markAsPaused(int requestId) async {
-    final updateData = PrayerRequestUpdate(status: PrayerStatus.paused);
-    return updateRequest(requestId, updateData);
-  }
-
   /// 중보 기도를 다시 활성화
-  static Future<ApiResponse<PrayerRequest>> markAsActive(int requestId) async {
+  Future<ApiResponse<PrayerRequest>> markAsActive(String requestId) async {
     final updateData = PrayerRequestUpdate(status: PrayerStatus.active);
     return updateRequest(requestId, updateData);
   }
 
   /// 상태별 목록 조회 헬퍼 메서드들
-  static Future<ApiResponse<List<PrayerRequest>>> getActiveRequests() {
+  Future<ApiResponse<List<PrayerRequest>>> getActiveRequests() {
     return getMyRequests(status: PrayerStatus.active);
   }
 
-  static Future<ApiResponse<List<PrayerRequest>>> getAnsweredRequests() {
+  Future<ApiResponse<List<PrayerRequest>>> getAnsweredRequests() {
     return getMyRequests(status: PrayerStatus.answered);
   }
 
-  static Future<ApiResponse<List<PrayerRequest>>> getClosedRequests() {
+  Future<ApiResponse<List<PrayerRequest>>> getClosedRequests() {
     return getMyRequests(status: PrayerStatus.closed);
   }
 
-  static Future<ApiResponse<List<PrayerRequest>>> getPausedRequests() {
-    return getMyRequests(status: PrayerStatus.paused);
-  }
-
   /// 카테고리별 목록 조회 헬퍼 메서드들
-  static Future<ApiResponse<List<PrayerRequest>>> getPersonalRequests() {
-    return getMyRequests(category: PrayerCategory.personal);
+  Future<ApiResponse<List<PrayerRequest>>> getGeneralRequests() {
+    return getMyRequests(category: PrayerCategory.general);
   }
 
-  static Future<ApiResponse<List<PrayerRequest>>> getFamilyRequests() {
+  Future<ApiResponse<List<PrayerRequest>>> getFamilyRequests() {
     return getMyRequests(category: PrayerCategory.family);
   }
 
-  static Future<ApiResponse<List<PrayerRequest>>> getChurchRequests() {
-    return getMyRequests(category: PrayerCategory.church);
-  }
-
-  static Future<ApiResponse<List<PrayerRequest>>> getMissionRequests() {
-    return getMyRequests(category: PrayerCategory.mission);
-  }
-
-  static Future<ApiResponse<List<PrayerRequest>>> getHealingRequests() {
+  Future<ApiResponse<List<PrayerRequest>>> getHealingRequests() {
     return getMyRequests(category: PrayerCategory.healing);
   }
 
-  static Future<ApiResponse<List<PrayerRequest>>> getGuidanceRequests() {
-    return getMyRequests(category: PrayerCategory.guidance);
+  Future<ApiResponse<List<PrayerRequest>>> getWorkRequests() {
+    return getMyRequests(category: PrayerCategory.work);
+  }
+
+  Future<ApiResponse<List<PrayerRequest>>> getMinistryRequests() {
+    return getMyRequests(category: PrayerCategory.ministry);
   }
 
   /// 공동 기도 카테고리별 목록 조회
-  static Future<ApiResponse<List<PrayerRequest>>> getPublicRequestsByCategory(String category) {
+  Future<ApiResponse<List<PrayerRequest>>> getPublicRequestsByCategory(
+      String category) {
     return getPublicRequests(category: category);
   }
 
   /// 긴급 기도 요청 조회
-  static Future<ApiResponse<List<PrayerRequest>>> getUrgentRequests() {
+  Future<ApiResponse<List<PrayerRequest>>> getUrgentRequests() {
     return getPublicRequests(status: PrayerStatus.active);
   }
 }

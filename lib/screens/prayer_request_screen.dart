@@ -60,7 +60,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     setState(() => _isLoadingMy = true);
 
     try {
-      final response = await PrayerRequestService.getMyRequests();
+      final response = await PrayerRequestService().getMyRequests();
       if (!mounted) return;
 
       if (response.success && response.data != null) {
@@ -794,7 +794,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
 
   Future<void> _deleteRequest(PrayerRequest request) async {
     try {
-      final response = await PrayerRequestService.deleteRequest(request.id!);
+      final response = await PrayerRequestService().deleteRequest(request.id!);
       if (response.success) {
         _showSuccessSnackBar('기도 요청이 삭제되었습니다');
         _loadMyRequests();
@@ -878,12 +878,12 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
       if (isEdit && request != null) {
         final updateRequest = PrayerRequestUpdate(
           content: _contentController.text.trim(),
-          category: PrayerCategory.personal,
+          category: PrayerCategory.general,
           priority: PrayerPriority.normal,
           isPrivate: _isPrivate,
         );
 
-        final response = await PrayerRequestService.updateRequest(
+        final response = await PrayerRequestService().updateRequest(
           request.id!,
           updateRequest,
         );
@@ -902,14 +902,14 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
         final createRequest = PrayerRequestCreate(
           title: '기도 요청',
           content: _contentController.text.trim(),
-          category: PrayerCategory.personal,
+          category: PrayerCategory.general,
           priority: PrayerPriority.normal,
           isPrivate: _isPrivate,
           requesterName: userName,
         );
 
         final response =
-            await PrayerRequestService.createRequest(createRequest);
+            await PrayerRequestService().createRequest(createRequest);
 
         if (response.success) {
           Navigator.pop(context);
@@ -947,13 +947,13 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
       final createRequest = PrayerRequestCreate(
         title: '기도 요청', // 기본 제목
         content: _contentController.text.trim(),
-        category: PrayerCategory.personal, // 기본 카테고리
+        category: PrayerCategory.general, // 기본 카테고리
         priority: PrayerPriority.normal, // 기본 우선순위
         isPrivate: _isPrivate,
         requesterName: userName, // 사용자 이름 전달
       );
 
-      final response = await PrayerRequestService.createRequest(createRequest);
+      final response = await PrayerRequestService().createRequest(createRequest);
 
       if (response.success) {
         _clearForm();

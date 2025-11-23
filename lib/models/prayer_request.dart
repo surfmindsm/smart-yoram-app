@@ -1,15 +1,18 @@
 class PrayerRequest {
-  final int? id;
+  final String? id; // UUID
   final String title;
   final String content;
   final String category;
   final String priority;
   final bool isPrivate;
+  final bool isAnonymous; // 익명 여부 추가
   final String status;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final int? memberId;
   final String? memberName;
+  final int prayerCount; // 기도 카운트 추가
+  final String? answeredTestimony; // 기도 응답 간증 추가
 
   const PrayerRequest({
     this.id,
@@ -18,29 +21,35 @@ class PrayerRequest {
     required this.category,
     this.priority = 'normal',
     this.isPrivate = false,
+    this.isAnonymous = false,
     this.status = 'active',
     required this.createdAt,
     this.updatedAt,
     this.memberId,
     this.memberName,
+    this.prayerCount = 0,
+    this.answeredTestimony,
   });
 
   factory PrayerRequest.fromJson(Map<String, dynamic> json) {
     // API 응답 필드를 확인하여 올바른 매핑 적용
     return PrayerRequest(
-      id: json['id']?.toInt(),
+      id: json['id']?.toString(),
       title: json['title'] ?? json['prayer_title'] ?? json['requester_name'] ?? '제목 없음', // 여러 가능한 title 필드 확인
       content: json['prayer_content'] ?? json['content'] ?? '', // API에서 prayer_content 사용
       category: PrayerCategory.fromApiType(json['prayer_type'] ?? 'general'), // API prayer_type을 category로 변환
       priority: json['is_urgent'] == true ? 'urgent' : 'normal', // is_urgent로 우선순위 판단
       isPrivate: !(json['is_public'] ?? true), // is_public의 반대값이 isPrivate
+      isAnonymous: json['is_anonymous'] ?? false,
       status: json['status'] ?? 'active',
       createdAt: DateTime.parse(json['created_at']),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : null,
       memberId: json['member_id']?.toInt(),
       memberName: json['requester_name'],
+      prayerCount: json['prayer_count'] ?? 0,
+      answeredTestimony: json['answered_testimony'],
     );
   }
 
@@ -61,17 +70,20 @@ class PrayerRequest {
   }
 
   PrayerRequest copyWith({
-    int? id,
+    String? id,
     String? title,
     String? content,
     String? category,
     String? priority,
     bool? isPrivate,
+    bool? isAnonymous,
     String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
     int? memberId,
     String? memberName,
+    int? prayerCount,
+    String? answeredTestimony,
   }) {
     return PrayerRequest(
       id: id ?? this.id,
@@ -80,11 +92,14 @@ class PrayerRequest {
       category: category ?? this.category,
       priority: priority ?? this.priority,
       isPrivate: isPrivate ?? this.isPrivate,
+      isAnonymous: isAnonymous ?? this.isAnonymous,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       memberId: memberId ?? this.memberId,
       memberName: memberName ?? this.memberName,
+      prayerCount: prayerCount ?? this.prayerCount,
+      answeredTestimony: answeredTestimony ?? this.answeredTestimony,
     );
   }
 
@@ -109,7 +124,9 @@ class PrayerRequestCreate {
   final String category;
   final String priority;
   final bool isPrivate;
+  final bool isAnonymous; // 익명 여부 추가
   final String? requesterName;
+  final String? requesterPhone;
 
   const PrayerRequestCreate({
     required this.title,
@@ -117,17 +134,20 @@ class PrayerRequestCreate {
     required this.category,
     this.priority = 'normal',
     this.isPrivate = false,
+    this.isAnonymous = false,
     this.requesterName,
+    this.requesterPhone,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'title': title,  // 기도 제목은 title 필드로 전송
-      'requester_name': isPrivate ? '익명' : (requesterName ?? '익명'), // 비공개일 때만 익명, 공개일 때는 실제 이름
       'prayer_content': content,  // API expects 'prayer_content'
       'prayer_type': PrayerCategory.toApiType(category), // category를 API prayer_type으로 변환
       'is_urgent': priority == 'urgent', // priority -> is_urgent
       'is_public': !isPrivate,    // isPrivate -> is_public (반대)
+      'is_anonymous': isAnonymous, // 익명 여부
+      'requester_name': requesterName ?? '익명',
+      if (requesterPhone != null) 'requester_phone': requesterPhone,
     };
   }
 }
@@ -161,68 +181,47 @@ class PrayerRequestUpdate {
   }
 }
 
-// 중보 기도 카테고리 정의
+// 중보 기도 카테고리 정의 (API 문서: general, healing, family, work, ministry)
 class PrayerCategory {
-  static const String personal = 'personal';
-  static const String family = 'family';
-  static const String church = 'church';
-  static const String mission = 'mission';
-  static const String healing = 'healing';
-  static const String guidance = 'guidance';
-  static const String general = 'general'; // API에서 사용하는 일반 카테고리
+  static const String general = 'general';   // 일반 기도
+  static const String healing = 'healing';   // 치유 기도
+  static const String family = 'family';     // 가정 기도
+  static const String work = 'work';         // 직장/사업 기도
+  static const String ministry = 'ministry'; // 사역 기도
 
   static const Map<String, String> categoryNames = {
-    personal: '개인',
-    family: '가족',
-    church: '교회',
-    mission: '선교',
+    general: '일반',
     healing: '치유',
-    guidance: '인도',
-    general: '일반', // API general 카테고리 추가
+    family: '가정',
+    work: '직장/사업',
+    ministry: '사역',
   };
-  
+
   // API prayer_type을 클라이언트 category로 변환
   static String fromApiType(String apiType) {
     switch (apiType) {
       case 'general':
-        return personal; // general을 personal로 매핑
-      case 'family':
-        return family;
-      case 'church':
-        return church;
-      case 'mission':
-        return mission;
+        return general;
       case 'healing':
         return healing;
-      case 'guidance':
-        return guidance;
+      case 'family':
+        return family;
+      case 'work':
+        return work;
+      case 'ministry':
+        return ministry;
       default:
-        return personal;
-    }
-  }
-  
-  // 클라이언트 category를 API prayer_type으로 변환
-  static String toApiType(String category) {
-    switch (category) {
-      case personal:
-        return 'general'; // personal을 general로 매핑
-      case family:
-        return 'family';
-      case church:
-        return 'church';
-      case mission:
-        return 'mission';
-      case healing:
-        return 'healing';
-      case guidance:
-        return 'guidance';
-      default:
-        return 'general';
+        return general;
     }
   }
 
+  // 클라이언트 category를 API prayer_type으로 변환
+  static String toApiType(String category) {
+    return category; // 이제 API와 동일한 값 사용
+  }
+
   static List<String> get allCategories => categoryNames.keys.toList();
-  
+
   static String getCategoryName(String category) {
     return categoryNames[category] ?? '기타';
   }
