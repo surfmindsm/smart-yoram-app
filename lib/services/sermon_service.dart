@@ -101,21 +101,6 @@ class SermonService {
     }
   }
 
-  // 카테고리별 명설교 조회
-  Future<List<Sermon>> getSermonsByCategory(String category, {int limit = 20}) async {
-    try {
-      log('🎤 카테고리별 명설교 조회: $category');
-      return await getSermons(
-        category: category,
-        limit: limit,
-        sortBy: 'sermon_date',
-        sortOrder: 'desc',
-      );
-    } catch (e) {
-      log('❌ 카테고리별 명설교 조회 오류: $e');
-      throw Exception('카테고리별 명설교를 불러올 수 없습니다: $e');
-    }
-  }
 
   // 조회수 증가 (Supabase)
   Future<void> incrementViewCount(String id) async {
@@ -197,29 +182,74 @@ class SermonService {
     }
   }
 
-  // 카테고리 목록 조회 (중복 제거)
-  Future<List<String>> getCategories() async {
+  // 주제 목록 조회 (고정 목록)
+  Future<List<String>> getTags() async {
+    // 주제는 고정된 5가지
+    return ['믿음', '사랑', '은혜', '소망', '섬김'];
+  }
+
+  // 주제별 명설교 조회
+  Future<List<Sermon>> getSermonsByTag(String tag) async {
     try {
-      log('🎤 카테고리 목록 조회 시작');
+      log('🎤 주제별 명설교 조회: $tag');
 
       final response = await _supabaseService.client
           .from('sermons')
-          .select('category')
+          .select('*')
           .eq('is_active', true)
-          .not('category', 'is', null);
+          .contains('tags', [tag])
+          .order('sermon_date', ascending: false);
+
+      final sermons = (response as List)
+          .map((item) => Sermon.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      log('🎤 주제별 명설교 ${sermons.length}개 조회 완료');
+      return sermons;
+    } catch (e) {
+      log('❌ 주제별 명설교 조회 오류: $e');
+      throw Exception('주제별 명설교를 불러올 수 없습니다: $e');
+    }
+  }
+
+  // 설교자 목록 조회 (중복 제거)
+  Future<List<String>> getPreachers() async {
+    try {
+      log('🎤 설교자 목록 조회 시작');
+
+      final response = await _supabaseService.client
+          .from('sermons')
+          .select('preacher_name')
+          .eq('is_active', true)
+          .not('preacher_name', 'is', null);
 
       // 중복 제거 및 정렬
-      final categories = (response as List)
-          .map((item) => item['category'] as String)
+      final preachers = (response as List)
+          .map((item) => item['preacher_name'] as String)
           .toSet()
           .toList()
         ..sort();
 
-      log('🎤 카테고리 ${categories.length}개 조회 완료');
-      return categories;
+      log('🎤 설교자 ${preachers.length}명 조회 완료');
+      return preachers;
     } catch (e) {
-      log('❌ 카테고리 조회 오류: $e');
-      return ['주일설교', '수요예배', '특별집회']; // 기본 카테고리 반환
+      log('❌ 설교자 조회 오류: $e');
+      return []; // 빈 리스트 반환
+    }
+  }
+
+  // 설교자별 명설교 조회
+  Future<List<Sermon>> getSermonsByPreacher(String preacherName, {int limit = 20}) async {
+    try {
+      log('🎤 설교자별 명설교 조회: $preacherName');
+      return await getSermons(
+        limit: limit,
+        sortBy: 'sermon_date',
+        sortOrder: 'desc',
+      ).then((sermons) => sermons.where((s) => s.preacherName == preacherName).toList());
+    } catch (e) {
+      log('❌ 설교자별 명설교 조회 오류: $e');
+      throw Exception('설교자별 명설교를 불러올 수 없습니다: $e');
     }
   }
 
