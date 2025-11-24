@@ -7,6 +7,7 @@ import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/sermon_service.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 enum FilterType { all, preacher, category, favorite }
 
@@ -1025,6 +1026,36 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
     }
   }
 
+  Future<void> _openInYouTube() async {
+    final url = Uri.parse(widget.sermon.youtubeUrl);
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication, // YouTube 앱이나 브라우저로 열기
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('YouTube를 열 수 없습니다'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('YouTube를 열 수 없습니다'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildRelatedSermons() {
     if (_isLoadingRelated) {
       return Center(
@@ -1078,17 +1109,17 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
             ClipRRect(
               borderRadius: BorderRadius.horizontal(left: Radius.circular(8.r)),
               child: Image.network(
-                sermon.getThumbnailUrl(quality: 'default'),
-                width: 120.w,
-                height: 68.h,
+                sermon.getThumbnailUrl(quality: 'mqdefault'),
+                width: 160.w,
+                height: 90.h,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
-                  width: 120.w,
-                  height: 68.h,
+                  width: 160.w,
+                  height: 90.h,
                   color: NewAppColor.neutral200,
                   child: Icon(
                     Icons.play_circle_outline,
-                    size: 32.w,
+                    size: 40.w,
                     color: NewAppColor.neutral400,
                   ),
                 ),
@@ -1207,84 +1238,138 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 카테고리
-                        if (widget.sermon.category != null) ...[
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 6.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.primary100,
-                              borderRadius: BorderRadius.circular(4.r),
-                            ),
-                            child: Text(
-                              widget.sermon.category!,
-                              style: FigmaTextStyles().captionText2.copyWith(
-                                    color: NewAppColor.primary700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                        ],
-                        // 제목
-                        Text(
-                          widget.sermon.title,
-                          style: FigmaTextStyles().subtitle1.copyWith(
-                                color: NewAppColor.neutral900,
-                              ),
-                        ),
-                        SizedBox(height: 12.h),
-                        // 설교자 및 날짜
-                        Row(
+                        // 상단 정보 영역 (카테고리 ~ 조회수)
+                        Stack(
                           children: [
-                            if (widget.sermon.preacherName != null) ...[
-                              Icon(
-                                Icons.person_outline,
-                                size: 16.w,
-                                color: NewAppColor.neutral600,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                widget.sermon.preacherName!,
-                                style: FigmaTextStyles().body2.copyWith(
-                                      color: NewAppColor.neutral700,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 카테고리
+                                if (widget.sermon.category != null) ...[
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12.w,
+                                      vertical: 6.h,
                                     ),
-                              ),
-                              SizedBox(width: 16.w),
-                            ],
-                            if (widget.sermon.sermonDate != null) ...[
-                              Icon(
-                                Icons.calendar_today_outlined,
-                                size: 16.w,
-                                color: NewAppColor.neutral600,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                widget.sermon.getFormattedSermonDate(),
-                                style: FigmaTextStyles().body2.copyWith(
-                                      color: NewAppColor.neutral700,
+                                    decoration: BoxDecoration(
+                                      color: NewAppColor.primary100,
+                                      borderRadius: BorderRadius.circular(4.r),
                                     ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        // 조회수
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.visibility_outlined,
-                              size: 16.w,
-                              color: NewAppColor.neutral600,
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              '조회수 ${widget.sermon.viewCount}',
-                              style: FigmaTextStyles().captionText1.copyWith(
-                                    color: NewAppColor.neutral600,
+                                    child: Text(
+                                      widget.sermon.category!,
+                                      style: FigmaTextStyles().captionText2.copyWith(
+                                            color: NewAppColor.primary700,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
                                   ),
+                                  SizedBox(height: 12.h),
+                                ],
+                                // 제목
+                                Padding(
+                                  padding: EdgeInsets.only(right: 48.w),
+                                  child: Text(
+                                    widget.sermon.title,
+                                    style: FigmaTextStyles().subtitle1.copyWith(
+                                          color: NewAppColor.neutral900,
+                                        ),
+                                  ),
+                                ),
+                                SizedBox(height: 12.h),
+                                // 설교자 및 날짜
+                                Row(
+                                  children: [
+                                    if (widget.sermon.preacherName != null) ...[
+                                      Icon(
+                                        Icons.person_outline,
+                                        size: 16.w,
+                                        color: NewAppColor.neutral600,
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        widget.sermon.preacherName!,
+                                        style: FigmaTextStyles().body2.copyWith(
+                                              color: NewAppColor.neutral700,
+                                            ),
+                                      ),
+                                      SizedBox(width: 16.w),
+                                    ],
+                                    if (widget.sermon.sermonDate != null) ...[
+                                      Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 16.w,
+                                        color: NewAppColor.neutral600,
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        widget.sermon.getFormattedSermonDate(),
+                                        style: FigmaTextStyles().body2.copyWith(
+                                              color: NewAppColor.neutral700,
+                                            ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                SizedBox(height: 8.h),
+                                // 조회수
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.visibility_outlined,
+                                      size: 16.w,
+                                      color: NewAppColor.neutral600,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      '조회수 ${widget.sermon.viewCount}',
+                                      style: FigmaTextStyles().captionText1.copyWith(
+                                            color: NewAppColor.neutral600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            // YouTube에서 보기 버튼 (우측 하단)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: InkWell(
+                                onTap: () => _openInYouTube(),
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10.w,
+                                    vertical: 6.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: NewAppColor.neutral100,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    border: Border.all(
+                                      color: NewAppColor.neutral300,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.open_in_new,
+                                        size: 14.w,
+                                        color: NewAppColor.neutral600,
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        'YouTube',
+                                        style: FigmaTextStyles().captionText2.copyWith(
+                                              color: NewAppColor.neutral700,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
