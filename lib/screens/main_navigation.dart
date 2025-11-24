@@ -10,6 +10,7 @@ import 'notices_screen.dart';
 import 'settings_screen.dart';
 import 'members_screen.dart';
 import 'community_screen.dart';
+import 'sermons_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -55,6 +56,7 @@ class _MainNavigationState extends State<MainNavigation> {
       const MembersScreen(),
       const BulletinScreen(),
       const NoticesScreen(showAppBar: false), // main navigation에서는 앱바 없음
+      const SermonsScreen(), // 명설교 화면 추가
       if (_currentUser!.hasCommunityAccess) const CommunityScreen(),
     ];
   }
@@ -145,6 +147,12 @@ class _MainNavigationState extends State<MainNavigation> {
         isActive: _currentIndex == 3,
         onTap: () => _onTap(3),
       ),
+      _NavItem(
+        icon: Icons.video_library_outlined,
+        label: '명설교',
+        isActive: _currentIndex == 4,
+        onTap: () => _onTap(4),
+      ),
     ];
 
     // 커뮤니티 접근 권한이 있으면 커뮤니티 탭 추가
@@ -153,8 +161,8 @@ class _MainNavigationState extends State<MainNavigation> {
         _NavItem(
           icon: Icons.forum_outlined,
           label: '커뮤니티',
-          isActive: _currentIndex == 4,
-          onTap: () => _onTap(4),
+          isActive: _currentIndex == 5,
+          onTap: () => _onTap(5),
         ),
       );
     }

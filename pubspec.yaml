@@ -120,6 +120,9 @@ dependencies:
   # 네이버 지도 플러그인
   flutter_naver_map: ^1.4.1+1
 
+  # 유튜브 플레이어
+  youtube_player_flutter: ^9.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
