@@ -1,6 +1,8 @@
 /// 커뮤니티 공통 타입 및 모델
 /// 웹 명세서(community-spec.md) 기반
 
+import 'dart:convert';
+
 // ============================================================================
 // 공통 타입 정의
 // ============================================================================
@@ -121,7 +123,6 @@ abstract class CommunityBasePost {
 class SharingItem extends CommunityBasePost {
   final String category; // 가구, 전자제품, 도서, 악기, 기타
   final String condition; // 양호, 보통, 사용감있음, 새상품
-  final int quantity;
   final List<String> images;
   final String? province; // 도/시 (예: 서울특별시, 경기도)
   final String? district; // 시/군/구 (예: 강남구, 수원시)
@@ -132,8 +133,6 @@ class SharingItem extends CommunityBasePost {
   final String? contactEmail;
   final bool isFree; // true: 무료나눔, false: 물품판매
   final int? price; // 판매가격 (isFree=false일 때)
-  final String? deliveryMethod; // 직거래, 택배발송, 픽업, 협의
-  final String? purchaseDate; // 구매 시기
 
   SharingItem({
     required super.id,
@@ -152,7 +151,6 @@ class SharingItem extends CommunityBasePost {
     super.updatedAt,
     required this.category,
     required this.condition,
-    required this.quantity,
     this.images = const [],
     this.province,
     this.district,
@@ -163,8 +161,6 @@ class SharingItem extends CommunityBasePost {
     this.contactEmail,
     this.isFree = true,
     this.price,
-    this.deliveryMethod,
-    this.purchaseDate,
   });
 
   factory SharingItem.fromJson(Map<String, dynamic> json) {
@@ -184,6 +180,23 @@ class SharingItem extends CommunityBasePost {
       churchName = json['church']['name'];
     } else {
       churchName = json['church_name'] ?? json['church'];
+    }
+
+    // images 파싱: JSON 문자열인 경우 처리
+    List<String> imageList = [];
+    if (json['images'] != null) {
+      if (json['images'] is String) {
+        try {
+          final parsed = jsonDecode(json['images']);
+          if (parsed is List) {
+            imageList = List<String>.from(parsed);
+          }
+        } catch (e) {
+          print('⚠️ COMMUNITY_MODELS: images 파싱 실패 - $e');
+        }
+      } else if (json['images'] is List) {
+        imageList = List<String>.from(json['images']);
+      }
     }
 
     return SharingItem(
@@ -207,8 +220,7 @@ class SharingItem extends CommunityBasePost {
           : null,
       category: json['category'] ?? '',
       condition: json['condition'] ?? '',
-      quantity: json['quantity'] ?? 1,
-      images: json['images'] != null ? List<String>.from(json['images']) : [],
+      images: imageList,
       province: json['province'],
       district: json['district'],
       deliveryAvailable: json['delivery_available'] ?? false,
@@ -218,10 +230,8 @@ class SharingItem extends CommunityBasePost {
       contactEmail: json['contactEmail'] ?? json['contact_email'],
       isFree: json['is_free'] ?? true,
       price: json['price'] != null
-          ? (json['price'] is int ? json['price'] : (json['price'] as double).toInt())
+          ? (json['price'] is int ? json['price'] : (json['price'] is String ? int.tryParse(json['price'].replaceAll('.00', '')) : (json['price'] as double).toInt()))
           : null,
-      deliveryMethod: json['deliveryMethod'] ?? json['delivery_method'],
-      purchaseDate: json['purchaseDate'] ?? json['purchase_date'],
     );
   }
 
@@ -231,7 +241,6 @@ class SharingItem extends CommunityBasePost {
       'description': description,
       'category': category,
       'condition': condition,
-      'quantity': quantity,
       'images': images,
       'province': province,
       'district': district,
@@ -239,8 +248,6 @@ class SharingItem extends CommunityBasePost {
       'location': location,
       'is_free': isFree,
       'price': price,
-      'delivery_method': deliveryMethod,
-      'purchase_date': purchaseDate,
     };
   }
 

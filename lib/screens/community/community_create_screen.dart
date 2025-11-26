@@ -6,6 +6,7 @@ import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/community_models.dart';
 import 'package:smart_yoram_app/services/community_service.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
+import 'package:smart_yoram_app/services/supabase_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:smart_yoram_app/components/index.dart';
@@ -45,10 +46,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   // 무료나눔/물품판매 전용
   String? _selectedCategory; // furniture, electronics, books, etc.
   String? _selectedCondition; // new, like_new, used
-  int _quantity = 1;
   final TextEditingController _priceController = TextEditingController();
-  String? _selectedDeliveryMethod; // 직거래, 택배, 협의
-  final TextEditingController _purchaseDateController = TextEditingController();
 
   // 지역 선택 (도/시, 시/군/구)
   String? _selectedProvince; // 도/시
@@ -169,7 +167,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     _targetAudienceController.dispose();
     _participationFeeController.dispose();
     _contactPersonController.dispose();
-    _purchaseDateController.dispose();
     super.dispose();
   }
 
@@ -205,13 +202,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       if (tableName == 'community_sharing') {
         _selectedCategory = post['category'];
         _selectedCondition = post['condition'];
-        _quantity = post['quantity'] ?? 1;
         _isFreeSharing = post['is_free'] == true;
         if (!_isFreeSharing && post['price'] != null) {
           _priceController.text = post['price'].toString();
         }
-        _selectedDeliveryMethod = post['delivery_method'];
-        _purchaseDateController.text = post['purchase_date'] ?? '';
         _contactController.text = post['contact_info'] ?? post['contact_phone'] ?? '';
         _emailController.text = post['contact_email'] ?? '';
       } else if (tableName == 'community_requests') {
@@ -270,13 +264,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _locationController.text = post.location ?? '';
       _selectedCategory = post.category;
       _selectedCondition = post.condition;
-      _quantity = post.quantity;
       _isFreeSharing = post.isFree;
       if (!_isFreeSharing && post.price != null) {
         _priceController.text = post.price.toString();
       }
-      _selectedDeliveryMethod = post.deliveryMethod;
-      _purchaseDateController.text = post.purchaseDate ?? '';
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
       _selectedStatus = post.status;
@@ -676,47 +667,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 7. 구매 시기
-          Text(
-            '구매 시기',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 8.h),
-            TextFormField(
-              controller: _purchaseDateController,
-              decoration: InputDecoration(
-                hintText: '예: 2023년 3월, 작년, 6개월 전',
-                hintStyle: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral400,
-                ),
-                counterText: '${_purchaseDateController.text.length}/50',
-                counterStyle: FigmaTextStyles().caption1.copyWith(
-                  color: NewAppColor.neutral500,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.neutral200),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.neutral200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: NewAppColor.primary600),
-                ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
-              ),
-              style: FigmaTextStyles().body2,
-              maxLength: 50,
-              onChanged: (value) => setState(() {}),
-            ),
-          SizedBox(height: 24.h),
-
-          // 7-1. 거래 지역
+          // 7. 거래 지역
           Text(
             '거래 지역',
             style: FigmaTextStyles().body2.copyWith(
@@ -3529,13 +3480,52 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
   /// 이미지 업로드 (Supabase Storage)
   Future<List<String>> _uploadImages() async {
-    // TODO: Supabase Storage에 이미지 업로드 구현
-    // docs/writing/mobile-api-free-sharing.md 참고
     print('📸 이미지 업로드 시작: ${_selectedImages.length}장');
 
-    // 임시로 빈 배열 반환
-    AppToast.show(context, '이미지 업로드 기능 준비 중', type: ToastType.info);
-    return [];
+    if (_selectedImages.isEmpty) {
+      return [];
+    }
+
+    final List<String> imageUrls = [];
+    final supabase = SupabaseService().client;
+
+    try {
+      for (int i = 0; i < _selectedImages.length; i++) {
+        final imageFile = _selectedImages[i];
+
+        // 파일명 생성: timestamp_random.extension
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final random = (DateTime.now().microsecond % 10000).toString().padLeft(4, '0');
+        final extension = imageFile.path.split('.').last;
+        final fileName = '${timestamp}_$random.$extension';
+
+        print('📤 이미지 업로드 중 (${i + 1}/${_selectedImages.length}): $fileName');
+
+        // Supabase Storage에 업로드
+        final bytes = await imageFile.readAsBytes();
+        final path = await supabase.storage
+            .from('community-images')
+            .uploadBinary(
+              fileName,
+              bytes,
+            );
+
+        // Public URL 생성
+        final publicUrl = supabase.storage
+            .from('community-images')
+            .getPublicUrl(fileName);
+
+        imageUrls.add(publicUrl);
+        print('✅ 업로드 완료: $publicUrl');
+      }
+
+      print('📸 이미지 업로드 완료: ${imageUrls.length}장');
+      return imageUrls;
+    } catch (e) {
+      print('❌ 이미지 업로드 실패: $e');
+      AppToast.show(context, '이미지 업로드에 실패했습니다: $e', type: ToastType.error);
+      return [];
+    }
   }
 
   /// 무료나눔/물품판매 제출
@@ -3545,17 +3535,12 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       description: _descriptionController.text.trim(),
       category: _selectedCategory!,
       condition: _selectedCondition!,
-      quantity: _quantity,
       province: _selectedProvince,
       district: _selectedDistrict,
       deliveryAvailable: _deliveryAvailable,
       images: imageUrls,
       isFree: _isFreeSharing,
       price: _isFreeSharing ? null : int.tryParse(_priceController.text),
-      deliveryMethod: _selectedDeliveryMethod,
-      purchaseDate: _purchaseDateController.text.trim().isEmpty
-          ? null
-          : _purchaseDateController.text.trim(),
       contactPhone: _contactController.text.trim(),
       contactEmail: _emailController.text.trim().isEmpty
           ? null
@@ -3572,7 +3557,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       description: _descriptionController.text.trim(),
       category: _selectedCategory ?? 'other',
       requestedItem: _requestedItemController.text.trim(),
-      quantity: _quantity,
+      quantity: int.tryParse(_quantityController.text) ?? 1,
       reason: _reasonController.text.trim(),
       neededDate: _neededDateController.text.trim().isEmpty
           ? null
