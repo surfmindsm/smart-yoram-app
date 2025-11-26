@@ -382,238 +382,225 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-                // 이미지가 있는 경우에만 이미지 슬라이더 표시
-                if (images.isNotEmpty) ...[
-                  Stack(
-                    children: [
-                      SizedBox(
-                        height: 400.h,
-                        child: PageView.builder(
-                          itemCount: images.length,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _currentImageIndex = index;
-                            });
-                          },
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () => _showFullScreenImage(images, index),
-                              child: Image.network(
-                                images[index],
-                                height: 400.h,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    height: 400.h,
-                                    color: NewAppColor.neutral100,
-                                    child: const Icon(
-                                      Icons.image_not_supported,
-                                      color: Colors.grey,
-                                    ),
-                                  );
-                                },
+          // 이미지가 있는 경우에만 이미지 슬라이더 표시
+          if (images.isNotEmpty) ...[
+            Stack(
+              children: [
+                SizedBox(
+                  height: 400.h,
+                  child: PageView.builder(
+                    itemCount: images.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentImageIndex = index;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () => _showFullScreenImage(images, index),
+                        child: Image.network(
+                          images[index],
+                          height: 400.h,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 400.h,
+                              color: NewAppColor.neutral100,
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
                               ),
                             );
                           },
                         ),
-                      ),
-                      // 이미지 카운터
-                      Positioned(
-                        right: 16.w,
-                        bottom: 16.h,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 6.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(20.r),
-                          ),
-                          child: Text(
-                            '${_currentImageIndex + 1} / ${images.length}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14.sp,
-                              fontFamily: 'Pretendard Variable',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ] else ...[
-                  // 이미지가 없는 경우 상단 여백만 추가 (AppBar 높이만큼)
-                  SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
-                ],
-                // 작성자 정보 카드
-                Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.all(16.r),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          // 프로필 이미지
-                          _buildProfileImage(authorProfilePhotoUrl),
-                          SizedBox(width: 12.w),
-                          // 작성자 정보
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  authorName ?? '알 수 없음',
-                                  style: TextStyle(
-                                    color: NewAppColor.neutral900,
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Pretendard Variable',
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  [
-                                    if (churchName != null && churchName.isNotEmpty) churchName,
-                                    if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
-                                  ].join(' · '),
-                                  style: TextStyle(
-                                    color: NewAppColor.neutral600,
-                                    fontSize: 13.sp,
-                                    fontFamily: 'Pretendard Variable',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      // 작성자인 경우 상태 변경 드롭다운 표시
-                      if (_isAuthor()) ...[
-                        SizedBox(height: 12.h),
-                        _buildStatusDropdown(),
-                      ],
-                    ],
+                      );
+                    },
                   ),
                 ),
-                Container(
-                  height: 8.h,
-                  color: NewAppColor.neutral100,
-                ),
-                // 제목 및 본문
-                Container(
-                  color: Colors.white,
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16.r),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 제목
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: NewAppColor.neutral900,
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Pretendard Variable',
-                          height: 1.4,
-                        ),
+                // 이미지 카운터
+                Positioned(
+                  right: 16.w,
+                  bottom: 16.h,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Text(
+                      '${_currentImageIndex + 1} / ${images.length}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                        fontFamily: 'Pretendard Variable',
                       ),
-                      SizedBox(height: 8.h),
-                      // 시간
-                      Text(
-                        date,
-                        style: TextStyle(
-                          color: NewAppColor.neutral600,
-                          fontSize: 13.sp,
-                          fontFamily: 'Pretendard Variable',
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      // 본문
-                      Text(
-                        description ?? '',
-                        style: TextStyle(
-                          color: NewAppColor.neutral900,
-                          fontSize: 16.sp,
-                          fontFamily: 'Pretendard Variable',
-                          height: 1.6,
-                        ),
-                      ),
-                      SizedBox(height: 80.h),
-                    ],
-                  ),
-                ),
-                // 연락처 정보 (물품 나눔/판매, 물품 요청 게시글)
-                if (_post is SharingItem || _post is RequestItem) ...[
-                  Container(
-                    height: 8.h,
-                    color: NewAppColor.neutral100,
-                  ),
-                  Container(
-                    color: Colors.white,
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16.r),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '연락처 정보',
-                          style: TextStyle(
-                            color: NewAppColor.neutral900,
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Pretendard Variable',
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
-                        // 전화번호
-                        if (_post is SharingItem && (_post as SharingItem).contactPhone.isNotEmpty)
-                          _buildContactItem(
-                            icon: Icons.phone_outlined,
-                            label: '전화번호',
-                            value: (_post as SharingItem).contactPhone,
-                            onTap: () => _showContactDialog((_post as SharingItem).contactPhone),
-                          ),
-                        if (_post is RequestItem && (_post as RequestItem).contactPhone.isNotEmpty)
-                          _buildContactItem(
-                            icon: Icons.phone_outlined,
-                            label: '전화번호',
-                            value: (_post as RequestItem).contactPhone,
-                            onTap: () => _showContactDialog((_post as RequestItem).contactPhone),
-                          ),
-                        // 이메일
-                        if (_post is SharingItem &&
-                            (_post as SharingItem).contactEmail != null &&
-                            (_post as SharingItem).contactEmail!.isNotEmpty) ...[
-                          SizedBox(height: 12.h),
-                          _buildContactItem(
-                            icon: Icons.email_outlined,
-                            label: '이메일',
-                            value: (_post as SharingItem).contactEmail!,
-                            onTap: () {
-                              // TODO: 이메일 보내기 기능
-                            },
-                          ),
-                        ],
-                        if (_post is RequestItem &&
-                            (_post as RequestItem).contactEmail != null &&
-                            (_post as RequestItem).contactEmail!.isNotEmpty) ...[
-                          SizedBox(height: 12.h),
-                          _buildContactItem(
-                            icon: Icons.email_outlined,
-                            label: '이메일',
-                            value: (_post as RequestItem).contactEmail!,
-                            onTap: () {
-                              // TODO: 이메일 보내기 기능
-                            },
-                          ),
-                        ],
-                      ],
                     ),
                   ),
+                ),
+              ],
+            ),
+          ] else ...[
+            // 이미지가 없는 경우 상단 여백만 추가 (AppBar 높이만큼)
+            SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
+          ],
+
+          // === 무료나눔/물품판매 전용 레이아웃 ===
+          if (_post is SharingItem) ...[
+            _buildSharingLayout(_post as SharingItem, date, authorName, authorProfilePhotoUrl, churchName, churchLocation, description),
+          ]
+          // === 기타 게시글 기본 레이아웃 ===
+          else ...[
+            // 작성자 정보 카드
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.all(16.r),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      // 프로필 이미지
+                      _buildProfileImage(authorProfilePhotoUrl),
+                      SizedBox(width: 12.w),
+                      // 작성자 정보
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              authorName ?? '알 수 없음',
+                              style: TextStyle(
+                                color: NewAppColor.neutral900,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Pretendard Variable',
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              [
+                                if (churchName != null && churchName.isNotEmpty) churchName,
+                                if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
+                              ].join(' · '),
+                              style: TextStyle(
+                                color: NewAppColor.neutral600,
+                                fontSize: 13.sp,
+                                fontFamily: 'Pretendard Variable',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  // 작성자인 경우 상태 변경 드롭다운 표시
+                  if (_isAuthor()) ...[
+                    SizedBox(height: 12.h),
+                    _buildStatusDropdown(),
+                  ],
                 ],
+              ),
+            ),
+            Container(
+              height: 8.h,
+              color: NewAppColor.neutral100,
+            ),
+            // 제목 및 본문
+            Container(
+              color: Colors.white,
+              width: double.infinity,
+              padding: EdgeInsets.all(16.r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 제목
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: NewAppColor.neutral900,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Pretendard Variable',
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  // 시간
+                  Text(
+                    date,
+                    style: TextStyle(
+                      color: NewAppColor.neutral600,
+                      fontSize: 13.sp,
+                      fontFamily: 'Pretendard Variable',
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  // 본문
+                  Text(
+                    description ?? '',
+                    style: TextStyle(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontFamily: 'Pretendard Variable',
+                      height: 1.6,
+                    ),
+                  ),
+                  SizedBox(height: 80.h),
+                ],
+              ),
+            ),
+            // 연락처 정보 (물품 요청 게시글)
+            if (_post is RequestItem) ...[
+              Container(
+                height: 8.h,
+                color: NewAppColor.neutral100,
+              ),
+              Container(
+                color: Colors.white,
+                width: double.infinity,
+                padding: EdgeInsets.all(16.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '연락처 정보',
+                      style: TextStyle(
+                        color: NewAppColor.neutral900,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Pretendard Variable',
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    // 전화번호
+                    if ((_post as RequestItem).contactPhone.isNotEmpty)
+                      _buildContactItem(
+                        icon: Icons.phone_outlined,
+                        label: '전화번호',
+                        value: (_post as RequestItem).contactPhone,
+                        onTap: () => _showContactDialog((_post as RequestItem).contactPhone),
+                      ),
+                    // 이메일
+                    if ((_post as RequestItem).contactEmail != null &&
+                        (_post as RequestItem).contactEmail!.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _buildContactItem(
+                        icon: Icons.email_outlined,
+                        label: '이메일',
+                        value: (_post as RequestItem).contactEmail!,
+                        onTap: () {
+                          // TODO: 이메일 보내기 기능
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
@@ -1340,6 +1327,337 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         }
       }
     }
+  }
+
+  /// 무료나눔/물품판매 전용 레이아웃
+  Widget _buildSharingLayout(
+    SharingItem item,
+    String date,
+    String? authorName,
+    String? authorProfilePhotoUrl,
+    String? churchName,
+    String? churchLocation,
+    String? description,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // === 1. 제목 + 가격 섹션 ===
+        Container(
+          color: Colors.white,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 제목
+              Text(
+                item.title,
+                style: FigmaTextStyles().header1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+              ),
+              SizedBox(height: 12.h),
+
+              // 가격 + 상태 배지
+              Row(
+                children: [
+                  // 가격
+                  Text(
+                    item.formattedPrice,
+                    style: FigmaTextStyles().header2.copyWith(
+                          color: item.isFree ? NewAppColor.success600 : NewAppColor.primary600,
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  SizedBox(width: 12.w),
+                  // 상태 배지
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(item.status),
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: Text(
+                      item.statusDisplayName,
+                      style: FigmaTextStyles().caption2.copyWith(
+                            color: Colors.white,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 8.h),
+
+              // 작성 시간 + 조회수
+              Row(
+                children: [
+                  Text(
+                    date,
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral500,
+                          fontSize: 13.sp,
+                        ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '·',
+                    style: TextStyle(color: NewAppColor.neutral400),
+                  ),
+                  SizedBox(width: 8.w),
+                  Icon(Icons.visibility_outlined, size: 14.sp, color: NewAppColor.neutral500),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '${item.viewCount}',
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral500,
+                          fontSize: 13.sp,
+                        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 2. 상품 정보 카드 ===
+        Container(
+          color: Colors.white,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '상품 정보',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+
+              // 상품 정보 그리드
+              Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral100,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(label: '카테고리', value: item.category),
+                    SizedBox(height: 12.h),
+                    _buildInfoRow(label: '상태', value: item.condition),
+                    SizedBox(height: 12.h),
+                    _buildInfoRow(label: '지역', value: item.displayLocation),
+                    SizedBox(height: 12.h),
+                    _buildInfoRow(
+                      label: '택배',
+                      value: item.deliveryAvailable ? '가능' : '불가능',
+                      valueColor: item.deliveryAvailable ? NewAppColor.success600 : NewAppColor.neutral600,
+                      valueWeight: FontWeight.w600,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 3. 작성자 정보 ===
+        Container(
+          color: Colors.white,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '판매자 정보',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  _buildProfileImage(authorProfilePhotoUrl),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          authorName ?? '알 수 없음',
+                          style: FigmaTextStyles().body1.copyWith(
+                                color: NewAppColor.neutral900,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          [
+                            if (churchName != null && churchName.isNotEmpty) churchName,
+                            if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
+                          ].join(' · '),
+                          style: FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral600,
+                                fontSize: 13.sp,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // 작성자인 경우 상태 변경 드롭다운
+              if (_isAuthor()) ...[
+                SizedBox(height: 16.h),
+                _buildStatusDropdown(),
+              ],
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 4. 상품 설명 ===
+        Container(
+          color: Colors.white,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '상품 설명',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                description ?? '상품 설명이 없습니다.',
+                style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral800,
+                      fontSize: 15.sp,
+                      height: 1.6,
+                    ),
+              ),
+              SizedBox(height: 80.h),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 5. 연락처 정보 ===
+        Container(
+          color: Colors.white,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '연락처 정보',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              // 전화번호
+              if (item.contactPhone.isNotEmpty)
+                _buildContactItem(
+                  icon: Icons.phone_outlined,
+                  label: '전화번호',
+                  value: item.contactPhone,
+                  onTap: () => _showContactDialog(item.contactPhone),
+                ),
+              // 이메일
+              if (item.contactEmail != null && item.contactEmail!.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                _buildContactItem(
+                  icon: Icons.email_outlined,
+                  label: '이메일',
+                  value: item.contactEmail!,
+                  onTap: () {
+                    // TODO: 이메일 보내기 기능
+                  },
+                ),
+              ],
+              SizedBox(height: 20.h),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 상태에 따른 배지 색상
+  Color _getStatusColor(String status) {
+    final statusLower = status.toLowerCase();
+    switch (statusLower) {
+      case 'active':
+        return NewAppColor.success600;
+      case 'ing':
+        return NewAppColor.warning600;
+      case 'completed':
+      case 'sold':
+        return NewAppColor.neutral500;
+      default:
+        return NewAppColor.primary600;
+    }
+  }
+
+  /// 상품 정보 행
+  Widget _buildInfoRow({
+    required String label,
+    required String value,
+    Color? valueColor,
+    FontWeight? valueWeight,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral600,
+              ),
+        ),
+        Text(
+          value,
+          style: FigmaTextStyles().body2.copyWith(
+                color: valueColor ?? NewAppColor.neutral900,
+                fontWeight: valueWeight ?? FontWeight.w500,
+              ),
+        ),
+      ],
+    );
   }
 
 }
