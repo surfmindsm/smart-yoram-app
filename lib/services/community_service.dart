@@ -236,6 +236,7 @@ class CommunityService {
     required List<String> images,
     required bool isFree,
     int? price,
+    DateTime? purchaseDate,
     required String contactPhone,
     String? contactEmail,
   }) async {
@@ -264,6 +265,7 @@ class CommunityService {
         'images': images,
         'is_free': isFree,
         'price': price,
+        'purchase_date': purchaseDate?.toIso8601String().split('T')[0],
         'contact_phone': contactPhone,
         'contact_email': contactEmail,
         'church_id': currentUser.churchId,

@@ -1461,6 +1461,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     SizedBox(height: 12.h),
                     _buildInfoRow(label: '상태', value: item.condition),
                     SizedBox(height: 12.h),
+                    _buildInfoRow(label: '구매 시기', value: item.formattedPurchaseDate),
+                    SizedBox(height: 12.h),
                     _buildInfoRow(label: '지역', value: item.displayLocation),
                     SizedBox(height: 12.h),
                     _buildInfoRow(

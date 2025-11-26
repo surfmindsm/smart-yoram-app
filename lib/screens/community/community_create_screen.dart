@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
@@ -11,6 +13,7 @@ import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:smart_yoram_app/components/index.dart';
 import 'package:smart_yoram_app/utils/location_data.dart';
+import 'package:flutter/services.dart';
 
 /// 커뮤니티 게시글 작성/수정 화면 (공통)
 /// docs/writing/ API 명세서 기반 구현
@@ -52,6 +55,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   String? _selectedProvince; // 도/시
   String? _selectedDistrict; // 시/군/구
   bool _deliveryAvailable = false; // 택배 가능 여부
+  DateTime? _purchaseDate; // 구매 날짜
 
   // 물품요청 전용
   final TextEditingController _requestedItemController = TextEditingController();
@@ -775,6 +779,69 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 ),
               ),
             ],
+          ),
+          SizedBox(height: 16.h),
+
+          // 구매 시기 (선택)
+          Text(
+            '구매 시기 (선택)',
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          InkWell(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _purchaseDate ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: ColorScheme.light(
+                        primary: NewAppColor.primary600,
+                        onPrimary: Colors.white,
+                        onSurface: NewAppColor.neutral900,
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (date != null) {
+                setState(() => _purchaseDate = date);
+              }
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              decoration: BoxDecoration(
+                color: NewAppColor.neutral100,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _purchaseDate == null
+                        ? '구매한 시기를 선택해주세요'
+                        : '${_purchaseDate!.year}년 ${_purchaseDate!.month}월',
+                    style: FigmaTextStyles().body2.copyWith(
+                      color: _purchaseDate == null
+                          ? NewAppColor.neutral400
+                          : NewAppColor.neutral900,
+                    ),
+                  ),
+                  Icon(
+                    Icons.calendar_today,
+                    size: 20.sp,
+                    color: NewAppColor.neutral600,
+                  ),
+                ],
+              ),
+            ),
           ),
           SizedBox(height: 24.h),
 
@@ -3478,6 +3545,68 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     }
   }
 
+  /// 이미지 압축 (최대 1MB로)
+  Future<Uint8List> _compressImage(File imageFile) async {
+    // 원본 이미지 읽기
+    final bytes = await imageFile.readAsBytes();
+    final originalSize = bytes.length;
+
+    print('📊 원본 이미지 크기: ${(originalSize / 1024 / 1024).toStringAsFixed(2)}MB');
+
+    // 1MB 이하면 압축하지 않음
+    if (originalSize <= 1024 * 1024) {
+      print('✅ 압축 불필요 (1MB 이하)');
+      return bytes;
+    }
+
+    // 이미지 디코딩
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final image = frame.image;
+
+    // 이미지 크기 계산 (최대 1920px)
+    int targetWidth = image.width;
+    int targetHeight = image.height;
+    const maxSize = 1920;
+
+    if (image.width > maxSize || image.height > maxSize) {
+      if (image.width > image.height) {
+        targetWidth = maxSize;
+        targetHeight = (image.height * maxSize / image.width).round();
+      } else {
+        targetHeight = maxSize;
+        targetWidth = (image.width * maxSize / image.height).round();
+      }
+      print('📐 이미지 리사이즈: ${image.width}x${image.height} → ${targetWidth}x${targetHeight}');
+    }
+
+    // 이미지 리사이즈
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final paint = Paint()..filterQuality = FilterQuality.high;
+
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      Rect.fromLTWH(0, 0, targetWidth.toDouble(), targetHeight.toDouble()),
+      paint,
+    );
+
+    final picture = recorder.endRecording();
+    final resizedImage = await picture.toImage(targetWidth, targetHeight);
+
+    // JPEG로 인코딩 (품질 85%)
+    final byteData = await resizedImage.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+    final compressedBytes = byteData!.buffer.asUint8List();
+
+    final compressedSize = compressedBytes.length;
+    print('📊 압축 후 크기: ${(compressedSize / 1024 / 1024).toStringAsFixed(2)}MB (${((1 - compressedSize / originalSize) * 100).toStringAsFixed(1)}% 감소)');
+
+    return compressedBytes;
+  }
+
   /// 이미지 업로드 (Supabase Storage)
   Future<List<String>> _uploadImages() async {
     print('📸 이미지 업로드 시작: ${_selectedImages.length}장');
@@ -3491,23 +3620,25 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
     try {
       for (int i = 0; i < _selectedImages.length; i++) {
-        final imageFile = _selectedImages[i];
+        final xFile = _selectedImages[i];
+        final imageFile = File(xFile.path);
 
-        // 파일명 생성: timestamp_random.extension
+        // 파일명 생성: timestamp_random.png (압축 후 PNG)
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final random = (DateTime.now().microsecond % 10000).toString().padLeft(4, '0');
-        final extension = imageFile.path.split('.').last;
-        final fileName = '${timestamp}_$random.$extension';
+        final fileName = '${timestamp}_$random.png';
 
         print('📤 이미지 업로드 중 (${i + 1}/${_selectedImages.length}): $fileName');
 
+        // 이미지 압축
+        final compressedBytes = await _compressImage(imageFile);
+
         // Supabase Storage에 업로드
-        final bytes = await imageFile.readAsBytes();
         final path = await supabase.storage
             .from('community-images')
             .uploadBinary(
               fileName,
-              bytes,
+              compressedBytes,
             );
 
         // Public URL 생성
@@ -3541,6 +3672,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       images: imageUrls,
       isFree: _isFreeSharing,
       price: _isFreeSharing ? null : int.tryParse(_priceController.text),
+      purchaseDate: _purchaseDate,
       contactPhone: _contactController.text.trim(),
       contactEmail: _emailController.text.trim().isEmpty
           ? null

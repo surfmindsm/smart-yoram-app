@@ -133,6 +133,7 @@ class SharingItem extends CommunityBasePost {
   final String? contactEmail;
   final bool isFree; // true: 무료나눔, false: 물품판매
   final int? price; // 판매가격 (isFree=false일 때)
+  final DateTime? purchaseDate; // 구매 날짜 (물품 구입 시기)
 
   SharingItem({
     required super.id,
@@ -161,6 +162,7 @@ class SharingItem extends CommunityBasePost {
     this.contactEmail,
     this.isFree = true,
     this.price,
+    this.purchaseDate,
   });
 
   factory SharingItem.fromJson(Map<String, dynamic> json) {
@@ -232,6 +234,9 @@ class SharingItem extends CommunityBasePost {
       price: json['price'] != null
           ? (json['price'] is int ? json['price'] : (json['price'] is String ? int.tryParse(json['price'].replaceAll('.00', '')) : (json['price'] as double).toInt()))
           : null,
+      purchaseDate: json['purchase_date'] != null
+          ? DateTime.parse(json['purchase_date'])
+          : null,
     );
   }
 
@@ -248,6 +253,7 @@ class SharingItem extends CommunityBasePost {
       'location': location,
       'is_free': isFree,
       'price': price,
+      'purchase_date': purchaseDate?.toIso8601String().split('T')[0],
     };
   }
 
@@ -304,6 +310,12 @@ class SharingItem extends CommunityBasePost {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]},',
     )}원';
+  }
+
+  /// 구매 날짜 포맷 (예: 2024년 1월)
+  String get formattedPurchaseDate {
+    if (purchaseDate == null) return '정보 없음';
+    return '${purchaseDate!.year}년 ${purchaseDate!.month}월';
   }
 }
 
