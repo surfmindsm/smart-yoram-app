@@ -271,7 +271,7 @@ class CommunityService {
         'church_id': currentUser.churchId,
         'author_id': currentUser.id,
         'status': 'active',
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       final response = await _supabaseService.client

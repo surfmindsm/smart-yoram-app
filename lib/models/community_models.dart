@@ -103,15 +103,19 @@ abstract class CommunityBasePost {
 
   /// 날짜 포맷 (상대 시간)
   String get formattedDate {
-    final now = DateTime.now();
-    final difference = now.difference(createdAt);
+    // UTC 기준으로 계산 (시간대 혼동 방지)
+    final nowUtc = DateTime.now().toUtc();
+    final createdAtUtc = createdAt.toUtc();
+    final difference = nowUtc.difference(createdAtUtc);
 
     if (difference.inMinutes < 1) return '방금 전';
     if (difference.inHours < 1) return '${difference.inMinutes}분 전';
     if (difference.inDays < 1) return '${difference.inHours}시간 전';
     if (difference.inDays < 7) return '${difference.inDays}일 전';
 
-    return '${createdAt.year}.${createdAt.month.toString().padLeft(2, '0')}.${createdAt.day.toString().padLeft(2, '0')}';
+    // 날짜 표시는 로컬 시간으로
+    final localCreatedAt = createdAt.toLocal();
+    return '${localCreatedAt.year}.${localCreatedAt.month.toString().padLeft(2, '0')}.${localCreatedAt.day.toString().padLeft(2, '0')}';
   }
 }
 
@@ -214,11 +218,22 @@ class SharingItem extends CommunityBasePost {
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
-      createdAt: json['createdAt'] != null || json['created_at'] != null
-          ? DateTime.parse(json['createdAt'] ?? json['created_at'])
-          : DateTime.now(),
+      createdAt: () {
+        final createdAtStr = json['createdAt'] ?? json['created_at'];
+        print('🕐 SHARING_ITEM: created_at 원본 - $createdAtStr');
+        if (createdAtStr != null) {
+          final parsed = DateTime.parse(createdAtStr).toUtc();
+          print('🕐 SHARING_ITEM: 파싱 후 UTC - $parsed');
+          final nowUtc = DateTime.now().toUtc();
+          final diff = nowUtc.difference(parsed);
+          print('🕐 SHARING_ITEM: 현재 시간 UTC - $nowUtc');
+          print('🕐 SHARING_ITEM: 시간 차이 (UTC 기준) - ${diff.inDays}일 ${diff.inHours % 24}시간 ${diff.inMinutes % 60}분');
+          return parsed;
+        }
+        return DateTime.now().toUtc();
+      }(),
       updatedAt: json['updatedAt'] != null || json['updated_at'] != null
-          ? DateTime.parse(json['updatedAt'] ?? json['updated_at'])
+          ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,
       category: json['category'] ?? '',
       condition: json['condition'] ?? '',
@@ -404,10 +419,10 @@ class RequestItem extends CommunityBasePost {
       likes: json['likes'] ?? 0,
       comments: json['comments'],
       createdAt: json['createdAt'] != null || json['created_at'] != null
-          ? DateTime.parse(json['createdAt'] ?? json['created_at'])
-          : DateTime.now(),
+          ? DateTime.parse(json['createdAt'] ?? json['created_at']).toUtc()
+          : DateTime.now().toUtc(),
       updatedAt: json['updatedAt'] != null || json['updated_at'] != null
-          ? DateTime.parse(json['updatedAt'] ?? json['updated_at'])
+          ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,
       category: json['category'] ?? '',
       requestedItem: json['requestedItem'] ?? json['requested_item'],
@@ -551,10 +566,10 @@ class JobPost extends CommunityBasePost {
       likes: json['likes'] ?? 0,
       comments: json['comments'],
       createdAt: json['createdAt'] != null || json['created_at'] != null
-          ? DateTime.parse(json['createdAt'] ?? json['created_at'])
-          : DateTime.now(),
+          ? DateTime.parse(json['createdAt'] ?? json['created_at']).toUtc()
+          : DateTime.now().toUtc(),
       updatedAt: json['updatedAt'] != null || json['updated_at'] != null
-          ? DateTime.parse(json['updatedAt'] ?? json['updated_at'])
+          ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,
       company: json['company'],
       churchIntro: json['churchIntro'] ?? json['church_intro'] ?? '',
@@ -636,10 +651,10 @@ class MusicTeamRecruitment extends CommunityBasePost {
       likes: json['likes'] ?? 0,
       comments: json['comments'],
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
+          ? DateTime.parse(json['created_at']).toUtc()
+          : DateTime.now().toUtc(),
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
+          ? DateTime.parse(json['updated_at']).toUtc()
           : null,
       recruitmentType: json['recruitment_type'] ?? '',
       worshipType: json['worship_type'],
@@ -721,10 +736,10 @@ class MusicTeamSeeker extends CommunityBasePost {
       likes: json['likes'] ?? 0,
       comments: json['comments'],
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
+          ? DateTime.parse(json['created_at']).toUtc()
+          : DateTime.now().toUtc(),
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
+          ? DateTime.parse(json['updated_at']).toUtc()
           : null,
       name: json['name'] ?? '',
       teamName: json['team_name'],
@@ -811,10 +826,10 @@ class ChurchNews extends CommunityBasePost {
       likes: json['likes'] ?? 0,
       comments: json['comments'],
       createdAt: json['createdAt'] != null || json['created_at'] != null
-          ? DateTime.parse(json['createdAt'] ?? json['created_at'])
-          : DateTime.now(),
+          ? DateTime.parse(json['createdAt'] ?? json['created_at']).toUtc()
+          : DateTime.now().toUtc(),
       updatedAt: json['updatedAt'] != null || json['updated_at'] != null
-          ? DateTime.parse(json['updatedAt'] ?? json['updated_at'])
+          ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,
       category: json['category'] ?? '',
       content: json['content'],
