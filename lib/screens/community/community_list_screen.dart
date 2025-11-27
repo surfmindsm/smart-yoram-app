@@ -59,6 +59,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   bool _hideCompleted = false; // 판매/나눔/요청 완료 제거 필터
   String _employmentTypeFilter = 'all'; // 고용형태 필터: all(전체), full-time(정규직), part-time(시간제), volunteer(자원봉사)
   String _teamTypeFilter = 'all'; // 팀형태 필터: all(전체), praise-team(찬양팀), worship-team(워십팀), band(밴드)
+  String _instrumentFilter = 'all'; // 악기/파트 필터 (행사팀 지원): all(전체), solo(솔로), praise-team(찬양팀), etc.
+  String? _selectedDayFilter; // 활동 가능 요일 필터 (행사팀 지원)
+  String _priorityFilter = 'all'; // 우선순위 필터 (교회소식): all(전체), urgent(긴급), important(중요), normal(일반)
 
   @override
   void initState() {
@@ -313,6 +316,79 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       }).toList();
     }
 
+    // 악기/파트 필터 (행사팀 지원)
+    if (_instrumentFilter != 'all' && widget.type == CommunityListType.musicTeamSeeking) {
+      filtered = filtered.where((item) {
+        if (item is MusicTeamSeeker) {
+          return item.instrument == _instrumentFilter;
+        }
+        return false;
+      }).toList();
+    }
+
+    // 활동 가능 요일 필터 (행사팀 지원)
+    if (_selectedDayFilter != null && widget.type == CommunityListType.musicTeamSeeking) {
+      filtered = filtered.where((item) {
+        if (item is MusicTeamSeeker) {
+          return item.availableDays.contains(_selectedDayFilter);
+        }
+        return false;
+      }).toList();
+    }
+
+    // 행사팀 지원 완료 제거 필터
+    if (_hideCompleted && widget.type == CommunityListType.musicTeamSeeking) {
+      filtered = filtered.where((item) {
+        if (item is MusicTeamSeeker) {
+          final status = item.status.toLowerCase();
+          return status != 'completed' && status != 'closed';
+        }
+        return true;
+      }).toList();
+    }
+
+    // 행사팀 지원 지역 필터 (활동 가능 지역 배열에서 확인)
+    if (_selectedCity != null && widget.type == CommunityListType.musicTeamSeeking) {
+      filtered = filtered.where((item) {
+        if (item is MusicTeamSeeker) {
+          // preferredLocation 배열에 선택된 도시가 포함되어 있는지 확인
+          return item.preferredLocation.any((loc) => loc.contains(_selectedCity!));
+        }
+        return false;
+      }).toList();
+    }
+
+    // 우선순위 필터 (교회 소식)
+    if (_priorityFilter != 'all' && widget.type == CommunityListType.churchNews) {
+      filtered = filtered.where((item) {
+        if (item is ChurchNews) {
+          return item.priority?.toLowerCase() == _priorityFilter;
+        }
+        return false;
+      }).toList();
+    }
+
+    // 카테고리 필터 (교회 소식)
+    if (_selectedCategory != null && widget.type == CommunityListType.churchNews) {
+      filtered = filtered.where((item) {
+        if (item is ChurchNews) {
+          return item.category == _selectedCategory;
+        }
+        return false;
+      }).toList();
+    }
+
+    // 종료 제거 필터 (교회 소식)
+    if (_hideCompleted && widget.type == CommunityListType.churchNews) {
+      filtered = filtered.where((item) {
+        if (item is ChurchNews) {
+          final status = item.status.toLowerCase();
+          return status != 'completed' && status != 'closed';
+        }
+        return true;
+      }).toList();
+    }
+
     _filteredItemsCache = filtered;
   }
 
@@ -323,8 +399,10 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -334,12 +412,14 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               ),
         ),
         actions: [
-          // 필터 버튼 (무료나눔/물품판매/물품요청/사역자모집/행사팀모집)
+          // 필터 버튼 (무료나눔/물품판매/물품요청/사역자모집/행사팀모집/행사팀지원/교회소식)
           if (widget.type == CommunityListType.freeSharing ||
               widget.type == CommunityListType.itemSale ||
               widget.type == CommunityListType.itemRequest ||
               widget.type == CommunityListType.jobPosting ||
-              widget.type == CommunityListType.musicTeamRecruit)
+              widget.type == CommunityListType.musicTeamRecruit ||
+              widget.type == CommunityListType.musicTeamSeeking ||
+              widget.type == CommunityListType.churchNews)
             IconButton(
               icon: const Icon(Icons.filter_list, color: Colors.black),
               onPressed: _showAdvancedFilterBottomSheet,
@@ -371,6 +451,12 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           // 빠른 필터 (행사팀 모집)
           if (widget.type == CommunityListType.musicTeamRecruit)
             _buildQuickMusicTeamFilters(),
+          // 빠른 필터 (행사팀 지원)
+          if (widget.type == CommunityListType.musicTeamSeeking)
+            _buildQuickMusicTeamSeekingFilters(),
+          // 빠른 필터 (교회 소식)
+          if (widget.type == CommunityListType.churchNews)
+            _buildQuickChurchNewsFilters(),
           // 목록
           Expanded(
             child: _isLoading
@@ -1357,6 +1443,201 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     );
   }
 
+  /// 빠른 필터 (행사팀 지원)
+  Widget _buildQuickMusicTeamSeekingFilters() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(
+          bottom: BorderSide(
+            color: NewAppColor.neutral200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 악기/파트 필터 그룹: 전체, 솔로, 찬양팀, 워십팀, 밴드
+              _buildSmallFilterChip(
+                label: '전체',
+                isSelected: _instrumentFilter == 'all',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'all';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '솔로',
+                isSelected: _instrumentFilter == 'solo',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'solo';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '찬양팀',
+                isSelected: _instrumentFilter == 'praise-team',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'praise-team';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '워십팀',
+                isSelected: _instrumentFilter == 'worship-team',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'worship-team';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '밴드',
+                isSelected: _instrumentFilter == 'band',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'band';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 8.w),
+
+              // 구분선
+              Container(
+                width: 1,
+                height: 20.h,
+                color: NewAppColor.neutral300,
+              ),
+              SizedBox(width: 8.w),
+
+              // 완료 제거 필터
+              _buildSmallFilterChip(
+                label: '완료제거',
+                isSelected: _hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = !_hideCompleted;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 빠른 필터 (교회 소식)
+  Widget _buildQuickChurchNewsFilters() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(
+          bottom: BorderSide(
+            color: NewAppColor.neutral200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 우선순위 필터 그룹: 전체, 긴급, 중요, 일반
+              _buildSmallFilterChip(
+                label: '전체',
+                isSelected: _priorityFilter == 'all',
+                onTap: () {
+                  setState(() {
+                    _priorityFilter = 'all';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '긴급',
+                isSelected: _priorityFilter == 'urgent',
+                onTap: () {
+                  setState(() {
+                    _priorityFilter = 'urgent';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '중요',
+                isSelected: _priorityFilter == 'important',
+                onTap: () {
+                  setState(() {
+                    _priorityFilter = 'important';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '일반',
+                isSelected: _priorityFilter == 'normal',
+                onTap: () {
+                  setState(() {
+                    _priorityFilter = 'normal';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 8.w),
+
+              // 구분선
+              Container(
+                width: 1,
+                height: 20.h,
+                color: NewAppColor.neutral300,
+              ),
+              SizedBox(width: 8.w),
+
+              // 종료 제거 필터
+              _buildSmallFilterChip(
+                label: '종료제거',
+                isSelected: _hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = !_hideCompleted;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// 상태 칩을 표시할지 여부 (예약중, 완료만)
   bool _shouldShowStatus(String status) {
     final statusLower = status.toLowerCase();
@@ -1483,6 +1764,19 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
         '기타',
       ];
       categoryLabel = '예배 형태';
+    } else if (widget.listType == CommunityListType.churchNews) {
+      // 교회 소식: 소식 카테고리
+      categoryOptions = [
+        '예배',
+        '모임',
+        '행사',
+        '공지',
+        '교육',
+        '봉사',
+        '선교',
+        '기타',
+      ];
+      categoryLabel = '카테고리';
     } else {
       // 물품 판매/요청: 물품 카테고리
       categoryOptions = [

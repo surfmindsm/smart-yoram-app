@@ -1265,18 +1265,16 @@ class CommunityService {
   /// 행사팀 지원 글 작성
   Future<ApiResponse<MusicTeamSeeker>> createMusicTeamSeeker({
     required String title,
-    required String description,
-    required String name,
     required String teamName,
     required String instrument,
-    required List<String> instruments,
     required String experience,
     required String portfolio,
     String? portfolioFile,
     required List<String> preferredLocation,
     required List<String> availableDays,
     required String availableTime,
-    required String introduction,
+    required String contactPhone,
+    String? contactEmail,
   }) async {
     try {
       final userResponse = await _authService.getCurrentUser();
@@ -1292,22 +1290,40 @@ class CommunityService {
 
       print('📝 COMMUNITY_SERVICE: 행사팀 지원 작성 - $title');
 
+      // author_name 필수 (NOT NULL 제약조건)
+      String authorName = currentUser.fullName ?? '알 수 없음';
+
+      // church_name 가져오기
+      String? churchName;
+      if (currentUser.churchId != null) {
+        try {
+          final churchResponse = await _supabaseService.client
+              .from('churches')
+              .select('name')
+              .eq('id', currentUser.churchId!)
+              .single();
+          churchName = churchResponse['name'] as String?;
+        } catch (e) {
+          print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
+        }
+      }
+
       final data = {
         'title': title,
-        'description': description,
-        'name': name,
         'team_name': teamName,
         'instrument': instrument,
-        'instruments': instruments,
-        'experience': experience,
-        'portfolio': portfolio,
+        'experience': experience.isNotEmpty ? experience : null,
+        'portfolio': portfolio.isNotEmpty ? portfolio : null,
         'portfolio_file': portfolioFile,
-        'preferred_location': preferredLocation,
-        'available_days': availableDays,
-        'available_time': availableTime,
-        'introduction': introduction,
-        'church_id': currentUser.churchId,
+        'preferred_location': preferredLocation.isNotEmpty ? preferredLocation : null,
+        'available_days': availableDays.isNotEmpty ? availableDays : null,
+        'available_time': availableTime.isNotEmpty ? availableTime : null,
+        'contact_phone': contactPhone,
+        'contact_email': contactEmail,
         'author_id': currentUser.id,
+        'author_name': authorName, // NOT NULL 필드
+        'church_id': currentUser.churchId,
+        'church_name': churchName,
         'status': 'active',
         'created_at': DateTime.now().toIso8601String(),
       };
@@ -1364,9 +1380,16 @@ class CommunityService {
 
       print('📝 COMMUNITY_SERVICE: 교회 소식 작성 - $title');
 
+      // 🔍 디버깅: JWT 토큰 확인
+      final session = _supabaseService.currentSession;
+      final authUser = _supabaseService.currentUser;
+      print('🔐 JWT 토큰: ${session?.accessToken?.substring(0, 50) ?? "없음"}...');
+      print('🔐 Auth User ID: ${authUser?.id ?? "없음"}');
+      print('🔐 Session 유효: ${session != null}');
+
       final data = {
         'title': title,
-        'description': description,
+        'content': description,  // church_news 테이블은 content 컬럼 사용
         'category': category,
         'priority': priority,
         'event_date': eventDate,

@@ -11,6 +11,7 @@ import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/supabase_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:smart_yoram_app/components/index.dart';
 import 'package:smart_yoram_app/utils/location_data.dart';
 import 'package:flutter/services.dart';
@@ -349,6 +350,297 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     setState(() {});
   }
 
+  /// 날짜 선택 다이얼로그 테마 builder
+  Widget _buildDatePickerTheme(BuildContext context, Widget? child) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: ColorScheme.light(
+          primary: NewAppColor.primary600,
+          onPrimary: Colors.white,
+          onSurface: NewAppColor.neutral900,
+          surface: Colors.white,
+        ),
+        dialogBackgroundColor: Colors.white,
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: NewAppColor.primary600,
+            textStyle: FigmaTextStyles().button2,
+          ),
+        ),
+        dialogTheme: DialogThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          elevation: 4,
+        ),
+        datePickerTheme: DatePickerThemeData(
+          backgroundColor: Colors.white,
+          headerBackgroundColor: NewAppColor.primary600,
+          headerForegroundColor: Colors.white,
+          dayStyle: FigmaTextStyles().body2,
+          weekdayStyle: FigmaTextStyles().caption2.copyWith(
+            color: NewAppColor.neutral600,
+          ),
+          yearStyle: FigmaTextStyles().body2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return NewAppColor.primary600;
+            }
+            return null;
+          }),
+          dayForegroundColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return Colors.white;
+            }
+            if (states.contains(MaterialState.disabled)) {
+              return NewAppColor.neutral300;
+            }
+            return NewAppColor.neutral900;
+          }),
+          todayBorder: BorderSide(
+            color: NewAppColor.primary600,
+            width: 1.5,
+          ),
+          todayForegroundColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return Colors.white;
+            }
+            return NewAppColor.primary600;
+          }),
+        ),
+      ),
+      child: child!,
+    );
+  }
+
+  /// 타입별 작성 가이드 보여주기
+  void _showGuide() {
+    // 실제 타입 결정
+    CommunityListType actualType = widget.type;
+
+    if (widget.type == CommunityListType.myPosts ||
+        widget.type == CommunityListType.myFavorites) {
+      if (widget.existingPost is Map<String, dynamic>) {
+        final post = widget.existingPost as Map<String, dynamic>;
+        final tableName = post['tableName'] as String? ?? post['table'] as String?;
+        final isFree = post['is_free'] == true;
+
+        if (tableName == 'community_sharing') {
+          actualType = isFree
+              ? CommunityListType.freeSharing
+              : CommunityListType.itemSale;
+        } else if (tableName == 'community_requests') {
+          actualType = CommunityListType.itemRequest;
+        } else if (tableName == 'job_posts') {
+          actualType = CommunityListType.jobPosting;
+        } else if (tableName == 'community_music_teams') {
+          actualType = CommunityListType.musicTeamRecruit;
+        } else if (tableName == 'music_team_seekers') {
+          actualType = CommunityListType.musicTeamSeeking;
+        } else if (tableName == 'church_news') {
+          actualType = CommunityListType.churchNews;
+        }
+      }
+    }
+
+    String title = '';
+    List<String> tips = [];
+
+    switch (actualType) {
+      case CommunityListType.freeSharing:
+      case CommunityListType.itemSale:
+        title = '물품 판매 작성 가이드';
+        tips = [
+          '✓ 상품 사진을 여러 장 첨부하면 신뢰도가 높아집니다',
+          '✓ 무료 나눔인 경우 가격을 0원으로 설정해주세요',
+          '✓ 정확한 가격과 상품 상태를 입력해주세요',
+          '✓ 구매 시기를 입력하면 신뢰도가 높아집니다',
+          '✓ 거래 희망 지역과 택배 가능 여부를 체크해주세요',
+          '✓ 연락처는 정확하게 입력해주세요',
+        ];
+        break;
+      case CommunityListType.itemRequest:
+        title = '물품 요청 작성 가이드';
+        tips = [
+          '✓ 필요한 물품을 구체적으로 설명해주세요',
+          '✓ 긴급도를 적절히 선택해주세요',
+          '✓ 보상 방식이 있다면 명확히 입력해주세요',
+          '✓ 연락 가능한 시간대를 적어주면 좋습니다',
+        ];
+        break;
+      case CommunityListType.jobPosting:
+        title = '사역자 모집 작성 가이드';
+        tips = [
+          '✓ 교회 소개를 상세히 작성해주세요',
+          '✓ 모집 직무와 고용 형태를 명확히 입력해주세요',
+          '✓ 급여 및 복리후생을 투명하게 공개해주세요',
+          '✓ 자격 요건을 구체적으로 작성해주세요',
+          '✓ 지원 마감일을 정확히 입력해주세요',
+        ];
+        break;
+      case CommunityListType.musicTeamRecruit:
+        title = '행사팀 모집 작성 가이드';
+        tips = [
+          '✓ 행사 날짜와 리허설 일정을 명확히 입력해주세요',
+          '✓ 필요한 악기/파트를 구체적으로 선택해주세요',
+          '✓ 예배 스타일과 분위기를 설명해주세요',
+          '✓ 사례비나 교통비 지원 여부를 명시해주세요',
+          '✓ 연습 및 예배 시간대를 상세히 작성해주세요',
+        ];
+        break;
+      case CommunityListType.musicTeamSeeking:
+        title = '행사팀 지원 작성 가이드';
+        tips = [
+          '✓ 전공 파트와 호환 가능한 악기를 선택해주세요',
+          '✓ 경력과 경험을 구체적으로 작성해주세요',
+          '✓ 포트폴리오 파일이나 링크를 첨부해주세요',
+          '✓ 가능한 지역과 요일을 명확히 선택해주세요',
+          '✓ 연락 가능한 시간대를 적어주세요',
+        ];
+        break;
+      case CommunityListType.churchNews:
+        title = '행사 소식 작성 가이드';
+        tips = [
+          '✓ 행사 일시와 장소를 명확히 입력해주세요',
+          '✓ 행사의 목적과 내용을 상세히 작성해주세요',
+          '✓ 참가 신청 방법이 있다면 명시해주세요',
+          '✓ 사진이나 포스터를 첨부하면 좋습니다',
+        ];
+        break;
+      default:
+        title = '작성 가이드';
+        tips = ['게시글을 작성해주세요'];
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(24.r),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: NewAppColor.primary600,
+                    size: 24.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    title,
+                    style: FigmaTextStyles().headline4.copyWith(
+                          color: NewAppColor.neutral900,
+                        ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20.h),
+              ...tips.map((tip) => Padding(
+                    padding: EdgeInsets.only(bottom: 12.h),
+                    child: Text(
+                      tip,
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral700,
+                            height: 1.5,
+                          ),
+                    ),
+                  )),
+              SizedBox(height: 20.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: NewAppColor.primary600,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  child: Text(
+                    '확인',
+                    style: FigmaTextStyles().button1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 타입별 제목 반환
+  String _getTitleByType() {
+    // 수정 모드인 경우
+    if (widget.existingPost != null) {
+      return '수정하기';
+    }
+
+    // 실제 타입 결정 (myPosts, myFavorites 등에서 작성하는 경우)
+    CommunityListType actualType = widget.type;
+
+    if (widget.type == CommunityListType.myPosts ||
+        widget.type == CommunityListType.myFavorites) {
+      // existingPost가 Map인 경우 tableName 정보로 타입 판단
+      if (widget.existingPost is Map<String, dynamic>) {
+        final post = widget.existingPost as Map<String, dynamic>;
+        final tableName = post['tableName'] as String? ?? post['table'] as String?;
+        final isFree = post['is_free'] == true;
+
+        if (tableName == 'community_sharing') {
+          actualType = isFree
+              ? CommunityListType.freeSharing
+              : CommunityListType.itemSale;
+        } else if (tableName == 'community_requests') {
+          actualType = CommunityListType.itemRequest;
+        } else if (tableName == 'job_posts') {
+          actualType = CommunityListType.jobPosting;
+        } else if (tableName == 'community_music_teams') {
+          actualType = CommunityListType.musicTeamRecruit;
+        } else if (tableName == 'music_team_seekers') {
+          actualType = CommunityListType.musicTeamSeeking;
+        } else if (tableName == 'church_news') {
+          actualType = CommunityListType.churchNews;
+        }
+      }
+    }
+
+    // 타입별 제목
+    switch (actualType) {
+      case CommunityListType.freeSharing:
+      case CommunityListType.itemSale:
+        return '물품 판매 글쓰기';
+      case CommunityListType.itemRequest:
+        return '물품 요청 글쓰기';
+      case CommunityListType.jobPosting:
+        return '사역자 모집 글쓰기';
+      case CommunityListType.musicTeamRecruit:
+        return '행사팀 모집 글쓰기';
+      case CommunityListType.musicTeamSeeking:
+        return '행사팀 지원 글쓰기';
+      case CommunityListType.churchNews:
+        return '행사 소식 글쓰기';
+      default:
+        return '글쓰기';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -356,29 +648,38 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.close, color: Colors.black),
+            child: const Icon(Icons.arrow_back_ios, color: Colors.black),
           ),
         ),
         title: Text(
-          widget.existingPost == null ? '글쓰기' : '수정하기',
+          _getTitleByType(),
           style: FigmaTextStyles().headline4.copyWith(
                 color: NewAppColor.neutral900,
               ),
         ),
         actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _submit,
-            child: Text(
-              '완료',
-              style: FigmaTextStyles().button2.copyWith(
-                    color: _isLoading
-                        ? NewAppColor.neutral400
-                        : NewAppColor.primary600,
+          Padding(
+            padding: EdgeInsets.only(right: 8.w),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _showGuide,
+                borderRadius: BorderRadius.circular(24.r),
+                child: Padding(
+                  padding: EdgeInsets.all(8.r),
+                  child: Icon(
+                    Icons.info_outline,
+                    color: NewAppColor.neutral700,
+                    size: 24.sp,
                   ),
+                ),
+              ),
             ),
           ),
         ],
@@ -404,6 +705,34 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 ),
               ),
             ),
+      floatingActionButton: _isLoading
+          ? null
+          : Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: FloatingActionButton.extended(
+                onPressed: _submit,
+                backgroundColor: NewAppColor.primary600,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                label: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '등록',
+                      style: FigmaTextStyles().button1.copyWith(
+                            color: Colors.white,
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -785,18 +1114,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 initialDate: _purchaseDate ?? DateTime.now(),
                 firstDate: DateTime(2000),
                 lastDate: DateTime.now(),
-                builder: (context, child) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: ColorScheme.light(
-                        primary: NewAppColor.primary600,
-                        onPrimary: Colors.white,
-                        onSurface: NewAppColor.neutral900,
-                      ),
-                    ),
-                    child: child!,
-                  );
-                },
+                builder: _buildDatePickerTheme,
               );
               if (date != null) {
                 setState(() => _purchaseDate = date);
@@ -1449,40 +1767,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               ),
             ],
           ),
-          SizedBox(height: 32.h),
-
-          // 물품 요청 안내
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: NewAppColor.primary100,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, color: NewAppColor.primary600, size: 20.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '물품 요청 안내',
-                      style: FigmaTextStyles().subtitle2.copyWith(
-                        color: NewAppColor.primary700,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                _buildInfoItem('• 구체적인 물품명과 조건을 명시하면 더 좋은 응답을 받을 수 있습니다.'),
-                SizedBox(height: 4.h),
-                _buildInfoItem('• 필요일을 정확히 입력하여 적절한 시점에 연락받으세요.'),
-                SizedBox(height: 4.h),
-                _buildInfoItem('• 예산 범위를 제시하면 적절한 거래가 이루어질 수 있습니다.'),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -1725,42 +2009,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               ),
             ],
           ),
-          SizedBox(height: 12.h),
-          // 택배 가능 체크박스
-          Row(
-            children: [
-              SizedBox(
-                width: 20.w,
-                height: 20.h,
-                child: Checkbox(
-                  value: _deliveryAvailable,
-                  onChanged: (value) {
-                    setState(() {
-                      _deliveryAvailable = value ?? false;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _deliveryAvailable = !_deliveryAvailable;
-                  });
-                },
-                child: Text(
-                  '택배 가능',
-                  style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral900,
-                  ),
-                ),
-              ),
-            ],
-          ),
           SizedBox(height: 24.h),
 
           // 4. 지원 마감일 *
@@ -1786,6 +2034,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 initialDate: DateTime.now(),
                 firstDate: DateTime.now(),
                 lastDate: DateTime.now().add(const Duration(days: 365)),
+                builder: _buildDatePickerTheme,
               );
               if (date != null) {
                 _deadlineController.text = date.toString().split(' ')[0];
@@ -1954,40 +2203,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               ),
             ],
           ),
-          SizedBox(height: 32.h),
-
-          // 사역자 모집 안내
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: NewAppColor.primary100,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.lightbulb_outline, color: NewAppColor.primary600, size: 20.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '사역자 모집 안내',
-                      style: FigmaTextStyles().subtitle2.copyWith(
-                        color: NewAppColor.primary700,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                _buildInfoItem('• 명확한 업무 내용과 자격 요건을 제시하면 적합한 지원자를 받을 수 있습니다.'),
-                SizedBox(height: 4.h),
-                _buildInfoItem('• 급여 조건과 복리후생을 구체적으로 명시해주세요.'),
-                SizedBox(height: 4.h),
-                _buildInfoItem('• 교회 소개를 통해 지원자가 교회 분위기를 파악할 수 있도록 해주세요.'),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -2123,6 +2338,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                           initialDate: DateTime.now(),
                           firstDate: DateTime.now(),
                           lastDate: DateTime.now().add(const Duration(days: 365)),
+                          builder: _buildDatePickerTheme,
                         );
                         if (date != null) {
                           setState(() {
@@ -2359,39 +2575,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 ),
               ),
             ],
-          ),
-          SizedBox(height: 32.h),
-
-          // ===== 행사팀 모집 안내 =====
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: NewAppColor.primary100,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.lightbulb_outline, size: 20.r, color: NewAppColor.primary500),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '행사팀 모집 안내',
-                      style: FigmaTextStyles().body1.copyWith(
-                            color: NewAppColor.primary500,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                _buildInfoItem('필요한 팀 형태의 연주 수준을 구체적으로 명시해주세요.'),
-                _buildInfoItem('리허설 일정과 행사 일정을 명확히 안내해주세요.'),
-                _buildInfoItem('보상이나 사례비 조건을 미리 협의해두시기 바랍니다.'),
-                _buildInfoItem('교회의 음악 스타일이나 선호하는 장르가 있다면 안내해주세요.'),
-              ],
-            ),
           ),
         ],
       ),
@@ -2706,7 +2889,22 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               DropdownMenuItem(value: 'anytime', child: Text('상시 가능')),
               DropdownMenuItem(value: 'negotiable', child: Text('협의 후 결정')),
             ],
-            onChanged: (value) => setState(() => _selectedTimeSlot = value),
+            onChanged: (value) {
+              setState(() {
+                _selectedTimeSlot = value;
+                if (value != null) {
+                  final timeLabels = {
+                    'morning': '오전 (9:00-12:00)',
+                    'afternoon': '오후 (13:00-18:00)',
+                    'evening': '저녁 (18:00-21:00)',
+                    'night': '야간 (21:00-23:00)',
+                    'anytime': '상시 가능',
+                    'negotiable': '협의 후 결정',
+                  };
+                  _availableTimeController.text = timeLabels[value] ?? value;
+                }
+              });
+            },
           ),
           SizedBox(height: 24.h),
 
@@ -2768,10 +2966,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     ),
                     SizedBox(height: 12.h),
                     ElevatedButton(
-                      onPressed: () {
-                        // TODO: 파일 업로드
-                        AppToast.show(context, '파일 업로드 기능 준비 중', type: ToastType.info);
-                      },
+                      onPressed: _isLoading ? null : _pickPortfolioFile,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: NewAppColor.primary500,
                         foregroundColor: Colors.white,
@@ -2782,7 +2977,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         ),
                       ),
                       child: Text(
-                        '파일 선택',
+                        _portfolioFileUrl != null ? '파일 변경' : '파일 선택',
                         style: FigmaTextStyles().body2.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -2790,6 +2985,40 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       ),
                     ),
                     SizedBox(height: 8.h),
+                    if (_portfolioFileUrl != null) ...[
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                        decoration: BoxDecoration(
+                          color: NewAppColor.primary100,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle, size: 16.r, color: NewAppColor.primary600),
+                            SizedBox(width: 4.w),
+                            Text(
+                              '파일 업로드 완료',
+                              style: FigmaTextStyles().body2.copyWith(
+                                fontSize: 12.sp,
+                                color: NewAppColor.primary600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _portfolioFileUrl = null;
+                                });
+                              },
+                              child: Icon(Icons.close, size: 16.r, color: NewAppColor.primary600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                    ],
                     Text(
                       'PDF, MP3, MP4, DOC (최대 10MB)',
                       style: FigmaTextStyles().body2.copyWith(
@@ -3044,6 +3273,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 initialDate: DateTime.now(),
                 firstDate: DateTime.now(),
                 lastDate: DateTime.now().add(const Duration(days: 365)),
+                builder: _buildDatePickerTheme,
               );
               if (date != null) {
                 setState(() {
@@ -3549,6 +3779,138 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     }
   }
 
+  /// 포트폴리오 파일 선택
+  Future<void> _pickPortfolioFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'mp3', 'mp4', 'mov'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+
+        // 파일 크기 체크 (10MB = 10 * 1024 * 1024 bytes)
+        if (file.size > 10 * 1024 * 1024) {
+          if (mounted) {
+            AppToast.show(
+              context,
+              '파일 크기는 10MB를 초과할 수 없습니다',
+              type: ToastType.error,
+            );
+          }
+          return;
+        }
+
+        setState(() => _isLoading = true);
+
+        // 파일 업로드
+        final fileUrl = await _uploadPortfolioFile(file);
+
+        if (fileUrl != null) {
+          setState(() {
+            _portfolioFileUrl = fileUrl;
+          });
+          if (mounted) {
+            AppToast.show(
+              context,
+              '파일이 업로드되었습니다',
+              type: ToastType.success,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ 파일 선택 실패: $e');
+      if (mounted) {
+        AppToast.show(
+          context,
+          '파일 선택에 실패했습니다: $e',
+          type: ToastType.error,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// 포트폴리오 파일 업로드 (Supabase Storage)
+  Future<String?> _uploadPortfolioFile(PlatformFile file) async {
+    print('📄 파일 업로드 시작: ${file.name}');
+
+    final supabase = SupabaseService().client;
+
+    try {
+      // 파일명 생성: timestamp_originalname
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = file.extension ?? 'bin';
+      final fileName = '${timestamp}_portfolio.$extension';
+
+      print('📤 파일 업로드 중: $fileName (${(file.size / 1024 / 1024).toStringAsFixed(2)}MB)');
+
+      Uint8List fileBytes;
+      if (file.bytes != null) {
+        fileBytes = file.bytes!;
+      } else if (file.path != null) {
+        fileBytes = await File(file.path!).readAsBytes();
+      } else {
+        throw Exception('파일 데이터를 읽을 수 없습니다');
+      }
+
+      // MIME 타입 결정
+      String contentType = 'application/octet-stream';
+      switch (extension.toLowerCase()) {
+        case 'pdf':
+          contentType = 'application/pdf';
+          break;
+        case 'doc':
+          contentType = 'application/msword';
+          break;
+        case 'docx':
+          contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          break;
+        case 'mp3':
+          contentType = 'audio/mpeg';
+          break;
+        case 'mp4':
+          contentType = 'video/mp4';
+          break;
+        case 'mov':
+          contentType = 'video/quicktime';
+          break;
+      }
+
+      // Supabase Storage에 업로드 (community-files 버킷 사용)
+      await supabase.storage
+          .from('community-files')
+          .uploadBinary(
+            fileName,
+            fileBytes,
+          );
+
+      // Public URL 생성
+      final publicUrl = supabase.storage
+          .from('community-files')
+          .getPublicUrl(fileName);
+
+      print('✅ 파일 업로드 완료: $publicUrl');
+      return publicUrl;
+    } catch (e) {
+      print('❌ 파일 업로드 실패: $e');
+      if (mounted) {
+        AppToast.show(
+          context,
+          '파일 업로드에 실패했습니다: $e',
+          type: ToastType.error,
+        );
+      }
+      return null;
+    }
+  }
+
   /// 무료나눔/물품판매 제출
   Future<bool> _submitSharing(List<String> imageUrls) async {
     final response = await _communityService.createSharingItem(
@@ -3656,18 +4018,18 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   Future<bool> _submitMusicTeamSeeking() async {
     final response = await _communityService.createMusicTeamSeeker(
       title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      name: _nameController.text.trim(),
-      teamName: _teamNameController.text.trim(),
-      instrument: _selectedInstrument!,
-      instruments: _compatibleInstruments,
+      teamName: _teamNameController.text.trim().isEmpty ? '없음' : _teamNameController.text.trim(),
+      instrument: _selectedInstrument ?? 'other', // 미선택 시 기본값 'other'
       experience: _experienceController.text.trim(),
-      portfolio: _portfolioController.text.trim(),
+      portfolio: _youtubeController.text.trim(), // YouTube 링크를 portfolio로 사용
       portfolioFile: _portfolioFileUrl,
       preferredLocation: _preferredLocations,
       availableDays: _availableDays,
       availableTime: _availableTimeController.text.trim(),
-      introduction: _introductionController.text.trim(),
+      contactPhone: _contactController.text.trim(),
+      contactEmail: _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim(),
     );
 
     return response.success;

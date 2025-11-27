@@ -10,6 +10,10 @@ import 'package:smart_yoram_app/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_create_screen.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:share_plus/share_plus.dart';
 
 /// 커뮤니티 게시글 상세 화면 (공통)
 /// 모든 카테고리의 게시글을 표시할 수 있는 공통 화면
@@ -457,6 +461,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           else if (_post is RequestItem) ...[
             _buildRequestLayout(_post as RequestItem, date, authorName, authorProfilePhotoUrl, churchName, churchLocation, description),
           ]
+          // === 행사팀 지원 전용 레이아웃 ===
+          else if (_post is MusicTeamSeeker) ...[
+            _buildMusicTeamSeekerLayout(_post as MusicTeamSeeker, date, authorName, authorProfilePhotoUrl, churchName),
+          ]
           // === 기타 게시글 기본 레이아웃 ===
           else ...[
             // 작성자 정보 카드
@@ -893,6 +901,66 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('메시지를 보낼 수 없습니다')),
+        );
+      }
+    }
+  }
+
+  /// 포트폴리오 파일 다운로드 및 열기
+  Future<void> _downloadAndOpenFile(String fileUrl) async {
+    try {
+      // 로딩 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('파일을 다운로드 중입니다...')),
+        );
+      }
+
+      // 파일 다운로드
+      final response = await http.get(Uri.parse(fileUrl));
+
+      if (response.statusCode != 200) {
+        throw Exception('파일 다운로드 실패');
+      }
+
+      // 파일명 추출 (URL에서 마지막 부분)
+      final uri = Uri.parse(fileUrl);
+      String fileName = uri.pathSegments.last;
+
+      // 파일명에서 특수문자 제거 및 정리
+      if (fileName.contains('?')) {
+        fileName = fileName.split('?').first;
+      }
+
+      // 확장자가 없으면 기본값 추가
+      if (!fileName.contains('.')) {
+        fileName = '$fileName.pdf';
+      }
+
+      // 임시 디렉토리에 파일 저장
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+
+      // 파일 공유 (사용자가 앱을 선택하여 열 수 있음)
+      final result = await Share.shareXFiles(
+        [XFile(filePath)],
+        text: '포트폴리오 파일',
+      );
+
+      if (mounted) {
+        if (result.status == ShareResultStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('파일을 열었습니다')),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ FILE_DOWNLOAD_ERROR: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('파일을 다운로드할 수 없습니다: $e')),
         );
       }
     }
@@ -1920,6 +1988,613 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         Container(height: 8.h, color: NewAppColor.neutral100),
 
         // === 5. 연락처 정보 ===
+        Container(
+          color: Colors.white,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '연락처 정보',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              // 전화번호
+              if (item.contactPhone.isNotEmpty)
+                _buildContactItem(
+                  icon: Icons.phone_outlined,
+                  label: '전화번호',
+                  value: item.contactPhone,
+                  onTap: () => _showContactDialog(item.contactPhone),
+                ),
+              // 이메일
+              if (item.contactEmail != null && item.contactEmail!.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                _buildContactItem(
+                  icon: Icons.email_outlined,
+                  label: '이메일',
+                  value: item.contactEmail!,
+                  onTap: () {
+                    // TODO: 이메일 보내기 기능
+                  },
+                ),
+              ],
+              SizedBox(height: 20.h),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 행사팀 지원 전용 레이아웃
+  Widget _buildMusicTeamSeekerLayout(
+    MusicTeamSeeker item,
+    String date,
+    String? authorName,
+    String? authorProfilePhotoUrl,
+    String? churchName,
+  ) {
+    // 팀 형태 표시 텍스트 변환
+    final teamTypeLabels = {
+      'solo': '현재 솔로 활동',
+      'praise-team': '찬양팀',
+      'worship-team': '워십팀',
+      'acoustic-team': '어쿠스틱 팀',
+      'band': '밴드',
+      'orchestra': '오케스트라',
+      'choir': '합창단',
+      'dance-team': '무용팀',
+      'other': '기타',
+    };
+
+    String teamTypeDisplay = teamTypeLabels[item.instrument] ?? item.instrument;
+
+    // 활동 가능 시간대 표시 텍스트
+    String availableTimeDisplay = item.availableTime ?? '미입력';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // === 1. 제목 + 상태 섹션 ===
+        Container(
+          color: Colors.white,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 제목
+              Text(
+                item.title,
+                style: FigmaTextStyles().header1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+              ),
+              SizedBox(height: 12.h),
+
+              // 상태 배지
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: item.status == 'available' ? NewAppColor.success600 : NewAppColor.neutral500,
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: Text(
+                      item.status == 'available' ? '지원가능' : '완료',
+                      style: FigmaTextStyles().caption2.copyWith(
+                            color: Colors.white,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 8.h),
+
+              // 작성 시간 + 조회수
+              Row(
+                children: [
+                  Text(
+                    date,
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral500,
+                          fontSize: 13.sp,
+                        ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '·',
+                    style: TextStyle(color: NewAppColor.neutral400),
+                  ),
+                  SizedBox(width: 8.w),
+                  Icon(Icons.visibility_outlined, size: 14.sp, color: NewAppColor.neutral500),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '${item.viewCount}',
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral500,
+                          fontSize: 13.sp,
+                        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 2. 기본 정보 카드 ===
+        Container(
+          color: Colors.white,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '기본 정보',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+
+              // 기본 정보 그리드
+              Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral100,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Column(
+                  children: [
+                    if (item.teamName != null && item.teamName!.isNotEmpty && item.teamName != '없음') ...[
+                      _buildInfoRow(label: '현재 활동 팀명', value: item.teamName!),
+                      SizedBox(height: 12.h),
+                    ],
+                    _buildInfoRow(label: '전공 파트', value: teamTypeDisplay),
+                    if (item.instruments != null && item.instruments!.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _buildInfoRow(
+                        label: '호환 악기',
+                        value: item.instruments!.join(', '),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 3. 경력 정보 ===
+        if (item.experience.isNotEmpty) ...[
+          Container(
+            color: Colors.white,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '연주 경력',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  item.experience,
+                  style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral800,
+                        fontSize: 15.sp,
+                        height: 1.6,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          Container(height: 8.h, color: NewAppColor.neutral100),
+        ],
+
+        // === 4. 활동 조건 ===
+        Container(
+          color: Colors.white,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '활동 조건',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+
+              // 활동 조건 그리드
+              Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral100,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Column(
+                  children: [
+                    // 활동 가능 지역
+                    if (item.preferredLocation.isNotEmpty) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '활동 가능 지역',
+                            style: FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral600,
+                                ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Wrap(
+                              alignment: WrapAlignment.end,
+                              spacing: 6.w,
+                              runSpacing: 6.h,
+                              children: item.preferredLocation.map((location) {
+                                return Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                  decoration: BoxDecoration(
+                                    color: NewAppColor.primary100,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Text(
+                                    location,
+                                    style: FigmaTextStyles().body2.copyWith(
+                                          color: NewAppColor.primary700,
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+                    ],
+                    // 활동 가능 요일
+                    if (item.availableDays.isNotEmpty) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '활동 가능 요일',
+                            style: FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral600,
+                                ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Wrap(
+                              alignment: WrapAlignment.end,
+                              spacing: 4.w,
+                              runSpacing: 4.h,
+                              children: item.availableDays.map((day) {
+                                return Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                  decoration: BoxDecoration(
+                                    color: NewAppColor.success00,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Text(
+                                    day,
+                                    style: FigmaTextStyles().body2.copyWith(
+                                          color: NewAppColor.success700,
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+                    ],
+                    // 활동 가능 시간대
+                    _buildInfoRow(
+                      label: '활동 가능 시간대',
+                      value: availableTimeDisplay,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 5. 포트폴리오 ===
+        if ((item.portfolio.isNotEmpty) || (item.portfolioFile != null && item.portfolioFile!.isNotEmpty)) ...[
+          Container(
+            color: Colors.white,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '포트폴리오',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(height: 16.h),
+
+                // YouTube 링크
+                if (item.portfolio.isNotEmpty) ...[
+                  InkWell(
+                    onTap: () async {
+                      final uri = Uri.parse(item.portfolio);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(16.r),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.neutral100,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: NewAppColor.neutral200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40.w,
+                            height: 40.w,
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.play_arrow,
+                              color: Colors.red,
+                              size: 24.sp,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'YouTube 영상',
+                                  style: FigmaTextStyles().body2.copyWith(
+                                        color: NewAppColor.neutral600,
+                                        fontSize: 12.sp,
+                                      ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  item.portfolio,
+                                  style: FigmaTextStyles().body2.copyWith(
+                                        color: NewAppColor.neutral900,
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.open_in_new,
+                            color: NewAppColor.neutral400,
+                            size: 20.sp,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (item.portfolioFile != null && item.portfolioFile!.isNotEmpty)
+                    SizedBox(height: 12.h),
+                ],
+
+                // 포트폴리오 파일
+                if (item.portfolioFile != null && item.portfolioFile!.isNotEmpty) ...[
+                  InkWell(
+                    onTap: () => _downloadAndOpenFile(item.portfolioFile!),
+                    child: Container(
+                      padding: EdgeInsets.all(16.r),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.neutral100,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: NewAppColor.neutral200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40.w,
+                            height: 40.w,
+                            decoration: BoxDecoration(
+                              color: NewAppColor.primary100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.insert_drive_file,
+                              color: NewAppColor.primary600,
+                              size: 24.sp,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '포트폴리오 파일',
+                                  style: FigmaTextStyles().body2.copyWith(
+                                        color: NewAppColor.neutral600,
+                                        fontSize: 12.sp,
+                                      ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  '파일 열기',
+                                  style: FigmaTextStyles().body2.copyWith(
+                                        color: NewAppColor.neutral900,
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.open_in_new,
+                            color: NewAppColor.neutral400,
+                            size: 20.sp,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Container(height: 8.h, color: NewAppColor.neutral100),
+        ],
+
+        // === 6. 자기소개 ===
+        if (item.introduction != null && item.introduction!.isNotEmpty) ...[
+          Container(
+            color: Colors.white,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '자기소개',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  item.introduction!,
+                  style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral800,
+                        fontSize: 15.sp,
+                        height: 1.6,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          Container(height: 8.h, color: NewAppColor.neutral100),
+        ],
+
+        // === 7. 작성자 정보 ===
+        Container(
+          color: Colors.white,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '지원자 정보',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  _buildProfileImage(authorProfilePhotoUrl),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          authorName ?? '알 수 없음',
+                          style: FigmaTextStyles().body1.copyWith(
+                                color: NewAppColor.neutral900,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        SizedBox(height: 4.h),
+                        if (churchName != null && churchName.isNotEmpty)
+                          Text(
+                            churchName,
+                            style: FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral600,
+                                  fontSize: 13.sp,
+                                ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // 작성자인 경우 상태 변경 드롭다운
+              if (_isAuthor()) ...[
+                SizedBox(height: 16.h),
+                _buildStatusDropdown(),
+              ],
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 8. 연락처 정보 ===
         Container(
           color: Colors.white,
           width: double.infinity,

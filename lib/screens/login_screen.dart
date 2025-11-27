@@ -437,7 +437,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   )
                                 : Text(
-                                    'LOGIN',
+                                    '로그인',
                                     style: figmaStyles.subtitle2.copyWith(
                                       color: (((_loginType == 'email' &&
                                                       _isEmailValid) ||
