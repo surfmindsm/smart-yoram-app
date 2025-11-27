@@ -15,6 +15,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:smart_yoram_app/components/index.dart';
 import 'package:smart_yoram_app/utils/location_data.dart';
 import 'package:flutter/services.dart';
+import 'package:smart_yoram_app/widgets/custom_date_picker.dart';
 
 /// 커뮤니티 게시글 작성/수정 화면 (공통)
 /// docs/writing/ API 명세서 기반 구현
@@ -350,69 +351,303 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     setState(() {});
   }
 
+  /// 필수 필드가 모두 채워졌는지 확인
+  bool _isFormValid() {
+    // 실제 타입 결정
+    CommunityListType actualType = widget.type;
+
+    if (widget.type == CommunityListType.myPosts ||
+        widget.type == CommunityListType.myFavorites) {
+      if (widget.existingPost is Map<String, dynamic>) {
+        final post = widget.existingPost as Map<String, dynamic>;
+        final tableName = post['tableName'] as String? ?? post['table'] as String?;
+        final isFree = post['is_free'] == true;
+
+        if (tableName == 'community_sharing') {
+          actualType = isFree
+              ? CommunityListType.freeSharing
+              : CommunityListType.itemSale;
+        } else if (tableName == 'community_requests') {
+          actualType = CommunityListType.itemRequest;
+        } else if (tableName == 'job_posts') {
+          actualType = CommunityListType.jobPosting;
+        } else if (tableName == 'community_music_teams') {
+          actualType = CommunityListType.musicTeamRecruit;
+        } else if (tableName == 'music_team_seekers') {
+          actualType = CommunityListType.musicTeamSeeking;
+        } else if (tableName == 'church_news') {
+          actualType = CommunityListType.churchNews;
+        }
+      }
+    }
+
+    switch (actualType) {
+      case CommunityListType.freeSharing:
+      case CommunityListType.itemSale:
+        // 필수: 제목, 설명, 카테고리, 상태, 위치, 연락처
+        return _titleController.text.trim().isNotEmpty &&
+            _descriptionController.text.trim().isNotEmpty &&
+            _selectedCategory != null &&
+            _selectedCondition != null &&
+            (_selectedProvince != null || _locationController.text.trim().isNotEmpty) &&
+            _contactController.text.trim().isNotEmpty;
+
+      case CommunityListType.itemRequest:
+        // 필수: 제목, 설명, 연락처
+        return _titleController.text.trim().isNotEmpty &&
+            _descriptionController.text.trim().isNotEmpty &&
+            _contactController.text.trim().isNotEmpty;
+
+      case CommunityListType.jobPosting:
+        // 필수: 제목, 설명, 교회/기관명, 직무, 고용형태, 급여, 마감일, 연락처
+        return _titleController.text.trim().isNotEmpty &&
+            _descriptionController.text.trim().isNotEmpty &&
+            _companyController.text.trim().isNotEmpty &&
+            _positionController.text.trim().isNotEmpty &&
+            _selectedEmploymentType != null &&
+            _salaryController.text.trim().isNotEmpty &&
+            _deadlineController.text.trim().isNotEmpty &&
+            _contactController.text.trim().isNotEmpty;
+
+      case CommunityListType.musicTeamRecruit:
+        // 필수: 제목, 설명, 행사일, 리허설 시간, 필요 악기/파트, 연락처
+        return _titleController.text.trim().isNotEmpty &&
+            _descriptionController.text.trim().isNotEmpty &&
+            _eventDateController.text.trim().isNotEmpty &&
+            _rehearsalTimeController.text.trim().isNotEmpty &&
+            _selectedInstruments.isNotEmpty &&
+            _contactController.text.trim().isNotEmpty;
+
+      case CommunityListType.musicTeamSeeking:
+        // 필수: 제목, 이름, 전공 파트, 경력, 연락처
+        return _titleController.text.trim().isNotEmpty &&
+            _nameController.text.trim().isNotEmpty &&
+            _selectedInstrument != null &&
+            _experienceController.text.trim().isNotEmpty &&
+            _contactController.text.trim().isNotEmpty;
+
+      case CommunityListType.churchNews:
+        // 필수: 제목, 설명, 행사일, 연락처
+        return _titleController.text.trim().isNotEmpty &&
+            _descriptionController.text.trim().isNotEmpty &&
+            _newsEventDateController.text.trim().isNotEmpty &&
+            _contactController.text.trim().isNotEmpty;
+
+      default:
+        return true;
+    }
+  }
+
   /// 날짜 선택 다이얼로그 테마 builder
   Widget _buildDatePickerTheme(BuildContext context, Widget? child) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        colorScheme: ColorScheme.light(
-          primary: NewAppColor.primary600,
-          onPrimary: Colors.white,
-          onSurface: NewAppColor.neutral900,
-          surface: Colors.white,
-        ),
-        dialogBackgroundColor: Colors.white,
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: NewAppColor.primary600,
-            textStyle: FigmaTextStyles().button2,
+    return Transform.translate(
+      offset: Offset(0, -60.h), // 상단을 위로 이동시켜 잘라내기
+      child: ClipRect(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          heightFactor: 0.82, // 적절한 높이로 조정
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: const Color(0xFF2196F3),
+                onPrimary: Colors.white,
+                onSurface: const Color(0xFF333333),
+                surface: Colors.white,
+              ),
+              dialogBackgroundColor: Colors.white,
+              textButtonTheme: TextButtonThemeData(
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.resolveWith((states) {
+                  // 취소 버튼 완전히 숨기기
+                  if (states.contains(MaterialState.disabled)) {
+                    return Colors.transparent;
+                  }
+                  return Colors.white;
+                }),
+                backgroundColor: MaterialStateProperty.resolveWith((states) {
+                  // 취소 버튼 완전히 숨기기
+                  if (states.contains(MaterialState.disabled)) {
+                    return Colors.transparent;
+                  }
+                  return const Color(0xFF2196F3);
+                }),
+                textStyle: MaterialStateProperty.all(
+                  FigmaTextStyles().button2.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16.sp,
+                  ),
+                ),
+                shape: MaterialStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+                padding: MaterialStateProperty.all(
+                  EdgeInsets.symmetric(horizontal: 48.w, vertical: 14.h),
+                ),
+                minimumSize: MaterialStateProperty.resolveWith((states) {
+                  // 취소 버튼 크기 0으로
+                  if (states.contains(MaterialState.disabled)) {
+                    return Size.zero;
+                  }
+                  return Size(140.w, 48.h);
+                }),
+                overlayColor: MaterialStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return Colors.transparent;
+                  }
+                  return null;
+                }),
+              ),
+            ),
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              elevation: 4,
+              backgroundColor: Colors.white,
+            ),
+            textTheme: TextTheme(
+              // 년월 표시 텍스트 (July 2019)
+              headlineMedium: FigmaTextStyles().headline3.copyWith(
+                color: const Color(0xFF333333),
+                fontWeight: FontWeight.w700,
+                fontSize: 24.sp,
+              ),
+              labelLarge: const TextStyle(
+                fontSize: 0, // "날짜 선택" 텍스트 숨기기
+                height: 0,
+              ),
+            ),
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              // 헤더 완전히 제거
+              headerBackgroundColor: Colors.white,
+              headerForegroundColor: Colors.white,
+              headerHeadlineStyle: const TextStyle(
+                fontSize: 0,
+                height: 0,
+                color: Colors.transparent,
+              ),
+              headerHelpStyle: const TextStyle(
+                fontSize: 0,
+                height: 0,
+                color: Colors.transparent,
+              ),
+              // 상단 여백 최소화
+              rangePickerHeaderHeadlineStyle: const TextStyle(fontSize: 0, height: 0),
+              rangePickerHeaderHelpStyle: const TextStyle(fontSize: 0, height: 0),
+              // 요일 스타일 (M T W T F S S)
+              weekdayStyle: FigmaTextStyles().caption1.copyWith(
+                color: const Color(0xFF999999),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1,
+                fontSize: 13.sp,
+              ),
+              // 날짜 숫자 스타일
+              dayStyle: FigmaTextStyles().body2.copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: 15.sp,
+              ),
+              // 년 선택 스타일
+              yearStyle: FigmaTextStyles().headline4.copyWith(
+                color: const Color(0xFF333333),
+                fontWeight: FontWeight.w600,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              // 선택된 날짜 - 파란색 원형
+              dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return const Color(0xFF2196F3);
+                }
+                return Colors.transparent;
+              }),
+              dayForegroundColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.white;
+                }
+                if (states.contains(MaterialState.disabled)) {
+                  return const Color(0xFFDDDDDD);
+                }
+                return const Color(0xFF333333);
+              }),
+              dayOverlayColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.hovered)) {
+                  return const Color(0xFF2196F3).withOpacity(0.1);
+                }
+                return null;
+              }),
+              // 날짜를 원형으로
+              dayShape: MaterialStateProperty.all(
+                const CircleBorder(),
+              ),
+              // 오늘 날짜 스타일
+              todayBorder: BorderSide.none,
+              todayForegroundColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.white;
+                }
+                return const Color(0xFF64B5F6); // 연한 파란색
+              }),
+              todayBackgroundColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return const Color(0xFF2196F3);
+                }
+                return Colors.transparent;
+              }),
+            ),
           ),
-        ),
-        dialogTheme: DialogThemeData(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
+            child: Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Stack(
+                children: [
+                  child!,
+                  // 왼쪽 취소 버튼 영역 가리기
+                  Positioned(
+                    bottom: 16.h,
+                    left: 16.w,
+                    child: Container(
+                      width: 160.w,
+                      height: 48.h,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          elevation: 4,
-        ),
-        datePickerTheme: DatePickerThemeData(
-          backgroundColor: Colors.white,
-          headerBackgroundColor: NewAppColor.primary600,
-          headerForegroundColor: Colors.white,
-          dayStyle: FigmaTextStyles().body2,
-          weekdayStyle: FigmaTextStyles().caption2.copyWith(
-            color: NewAppColor.neutral600,
-          ),
-          yearStyle: FigmaTextStyles().body2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
-              return NewAppColor.primary600;
-            }
-            return null;
-          }),
-          dayForegroundColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
-              return Colors.white;
-            }
-            if (states.contains(MaterialState.disabled)) {
-              return NewAppColor.neutral300;
-            }
-            return NewAppColor.neutral900;
-          }),
-          todayBorder: BorderSide(
-            color: NewAppColor.primary600,
-            width: 1.5,
-          ),
-          todayForegroundColor: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
-              return Colors.white;
-            }
-            return NewAppColor.primary600;
-          }),
         ),
       ),
-      child: child!,
+    );
+  }
+
+  /// 필수 레이블 생성 (빨간 * 포함)
+  Widget _buildRequiredLabel(String text) {
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: text,
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          TextSpan(
+            text: ' *',
+            style: FigmaTextStyles().body2.copyWith(
+              color: Colors.red,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -700,7 +935,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   children: [
                     _buildCommonFields(),
                     _buildTypeSpecificFields(),
-                    SizedBox(height: 80.h),
+                    SizedBox(height: 120.h),
                   ],
                 ),
               ),
@@ -711,8 +946,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: FloatingActionButton.extended(
-                onPressed: _submit,
-                backgroundColor: NewAppColor.primary600,
+                onPressed: _isFormValid() ? _submit : null,
+                backgroundColor: _isFormValid()
+                    ? NewAppColor.primary600
+                    : NewAppColor.neutral300,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
@@ -809,13 +1046,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 2. 카테고리 *
-          Text(
-            '카테고리 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('카테고리'),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
             decoration: _buildInputDecoration(hintText: '카테고리를 선택하세요'),
@@ -835,13 +1066,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 3. 제목 *
-          Text(
-            '제목 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('제목'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
@@ -864,13 +1089,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 4. 설명 *
-          Text(
-            '설명 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('설명'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
@@ -894,13 +1113,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 5. 상태 *
-          Text(
-            '상태 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('상태'),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
             decoration: _buildInputDecoration(hintText: '상품 상태를 선택하세요'),
@@ -1109,12 +1322,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 8.h),
           InkWell(
             onTap: () async {
-              final date = await showDatePicker(
+              final date = await showCustomDatePicker(
                 context: context,
                 initialDate: _purchaseDate ?? DateTime.now(),
                 firstDate: DateTime(2000),
                 lastDate: DateTime.now(),
-                builder: _buildDatePickerTheme,
               );
               if (date != null) {
                 setState(() => _purchaseDate = date);
@@ -1151,13 +1363,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 8 (무료나눔의 경우 6). 연락처 *
-          Text(
-            '연락처 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('연락처'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _contactController,
@@ -1435,13 +1641,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 1. 제목 *
-          Text(
-            '제목 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('제목'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
@@ -1465,13 +1665,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '카테고리 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRequiredLabel('카테고리'),
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
                       decoration: _buildInputDecoration(
@@ -1498,13 +1692,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '우선순위 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRequiredLabel('우선순위'),
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
                       decoration: _buildInputDecoration(
@@ -1716,13 +1904,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '연락처 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRequiredLabel('연락처'),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
@@ -1802,13 +1984,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 1. 모집 제목 *
-          Text(
-            '모집 제목 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('모집 제목'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
@@ -1832,13 +2008,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '직책 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRequiredLabel('직책'),
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
                       decoration: _buildInputDecoration(
@@ -2012,13 +2182,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 4. 지원 마감일 *
-          Text(
-            '지원 마감일 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('지원 마감일'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _deadlineController,
@@ -2029,12 +2193,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             ),
             style: FigmaTextStyles().body2,
             onTap: () async {
-              final date = await showDatePicker(
+              final date = await showCustomDatePicker(
                 context: context,
                 initialDate: DateTime.now(),
                 firstDate: DateTime.now(),
                 lastDate: DateTime.now().add(const Duration(days: 365)),
-                builder: _buildDatePickerTheme,
               );
               if (date != null) {
                 _deadlineController.text = date.toString().split(' ')[0];
@@ -2152,13 +2315,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '담당자 연락처 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRequiredLabel('담당자 연락처'),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
@@ -2228,13 +2385,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 1. 모집 제목 *
-          Text(
-            '모집 제목 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('모집 제목'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
@@ -2249,13 +2400,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 2. 행사 유형 *
-          Text(
-            '행사 유형 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('행사 유형'),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
             decoration: _buildInputDecoration(
@@ -2281,13 +2426,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 3. 모집 팀 형태 *
-          Text(
-            '모집 팀 형태 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('모집 팀 형태'),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
             decoration: _buildInputDecoration(
@@ -2333,12 +2472,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         prefixIcon: const Icon(Icons.calendar_today),
                       ),
                       onTap: () async {
-                        final date = await showDatePicker(
+                        final date = await showCustomDatePicker(
                           context: context,
                           initialDate: DateTime.now(),
                           firstDate: DateTime.now(),
                           lastDate: DateTime.now().add(const Duration(days: 365)),
-                          builder: _buildDatePickerTheme,
                         );
                         if (date != null) {
                           setState(() {
@@ -2378,13 +2516,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 5. 지역
-          Text(
-            '지역 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('지역'),
           SizedBox(height: 8.h),
           Row(
             children: [
@@ -2532,13 +2664,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '담당자 연락처 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                            color: NewAppColor.neutral900,
-                            fontWeight: FontWeight.w500,
-                          ),
-                    ),
+                    _buildRequiredLabel('담당자 연락처'),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
@@ -2608,13 +2734,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '지원서 제목 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRequiredLabel('지원서 제목'),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _titleController,
@@ -2661,13 +2781,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 16.h),
 
           // 2. 팀 형태 *
-          Text(
-            '팀 형태 *',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          _buildRequiredLabel('팀 형태'),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
             decoration: _buildInputDecoration(
@@ -3051,13 +3165,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '연락처 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRequiredLabel('연락처'),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
@@ -3122,13 +3230,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 카테고리 *
-          Text(
-            '카테고리 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('카테고리'),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
             decoration: InputDecoration(
@@ -3154,13 +3256,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 제목 *
-          Text(
-            '제목 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('제목'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _titleController,
@@ -3187,13 +3283,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 내용 *
-          Text(
-            '내용 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('내용'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
@@ -3221,13 +3311,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 우선순위 *
-          Text(
-            '우선순위 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('우선순위'),
           SizedBox(height: 8.h),
           DropdownButtonFormField<String>(
             decoration: InputDecoration(
@@ -3268,12 +3352,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             onTap: () async {
-              final date = await showDatePicker(
+              final date = await showCustomDatePicker(
                 context: context,
                 initialDate: DateTime.now(),
                 firstDate: DateTime.now(),
                 lastDate: DateTime.now().add(const Duration(days: 365)),
-                builder: _buildDatePickerTheme,
               );
               if (date != null) {
                 setState(() {
@@ -3396,13 +3479,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 주최자/부서 *
-          Text(
-            '주최자/부서 *',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          _buildRequiredLabel('주최자/부서'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _organizerController,

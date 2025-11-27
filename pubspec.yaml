@@ -123,6 +123,9 @@ dependencies:
   # 유튜브 플레이어
   youtube_player_flutter: ^9.0.3
 
+  # 커스텀 날짜 선택기
+  calendar_date_picker2: ^1.1.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
