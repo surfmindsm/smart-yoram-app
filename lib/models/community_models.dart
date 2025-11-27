@@ -218,20 +218,9 @@ class SharingItem extends CommunityBasePost {
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
-      createdAt: () {
-        final createdAtStr = json['createdAt'] ?? json['created_at'];
-        print('🕐 SHARING_ITEM: created_at 원본 - $createdAtStr');
-        if (createdAtStr != null) {
-          final parsed = DateTime.parse(createdAtStr).toUtc();
-          print('🕐 SHARING_ITEM: 파싱 후 UTC - $parsed');
-          final nowUtc = DateTime.now().toUtc();
-          final diff = nowUtc.difference(parsed);
-          print('🕐 SHARING_ITEM: 현재 시간 UTC - $nowUtc');
-          print('🕐 SHARING_ITEM: 시간 차이 (UTC 기준) - ${diff.inDays}일 ${diff.inHours % 24}시간 ${diff.inMinutes % 60}분');
-          return parsed;
-        }
-        return DateTime.now().toUtc();
-      }(),
+      createdAt: json['createdAt'] != null || json['created_at'] != null
+          ? DateTime.parse(json['createdAt'] ?? json['created_at']).toUtc()
+          : DateTime.now().toUtc(),
       updatedAt: json['updatedAt'] != null || json['updated_at'] != null
           ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,

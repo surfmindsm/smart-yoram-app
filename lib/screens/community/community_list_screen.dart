@@ -248,15 +248,20 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
     // 택배가능 필터 (무료나눔/물품판매)
     if (_deliveryAvailableFilter != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
+      print('🚚 FILTER: 택배가능 필터 적용 - _deliveryAvailableFilter: $_deliveryAvailableFilter');
+      print('🚚 FILTER: 필터 적용 전 아이템 수: ${filtered.length}');
       filtered = filtered.where((item) {
         if (item is SharingItem) {
+          print('🚚 FILTER: 아이템 "${item.title}" - deliveryAvailable: ${item.deliveryAvailable}');
           return item.deliveryAvailable == _deliveryAvailableFilter;
         }
         return false;
       }).toList();
+      print('🚚 FILTER: 필터 적용 후 아이템 수: ${filtered.length}');
     }
 
     _filteredItemsCache = filtered;
+    print('📋 COMMUNITY_LIST: 최종 필터링된 아이템 수 - ${_filteredItemsCache.length}');
   }
 
   @override
@@ -277,6 +282,13 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               ),
         ),
         actions: [
+          // 필터 버튼 (무료나눔/물품판매에만 표시)
+          if (widget.type == CommunityListType.freeSharing ||
+              widget.type == CommunityListType.itemSale)
+            IconButton(
+              icon: const Icon(Icons.filter_list, color: Colors.black),
+              onPressed: _showAdvancedFilterBottomSheet,
+            ),
           // 검색 버튼
           IconButton(
             icon: const Icon(Icons.search, color: Colors.black),
@@ -291,20 +303,11 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       ),
       body: Column(
         children: [
-          // 위치 필터
-          if (widget.type == CommunityListType.freeSharing ||
-              widget.type == CommunityListType.itemSale ||
-              widget.type == CommunityListType.itemRequest ||
-              widget.type == CommunityListType.jobPosting ||
-              widget.type == CommunityListType.musicTeamRecruit ||
-              widget.type == CommunityListType.musicTeamSeeking ||
-              widget.type == CommunityListType.churchNews)
-            _buildLocationFilters(),
-          // 상태 + 카테고리 필터 (무료나눔/물품판매)
+          // 빠른 필터 (무료나눔/물품판매)
           if (widget.type == CommunityListType.freeSharing ||
               widget.type == CommunityListType.itemSale)
-            _buildStatusAndCategoryFilters(),
-          // 물품 요청 필터
+            _buildQuickFilters(),
+          // 기존 필터들 (다른 타입용)
           if (widget.type == CommunityListType.itemRequest)
             _buildRequestFilters(),
           // 목록
@@ -934,9 +937,10 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   }
 
   /// 위치 필터 UI
-  Widget _buildLocationFilters() {
+  /// 빠른 필터 (전체, 무료, 유료, 완료제거, 택배가능)
+  Widget _buildQuickFilters() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: Colors.white,
         border: const Border(
@@ -946,186 +950,39 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          // 도/시 선택
-          Expanded(
-            child: Container(
-              height: 40.h,
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              decoration: BoxDecoration(
-                border: Border.all(color: NewAppColor.neutral300),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String?>(
-                  value: _selectedCity,
-                  hint: Text(
-                    '전체 도/시',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: NewAppColor.neutral900,
-                      fontFamily: 'Pretendard Variable',
-                    ),
-                  ),
-                  isExpanded: true,
-                  items: [
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('전체 도/시'),
-                    ),
-                    ...LocationData.getCities().map((city) {
-                      return DropdownMenuItem<String?>(
-                        value: city,
-                        child: Text(
-                          city,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: NewAppColor.neutral900,
-                            fontFamily: 'Pretendard Variable',
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCity = value;
-                      _selectedDistrict = null; // 도/시 변경 시 구 초기화
-                      _updateFilteredItems();
-                    });
-                  },
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 8.w),
-          // 시/군/구 선택
-          Expanded(
-            child: Container(
-              height: 40.h,
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: _selectedCity == null
-                      ? NewAppColor.neutral200
-                      : NewAppColor.neutral300,
-                ),
-                borderRadius: BorderRadius.circular(8.r),
-                color: _selectedCity == null
-                    ? NewAppColor.neutral100
-                    : Colors.white,
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String?>(
-                  value: _selectedDistrict,
-                  hint: Text(
-                    '전체 구',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: _selectedCity == null
-                          ? NewAppColor.neutral400
-                          : NewAppColor.neutral900,
-                      fontFamily: 'Pretendard Variable',
-                    ),
-                  ),
-                  isExpanded: true,
-                  items: [
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('전체 구'),
-                    ),
-                    if (_selectedCity != null)
-                      ...LocationData.getDistricts(_selectedCity!).map((district) {
-                        return DropdownMenuItem<String?>(
-                          value: district,
-                          child: Text(
-                            district,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: NewAppColor.neutral900,
-                              fontFamily: 'Pretendard Variable',
-                            ),
-                          ),
-                        );
-                      }),
-                  ],
-                  onChanged: _selectedCity == null
-                      ? null
-                      : (value) {
-                          setState(() {
-                            _selectedDistrict = value;
-                            _updateFilteredItems();
-                          });
-                        },
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 상태 + 카테고리 필터 (무료나눔/물품판매)
-  Widget _buildStatusAndCategoryFilters() {
-    // 카테고리 옵션
-    final List<String> categoryOptions = [
-      '가구',
-      '전자제품',
-      '도서',
-      '의류',
-      '장난감',
-      '생활용품',
-      '기타',
-    ];
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: NewAppColor.neutral200, width: 1),
-        ),
-      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            // 전체 칩
-            _buildFilterChip(
+            // 가격 필터 그룹: 전체, 무료, 유료
+            _buildSmallFilterChip(
               label: '전체',
-              isSelected: _selectedCategory == null && _deliveryAvailableFilter == null && _priceFilter == 'all' && !_hideCompleted,
+              isSelected: _priceFilter == 'all',
               onTap: () {
                 setState(() {
-                  _selectedCategory = null;
-                  _deliveryAvailableFilter = null;
                   _priceFilter = 'all';
-                  _hideCompleted = false;
                   _updateFilteredItems();
                 });
               },
             ),
-            SizedBox(width: 8.w),
-
-            // 무료/판매 필터 칩
-            _buildFilterChip(
+            SizedBox(width: 6.w),
+            _buildSmallFilterChip(
               label: '무료',
               isSelected: _priceFilter == 'free',
               onTap: () {
                 setState(() {
-                  _priceFilter = _priceFilter == 'free' ? 'all' : 'free';
+                  _priceFilter = 'free';
                   _updateFilteredItems();
                 });
               },
             ),
-            SizedBox(width: 8.w),
-            _buildFilterChip(
+            SizedBox(width: 6.w),
+            _buildSmallFilterChip(
               label: '유료',
               isSelected: _priceFilter == 'paid',
               onTap: () {
                 setState(() {
-                  _priceFilter = _priceFilter == 'paid' ? 'all' : 'paid';
+                  _priceFilter = 'paid';
                   _updateFilteredItems();
                 });
               },
@@ -1135,14 +992,14 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             // 구분선
             Container(
               width: 1,
-              height: 24.h,
+              height: 20.h,
               color: NewAppColor.neutral300,
-              margin: EdgeInsets.symmetric(horizontal: 8.w),
             ),
+            SizedBox(width: 8.w),
 
-            // 판매 완료 제거 필터
-            _buildFilterChip(
-              label: '완료 제거',
+            // 상태 필터 그룹: 완료제거, 택배가능
+            _buildSmallFilterChip(
+              label: '완료제거',
               isSelected: _hideCompleted,
               onTap: () {
                 setState(() {
@@ -1151,10 +1008,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                 });
               },
             ),
-            SizedBox(width: 8.w),
-
-            // 택배가능 필터
-            _buildFilterChip(
+            SizedBox(width: 6.w),
+            _buildSmallFilterChip(
               label: '택배가능',
               isSelected: _deliveryAvailableFilter == true,
               onTap: () {
@@ -1164,34 +1019,31 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                 });
               },
             ),
-            SizedBox(width: 8.w),
-
-            // 구분선
-            Container(
-              width: 1,
-              height: 24.h,
-              color: NewAppColor.neutral300,
-              margin: EdgeInsets.symmetric(horizontal: 8.w),
-            ),
-
-            // 카테고리 필터 칩들
-            ...categoryOptions.map((category) {
-              return Padding(
-                padding: EdgeInsets.only(right: 8.w),
-                child: _buildFilterChip(
-                  label: category,
-                  isSelected: _selectedCategory == category,
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = _selectedCategory == category ? null : category;
-                      _updateFilteredItems();
-                    });
-                  },
-                ),
-              );
-            }),
           ],
         ),
+      ),
+    );
+  }
+
+  /// 고급 필터 바텀시트
+  void _showAdvancedFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _AdvancedFilterBottomSheet(
+        selectedCity: _selectedCity,
+        selectedDistrict: _selectedDistrict,
+        selectedCategory: _selectedCategory,
+        onApply: (city, district, category) {
+          setState(() {
+            _selectedCity = city;
+            _selectedDistrict = district;
+            _selectedCategory = category;
+            _updateFilteredItems();
+          });
+          Navigator.pop(context);
+        },
       ),
     );
   }
@@ -1307,6 +1159,286 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
             color: isSelected ? Colors.white : NewAppColor.neutral700,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
+        ),
+      ),
+    );
+  }
+
+  /// 작은 필터 칩 (크기 축소 버전)
+  Widget _buildSmallFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral100,
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            color: isSelected ? Colors.white : NewAppColor.neutral700,
+            fontFamily: 'Pretendard Variable',
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 고급 필터 바텀시트 위젯
+class _AdvancedFilterBottomSheet extends StatefulWidget {
+  final String? selectedCity;
+  final String? selectedDistrict;
+  final String? selectedCategory;
+  final Function(String?, String?, String?) onApply;
+
+  const _AdvancedFilterBottomSheet({
+    this.selectedCity,
+    this.selectedDistrict,
+    this.selectedCategory,
+    required this.onApply,
+  });
+
+  @override
+  State<_AdvancedFilterBottomSheet> createState() => _AdvancedFilterBottomSheetState();
+}
+
+class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> {
+  String? _tempCity;
+  String? _tempDistrict;
+  String? _tempCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _tempCity = widget.selectedCity;
+    _tempDistrict = widget.selectedDistrict;
+    _tempCategory = widget.selectedCategory;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryOptions = [
+      '가구',
+      '전자제품',
+      '도서',
+      '의류',
+      '장난감',
+      '생활용품',
+      '기타',
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 헤더
+            Container(
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: NewAppColor.neutral200, width: 1),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '상세 필터',
+                    style: FigmaTextStyles().subtitle2.copyWith(
+                          color: NewAppColor.neutral900,
+                        ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Icon(Icons.close, size: 24.sp),
+                  ),
+                ],
+              ),
+            ),
+
+            // 필터 내용
+            Padding(
+              padding: EdgeInsets.all(16.r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 도시 선택
+                  Text(
+                    '지역',
+                    style: FigmaTextStyles().subtitle3.copyWith(
+                          color: NewAppColor.neutral900,
+                        ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: NewAppColor.neutral300),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String?>(
+                        value: _tempCity,
+                        hint: const Text('전체 도/시'),
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('전체 도/시'),
+                          ),
+                          ...LocationData.getCities().map((city) {
+                            return DropdownMenuItem<String?>(
+                              value: city,
+                              child: Text(city),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _tempCity = value;
+                            _tempDistrict = null;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // 구 선택
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: NewAppColor.neutral300),
+                      borderRadius: BorderRadius.circular(8.r),
+                      color: _tempCity == null ? NewAppColor.neutral100 : Colors.white,
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String?>(
+                        value: _tempDistrict,
+                        hint: const Text('전체 구'),
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('전체 구'),
+                          ),
+                          if (_tempCity != null)
+                            ...LocationData.getDistricts(_tempCity!).map((district) {
+                              return DropdownMenuItem<String?>(
+                                value: district,
+                                child: Text(district),
+                              );
+                            }),
+                        ],
+                        onChanged: _tempCity == null
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _tempDistrict = value;
+                                });
+                              },
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // 카테고리 선택
+                  Text(
+                    '카테고리',
+                    style: FigmaTextStyles().subtitle3.copyWith(
+                          color: NewAppColor.neutral900,
+                        ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Wrap(
+                    spacing: 8.w,
+                    runSpacing: 8.h,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _tempCategory = null;
+                          });
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                          decoration: BoxDecoration(
+                            color: _tempCategory == null ? NewAppColor.primary600 : NewAppColor.neutral100,
+                            borderRadius: BorderRadius.circular(20.r),
+                          ),
+                          child: Text(
+                            '전체',
+                            style: FigmaTextStyles().body2.copyWith(
+                                  color: _tempCategory == null ? Colors.white : NewAppColor.neutral700,
+                                ),
+                          ),
+                        ),
+                      ),
+                      ...categoryOptions.map((category) {
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _tempCategory = category;
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                            decoration: BoxDecoration(
+                              color: _tempCategory == category ? NewAppColor.primary600 : NewAppColor.neutral100,
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Text(
+                              category,
+                              style: FigmaTextStyles().body2.copyWith(
+                                    color: _tempCategory == category ? Colors.white : NewAppColor.neutral700,
+                                  ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // 적용 버튼
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        widget.onApply(_tempCity, _tempDistrict, _tempCategory);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: NewAppColor.primary600,
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                      child: Text(
+                        '적용',
+                        style: FigmaTextStyles().subtitle2.copyWith(
+                              color: Colors.white,
+                            ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
