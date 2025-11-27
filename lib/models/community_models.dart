@@ -330,19 +330,16 @@ class SharingItem extends CommunityBasePost {
 /// 물품 요청
 class RequestItem extends CommunityBasePost {
   final String category;
-  final String? requestedItem; // 요청 물품명
-  final int? quantity;
-  final String? reason; // 요청 사유
-  final String? neededDate; // 필요일
+  final String urgency; // low, normal, medium, high
+  final String? location; // 레거시 필드 (하위 호환성)
   final String? province; // 도/시 (예: 서울특별시, 경기도)
   final String? district; // 시/군/구 (예: 강남구, 수원시)
-  final String? location; // 레거시 필드 (하위 호환성)
-  final String? priceRange; // 희망 가격대
+  final bool deliveryAvailable; // 택배 가능 여부
   final String contactPhone;
   final String? contactEmail;
-  final String urgency; // low, normal, medium, high
   final List<String>? images; // 참고 이미지
-  final bool deliveryAvailable; // 택배 가능 여부
+  final String? rewardType; // none, exchange, payment 등
+  final double? rewardAmount; // 보상 금액
 
   RequestItem({
     required super.id,
@@ -360,19 +357,16 @@ class RequestItem extends CommunityBasePost {
     required super.createdAt,
     super.updatedAt,
     required this.category,
-    this.requestedItem,
-    this.quantity,
-    this.reason,
-    this.neededDate,
+    this.urgency = 'normal',
+    this.location,
     this.province,
     this.district,
-    this.location,
-    this.priceRange,
+    this.deliveryAvailable = false,
     required this.contactPhone,
     this.contactEmail,
-    this.urgency = 'normal',
     this.images,
-    this.deliveryAvailable = false,
+    this.rewardType,
+    this.rewardAmount,
   });
 
   factory RequestItem.fromJson(Map<String, dynamic> json) {
@@ -394,11 +388,28 @@ class RequestItem extends CommunityBasePost {
       churchName = json['church_name'] ?? json['church'];
     }
 
+    // images 파싱: JSON 문자열인 경우 처리
+    List<String>? imageList;
+    if (json['images'] != null) {
+      if (json['images'] is String) {
+        try {
+          final parsed = jsonDecode(json['images']);
+          if (parsed is List) {
+            imageList = List<String>.from(parsed);
+          }
+        } catch (e) {
+          print('⚠️ REQUEST_ITEM: images 파싱 실패 - $e');
+        }
+      } else if (json['images'] is List) {
+        imageList = List<String>.from(json['images']);
+      }
+    }
+
     return RequestItem(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
       description: json['description'],
-      status: json['status'] ?? 'requesting',
+      status: json['status'] ?? 'active',
       authorId: json['author_id'] ?? 0,
       authorName: authorName,
       authorProfilePhotoUrl: authorProfilePhotoUrl,
@@ -414,19 +425,20 @@ class RequestItem extends CommunityBasePost {
           ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,
       category: json['category'] ?? '',
-      requestedItem: json['requestedItem'] ?? json['requested_item'],
-      quantity: json['quantity'],
-      reason: json['reason'],
-      neededDate: json['neededDate'] ?? json['needed_date'],
+      urgency: json['urgency'] ?? 'normal',
+      location: json['location'],
       province: json['province'],
       district: json['district'],
-      location: json['location'],
-      priceRange: json['priceRange'] ?? json['price_range'],
-      contactPhone: json['contactPhone'] ?? json['contact_phone'] ?? '',
-      contactEmail: json['contactEmail'] ?? json['contact_email'],
-      urgency: json['urgency'] ?? 'normal',
-      images: json['images'] != null ? List<String>.from(json['images']) : null,
       deliveryAvailable: json['delivery_available'] ?? false,
+      contactPhone: json['contact_phone'] ?? json['contactInfo'] ?? '',
+      contactEmail: json['contact_email'],
+      images: imageList,
+      rewardType: json['reward_type'],
+      rewardAmount: json['reward_amount'] != null
+          ? (json['reward_amount'] is num
+              ? (json['reward_amount'] as num).toDouble()
+              : double.tryParse(json['reward_amount'].toString()))
+          : null,
     );
   }
 
@@ -435,17 +447,16 @@ class RequestItem extends CommunityBasePost {
       'title': title,
       'description': description,
       'category': category,
-      'requested_item': requestedItem,
-      'quantity': quantity,
-      'reason': reason,
-      'needed_date': neededDate,
+      'urgency': urgency,
+      'location': location,
       'province': province,
       'district': district,
-      'location': location,
-      'price_range': priceRange,
-      'urgency': urgency,
-      'images': images,
       'delivery_available': deliveryAvailable,
+      'contact_phone': contactPhone,
+      'contact_email': contactEmail,
+      'images': images,
+      'reward_type': rewardType,
+      'reward_amount': rewardAmount,
     };
   }
 
@@ -594,7 +605,7 @@ class MusicTeamRecruitment extends CommunityBasePost {
   final String? schedule; // 연습 일정
   final String location;
   final String? requirements; // 지원 자격
-  final String? compensation; // 보상/사례
+  final String? benefits; // 보상/사례 (스키마: benefits)
   final String contactPhone;
   final String? contactEmail;
   final int? applications;
@@ -620,7 +631,7 @@ class MusicTeamRecruitment extends CommunityBasePost {
     this.schedule,
     required this.location,
     this.requirements,
-    this.compensation,
+    this.benefits, // compensation → benefits로 변경
     required this.contactPhone,
     this.contactEmail,
     this.applications,
@@ -649,13 +660,13 @@ class MusicTeamRecruitment extends CommunityBasePost {
       worshipType: json['worship_type'],
       teamTypes: json['team_types'] != null ? List<String>.from(json['team_types']) : [],
       instrumentsNeeded: json['instruments_needed'] != null ? List<String>.from(json['instruments_needed']) : [],
-      schedule: json['schedule'],
-      location: json['location'] ?? '',
+      schedule: json['practice_schedule'] ?? json['schedule'], // practice_schedule 우선
+      location: json['practice_location'] ?? json['location'] ?? '', // practice_location 우선
       requirements: json['requirements'],
-      compensation: json['compensation'],
-      contactPhone: json['contact_phone'] ?? '',
+      benefits: json['benefits'], // ⭐ compensation → benefits로 변경
+      contactPhone: json['contact_info'] ?? json['contact_phone'] ?? '', // contact_info 우선
       contactEmail: json['contact_email'],
-      applications: json['applications'],
+      applications: json['applicants_count'] ?? json['applications'], // applicants_count 우선
     );
   }
 }

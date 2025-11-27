@@ -58,12 +58,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   DateTime? _purchaseDate; // 구매 날짜
 
   // 물품요청 전용
-  final TextEditingController _requestedItemController = TextEditingController();
-  final TextEditingController _reasonController = TextEditingController();
-  final TextEditingController _neededDateController = TextEditingController();
-  final TextEditingController _priceRangeController = TextEditingController();
-  final TextEditingController _quantityController = TextEditingController();
   String _selectedUrgency = 'normal'; // low, normal, high
+  String? _rewardType; // none, exchange, payment
+  final TextEditingController _rewardAmountController = TextEditingController();
 
   // 사역자모집 전용
   final TextEditingController _companyController = TextEditingController();
@@ -138,11 +135,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     _contactController.dispose();
     _emailController.dispose();
     _priceController.dispose();
-    _requestedItemController.dispose();
-    _reasonController.dispose();
-    _neededDateController.dispose();
-    _priceRangeController.dispose();
-    _quantityController.dispose();
+    _rewardAmountController.dispose();
     _companyController.dispose();
     _churchIntroController.dispose();
     _positionController.dispose();
@@ -213,11 +206,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         _contactController.text = post['contact_info'] ?? post['contact_phone'] ?? '';
         _emailController.text = post['contact_email'] ?? '';
       } else if (tableName == 'community_requests') {
-        _requestedItemController.text = post['requested_item'] ?? '';
-        _reasonController.text = post['reason'] ?? '';
-        _neededDateController.text = post['needed_date'] ?? '';
-        _priceRangeController.text = post['price_range'] ?? '';
-        _quantityController.text = post['quantity']?.toString() ?? '';
+        _rewardType = post['reward_type'];
+        _rewardAmountController.text = post['reward_amount']?.toString() ?? '';
         _selectedUrgency = post['urgency'] ?? 'normal';
         _contactController.text = post['contact_info'] ?? post['contact_phone'] ?? '';
         _emailController.text = post['contact_email'] ?? '';
@@ -286,11 +276,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
       _locationController.text = post.location ?? '';
-      _requestedItemController.text = post.requestedItem ?? '';
-      _reasonController.text = post.reason ?? '';
-      _neededDateController.text = post.neededDate ?? '';
-      _priceRangeController.text = post.priceRange ?? '';
-      _quantityController.text = post.quantity?.toString() ?? '';
+      _rewardType = post.rewardType;
+      _rewardAmountController.text = post.rewardAmount?.toString() ?? '';
       _selectedUrgency = post.urgency ?? 'normal';
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
@@ -329,7 +316,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _worshipTypeController.text = post.worshipType ?? '';
       _scheduleController.text = post.schedule ?? '';
       _requirementsController.text = post.requirements ?? '';
-      _compensationController.text = post.compensation ?? '';
+      _compensationController.text = post.benefits ?? '';
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
     } else if (post is MusicTeamSeeker) {
@@ -1153,38 +1140,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 2. 요청 물품 * | 카테고리 * (Row)
+          // 2. 카테고리 * | 우선순위 * (Row)
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '요청 물품 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    TextFormField(
-                      controller: _requestedItemController,
-                      decoration: _buildInputDecoration(
-                        hintText: '구체적인 물품명을 입력하세요',
-                      ),
-                      style: FigmaTextStyles().body2,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return '요청 물품을 입력해주세요';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 16.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1217,43 +1175,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   ],
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: 24.h),
-
-          // 3. 수량 | 우선순위 (Row)
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '수량',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    TextFormField(
-                      controller: _quantityController,
-                      decoration: _buildInputDecoration(
-                        hintText: '1',
-                      ),
-                      style: FigmaTextStyles().body2,
-                      keyboardType: TextInputType.number,
-                    ),
-                  ],
-                ),
-              ),
               SizedBox(width: 16.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '우선순위',
+                      '우선순위 *',
                       style: FigmaTextStyles().body2.copyWith(
                         color: NewAppColor.neutral900,
                         fontWeight: FontWeight.w500,
@@ -1262,87 +1190,17 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     DropdownButtonFormField<String>(
                       decoration: _buildInputDecoration(
-                        hintText: '보통',
+                        hintText: '우선순위 선택',
                       ),
                       value: _selectedUrgency,
                       items: const [
                         DropdownMenuItem(value: 'low', child: Text('낮음')),
                         DropdownMenuItem(value: 'normal', child: Text('보통')),
+                        DropdownMenuItem(value: 'medium', child: Text('중간')),
                         DropdownMenuItem(value: 'high', child: Text('높음')),
                       ],
                       onChanged: (value) => setState(() => _selectedUrgency = value!),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 24.h),
-
-          // 4. 필요일 * | 최대 예산 (Row)
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '필요일 *',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    TextFormField(
-                      controller: _neededDateController,
-                      readOnly: true,
-                      decoration: _buildInputDecoration(
-                        hintText: '필요일을 선택해주세요',
-                        prefixIcon: const Icon(Icons.calendar_today),
-                      ),
-                      style: FigmaTextStyles().body2,
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
-                        if (date != null) {
-                          _neededDateController.text = date.toString().split(' ')[0];
-                        }
-                      },
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return '필요일을 선택해주세요';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '최대 예산 (선택)',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    TextFormField(
-                      controller: _priceRangeController,
-                      decoration: _buildInputDecoration(
-                        hintText: '예: 50,000원',
-                      ),
-                      style: FigmaTextStyles().body2,
-                      keyboardType: TextInputType.number,
+                      validator: (value) => value == null ? '우선순위를 선택해주세요' : null,
                     ),
                   ],
                 ),
@@ -1462,22 +1320,54 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 6. 필요 이유
+          // 6. 보상 정보
           Text(
-            '필요 이유',
+            '보상 정보',
             style: FigmaTextStyles().body2.copyWith(
               color: NewAppColor.neutral900,
               fontWeight: FontWeight.w500,
             ),
           ),
           SizedBox(height: 8.h),
-          TextFormField(
-            controller: _reasonController,
-            decoration: _buildInputDecoration(
-              hintText: '물품이 필요한 이유를 간단히 설명해주세요',
-            ),
-            style: FigmaTextStyles().body2,
-            maxLines: 4,
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      decoration: _buildInputDecoration(
+                        hintText: '보상 유형 선택',
+                      ),
+                      value: _rewardType,
+                      items: const [
+                        DropdownMenuItem(value: 'none', child: Text('없음')),
+                        DropdownMenuItem(value: 'exchange', child: Text('교환')),
+                        DropdownMenuItem(value: 'payment', child: Text('금액')),
+                      ],
+                      onChanged: (value) => setState(() => _rewardType = value),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: _rewardAmountController,
+                      decoration: _buildInputDecoration(
+                        hintText: '보상 금액 (원)',
+                      ),
+                      style: FigmaTextStyles().body2,
+                      keyboardType: TextInputType.number,
+                      enabled: _rewardType == 'payment',
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 24.h),
 
@@ -3688,22 +3578,19 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       category: _selectedCategory ?? 'other',
-      requestedItem: _requestedItemController.text.trim(),
-      quantity: int.tryParse(_quantityController.text) ?? 1,
-      reason: _reasonController.text.trim(),
-      neededDate: _neededDateController.text.trim().isEmpty
-          ? null
-          : _neededDateController.text.trim(),
       province: _selectedProvince,
       district: _selectedDistrict,
       deliveryAvailable: _deliveryAvailable,
-      priceRange: _priceRangeController.text.trim(),
       urgency: _selectedUrgency,
       images: imageUrls,
       contactPhone: _contactController.text.trim(),
       contactEmail: _emailController.text.trim().isEmpty
           ? null
           : _emailController.text.trim(),
+      rewardType: _rewardType,
+      rewardAmount: _rewardType == 'payment'
+          ? double.tryParse(_rewardAmountController.text.trim())
+          : null,
     );
 
     return response.success;

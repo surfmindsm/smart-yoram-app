@@ -57,6 +57,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   bool? _deliveryAvailableFilter; // 택배가능 필터
   String _priceFilter = 'all'; // 가격 필터: all(전체), free(무료), paid(판매)
   bool _hideCompleted = false; // 판매/나눔/요청 완료 제거 필터
+  String _employmentTypeFilter = 'all'; // 고용형태 필터: all(전체), full-time(정규직), part-time(시간제), volunteer(자원봉사)
+  String _teamTypeFilter = 'all'; // 팀형태 필터: all(전체), praise-team(찬양팀), worship-team(워십팀), band(밴드)
 
   @override
   void initState() {
@@ -161,13 +163,48 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       }).toList();
     }
 
-    // 판매/나눔/요청 완료 제거 필터
+    // 판매/나눔/요청/사역자 모집 완료 제거 필터
     if (_hideCompleted) {
       filtered = filtered.where((item) {
         if (item is SharingItem) {
           final status = item.status.toLowerCase();
           return status != 'completed' && status != 'closed' && status != 'sold';
         } else if (item is RequestItem) {
+          final status = item.status.toLowerCase();
+          return status != 'completed' && status != 'closed';
+        } else if (item is JobPost) {
+          final status = item.status.toLowerCase();
+          return status != 'completed' && status != 'closed';
+        }
+        return true;
+      }).toList();
+    }
+
+    // 고용형태 필터 (사역자 모집)
+    if (_employmentTypeFilter != 'all' && widget.type == CommunityListType.jobPosting) {
+      filtered = filtered.where((item) {
+        if (item is JobPost) {
+          return item.employmentType == _employmentTypeFilter;
+        }
+        return false;
+      }).toList();
+    }
+
+    // 팀형태 필터 (행사팀 모집)
+    if (_teamTypeFilter != 'all' && widget.type == CommunityListType.musicTeamRecruit) {
+      filtered = filtered.where((item) {
+        if (item is MusicTeamRecruitment) {
+          // teamTypes는 배열이므로 contains로 확인
+          return item.teamTypes.contains(_teamTypeFilter);
+        }
+        return false;
+      }).toList();
+    }
+
+    // 행사팀 모집 완료 제거 필터
+    if (_hideCompleted && widget.type == CommunityListType.musicTeamRecruit) {
+      filtered = filtered.where((item) {
+        if (item is MusicTeamRecruitment) {
           final status = item.status.toLowerCase();
           return status != 'completed' && status != 'closed';
         }
@@ -185,6 +222,26 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           return item.category == _selectedCategory;
         } else if (item is RequestItem) {
           return item.category == _selectedCategory;
+        }
+        return false;
+      }).toList();
+    }
+
+    // 직종 필터 (사역자 모집)
+    if (_selectedCategory != null && widget.type == CommunityListType.jobPosting) {
+      filtered = filtered.where((item) {
+        if (item is JobPost) {
+          return item.jobType == _selectedCategory;
+        }
+        return false;
+      }).toList();
+    }
+
+    // 예배 형태 필터 (행사팀 모집)
+    if (_selectedCategory != null && widget.type == CommunityListType.musicTeamRecruit) {
+      filtered = filtered.where((item) {
+        if (item is MusicTeamRecruitment) {
+          return item.worshipType == _selectedCategory;
         }
         return false;
       }).toList();
@@ -248,20 +305,15 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
     // 택배가능 필터 (무료나눔/물품판매)
     if (_deliveryAvailableFilter != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
-      print('🚚 FILTER: 택배가능 필터 적용 - _deliveryAvailableFilter: $_deliveryAvailableFilter');
-      print('🚚 FILTER: 필터 적용 전 아이템 수: ${filtered.length}');
       filtered = filtered.where((item) {
         if (item is SharingItem) {
-          print('🚚 FILTER: 아이템 "${item.title}" - deliveryAvailable: ${item.deliveryAvailable}');
           return item.deliveryAvailable == _deliveryAvailableFilter;
         }
         return false;
       }).toList();
-      print('🚚 FILTER: 필터 적용 후 아이템 수: ${filtered.length}');
     }
 
     _filteredItemsCache = filtered;
-    print('📋 COMMUNITY_LIST: 최종 필터링된 아이템 수 - ${_filteredItemsCache.length}');
   }
 
   @override
@@ -282,9 +334,12 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               ),
         ),
         actions: [
-          // 필터 버튼 (무료나눔/물품판매에만 표시)
+          // 필터 버튼 (무료나눔/물품판매/물품요청/사역자모집/행사팀모집)
           if (widget.type == CommunityListType.freeSharing ||
-              widget.type == CommunityListType.itemSale)
+              widget.type == CommunityListType.itemSale ||
+              widget.type == CommunityListType.itemRequest ||
+              widget.type == CommunityListType.jobPosting ||
+              widget.type == CommunityListType.musicTeamRecruit)
             IconButton(
               icon: const Icon(Icons.filter_list, color: Colors.black),
               onPressed: _showAdvancedFilterBottomSheet,
@@ -307,9 +362,15 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           if (widget.type == CommunityListType.freeSharing ||
               widget.type == CommunityListType.itemSale)
             _buildQuickFilters(),
-          // 기존 필터들 (다른 타입용)
+          // 빠른 필터 (물품 요청)
           if (widget.type == CommunityListType.itemRequest)
-            _buildRequestFilters(),
+            _buildQuickRequestFilters(),
+          // 빠른 필터 (사역자 모집)
+          if (widget.type == CommunityListType.jobPosting)
+            _buildQuickJobFilters(),
+          // 빠른 필터 (행사팀 모집)
+          if (widget.type == CommunityListType.musicTeamRecruit)
+            _buildQuickMusicTeamFilters(),
           // 목록
           Expanded(
             child: _isLoading
@@ -950,10 +1011,13 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           ),
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // 가격 필터 그룹: 전체, 무료, 유료
             _buildSmallFilterChip(
               label: '전체',
@@ -1019,7 +1083,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                 });
               },
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1032,6 +1097,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _AdvancedFilterBottomSheet(
+        listType: widget.type,
         selectedCity: _selectedCity,
         selectedDistrict: _selectedDistrict,
         selectedCategory: _selectedCategory,
@@ -1048,83 +1114,244 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     );
   }
 
-  /// 물품 요청 필터
-  Widget _buildRequestFilters() {
-    // 카테고리 옵션
-    final List<String> categoryOptions = [
-      '가구',
-      '전자제품',
-      '도서',
-      '의류',
-      '장난감',
-      '생활용품',
-      '기타',
-    ];
-
+  /// 빠른 필터 (물품 요청)
+  Widget _buildQuickRequestFilters() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: Colors.white,
         border: const Border(
-          bottom: BorderSide(color: NewAppColor.neutral200, width: 1),
+          bottom: BorderSide(
+            color: NewAppColor.neutral200,
+            width: 1,
+          ),
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            // 전체 칩
-            _buildFilterChip(
-              label: '전체',
-              isSelected: !_hideCompleted && _selectedCategory == null,
-              onTap: () {
-                setState(() {
-                  _hideCompleted = false;
-                  _selectedCategory = null;
-                  _updateFilteredItems();
-                });
-              },
-            ),
-            SizedBox(width: 8.w),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 전체 칩
+              _buildSmallFilterChip(
+                label: '전체',
+                isSelected: !_hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = false;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 8.w),
 
-            // 완료 제거 필터
-            _buildFilterChip(
-              label: '완료 제거',
-              isSelected: _hideCompleted,
-              onTap: () {
-                setState(() {
-                  _hideCompleted = !_hideCompleted;
-                  _updateFilteredItems();
-                });
-              },
-            ),
-            SizedBox(width: 8.w),
+              // 구분선
+              Container(
+                width: 1,
+                height: 20.h,
+                color: NewAppColor.neutral300,
+              ),
+              SizedBox(width: 8.w),
 
-            // 구분선
-            Container(
-              width: 1,
-              height: 24.h,
-              color: NewAppColor.neutral300,
-              margin: EdgeInsets.symmetric(horizontal: 8.w),
-            ),
+              // 완료 제거 필터
+              _buildSmallFilterChip(
+                label: '완료제거',
+                isSelected: _hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = !_hideCompleted;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // 카테고리 필터 칩들
-            ...categoryOptions.map((category) {
-              return Padding(
-                padding: EdgeInsets.only(right: 8.w),
-                child: _buildFilterChip(
-                  label: category,
-                  isSelected: _selectedCategory == category,
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = _selectedCategory == category ? null : category;
-                      _updateFilteredItems();
-                    });
-                  },
-                ),
-              );
-            }),
-          ],
+  /// 빠른 필터 (사역자 모집)
+  Widget _buildQuickJobFilters() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(
+          bottom: BorderSide(
+            color: NewAppColor.neutral200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 고용형태 필터 그룹: 전체, 정규직, 시간제, 자원봉사
+              _buildSmallFilterChip(
+                label: '전체',
+                isSelected: _employmentTypeFilter == 'all',
+                onTap: () {
+                  setState(() {
+                    _employmentTypeFilter = 'all';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '정규직',
+                isSelected: _employmentTypeFilter == 'full-time',
+                onTap: () {
+                  setState(() {
+                    _employmentTypeFilter = 'full-time';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '시간제',
+                isSelected: _employmentTypeFilter == 'part-time',
+                onTap: () {
+                  setState(() {
+                    _employmentTypeFilter = 'part-time';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '자원봉사',
+                isSelected: _employmentTypeFilter == 'volunteer',
+                onTap: () {
+                  setState(() {
+                    _employmentTypeFilter = 'volunteer';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 8.w),
+
+              // 구분선
+              Container(
+                width: 1,
+                height: 20.h,
+                color: NewAppColor.neutral300,
+              ),
+              SizedBox(width: 8.w),
+
+              // 완료 제거 필터
+              _buildSmallFilterChip(
+                label: '마감제거',
+                isSelected: _hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = !_hideCompleted;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 빠른 필터 (행사팀 모집)
+  Widget _buildQuickMusicTeamFilters() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(
+          bottom: BorderSide(
+            color: NewAppColor.neutral200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 팀형태 필터 그룹: 전체, 찬양팀, 워십팀, 밴드
+              _buildSmallFilterChip(
+                label: '전체',
+                isSelected: _teamTypeFilter == 'all',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'all';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '찬양팀',
+                isSelected: _teamTypeFilter == 'praise-team',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'praise-team';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '워십팀',
+                isSelected: _teamTypeFilter == 'worship-team',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'worship-team';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '밴드',
+                isSelected: _teamTypeFilter == 'band',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'band';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 8.w),
+
+              // 구분선
+              Container(
+                width: 1,
+                height: 20.h,
+                color: NewAppColor.neutral300,
+              ),
+              SizedBox(width: 8.w),
+
+              // 완료 제거 필터
+              _buildSmallFilterChip(
+                label: '마감제거',
+                isSelected: _hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = !_hideCompleted;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1194,12 +1421,14 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
 /// 고급 필터 바텀시트 위젯
 class _AdvancedFilterBottomSheet extends StatefulWidget {
+  final CommunityListType listType;
   final String? selectedCity;
   final String? selectedDistrict;
   final String? selectedCategory;
   final Function(String?, String?, String?) onApply;
 
   const _AdvancedFilterBottomSheet({
+    required this.listType,
     this.selectedCity,
     this.selectedDistrict,
     this.selectedCategory,
@@ -1225,15 +1454,48 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
 
   @override
   Widget build(BuildContext context) {
-    final categoryOptions = [
-      '가구',
-      '전자제품',
-      '도서',
-      '의류',
-      '장난감',
-      '생활용품',
-      '기타',
-    ];
+    // 리스트 타입에 따라 다른 카테고리 옵션 사용
+    final List<String> categoryOptions;
+    final String categoryLabel;
+
+    if (widget.listType == CommunityListType.jobPosting) {
+      // 사역자 모집: 직종 카테고리
+      categoryOptions = [
+        '목회자',
+        '사무행정',
+        '교육',
+        '음악',
+        '미디어',
+        '시설관리',
+        '기타',
+      ];
+      categoryLabel = '직종';
+    } else if (widget.listType == CommunityListType.musicTeamRecruit) {
+      // 행사팀 모집: 예배 형태 카테고리
+      categoryOptions = [
+        '주일예배',
+        '새벽예배',
+        '수요예배',
+        '금요예배',
+        '특별예배',
+        '콘서트',
+        '수련회',
+        '기타',
+      ];
+      categoryLabel = '예배 형태';
+    } else {
+      // 물품 판매/요청: 물품 카테고리
+      categoryOptions = [
+        '가구',
+        '전자제품',
+        '도서',
+        '의류',
+        '장난감',
+        '생활용품',
+        '기타',
+      ];
+      categoryLabel = '카테고리';
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -1355,9 +1617,9 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
                   ),
                   SizedBox(height: 24.h),
 
-                  // 카테고리 선택
+                  // 카테고리/직종 선택
                   Text(
-                    '카테고리',
+                    categoryLabel,
                     style: FigmaTextStyles().subtitle3.copyWith(
                           color: NewAppColor.neutral900,
                         ),

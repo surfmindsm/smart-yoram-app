@@ -504,18 +504,15 @@ class CommunityService {
     required String title,
     required String description,
     required String category,
-    required String requestedItem,
-    required int quantity,
-    required String reason,
-    String? neededDate,
     String? province,
     String? district,
     bool? deliveryAvailable,
-    required String priceRange,
     required String urgency,
     required List<String> images,
     required String contactPhone,
     String? contactEmail,
+    String? rewardType,
+    double? rewardAmount,
   }) async {
     try {
       final userResponse = await _authService.getCurrentUser();
@@ -535,27 +532,20 @@ class CommunityService {
         'title': title,
         'description': description,
         'category': category,
-        'requested_item': requestedItem,
-        'quantity': quantity,
-        'reason': reason,
         'province': province,
         'district': district,
         'delivery_available': deliveryAvailable ?? false,
-        'price_range': priceRange,
         'urgency': urgency,
         'images': images,
         'contact_phone': contactPhone,
         'contact_email': contactEmail,
+        'reward_type': rewardType,
+        'reward_amount': rewardAmount,
         'church_id': currentUser.churchId,
         'author_id': currentUser.id,
         'status': 'active',
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       };
-
-      // needed_date가 있으면 추가 (테이블에 컬럼이 있는 경우)
-      if (neededDate != null) {
-        data['needed_date'] = neededDate;
-      }
 
       final response = await _supabaseService.client
           .from('community_requests')
@@ -1126,26 +1116,43 @@ class CommunityService {
 
       print('📝 COMMUNITY_SERVICE: 사역자 모집 작성 - $title');
 
+      // province + district를 합쳐서 location 생성
+      String? location;
+      if (province != null && district != null) {
+        location = '$province $district';
+      } else if (province != null) {
+        location = province;
+      }
+
+      // contact_phone + contact_email을 합쳐서 contact_info 생성
+      String contactInfo = contactPhone;
+      if (contactEmail != null && contactEmail.isNotEmpty) {
+        contactInfo = '$contactPhone / $contactEmail';
+      }
+
+      // description에 교회소개와 모집분야 정보 추가
+      String fullDescription = description;
+      if (churchIntro.isNotEmpty) {
+        fullDescription = '【교회 소개】\n$churchIntro\n\n【모집 분야】\n$position\n\n【상세 내용】\n$description';
+      } else if (position.isNotEmpty) {
+        fullDescription = '【모집 분야】\n$position\n\n【상세 내용】\n$description';
+      }
+
       final data = {
         'title': title,
-        'description': description,
-        'company': company,
-        'church_intro': churchIntro,
-        'position': position,
+        'description': fullDescription,
+        'company_name': company,
         'job_type': jobType,
         'employment_type': employmentType,
-        'salary': salary,
-        'qualifications': qualifications,
-        'province': province,
-        'district': district,
-        'delivery_available': deliveryAvailable ?? false,
-        'deadline': deadline,
-        'contact_phone': contactPhone,
-        'contact_email': contactEmail,
+        'salary_range': salary,
+        'requirements': qualifications,
+        'location': location,
+        'application_deadline': deadline,
+        'contact_info': contactInfo,
         'church_id': currentUser.churchId,
         'author_id': currentUser.id,
         'status': 'active',
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       final response = await _supabaseService.client
@@ -1181,7 +1188,7 @@ class CommunityService {
     String? rehearsalSchedule,
     required String location,
     String? requirements,
-    String? compensation,
+    String? compensation, // UI에서는 compensation으로 받지만 DB에는 benefits로 저장
     required String contactPhone,
     String? contactEmail,
   }) async {
@@ -1199,22 +1206,37 @@ class CommunityService {
 
       print('📝 COMMUNITY_SERVICE: 행사팀 모집 작성 - $title');
 
+      // contact_method 결정 (email이 있으면 email, 없으면 phone)
+      final contactMethod = (contactEmail != null && contactEmail.isNotEmpty) ? 'email' : 'phone';
+
+      // contact_info 생성
+      String contactInfo = contactPhone;
+      if (contactEmail != null && contactEmail.isNotEmpty) {
+        contactInfo = '$contactPhone / $contactEmail';
+      }
+
       final data = {
         'title': title,
+        'team_name': title, // 필수: 팀명은 제목으로 대체
+        'worship_type': eventType, // 필수: 예배 형태 (기존 eventType 매핑)
+        'team_types': [teamType], // JSONB 배열
+        'instruments_needed': null, // JSON - 현재는 null
+        'positions_needed': null, // 현재는 null
+        'experience_required': '무관', // 필수: 기본값 '무관'
+        'practice_location': location, // 필수: 연습 장소
+        'practice_schedule': rehearsalSchedule ?? '협의', // 필수: 연습 일정
+        'commitment': null,
         'description': description,
-        'event_type': eventType,
-        'team_type': teamType,
-        'event_date': eventDate,
-        'rehearsal_schedule': rehearsalSchedule,
-        'location': location,
         'requirements': requirements,
-        'compensation': compensation,
-        'contact_phone': contactPhone,
-        'contact_email': contactEmail,
+        'benefits': compensation, // ⭐ compensation → benefits로 변경
+        'contact_method': contactMethod, // 필수: 연락 방법
+        'contact_info': contactInfo, // 필수: 연락처 정보
+        'current_members': null,
+        'target_members': null,
         'church_id': currentUser.churchId,
         'author_id': currentUser.id,
         'status': 'active',
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       final response = await _supabaseService.client
