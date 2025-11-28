@@ -761,6 +761,8 @@ class CommunityService {
   /// 조회수 증가
   Future<void> _incrementViewCount(String tableName, int id) async {
     try {
+      print('🔍 COMMUNITY_SERVICE: 조회수 증가 시도 - $tableName/$id');
+
       // 현재 조회수 가져오기
       final current = await _supabaseService.client
           .from(tableName)
@@ -768,16 +770,23 @@ class CommunityService {
           .eq('id', id)
           .single();
 
-      // 조회수 1 증가
       final currentCount = current['view_count'] as int? ?? 0;
-      await _supabaseService.client
+      print('🔍 COMMUNITY_SERVICE: 현재 조회수 - $currentCount');
+
+      // 조회수 1 증가
+      final updateResult = await _supabaseService.client
           .from(tableName)
           .update({'view_count': currentCount + 1})
-          .eq('id', id);
+          .eq('id', id)
+          .select();
 
-      print('✅ COMMUNITY_SERVICE: 조회수 증가 완료 - $tableName/$id: ${currentCount + 1}');
-    } catch (e) {
-      print('❌ COMMUNITY_SERVICE: 조회수 증가 실패 - $e');
+      print('✅ COMMUNITY_SERVICE: 조회수 증가 완료 - $tableName/$id: $currentCount → ${currentCount + 1}');
+      print('✅ UPDATE 결과: $updateResult');
+    } catch (e, stackTrace) {
+      print('❌ COMMUNITY_SERVICE: 조회수 증가 실패 - $tableName/$id');
+      print('❌ 에러 타입: ${e.runtimeType}');
+      print('❌ 에러 내용: $e');
+      print('❌ 스택 트레이스: $stackTrace');
     }
   }
 

@@ -1050,10 +1050,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           ),
         ),
       ).then((result) {
-        // 상세 화면에서 삭제 등의 작업 후 돌아왔을 때 목록 새로고침
-        if (result == true) {
-          _loadItems();
-        }
+        // 상세 화면에서 돌아왔을 때 항상 목록 새로고침 (조회수 반영)
+        _loadItems();
       });
     }
   }
