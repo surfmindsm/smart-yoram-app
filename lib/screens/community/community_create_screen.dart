@@ -1055,20 +1055,15 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 2. 카테고리 *
-          _buildRequiredLabel('카테고리'),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            decoration: _buildInputDecoration(hintText: '카테고리를 선택하세요'),
+          CustomDropdownField<String>(
+            label: '카테고리',
+            hintText: '카테고리를 선택하세요',
             value: _selectedCategory,
-            items: const [
-              DropdownMenuItem(value: '가구', child: Text('가구')),
-              DropdownMenuItem(value: '전자제품', child: Text('전자제품')),
-              DropdownMenuItem(value: '도서', child: Text('도서')),
-              DropdownMenuItem(value: '의류', child: Text('의류')),
-              DropdownMenuItem(value: '장난감', child: Text('장난감')),
-              DropdownMenuItem(value: '생활용품', child: Text('생활용품')),
-              DropdownMenuItem(value: '기타', child: Text('기타')),
-            ],
+            required: true,
+            items: buildSimpleDropdownItems(
+              items: const ['가구', '전자제품', '도서', '의류', '장난감', '생활용품', '기타'],
+              currentValue: _selectedCategory,
+            ),
             onChanged: (value) => setState(() => _selectedCategory = value),
             validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
           ),
@@ -1122,17 +1117,15 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 5. 상태 *
-          _buildRequiredLabel('상태'),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            decoration: _buildInputDecoration(hintText: '상품 상태를 선택하세요'),
+          CustomDropdownField<String>(
+            label: '상태',
+            hintText: '상품 상태를 선택하세요',
             value: _selectedCondition,
-            items: const [
-              DropdownMenuItem(value: '새상품', child: Text('새 상품')),
-              DropdownMenuItem(value: '거의새것', child: Text('거의 새것')),
-              DropdownMenuItem(value: '양호', child: Text('양호')),
-              DropdownMenuItem(value: '사용감있음', child: Text('사용감 있음')),
-            ],
+            required: true,
+            items: buildSimpleDropdownItems(
+              items: const ['새상품', '거의새것', '양호', '사용감있음'],
+              currentValue: _selectedCondition,
+            ),
             onChanged: (value) => setState(() => _selectedCondition = value),
             validator: (value) => value == null ? '상품 상태를 선택해주세요' : null,
           ),
@@ -1198,28 +1191,20 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 7. 거래 지역 *
-          _buildRequiredLabel('거래 지역'),
-          SizedBox(height: 8.h),
           Row(
             children: [
               // 도/시 선택
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  label: '도/시',
+                  hintText: '도/시 선택',
                   value: _selectedProvince,
-                  hint: Text(
-                    '도/시 선택',
-                    style: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
-                  ),
-                  decoration: _buildInputDecoration(hintText: ''),
+                  required: true,
                   items: LocationData.getCities().map((city) {
-                    return DropdownMenuItem<String>(
+                    return buildDropdownItem<String>(
                       value: city,
-                      child: Text(
-                        city,
-                        style: FigmaTextStyles().body2,
-                      ),
+                      text: city,
+                      currentValue: _selectedProvince,
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -1233,33 +1218,26 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               SizedBox(width: 8.w),
               // 시/군/구 선택
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  label: '시/군/구',
+                  hintText: '시/군/구 선택',
                   value: _selectedDistrict,
-                  hint: Text(
-                    '시/군/구 선택',
-                    style: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
-                  ),
-                  decoration: _buildInputDecoration(hintText: ''),
+                  required: true,
+                  enabled: _selectedProvince != null,
                   items: _selectedProvince != null
                       ? LocationData.getDistricts(_selectedProvince!).map((district) {
-                          return DropdownMenuItem<String>(
+                          return buildDropdownItem<String>(
                             value: district,
-                            child: Text(
-                              district,
-                              style: FigmaTextStyles().body2,
-                            ),
+                            text: district,
+                            currentValue: _selectedDistrict,
                           );
                         }).toList()
                       : [],
-                  onChanged: _selectedProvince == null
-                      ? null
-                      : (value) {
-                          setState(() {
-                            _selectedDistrict = value;
-                          });
-                        },
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedDistrict = value;
+                    });
+                  },
                 ),
               ),
             ],
@@ -1622,53 +1600,34 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildRequiredLabel('카테고리'),
-                    SizedBox(height: 8.h),
-                    DropdownButtonFormField<String>(
-                      decoration: _buildInputDecoration(
-                        hintText: '카테고리 선택',
-                      ),
-                      value: _selectedCategory,
-                      items: const [
-                        DropdownMenuItem(value: '가구', child: Text('가구')),
-                        DropdownMenuItem(value: '전자제품', child: Text('전자제품')),
-                        DropdownMenuItem(value: '도서', child: Text('도서')),
-                        DropdownMenuItem(value: '의류', child: Text('의류')),
-                        DropdownMenuItem(value: '장난감', child: Text('장난감')),
-                        DropdownMenuItem(value: '생활용품', child: Text('생활용품')),
-                        DropdownMenuItem(value: '기타', child: Text('기타')),
-                      ],
-                      onChanged: (value) => setState(() => _selectedCategory = value),
-                      validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
-                    ),
-                  ],
+                child: CustomDropdownField<String>(
+                  label: '카테고리',
+                  hintText: '카테고리 선택',
+                  value: _selectedCategory,
+                  required: true,
+                  items: buildSimpleDropdownItems(
+                    items: const ['가구', '전자제품', '도서', '의류', '장난감', '생활용품', '기타'],
+                    currentValue: _selectedCategory,
+                  ),
+                  onChanged: (value) => setState(() => _selectedCategory = value),
+                  validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
                 ),
               ),
               SizedBox(width: 16.w),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildRequiredLabel('우선순위'),
-                    SizedBox(height: 8.h),
-                    DropdownButtonFormField<String>(
-                      decoration: _buildInputDecoration(
-                        hintText: '우선순위 선택',
-                      ),
-                      value: _selectedUrgency,
-                      items: const [
-                        DropdownMenuItem(value: 'low', child: Text('낮음')),
-                        DropdownMenuItem(value: 'normal', child: Text('보통')),
-                        DropdownMenuItem(value: 'medium', child: Text('중간')),
-                        DropdownMenuItem(value: 'high', child: Text('높음')),
-                      ],
-                      onChanged: (value) => setState(() => _selectedUrgency = value!),
-                      validator: (value) => value == null ? '우선순위를 선택해주세요' : null,
-                    ),
+                child: CustomDropdownField<String>(
+                  label: '우선순위',
+                  hintText: '우선순위 선택',
+                  value: _selectedUrgency,
+                  required: true,
+                  items: [
+                    buildDropdownItem<String>(value: 'low', text: '낮음', currentValue: _selectedUrgency),
+                    buildDropdownItem<String>(value: 'normal', text: '보통', currentValue: _selectedUrgency),
+                    buildDropdownItem<String>(value: 'medium', text: '중간', currentValue: _selectedUrgency),
+                    buildDropdownItem<String>(value: 'high', text: '높음', currentValue: _selectedUrgency),
                   ],
+                  onChanged: (value) => setState(() => _selectedUrgency = value!),
+                  validator: (value) => value == null ? '우선순위를 선택해주세요' : null,
                 ),
               ),
             ],
@@ -1688,22 +1647,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             children: [
               // 도/시 선택
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '도/시 선택',
                   value: _selectedProvince,
-                  hint: Text(
-                    '도/시 선택',
-                    style: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
-                  ),
-                  decoration: _buildInputDecoration(hintText: ''),
                   items: LocationData.getCities().map((city) {
-                    return DropdownMenuItem<String>(
+                    return buildDropdownItem<String>(
                       value: city,
-                      child: Text(
-                        city,
-                        style: FigmaTextStyles().body2,
-                      ),
+                      text: city,
+                      currentValue: _selectedProvince,
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -1717,23 +1668,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               SizedBox(width: 8.w),
               // 시/군/구 선택
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '시/군/구 선택',
                   value: _selectedDistrict,
-                  hint: Text(
-                    '시/군/구 선택',
-                    style: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
-                  ),
-                  decoration: _buildInputDecoration(hintText: ''),
+                  enabled: _selectedProvince != null,
                   items: _selectedProvince != null
                       ? LocationData.getDistricts(_selectedProvince!).map((district) {
-                          return DropdownMenuItem<String>(
+                          return buildDropdownItem<String>(
                             value: district,
-                            child: Text(
-                              district,
-                              style: FigmaTextStyles().body2,
-                            ),
+                            text: district,
+                            currentValue: _selectedDistrict,
                           );
                         }).toList()
                       : [],
@@ -1798,22 +1742,15 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      decoration: _buildInputDecoration(
-                        hintText: '보상 유형 선택',
-                      ),
-                      value: _rewardType,
-                      items: const [
-                        DropdownMenuItem(value: 'none', child: Text('없음')),
-                        DropdownMenuItem(value: 'exchange', child: Text('교환')),
-                        DropdownMenuItem(value: 'payment', child: Text('금액')),
-                      ],
-                      onChanged: (value) => setState(() => _rewardType = value),
-                    ),
+                child: CustomDropdownField<String>(
+                  hintText: '보상 유형 선택',
+                  value: _rewardType,
+                  items: [
+                    buildDropdownItem<String>(value: 'none', text: '없음', currentValue: _rewardType),
+                    buildDropdownItem<String>(value: 'exchange', text: '교환', currentValue: _rewardType),
+                    buildDropdownItem<String>(value: 'payment', text: '금액', currentValue: _rewardType),
                   ],
+                  onChanged: (value) => setState(() => _rewardType = value),
                 ),
               ),
               SizedBox(width: 16.w),
@@ -1965,57 +1902,36 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildRequiredLabel('직책'),
-                    SizedBox(height: 8.h),
-                    DropdownButtonFormField<String>(
-                      decoration: _buildInputDecoration(
-                        hintText: '직책 선택',
-                      ),
-                      value: _selectedCategory,
-                      items: const [
-                        DropdownMenuItem(value: 'pastor', child: Text('목사')),
-                        DropdownMenuItem(value: 'minister', child: Text('전도사')),
-                        DropdownMenuItem(value: 'worship', child: Text('찬양사역자')),
-                        DropdownMenuItem(value: 'admin', child: Text('행정간사')),
-                        DropdownMenuItem(value: 'education', child: Text('교육간사')),
-                        DropdownMenuItem(value: 'other', child: Text('기타')),
-                      ],
-                      onChanged: (value) => setState(() => _selectedCategory = value),
-                      validator: (value) => value == null ? '직책을 선택해주세요' : null,
-                    ),
+                child: CustomDropdownField<String>(
+                  label: '직책',
+                  hintText: '직책 선택',
+                  value: _selectedCategory,
+                  required: true,
+                  items: [
+                    buildDropdownItem<String>(value: 'pastor', text: '목사', currentValue: _selectedCategory),
+                    buildDropdownItem<String>(value: 'minister', text: '전도사', currentValue: _selectedCategory),
+                    buildDropdownItem<String>(value: 'worship', text: '찬양사역자', currentValue: _selectedCategory),
+                    buildDropdownItem<String>(value: 'admin', text: '행정간사', currentValue: _selectedCategory),
+                    buildDropdownItem<String>(value: 'education', text: '교육간사', currentValue: _selectedCategory),
+                    buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedCategory),
                   ],
+                  onChanged: (value) => setState(() => _selectedCategory = value),
+                  validator: (value) => value == null ? '직책을 선택해주세요' : null,
                 ),
               ),
               SizedBox(width: 16.w),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '고용 형태',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    DropdownButtonFormField<String>(
-                      decoration: _buildInputDecoration(
-                        hintText: '고용 형태',
-                      ),
-                      value: _selectedEmploymentType,
-                      items: const [
-                        DropdownMenuItem(value: 'full-time', child: Text('정규직')),
-                        DropdownMenuItem(value: 'contract', child: Text('계약직')),
-                        DropdownMenuItem(value: 'part-time', child: Text('시간제')),
-                        DropdownMenuItem(value: 'volunteer', child: Text('자원봉사')),
-                      ],
-                      onChanged: (value) => setState(() => _selectedEmploymentType = value),
-                    ),
+                child: CustomDropdownField<String>(
+                  label: '고용 형태',
+                  hintText: '고용 형태',
+                  value: _selectedEmploymentType,
+                  items: [
+                    buildDropdownItem<String>(value: 'full-time', text: '정규직', currentValue: _selectedEmploymentType),
+                    buildDropdownItem<String>(value: 'contract', text: '계약직', currentValue: _selectedEmploymentType),
+                    buildDropdownItem<String>(value: 'part-time', text: '시간제', currentValue: _selectedEmploymentType),
+                    buildDropdownItem<String>(value: 'volunteer', text: '자원봉사', currentValue: _selectedEmploymentType),
                   ],
+                  onChanged: (value) => setState(() => _selectedEmploymentType = value),
                 ),
               ),
             ],
@@ -2079,22 +1995,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             children: [
               // 도/시 선택
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '도/시 선택',
                   value: _selectedProvince,
-                  hint: Text(
-                    '도/시 선택',
-                    style: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
-                  ),
-                  decoration: _buildInputDecoration(hintText: ''),
                   items: LocationData.getCities().map((city) {
-                    return DropdownMenuItem<String>(
+                    return buildDropdownItem<String>(
                       value: city,
-                      child: Text(
-                        city,
-                        style: FigmaTextStyles().body2,
-                      ),
+                      text: city,
+                      currentValue: _selectedProvince,
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -2108,23 +2016,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               SizedBox(width: 8.w),
               // 시/군/구 선택
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '시/군/구 선택',
                   value: _selectedDistrict,
-                  hint: Text(
-                    '시/군/구 선택',
-                    style: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
-                  ),
-                  decoration: _buildInputDecoration(hintText: ''),
+                  enabled: _selectedProvince != null,
                   items: _selectedProvince != null
                       ? LocationData.getDistricts(_selectedProvince!).map((district) {
-                          return DropdownMenuItem<String>(
+                          return buildDropdownItem<String>(
                             value: district,
-                            child: Text(
-                              district,
-                              style: FigmaTextStyles().body2,
-                            ),
+                            text: district,
+                            currentValue: _selectedDistrict,
                           );
                         }).toList()
                       : [],
@@ -2360,25 +2261,23 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 2. 행사 유형 *
-          _buildRequiredLabel('행사 유형'),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            decoration: _buildInputDecoration(
-              hintText: '행사 유형 선택',
-            ),
+          CustomDropdownField<String>(
+            label: '행사 유형',
+            hintText: '행사 유형 선택',
             value: _selectedEventType,
-            items: const [
-              DropdownMenuItem(value: 'sunday-service', child: Text('주일예배')),
-              DropdownMenuItem(value: 'wednesday-service', child: Text('수요예배')),
-              DropdownMenuItem(value: 'dawn-service', child: Text('새벽예배')),
-              DropdownMenuItem(value: 'special-service', child: Text('특별예배')),
-              DropdownMenuItem(value: 'revival', child: Text('부흥회')),
-              DropdownMenuItem(value: 'praise-meeting', child: Text('찬양집회')),
-              DropdownMenuItem(value: 'wedding', child: Text('결혼식')),
-              DropdownMenuItem(value: 'funeral', child: Text('장례식')),
-              DropdownMenuItem(value: 'retreat', child: Text('수련회')),
-              DropdownMenuItem(value: 'concert', child: Text('콘서트')),
-              DropdownMenuItem(value: 'other', child: Text('기타')),
+            required: true,
+            items: [
+              buildDropdownItem<String>(value: 'sunday-service', text: '주일예배', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'wednesday-service', text: '수요예배', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'dawn-service', text: '새벽예배', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'special-service', text: '특별예배', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'revival', text: '부흥회', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'praise-meeting', text: '찬양집회', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'wedding', text: '결혼식', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'funeral', text: '장례식', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'retreat', text: '수련회', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'concert', text: '콘서트', currentValue: _selectedEventType),
+              buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedEventType),
             ],
             onChanged: (value) => setState(() => _selectedEventType = value),
             validator: (value) => value == null ? '행사 유형을 선택해주세요' : null,
@@ -2386,23 +2285,21 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 3. 모집 팀 형태 *
-          _buildRequiredLabel('모집 팀 형태'),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            decoration: _buildInputDecoration(
-              hintText: '팀 형태 선택',
-            ),
+          CustomDropdownField<String>(
+            label: '모집 팀 형태',
+            hintText: '팀 형태 선택',
             value: _selectedTeamType,
-            items: const [
-              DropdownMenuItem(value: 'solo', child: Text('현재 솔로 활동')),
-              DropdownMenuItem(value: 'praise-team', child: Text('찬양팀')),
-              DropdownMenuItem(value: 'worship-team', child: Text('워십팀')),
-              DropdownMenuItem(value: 'acoustic-team', child: Text('어쿠스틱 팀')),
-              DropdownMenuItem(value: 'band', child: Text('밴드')),
-              DropdownMenuItem(value: 'orchestra', child: Text('오케스트라')),
-              DropdownMenuItem(value: 'choir', child: Text('합창단')),
-              DropdownMenuItem(value: 'dance-team', child: Text('무용팀')),
-              DropdownMenuItem(value: 'other', child: Text('기타')),
+            required: true,
+            items: [
+              buildDropdownItem<String>(value: 'solo', text: '현재 솔로 활동', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'praise-team', text: '찬양팀', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'worship-team', text: '워십팀', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'acoustic-team', text: '어쿠스틱 팀', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'band', text: '밴드', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'orchestra', text: '오케스트라', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'choir', text: '합창단', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'dance-team', text: '무용팀', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedTeamType),
             ],
             onChanged: (value) => setState(() => _selectedTeamType = value),
             validator: (value) => value == null ? '팀 형태를 선택해주세요' : null,
@@ -2481,15 +2378,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '도/시 선택',
                   value: _selectedProvince,
-                  decoration: _buildInputDecoration(
-                    hintText: '도/시 선택',
-                  ),
                   items: LocationData.getCities().map((city) {
-                    return DropdownMenuItem<String>(
+                    return buildDropdownItem<String>(
                       value: city,
-                      child: Text(city),
+                      text: city,
+                      currentValue: _selectedProvince,
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -2502,16 +2398,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               ),
               SizedBox(width: 8.w),
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '시/군/구 선택',
                   value: _selectedDistrict,
-                  decoration: _buildInputDecoration(
-                    hintText: '시/군/구 선택',
-                  ),
+                  enabled: _selectedProvince != null,
                   items: _selectedProvince != null
                       ? LocationData.getDistricts(_selectedProvince!).map((district) {
-                          return DropdownMenuItem<String>(
+                          return buildDropdownItem<String>(
                             value: district,
-                            child: Text(district),
+                            text: district,
+                            currentValue: _selectedDistrict,
                           );
                         }).toList()
                       : [],
@@ -2741,23 +2637,21 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 16.h),
 
           // 2. 팀 형태 *
-          _buildRequiredLabel('팀 형태'),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            decoration: _buildInputDecoration(
-              hintText: '팀 형태 선택',
-            ),
+          CustomDropdownField<String>(
+            label: '팀 형태',
+            hintText: '팀 형태 선택',
             value: _selectedTeamType,
-            items: const [
-              DropdownMenuItem(value: 'solo', child: Text('현재 솔로 활동')),
-              DropdownMenuItem(value: 'praise-team', child: Text('찬양팀')),
-              DropdownMenuItem(value: 'worship-team', child: Text('워십팀')),
-              DropdownMenuItem(value: 'acoustic-team', child: Text('어쿠스틱 팀')),
-              DropdownMenuItem(value: 'band', child: Text('밴드')),
-              DropdownMenuItem(value: 'orchestra', child: Text('오케스트라')),
-              DropdownMenuItem(value: 'choir', child: Text('합창단')),
-              DropdownMenuItem(value: 'dance-team', child: Text('무용팀')),
-              DropdownMenuItem(value: 'other', child: Text('기타')),
+            required: true,
+            items: [
+              buildDropdownItem<String>(value: 'solo', text: '현재 솔로 활동', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'praise-team', text: '찬양팀', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'worship-team', text: '워십팀', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'acoustic-team', text: '어쿠스틱 팀', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'band', text: '밴드', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'orchestra', text: '오케스트라', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'choir', text: '합창단', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'dance-team', text: '무용팀', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedTeamType),
             ],
             onChanged: (value) => setState(() => _selectedTeamType = value),
             validator: (value) => value == null ? '팀 형태를 선택해주세요' : null,
@@ -2794,16 +2688,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '도/시 선택',
                   value: _selectedProvince,
-                  decoration: _buildInputDecoration(
-                    hintText: '도/시 선택',
-                  ),
-                  hint: const Text('도/시 선택'),
                   items: LocationData.getCities().map((city) {
-                    return DropdownMenuItem<String>(
+                    return buildDropdownItem<String>(
                       value: city,
-                      child: Text(city),
+                      text: city,
+                      currentValue: _selectedProvince,
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -2816,17 +2708,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               ),
               SizedBox(width: 8.w),
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '시/군/구 선택',
                   value: _selectedDistrict,
-                  decoration: _buildInputDecoration(
-                    hintText: '시/군/구 선택',
-                  ),
-                  hint: const Text('시/군/구 선택'),
+                  enabled: _selectedProvince != null,
                   items: _selectedProvince != null
                       ? LocationData.getDistricts(_selectedProvince!).map((district) {
-                          return DropdownMenuItem<String>(
+                          return buildDropdownItem<String>(
                             value: district,
-                            child: Text(district),
+                            text: district,
+                            currentValue: _selectedDistrict,
                           );
                         }).toList()
                       : [],
@@ -2942,26 +2833,17 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 16.h),
 
           // 6. 활동 가능 시간대
-          Text(
-            '활동 가능 시간대',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            decoration: _buildInputDecoration(
-              hintText: '활동 가능 시간대',
-            ),
+          CustomDropdownField<String>(
+            label: '활동 가능 시간대',
+            hintText: '활동 가능 시간대',
             value: _selectedTimeSlot,
-            items: const [
-              DropdownMenuItem(value: 'morning', child: Text('오전 (9:00-12:00)')),
-              DropdownMenuItem(value: 'afternoon', child: Text('오후 (13:00-18:00)')),
-              DropdownMenuItem(value: 'evening', child: Text('저녁 (18:00-21:00)')),
-              DropdownMenuItem(value: 'night', child: Text('야간 (21:00-23:00)')),
-              DropdownMenuItem(value: 'anytime', child: Text('상시 가능')),
-              DropdownMenuItem(value: 'negotiable', child: Text('협의 후 결정')),
+            items: [
+              buildDropdownItem<String>(value: 'morning', text: '오전 (9:00-12:00)', currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(value: 'afternoon', text: '오후 (13:00-18:00)', currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(value: 'evening', text: '저녁 (18:00-21:00)', currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(value: 'night', text: '야간 (21:00-23:00)', currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(value: 'anytime', text: '상시 가능', currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(value: 'negotiable', text: '협의 후 결정', currentValue: _selectedTimeSlot),
             ],
             onChanged: (value) {
               setState(() {
@@ -3190,25 +3072,19 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 카테고리 *
-          _buildRequiredLabel('카테고리'),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              hintText: '카테고리 선택',
-              filled: true,
-              fillColor: NewAppColor.neutral100,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            ),
+          CustomDropdownField<String>(
+            label: '카테고리',
+            hintText: '카테고리 선택',
             value: _selectedNewsCategory,
-            items: const [
-              DropdownMenuItem(value: 'worship', child: Text('특별예배/연합예배')),
-              DropdownMenuItem(value: 'event', child: Text('행사')),
-              DropdownMenuItem(value: 'retreat', child: Text('수련회')),
-              DropdownMenuItem(value: 'mission', child: Text('선교')),
-              DropdownMenuItem(value: 'education', child: Text('교육')),
-              DropdownMenuItem(value: 'volunteer', child: Text('봉사')),
-              DropdownMenuItem(value: 'other', child: Text('기타')),
+            required: true,
+            items: [
+              buildDropdownItem<String>(value: 'worship', text: '특별예배/연합예배', currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(value: 'event', text: '행사', currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(value: 'retreat', text: '수련회', currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(value: 'mission', text: '선교', currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(value: 'education', text: '교육', currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(value: 'volunteer', text: '봉사', currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedNewsCategory),
             ],
             onChanged: (value) => setState(() => _selectedNewsCategory = value),
             validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
@@ -3271,21 +3147,15 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 24.h),
 
           // 우선순위 *
-          _buildRequiredLabel('우선순위'),
-          SizedBox(height: 8.h),
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              hintText: '일반',
-              filled: true,
-              fillColor: NewAppColor.neutral100,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            ),
+          CustomDropdownField<String>(
+            label: '우선순위',
+            hintText: '일반',
             value: _selectedPriority,
-            items: const [
-              DropdownMenuItem(value: 'urgent', child: Text('긴급')),
-              DropdownMenuItem(value: 'important', child: Text('중요')),
-              DropdownMenuItem(value: 'normal', child: Text('일반')),
+            required: true,
+            items: [
+              buildDropdownItem<String>(value: 'urgent', text: '긴급', currentValue: _selectedPriority),
+              buildDropdownItem<String>(value: 'important', text: '중요', currentValue: _selectedPriority),
+              buildDropdownItem<String>(value: 'normal', text: '일반', currentValue: _selectedPriority),
             ],
             onChanged: (value) => setState(() => _selectedPriority = value!),
           ),
@@ -3361,19 +3231,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '도/시 선택',
                   value: _selectedProvince,
-                  decoration: InputDecoration(
-                    hintText: '도/시 선택',
-                    filled: true,
-                    fillColor: NewAppColor.neutral100,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                  ),
                   items: LocationData.getCities().map((city) {
-                    return DropdownMenuItem<String>(
+                    return buildDropdownItem<String>(
                       value: city,
-                      child: Text(city),
+                      text: city,
+                      currentValue: _selectedProvince,
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -3386,20 +3251,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               ),
               SizedBox(width: 8.w),
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: CustomDropdownField<String>(
+                  hintText: '시/군/구 선택',
                   value: _selectedDistrict,
-                  decoration: InputDecoration(
-                    hintText: '시/군/구 선택',
-                    filled: true,
-                    fillColor: NewAppColor.neutral100,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                  ),
+                  enabled: _selectedProvince != null,
                   items: _selectedProvince != null
                       ? LocationData.getDistricts(_selectedProvince!).map((district) {
-                          return DropdownMenuItem<String>(
+                          return buildDropdownItem<String>(
                             value: district,
-                            child: Text(district),
+                            text: district,
+                            currentValue: _selectedDistrict,
                           );
                         }).toList()
                       : [],

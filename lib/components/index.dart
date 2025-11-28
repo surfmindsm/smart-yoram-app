@@ -32,6 +32,7 @@ export 'app_skeleton.dart';
 
 // Additional form components
 export 'app_dropdown.dart';
+export 'custom_dropdown_field.dart';
 export 'app_checkbox.dart';
 export 'app_radio.dart';
 export 'app_switch.dart';
