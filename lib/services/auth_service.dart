@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/api_config.dart';
@@ -40,7 +41,24 @@ class AuthService {
         return false;
       }
 
-      // Supabase 세션 복구 시도
+      // SharedPreferences에서 저장된 사용자 정보 로드
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString(_userKey);
+
+      if (userJson != null && userJson.isNotEmpty) {
+        try {
+          final userData = jsonDecode(userJson) as Map<String, dynamic>;
+          _currentUser = app_user.User.fromJson(userData);
+          print('✅ 저장된 인증 정보 로드 성공: ${_currentUser!.email}');
+          return true;
+        } catch (e) {
+          print('❌ 사용자 정보 파싱 실패: $e');
+          // 파싱 실패 시 저장된 정보 삭제
+          await clearStoredAuth();
+        }
+      }
+
+      // Supabase 세션 복구 시도 (백업)
       final session = _supabaseService.currentSession;
       if (session != null) {
         // 세션이 있으면 현재 사용자 정보 가져오기
@@ -348,9 +366,11 @@ class AuthService {
   Future<void> _saveUser(app_user.User user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_userKey, user.toJson().toString());
+      final userJson = jsonEncode(user.toJson());
+      await prefs.setString(_userKey, userJson);
+      print('✅ 사용자 정보 저장 완료: ${user.email}');
     } catch (e) {
-      print('사용자 정보 저장 실패: $e');
+      print('❌ 사용자 정보 저장 실패: $e');
     }
   }
 
