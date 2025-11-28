@@ -761,10 +761,21 @@ class CommunityService {
   /// 조회수 증가
   Future<void> _incrementViewCount(String tableName, int id) async {
     try {
+      // 현재 조회수 가져오기
+      final current = await _supabaseService.client
+          .from(tableName)
+          .select('view_count')
+          .eq('id', id)
+          .single();
+
+      // 조회수 1 증가
+      final currentCount = current['view_count'] as int? ?? 0;
       await _supabaseService.client
           .from(tableName)
-          .update({'view_count': _supabaseService.client.from(tableName).select('view_count').eq('id', id)})
+          .update({'view_count': currentCount + 1})
           .eq('id', id);
+
+      print('✅ COMMUNITY_SERVICE: 조회수 증가 완료 - $tableName/$id: ${currentCount + 1}');
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 조회수 증가 실패 - $e');
     }
@@ -881,6 +892,9 @@ class CommunityService {
           .eq('id', id)
           .single();
 
+      // 조회수 증가
+      await _incrementViewCount('job_posts', id);
+
       final itemMap = response as Map<String, dynamic>;
 
       // author 정보 가져오기
@@ -934,6 +948,9 @@ class CommunityService {
           .select()
           .eq('id', id)
           .single();
+
+      // 조회수 증가
+      await _incrementViewCount('community_music_teams', id);
 
       final itemMap = response as Map<String, dynamic>;
 
@@ -989,6 +1006,9 @@ class CommunityService {
           .eq('id', id)
           .single();
 
+      // 조회수 증가
+      await _incrementViewCount('music_team_seekers', id);
+
       final itemMap = response as Map<String, dynamic>;
 
       // author 정보 가져오기
@@ -1034,6 +1054,9 @@ class CommunityService {
           .select()
           .eq('id', id)
           .single();
+
+      // 조회수 증가
+      await _incrementViewCount('church_news', id);
 
       final itemMap = response as Map<String, dynamic>;
 
