@@ -57,7 +57,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   String? _selectedProvince; // 도/시
   String? _selectedDistrict; // 시/군/구
   bool _deliveryAvailable = false; // 택배 가능 여부
-  DateTime? _purchaseDate; // 구매 날짜
+  final TextEditingController _purchaseDateController = TextEditingController(); // 구매 시기 (텍스트)
 
   // 물품요청 전용
   String _selectedUrgency = 'normal'; // low, normal, high
@@ -137,6 +137,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     _contactController.dispose();
     _emailController.dispose();
     _priceController.dispose();
+    _purchaseDateController.dispose();
     _rewardAmountController.dispose();
     _companyController.dispose();
     _churchIntroController.dispose();
@@ -205,6 +206,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         if (!_isFreeSharing && post['price'] != null) {
           _priceController.text = post['price'].toString();
         }
+        // 구매시기 로드
+        if (post['purchase_date'] != null) {
+          _purchaseDateController.text = post['purchase_date'].toString();
+        }
         _contactController.text = post['contact_info'] ?? post['contact_phone'] ?? '';
         _emailController.text = post['contact_email'] ?? '';
       } else if (tableName == 'community_requests') {
@@ -263,6 +268,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _isFreeSharing = post.isFree;
       if (!_isFreeSharing && post.price != null) {
         _priceController.text = post.price.toString();
+      }
+      // 구매시기 로드
+      if (post.purchaseDate != null) {
+        _purchaseDateController.text = post.formattedPurchaseDate;
       }
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
@@ -1129,14 +1138,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 6. 판매 가격
-          Text(
-            '판매 가격',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          // 6. 판매 가격 *
+          _buildRequiredLabel('판매 가격'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _priceController,
@@ -1148,12 +1151,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               color: _isFreeSharing ? NewAppColor.neutral400 : NewAppColor.neutral900,
             ),
             keyboardType: TextInputType.number,
-            validator: (value) {
-              if (!_isFreeSharing && (value == null || value.trim().isEmpty)) {
-                return '판매 가격을 입력해주세요';
-              }
-              return null;
-            },
           ),
           SizedBox(height: 12.h),
 
@@ -1200,14 +1197,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 7. 거래 지역
-          Text(
-            '거래 지역',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          // 7. 거래 지역 *
+          _buildRequiredLabel('거래 지역'),
           SizedBox(height: 8.h),
           Row(
             children: [
@@ -1320,44 +1311,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             ),
           ),
           SizedBox(height: 8.h),
-          InkWell(
-            onTap: () async {
-              final date = await showCustomDatePicker(
-                context: context,
-                initialDate: _purchaseDate ?? DateTime.now(),
-                firstDate: DateTime(2000),
-                lastDate: DateTime.now(),
-              );
-              if (date != null) {
-                setState(() => _purchaseDate = date);
-              }
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-              decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _purchaseDate == null
-                        ? '구매한 시기를 선택해주세요'
-                        : '${_purchaseDate!.year}년 ${_purchaseDate!.month}월',
-                    style: FigmaTextStyles().body2.copyWith(
-                      color: _purchaseDate == null
-                          ? NewAppColor.neutral400
-                          : NewAppColor.neutral900,
-                    ),
-                  ),
-                  Icon(
-                    Icons.calendar_today,
-                    size: 20.sp,
-                    color: NewAppColor.neutral600,
-                  ),
-                ],
-              ),
+          TextField(
+            controller: _purchaseDateController,
+            decoration: _buildInputDecoration(
+              hintText: '예: 2023년 3월, 작년 여름 등',
+            ),
+            style: FigmaTextStyles().body2.copyWith(
+              color: NewAppColor.neutral900,
             ),
           ),
           SizedBox(height: 24.h),
@@ -3671,16 +3631,38 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       return;
     }
 
-    // 무료나눔/물품판매는 사진 필수
-    if ((widget.type == CommunityListType.freeSharing ||
-         widget.type == CommunityListType.itemSale) &&
-        _selectedImages.isEmpty) {
-      AppToast.show(
-        context,
-        '최소 1장 이상의 사진을 등록해주세요',
-        type: ToastType.error,
-      );
-      return;
+    // 무료나눔/물품판매 추가 검증
+    if (widget.type == CommunityListType.freeSharing ||
+        widget.type == CommunityListType.itemSale) {
+      // 사진 필수
+      if (_selectedImages.isEmpty) {
+        AppToast.show(
+          context,
+          '최소 1장 이상의 사진을 등록해주세요',
+          type: ToastType.error,
+        );
+        return;
+      }
+
+      // 금액 필수 (무료나눔 체크하면 통과)
+      if (!_isFreeSharing && _priceController.text.trim().isEmpty) {
+        AppToast.show(
+          context,
+          '판매 가격을 입력하거나 무료나눔을 선택해주세요',
+          type: ToastType.error,
+        );
+        return;
+      }
+
+      // 지역 필수 (택배 가능 체크하면 통과)
+      if (!_deliveryAvailable && _selectedProvince == null && _selectedDistrict == null) {
+        AppToast.show(
+          context,
+          '거래 지역을 선택하거나 택배 가능을 체크해주세요',
+          type: ToastType.error,
+        );
+        return;
+      }
     }
 
     setState(() => _isLoading = true);
@@ -4001,7 +3983,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       images: imageUrls,
       isFree: _isFreeSharing,
       price: _isFreeSharing ? null : int.tryParse(_priceController.text),
-      purchaseDate: _purchaseDate,
+      purchaseDate: _purchaseDateController.text.trim().isEmpty ? null : _purchaseDateController.text.trim(),
       contactPhone: _contactController.text.trim(),
       contactEmail: _emailController.text.trim().isEmpty
           ? null

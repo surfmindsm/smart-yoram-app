@@ -1,62 +1,99 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/api_config.dart';
 import '../models/worship_service.dart';
 import '../models/api_response.dart';
 import 'api_service.dart';
+import 'auth_service.dart';
 
 class WorshipServiceApi {
   final ApiService _apiService = ApiService();
+  final AuthService _authService = AuthService();
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  // 예배 서비스 목록 조회
+  // 예배 서비스 목록 조회 (Supabase 직접 연동)
   Future<List<WorshipService>> getWorshipServices({
     bool? isActive,
     int? dayOfWeek,
     String? serviceType,
   }) async {
     try {
-      print('🛐 WORSHIP_SERVICE: 예배 서비스 목록 조회 시작');
-      
-      // 쿼리 파라미터 구성
-      String endpoint = ApiConfig.worshipServices;
-      final queryParams = <String, String>{};
-      if (isActive != null) queryParams['is_active'] = isActive.toString();
-      if (dayOfWeek != null) queryParams['day_of_week'] = dayOfWeek.toString();
-      if (serviceType != null) queryParams['service_type'] = serviceType;
+      print('🛐 WORSHIP_SERVICE: 예배 서비스 목록 조회 시작 (Supabase)');
 
-      if (queryParams.isNotEmpty) {
-        final query = queryParams.entries.map((e) => '${e.key}=${e.value}').join('&');
-        endpoint += '?$query';
+      // 현재 사용자의 교회 ID 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      final churchId = userResponse.data?.churchId;
+
+      if (churchId == null) {
+        print('❌ WORSHIP_SERVICE: 교회 ID를 찾을 수 없습니다');
+        return [];
       }
 
-      print('🛐 WORSHIP_SERVICE: API 호출 - $endpoint');
-      print('🛐 WORSHIP_SERVICE: 쿼리 파라미터: $queryParams');
+      print('🛐 WORSHIP_SERVICE: 교회 ID: $churchId');
 
-      final response = await _apiService.get(endpoint);
-      
-      if (response.success && response.data != null) {
-        final List<dynamic> data = response.data as List<dynamic>;
-        final services = data.map((json) => WorshipService.fromJson(json)).toList();
-        
-        // 정렬: order_index 기준, 그 다음 day_of_week, start_time 기준
-        services.sort((a, b) {
-          if (a.orderIndex != b.orderIndex) {
-            return a.orderIndex.compareTo(b.orderIndex);
-          }
-          if (a.dayOfWeek != b.dayOfWeek) {
-            return a.dayOfWeek.compareTo(b.dayOfWeek);
-          }
-          return a.startTime.compareTo(b.startTime);
-        });
-        
-        print('🛐 WORSHIP_SERVICE: 예배 서비스 ${services.length}개 조회 성공');
-        return services;
-      } else {
-        throw Exception('예배 서비스 조회 실패: ${response.message}');
+      // Supabase 쿼리 빌드
+      var query = _supabase
+          .from('worship_services')
+          .select()
+          .eq('church_id', churchId);
+
+      // 필터 적용
+      if (isActive != null) {
+        query = query.eq('is_active', isActive);
       }
-    } catch (e) {
+      if (dayOfWeek != null) {
+        query = query.eq('day_of_week', dayOfWeek);
+      }
+      if (serviceType != null) {
+        query = query.eq('service_type', serviceType);
+      }
+
+      print('🛐 WORSHIP_SERVICE: Supabase 쿼리 실행 중...');
+
+      // 기본 정렬로 실행 (시간순)
+      final response = await query.order('start_time', ascending: true);
+
+      print('🛐 WORSHIP_SERVICE: 응답 데이터: $response');
+
+      if (response == null || response.isEmpty) {
+        print('🛐 WORSHIP_SERVICE: 예배 서비스 데이터 없음');
+        return [];
+      }
+
+      final List<dynamic> data = response as List<dynamic>;
+      final services = data.map((json) => WorshipService.fromJson(json)).toList();
+
+      // 커스텀 정렬: 예배 종류별 그룹화 → 요일순 → 시간순
+      services.sort((a, b) {
+        // 1. 예배 종류별 우선순위 (주일예배 → 주중예배 → 새벽예배)
+        final aTypePriority = _getServiceTypePriority(a.serviceType, a.dayOfWeek);
+        final bTypePriority = _getServiceTypePriority(b.serviceType, b.dayOfWeek);
+
+        if (aTypePriority != bTypePriority) {
+          return aTypePriority.compareTo(bTypePriority);
+        }
+
+        // 2. 같은 종류 내에서 요일순 (일요일=6이 먼저, 그 다음 월~토=0~5)
+        if (a.dayOfWeek != b.dayOfWeek) {
+          // 일요일(6)을 최우선으로
+          if (a.dayOfWeek == 6) return -1;
+          if (b.dayOfWeek == 6) return 1;
+          // 나머지는 월~토 순서
+          return a.dayOfWeek.compareTo(b.dayOfWeek);
+        }
+
+        // 3. 같은 요일 내에서 시간순
+        return a.startTime.compareTo(b.startTime);
+      });
+
+      print('🛐 WORSHIP_SERVICE: 예배 서비스 ${services.length}개 조회 성공 (정렬 완료)');
+
+      return services;
+    } catch (e, stackTrace) {
       print('🛐 WORSHIP_SERVICE: 예배 서비스 조회 오류: $e');
-      
-      // 네트워크 오류 또는 API 실패 시 샘플 데이터 반환
-      return _getSampleWorshipServices();
+      print('🛐 WORSHIP_SERVICE: 스택트레이스: $stackTrace');
+
+      // 오류 발생 시 빈 리스트 반환
+      return [];
     }
   }
 
@@ -92,122 +129,40 @@ class WorshipServiceApi {
     }
   }
 
+  // 예배 종류별 우선순위 결정 (숫자가 작을수록 위에 표시)
+  int _getServiceTypePriority(String serviceType, int dayOfWeek) {
+    // 일요일(6)에 하는 모든 예배 = 주일예배 그룹
+    if (dayOfWeek == 6) {
+      return 1; // 주일예배
+    }
+
+    // 평일 예배는 service_type으로 구분
+    switch (serviceType) {
+      case 'dawn_prayer': // 새벽기도회
+        return 3; // 새벽예배 그룹 (가장 마지막)
+
+      case 'wednesday_worship': // 수요예배
+      case 'friday_worship': // 금요예배
+      case 'special_worship': // 특별예배
+        return 2; // 주중예배 그룹
+
+      default:
+        // 기타 예배는 주중예배로 분류
+        return 2;
+    }
+  }
+
   // 주일 예배 서비스만 조회 (홈화면용)
   Future<List<WorshipService>> getSundayServices() async {
     return await getWorshipServices(
       isActive: true,
-      dayOfWeek: 0, // 일요일
+      dayOfWeek: 6, // 일요일 (0=월요일, 6=일요일)
     );
   }
 
   // 주간 예배 서비스 조회
   Future<List<WorshipService>> getWeekdayServices() async {
     final allServices = await getWorshipServices(isActive: true);
-    return allServices.where((service) => service.dayOfWeek != 0).toList();
-  }
-
-  // 샘플 데이터 (API 실패 시 사용)
-  List<WorshipService> _getSampleWorshipServices() {
-    print('🛐 WORSHIP_SERVICE: 샘플 데이터 사용');
-    
-    final now = DateTime.now();
-    return [
-      WorshipService(
-        id: 1,
-        churchId: 6,
-        name: '주일예배 1부',
-        location: '예배실(본성전)',
-        dayOfWeek: 0,
-        startTime: DateTime(now.year, now.month, now.day, 9, 0),
-        endTime: DateTime(now.year, now.month, now.day, 10, 30),
-        serviceType: 'sunday_worship',
-        targetGroup: 'all',
-        isOnline: false,
-        isActive: true,
-        orderIndex: 1,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      WorshipService(
-        id: 2,
-        churchId: 6,
-        name: '주일예배 2부',
-        location: '예배실(본성전)',
-        dayOfWeek: 0,
-        startTime: DateTime(now.year, now.month, now.day, 11, 0),
-        endTime: DateTime(now.year, now.month, now.day, 12, 30),
-        serviceType: 'sunday_worship',
-        targetGroup: 'all',
-        isOnline: false,
-        isActive: true,
-        orderIndex: 2,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      WorshipService(
-        id: 3,
-        churchId: 6,
-        name: '주일예배 3부',
-        location: '예배실(본성전)',
-        dayOfWeek: 0,
-        startTime: DateTime(now.year, now.month, now.day, 13, 30),
-        endTime: DateTime(now.year, now.month, now.day, 15, 0),
-        serviceType: 'sunday_worship',
-        targetGroup: 'all',
-        isOnline: false,
-        isActive: true,
-        orderIndex: 3,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      WorshipService(
-        id: 4,
-        churchId: 6,
-        name: '새벽부',
-        location: '새벽부실',
-        dayOfWeek: 0,
-        startTime: DateTime(now.year, now.month, now.day, 11, 0),
-        endTime: DateTime(now.year, now.month, now.day, 12, 0),
-        serviceType: 'children',
-        targetGroup: 'children',
-        isOnline: false,
-        isActive: true,
-        orderIndex: 4,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      WorshipService(
-        id: 5,
-        churchId: 6,
-        name: '수요예배',
-        location: '예배실(본성전)',
-        dayOfWeek: 3,
-        startTime: DateTime(now.year, now.month, now.day, 20, 0),
-        endTime: DateTime(now.year, now.month, now.day, 21, 0),
-        serviceType: 'wednesday_worship',
-        targetGroup: 'all',
-        isOnline: false,
-        isActive: true,
-        orderIndex: 5,
-        createdAt: now,
-        updatedAt: now,
-      ),
-      WorshipService(
-        id: 6,
-        churchId: 6,
-        name: '새벽기도회',
-        location: '온라인',
-        dayOfWeek: 1, // 월-금 대표로 월요일
-        startTime: DateTime(now.year, now.month, now.day, 5, 30),
-        endTime: DateTime(now.year, now.month, now.day, 6, 30),
-        serviceType: 'dawn_prayer',
-        targetGroup: 'all',
-        isOnline: true,
-        isActive: true,
-        orderIndex: 6,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ];
+    return allServices.where((service) => service.dayOfWeek != 6).toList();
   }
 }

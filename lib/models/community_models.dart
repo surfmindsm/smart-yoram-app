@@ -137,7 +137,7 @@ class SharingItem extends CommunityBasePost {
   final String? contactEmail;
   final bool isFree; // true: 무료나눔, false: 물품판매
   final int? price; // 판매가격 (isFree=false일 때)
-  final DateTime? purchaseDate; // 구매 날짜 (물품 구입 시기)
+  final String? purchaseDate; // 구매 시기 (텍스트, 예: "2023년 3월", "작년 여름")
 
   SharingItem({
     required super.id,
@@ -238,9 +238,7 @@ class SharingItem extends CommunityBasePost {
       price: json['price'] != null
           ? (json['price'] is int ? json['price'] : (json['price'] is String ? int.tryParse(json['price'].replaceAll('.00', '')) : (json['price'] as double).toInt()))
           : null,
-      purchaseDate: json['purchase_date'] != null
-          ? DateTime.parse(json['purchase_date'])
-          : null,
+      purchaseDate: json['purchase_date'] as String?,
     );
   }
 
@@ -257,7 +255,7 @@ class SharingItem extends CommunityBasePost {
       'location': location,
       'is_free': isFree,
       'price': price,
-      'purchase_date': purchaseDate?.toIso8601String().split('T')[0],
+      'purchase_date': purchaseDate,
     };
   }
 
@@ -316,10 +314,10 @@ class SharingItem extends CommunityBasePost {
     )}원';
   }
 
-  /// 구매 날짜 포맷 (예: 2024년 1월)
+  /// 구매 시기 표시 (텍스트 그대로 반환)
   String get formattedPurchaseDate {
-    if (purchaseDate == null) return '정보 없음';
-    return '${purchaseDate!.year}년 ${purchaseDate!.month}월';
+    if (purchaseDate == null || purchaseDate!.isEmpty) return '정보 없음';
+    return purchaseDate!;
   }
 }
 

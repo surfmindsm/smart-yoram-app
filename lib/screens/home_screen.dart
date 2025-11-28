@@ -1714,9 +1714,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   : CrossFadeState.showSecond,
               firstChild: Padding(
                 padding: EdgeInsets.only(top: 16.h),
-                child: Column(
-                  children: _buildWorshipServiceRows(),
-                ),
+                child: _isLoadingWorshipServices
+                    ? Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24.h),
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              NewAppColor.neutral400,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Column(
+                        children: _buildWorshipServiceRows(),
+                      ),
               ),
               secondChild: const SizedBox(),
             ),
@@ -1727,55 +1738,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   List<Widget> _buildWorshipServiceRows() {
-    // Sample data - replace with actual worship service data
-    final services = [
-      {'name': '주일예배 1부', 'location': '예루살렘성전', 'day': '주일', 'time': '오전 9시'},
-      {'name': '주일예배 2부', 'location': '예루살렘성전', 'day': '주일', 'time': '오전 11시'},
-      {
-        'name': '주일예배 3부',
-        'location': '예루살렘성전',
-        'day': '주일',
-        'time': '오후 1시 30분'
-      },
-      {'name': '새싹부', 'location': '새싹부실', 'day': '주일', 'time': '오전 11시'},
-      {'name': '어린이부', 'location': '어린이부실', 'day': '주일', 'time': '오전 11시'},
-      {'name': '청소년부', 'location': '밷엘성전', 'day': '주일', 'time': '오전 11시'},
-      {'name': '대학청년부', 'location': '시온성전', 'day': '주일', 'time': '오후 1시 30분'},
-      {'name': '수요 예배', 'location': '예루살렘성전', 'day': '수요일', 'time': '오후 8시'},
-      {
-        'name': '새벽기도회(월)',
-        'location': '온라인',
-        'day': '월요일',
-        'time': '오전 5시 30분'
-      },
-      {
-        'name': '새벽기도회(화)',
-        'location': '온라인',
-        'day': '화요일',
-        'time': '오전 5시 30분'
-      },
-      {
-        'name': '새벽기도회(수)',
-        'location': '온라인',
-        'day': '수요일',
-        'time': '오전 5시 30분'
-      },
-      {
-        'name': '새벽기도회(목)',
-        'location': '온라인',
-        'day': '목요일',
-        'time': '오전 5시 30분'
-      },
-      {
-        'name': '새벽기도회(금)',
-        'location': '온라인',
-        'day': '금요일',
-        'time': '오전 5시 30분'
-      },
-    ];
+    // API에서 가져온 실제 예배 서비스 데이터 사용
+    if (worshipServices.isEmpty) {
+      return [
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 24.h),
+          child: Center(
+            child: Text(
+              '등록된 예배 시간이 없습니다',
+              style: FigmaTextStyles().body3.copyWith(
+                color: NewAppColor.neutral400,
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
 
-    return services.map((service) {
-      final isLast = services.indexOf(service) == services.length - 1;
+    return worshipServices.asMap().entries.map((entry) {
+      final index = entry.key;
+      final service = entry.value;
+      final isLast = index == worshipServices.length - 1;
+
       return Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -1794,7 +1778,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Expanded(
               flex: 3,
               child: Text(
-                service['name']!,
+                service.name,
                 style: FigmaTextStyles().body3.copyWith(
                       color: Colors.white,
                     ),
@@ -1804,7 +1788,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Expanded(
               flex: 2,
               child: Text(
-                service['location']!,
+                service.location,
                 textAlign: TextAlign.center,
                 style: FigmaTextStyles().body3.copyWith(
                       color: Colors.white,
@@ -1818,7 +1802,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    service['day']!,
+                    service.dayOfWeekShort,
                     textAlign: TextAlign.right,
                     style: FigmaTextStyles().caption3.copyWith(
                           color: Colors.white,
@@ -1826,7 +1810,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    service['time']!,
+                    service.formattedStartTime,
                     textAlign: TextAlign.right,
                     style: FigmaTextStyles().subtitle4.copyWith(
                           color: Colors.white,

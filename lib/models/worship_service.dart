@@ -3,7 +3,7 @@ class WorshipService {
   final int churchId;
   final String name;
   final String location;
-  final int dayOfWeek; // 0=일요일, 1=월요일, ... 6=토요일
+  final int dayOfWeek; // 0=월요일, 1=화요일, 2=수요일, 3=목요일, 4=금요일, 5=토요일, 6=일요일
   final DateTime startTime;
   final DateTime endTime;
   final String serviceType;
