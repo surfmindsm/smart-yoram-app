@@ -6,10 +6,12 @@ import 'package:smart_yoram_app/models/community_models.dart';
 import 'package:smart_yoram_app/services/community_service.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/wishlist_service.dart';
+import 'package:smart_yoram_app/services/chat_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_create_screen.dart';
+import 'package:smart_yoram_app/screens/chat/chat_room_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -278,7 +280,49 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _post == null
               ? _buildErrorState()
-              : _buildContent(),
+              : Stack(
+                  children: [
+                    // 컨텐츠
+                    _buildContent(),
+
+                    // 문의하기 버튼 (작성자가 아닐 때만 표시)
+                    if (!_isAuthor() && _post != null)
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, -2),
+                              ),
+                            ],
+                          ),
+                          padding: EdgeInsets.all(16.r),
+                          child: SafeArea(
+                            child: ElevatedButton.icon(
+                              onPressed: _onChatButtonPressed,
+                              icon: const Icon(Icons.chat_bubble_outline),
+                              label: const Text('문의하기'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: NewAppColor.primary600,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 16.h),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
     );
   }
 
@@ -2637,6 +2681,91 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
       ],
     );
+  }
+
+  /// 문의하기 버튼 클릭 핸들러
+  Future<void> _onChatButtonPressed() async {
+    if (_post == null || _currentUser == null) return;
+
+    // 게시글 작성자 ID 추출
+    int? authorId;
+    String title = '';
+
+    if (_post is CommunityBasePost) {
+      authorId = (_post as CommunityBasePost).authorId;
+      title = (_post as dynamic).title ?? '커뮤니티 게시글';
+    }
+
+    if (authorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('작성자 정보를 불러올 수 없습니다')),
+      );
+      return;
+    }
+
+    // 본인 게시글인 경우
+    if (authorId == _currentUser!.id) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('본인 게시글에는 문의할 수 없습니다')),
+      );
+      return;
+    }
+
+    try {
+      // 로딩 표시
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      final chatService = ChatService();
+
+      // 채팅방 생성 또는 조회
+      final chatRoom = await chatService.createOrGetChatRoom(
+        postId: widget.postId,
+        postTable: widget.tableName,
+        postTitle: title,
+        otherUserId: authorId,
+      );
+
+      // 로딩 다이얼로그 닫기
+      if (mounted) Navigator.pop(context);
+
+      if (chatRoom == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('채팅방 생성에 실패했습니다')),
+          );
+        }
+        return;
+      }
+
+      // 채팅방으로 이동
+      if (mounted) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatRoomScreen(chatRoom: chatRoom),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ COMMUNITY_DETAIL: 채팅방 생성 실패 - $e');
+
+      // 로딩 다이얼로그가 열려있으면 닫기
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('채팅방 생성에 실패했습니다: $e')),
+        );
+      }
+    }
   }
 
 }
