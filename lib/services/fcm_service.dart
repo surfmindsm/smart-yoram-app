@@ -14,6 +14,7 @@ import 'notification_service_enhanced.dart';
 import 'auth_service.dart';
 import 'chat_service.dart';
 import '../screens/chat/chat_room_screen.dart';
+import '../main.dart' show navigatorKey;
 
 /// FCM 백그라운드 메시지 핸들러 (top-level function)
 @pragma('vm:entry-point')
@@ -454,14 +455,14 @@ class FCMService {
   /// 채팅방으로 이동
   Future<void> _navigateToChatRoom(int roomId, Map<String, dynamic> data) async {
     try {
-      // WidgetsBinding을 통해 현재 BuildContext에서 Navigator 찾기
-      final context = WidgetsBinding.instance.rootElement;
-      if (context == null) {
-        developer.log('❌ BuildContext를 찾을 수 없습니다', name: 'FCM_ERROR');
+      developer.log('🔔 채팅방 이동 시작: room_id=$roomId', name: 'FCM');
+
+      // navigatorKey를 통해 Navigator 접근
+      final navigator = navigatorKey.currentState;
+      if (navigator == null) {
+        developer.log('❌ Navigator를 찾을 수 없습니다', name: 'FCM_ERROR');
         return;
       }
-
-      final navigator = Navigator.of(context);
 
       // ChatService를 통해 채팅방 정보 조회
       final chatService = ChatService();
@@ -475,8 +476,10 @@ class FCMService {
       // roomId에 해당하는 채팅방 찾기
       final chatRoom = chatRooms.firstWhere(
         (room) => room.id == roomId,
-        orElse: () => throw Exception('채팅방을 찾을 수 없습니다'),
+        orElse: () => throw Exception('채팅방을 찾을 수 없습니다 (room_id: $roomId)'),
       );
+
+      developer.log('✅ 채팅방 정보 조회 완료: ${chatRoom.displayTitle}', name: 'FCM');
 
       // 채팅방 화면으로 직접 이동
       await navigator.push(
@@ -485,9 +488,10 @@ class FCMService {
         ),
       );
 
-      developer.log('✅ 채팅방으로 이동: room_id=$roomId', name: 'FCM');
-    } catch (e) {
+      developer.log('✅ 채팅방으로 이동 완료: room_id=$roomId', name: 'FCM');
+    } catch (e, stackTrace) {
       developer.log('❌ 채팅방 이동 실패: $e', name: 'FCM_ERROR');
+      developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');
     }
   }
   
