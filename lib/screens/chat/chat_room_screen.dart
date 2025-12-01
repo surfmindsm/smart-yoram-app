@@ -32,6 +32,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   bool _isSending = false;
   int? _currentUserId;
   RealtimeChannel? _subscription;
+  bool _hasText = false; // 텍스트 입력 여부
 
   @override
   void initState() {
@@ -137,6 +138,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       setState(() {
         _messages.add(tempMessage);
         _messageController.clear();
+        _hasText = false;
       });
 
       // 스크롤을 맨 아래로 이동
@@ -387,6 +389,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   maxLines: 4,
                   minLines: 1,
                   textInputAction: TextInputAction.send,
+                  onChanged: (text) {
+                    setState(() {
+                      _hasText = text.trim().isNotEmpty;
+                    });
+                  },
                   onSubmitted: (_) => _sendMessage(),
                 ),
               ),
@@ -396,12 +403,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
             // 전송 버튼
             GestureDetector(
-              onTap: _isSending ? null : _sendMessage,
+              onTap: (!_hasText || _isSending) ? null : _sendMessage,
               child: Container(
                 width: 40.w,
                 height: 40.w,
                 decoration: BoxDecoration(
-                  color: _messageController.text.trim().isEmpty || _isSending
+                  color: (!_hasText || _isSending)
                       ? NewAppColor.neutral300
                       : NewAppColor.primary600,
                   shape: BoxShape.circle,

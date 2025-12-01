@@ -50,7 +50,7 @@ class ChatService {
       // 1. 기존 채팅방 조회 (해당 게시글 & 두 사용자가 참여한 방)
       final existingRooms = await _supabaseService.client
           .from('p2p_chat_rooms')
-          .select('*, chat_participants(*)')
+          .select('*, p2p_chat_participants(*)')
           .eq('post_id', postId)
           .eq('post_table', postTable);
 
@@ -91,7 +91,7 @@ class ChatService {
       // 4. 채팅방 정보 재조회 (참여자 정보 포함)
       final roomWithParticipants = await _supabaseService.client
           .from('p2p_chat_rooms')
-          .select('*, chat_participants(*)')
+          .select('*, p2p_chat_participants(*)')
           .eq('id', roomId)
           .single();
 
@@ -240,7 +240,7 @@ class ChatService {
       // 채팅방 정보 조회 (참여자 포함)
       final rooms = await _supabaseService.client
           .from('p2p_chat_rooms')
-          .select('*, chat_participants(*)')
+          .select('*, p2p_chat_participants(*)')
           .inFilter('id', roomIds)
           .order('last_message_at', ascending: false);
 

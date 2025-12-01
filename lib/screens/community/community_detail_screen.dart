@@ -7,6 +7,7 @@ import 'package:smart_yoram_app/services/community_service.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/wishlist_service.dart';
 import 'package:smart_yoram_app/services/chat_service.dart';
+import 'package:smart_yoram_app/services/supabase_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
@@ -39,6 +40,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   final CommunityService _communityService = CommunityService();
   final AuthService _authService = AuthService();
   final WishlistService _wishlistService = WishlistService();
+  final SupabaseService _supabaseService = SupabaseService();
 
   bool _isLoading = true;
   dynamic _post;
@@ -46,6 +48,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   bool _isFavorited = false;
   bool _isFavoriteLoading = false;
   int _currentImageIndex = 0;
+  String? _authorPhone; // 작성자 전화번호
 
   @override
   void initState() {
@@ -94,6 +97,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       // 찜하기 상태 확인
       if (post != null) {
         _checkFavoriteStatus();
+
+        // 작성자 전화번호 조회
+        _loadAuthorPhone();
       }
     } catch (e) {
       print('❌ COMMUNITY_DETAIL: 데이터 로드 실패 - $e');
@@ -113,6 +119,34 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     setState(() {
       _isFavorited = isFavorited;
     });
+  }
+
+  /// 작성자 전화번호 조회
+  Future<void> _loadAuthorPhone() async {
+    if (_post == null) return;
+
+    try {
+      // 게시글 작성자 ID 추출
+      int? authorId;
+      if (_post is CommunityBasePost) {
+        authorId = (_post as CommunityBasePost).authorId;
+      }
+
+      if (authorId == null) return;
+
+      // 본인 게시글이면 전화번호 조회 안 함
+      if (_currentUser != null && authorId == _currentUser!.id) return;
+
+      // users 테이블에서 전화번호 조회
+      final user = await _supabaseService.getUser(authorId);
+      if (user != null && user.phone != null) {
+        setState(() {
+          _authorPhone = user.phone;
+        });
+      }
+    } catch (e) {
+      print('❌ COMMUNITY_DETAIL: 작성자 전화번호 조회 실패 - $e');
+    }
   }
 
   Future<void> _toggleFavorite() async {
@@ -232,28 +266,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
         actions: [
-          Container(
-            margin: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(
-                _isFavorited ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorited ? Colors.red : Colors.black,
-              ),
-              onPressed: _toggleFavorite,
-              padding: EdgeInsets.zero,
-            ),
-          ),
           if (_canEdit())
             Container(
               margin: EdgeInsets.all(8.r),
@@ -285,8 +297,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     // 컨텐츠
                     _buildContent(),
 
-                    // 문의하기 버튼 (작성자가 아닐 때만 표시)
-                    if (!_isAuthor() && _post != null)
+                    // 하단 버튼들
+                    if (_post != null)
                       Positioned(
                         bottom: 0,
                         left: 0,
@@ -302,21 +314,106 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               ),
                             ],
                           ),
-                          padding: EdgeInsets.all(16.r),
+                          padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
                           child: SafeArea(
-                            child: ElevatedButton.icon(
-                              onPressed: _onChatButtonPressed,
-                              icon: const Icon(Icons.chat_bubble_outline),
-                              label: const Text('문의하기'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: NewAppColor.primary600,
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 16.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                ),
-                                elevation: 0,
-                              ),
+                            top: false,
+                            child: Row(
+                              children: [
+                                // 작성자인 경우: 상태 수정 버튼만
+                                if (_isAuthor())
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: _togglePostStatus,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: NewAppColor.primary600,
+                                        foregroundColor: Colors.white,
+                                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12.r),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      child: Text(
+                                        _getStatusButtonText(),
+                                        style: FigmaTextStyles().body2.copyWith(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                // 작성자가 아닌 경우: 좋아요 + 전화/채팅 버튼
+                                if (!_isAuthor()) ...[
+                                  // 좋아요 버튼
+                                  OutlinedButton(
+                                    onPressed: _toggleFavorite,
+                                    style: OutlinedButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16.w,
+                                        vertical: 14.h,
+                                      ),
+                                      side: BorderSide(
+                                        color: _isFavorited ? Colors.red : NewAppColor.neutral300,
+                                        width: 1.5,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.r),
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      _isFavorited ? Icons.favorite : Icons.favorite_border,
+                                      color: _isFavorited ? Colors.red : NewAppColor.neutral400,
+                                      size: 20.w,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  // 전화 버튼 (전화번호가 있을 때만)
+                                  if (_authorPhone != null) ...[
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        onPressed: _onPhoneButtonPressed,
+                                        style: OutlinedButton.styleFrom(
+                                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                                          side: BorderSide(
+                                            color: NewAppColor.primary600,
+                                            width: 1.5,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12.r),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '전화하기',
+                                          style: FigmaTextStyles().body2.copyWith(
+                                            color: NewAppColor.primary600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                  ],
+                                  // 채팅 버튼
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: _onChatButtonPressed,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: NewAppColor.primary600,
+                                        foregroundColor: Colors.white,
+                                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12.r),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      child: Text(
+                                        '채팅하기',
+                                        style: FigmaTextStyles().body2.copyWith(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ),
@@ -1195,6 +1292,16 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         );
       }
     }
+  }
+
+  /// 상태 버튼 텍스트 반환
+  String _getStatusButtonText() {
+    if (_post == null) return '상태 변경';
+
+    final currentStatus = (_post as CommunityBasePost).status;
+    final isCompleted = currentStatus == 'completed' || currentStatus == 'closed';
+
+    return isCompleted ? '진행중으로 변경' : '완료로 변경';
   }
 
   void _showPostMenu() {
@@ -2680,6 +2787,89 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// 전화 버튼 클릭 핸들러
+  Future<void> _onPhoneButtonPressed() async {
+    if (_authorPhone == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('작성자의 전화번호가 없습니다')),
+      );
+      return;
+    }
+
+    // 전화/문자 선택 bottom sheet 표시
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 전화 걸기
+              ListTile(
+                leading: Icon(Icons.phone, color: NewAppColor.primary600),
+                title: Text(
+                  '전화 걸기',
+                  style: FigmaTextStyles().body1,
+                ),
+                subtitle: Text(
+                  _authorPhone!,
+                  style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final uri = Uri.parse('tel:$_authorPhone');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('전화를 걸 수 없습니다')),
+                      );
+                    }
+                  }
+                },
+              ),
+              Divider(height: 1, color: NewAppColor.neutral200),
+              // 문자 보내기
+              ListTile(
+                leading: Icon(Icons.message, color: NewAppColor.primary600),
+                title: Text(
+                  '문자 보내기',
+                  style: FigmaTextStyles().body1,
+                ),
+                subtitle: Text(
+                  _authorPhone!,
+                  style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final uri = Uri.parse('sms:$_authorPhone');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('문자를 보낼 수 없습니다')),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
