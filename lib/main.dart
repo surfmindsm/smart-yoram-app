@@ -20,6 +20,7 @@ import 'screens/member_card_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/prayer_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/chat/chat_list_screen.dart';
 import 'screens/admin/admin_member_management_screen.dart';
 import 'screens/admin/admin_pastoral_care_list_screen.dart';
 import 'screens/admin/admin_notice_list_screen.dart';
@@ -115,6 +116,7 @@ class MyApp extends ConsumerWidget {
                   '/calendar': (context) => const CalendarScreen(),
                   '/prayer': (context) => const PrayerScreen(),
                   '/settings': (context) => const SettingsScreen(),
+                  '/chat': (context) => const ChatListScreen(),
                   // Signup routes
                   '/signup/selection': (context) => const SignupSelectionScreen(),
                   '/signup/church': (context) => const ChurchSignupScreen(),
