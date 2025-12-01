@@ -8,6 +8,7 @@ import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/wishlist_service.dart';
 import 'package:smart_yoram_app/services/chat_service.dart';
 import 'package:smart_yoram_app/services/supabase_service.dart';
+import 'package:smart_yoram_app/services/notification_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
@@ -157,15 +158,26 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
     setState(() => _isFavoriteLoading = true);
 
+    // 이전 상태 저장 (롤백용)
+    final previousState = _isFavorited;
+
     try {
       if (_isFavorited) {
         // 찜하기 해제
-        await _wishlistService.removeFromWishlist(
+        print('💔 COMMUNITY_DETAIL: 찜하기 해제 시작');
+        final response = await _wishlistService.removeFromWishlist(
           postType: postType,
           postId: widget.postId,
         );
+
+        if (!response.success) {
+          throw Exception('찜하기 해제 실패: ${response.message}');
+        }
+
+        print('✅ COMMUNITY_DETAIL: 찜하기 해제 성공');
       } else {
         // 찜하기 추가
+        print('💗 COMMUNITY_DETAIL: 찜하기 추가 시작');
         String title = '';
         String? description = '';
 
@@ -196,21 +208,116 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           description = post.content ?? post.description;
         }
 
-        await _wishlistService.addToWishlist(
+        final response = await _wishlistService.addToWishlist(
           postType: postType,
           postId: widget.postId,
           postTitle: title,
           postDescription: description ?? '',
         );
+
+        if (!response.success) {
+          throw Exception('찜하기 추가 실패: ${response.message}');
+        }
+
+        print('✅ COMMUNITY_DETAIL: 찜하기 추가 성공');
+
+        // 찜하기 성공 시, 글 작성자에게 푸시 알림 전송 (백그라운드로 실행)
+        _sendLikeNotificationToAuthor(title);
       }
 
+      // UI 즉시 업데이트
       setState(() {
         _isFavorited = !_isFavorited;
         _isFavoriteLoading = false;
       });
+
+      print('🎨 COMMUNITY_DETAIL: UI 업데이트 완료 - _isFavorited: $_isFavorited');
     } catch (e) {
       print('❌ COMMUNITY_DETAIL: 찜하기 토글 실패 - $e');
-      setState(() => _isFavoriteLoading = false);
+
+      // 실패 시 이전 상태로 롤백
+      setState(() {
+        _isFavorited = previousState;
+        _isFavoriteLoading = false;
+      });
+
+      // 사용자에게 에러 메시지 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isFavorited ? '찜하기 해제에 실패했습니다' : '찜하기 추가에 실패했습니다'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// 좋아요 시 작성자에게 푸시 알림 전송
+  Future<void> _sendLikeNotificationToAuthor(String postTitle) async {
+    try {
+      // 작성자 ID 가져오기
+      int? authorId;
+      if (_post is CommunityBasePost) {
+        authorId = (_post as CommunityBasePost).authorId;
+      }
+
+      // 작성자 본인이 좋아요를 누른 경우 알림 전송하지 않음
+      if (authorId == null || (_currentUser != null && authorId == _currentUser!.id)) {
+        print('💗 COMMUNITY_DETAIL: 작성자 본인이므로 알림 전송 생략');
+        return;
+      }
+
+      // 현재 사용자 이름
+      final userName = _currentUser?.fullName ?? '누군가';
+
+      // 푸시 알림 전송 시도
+      print('💗 COMMUNITY_DETAIL: 좋아요 알림 전송 시도 - authorId: $authorId, userName: $userName');
+
+      // 1. 먼저 작성자의 FCM 토큰 조회
+      final authorTokens = await _supabaseService.client
+          .from('device_tokens')
+          .select('fcm_token, platform')
+          .eq('user_id', authorId)
+          .eq('is_active', true);
+
+      if (authorTokens == null || (authorTokens as List).isEmpty) {
+        print('⚠️ COMMUNITY_DETAIL: 작성자의 FCM 토큰이 없음 (user_id: $authorId)');
+        return;
+      }
+
+      print('📱 COMMUNITY_DETAIL: FCM 토큰 조회 성공 - ${(authorTokens as List).length}개');
+
+      // 2. Supabase Edge Function으로 푸시 알림 전송
+      try {
+        print('🚀 COMMUNITY_DETAIL: Supabase Edge Function 호출 시작');
+
+        final response = await _supabaseService.client.functions.invoke(
+          'send-like-notification',
+          body: {
+            'author_id': authorId,
+            'liker_id': _currentUser?.id ?? 0,
+            'liker_name': userName,
+            'post_title': postTitle,
+            'post_id': widget.postId,
+            'table_name': widget.tableName,
+            'category_title': widget.categoryTitle,
+          },
+        );
+
+        if (response.data != null && response.data['success'] == true) {
+          print('✅ COMMUNITY_DETAIL: 좋아요 푸시 알림 전송 성공');
+          print('📊 COMMUNITY_DETAIL: ${response.data['message']}');
+        } else {
+          print('⚠️ COMMUNITY_DETAIL: 좋아요 푸시 알림 전송 실패 - ${response.data}');
+        }
+      } catch (edgeFunctionError) {
+        print('❌ COMMUNITY_DETAIL: Edge Function 호출 오류 - $edgeFunctionError');
+      }
+    } catch (e, stackTrace) {
+      print('❌ COMMUNITY_DETAIL: 좋아요 알림 전송 중 오류 - $e');
+      print('❌ COMMUNITY_DETAIL: 스택 트레이스 - $stackTrace');
+      // 알림 전송 실패는 사용자 경험에 영향을 주지 않도록 조용히 처리
     }
   }
 

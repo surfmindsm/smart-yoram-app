@@ -14,6 +14,7 @@ import 'notification_service_enhanced.dart';
 import 'auth_service.dart';
 import 'chat_service.dart';
 import '../screens/chat/chat_room_screen.dart';
+import '../screens/community/community_detail_screen.dart';
 import '../main.dart' show navigatorKey;
 
 /// FCM 백그라운드 메시지 핸들러 (top-level function)
@@ -434,6 +435,18 @@ class FCMService {
         }
       }
 
+      // 커뮤니티 좋아요 알림
+      if (type == 'community_like') {
+        final postId = int.tryParse(data['post_id']?.toString() ?? '');
+        final tableName = data['table_name'] as String?;
+        final categoryTitle = data['category_title'] as String?;
+
+        if (postId != null && tableName != null && categoryTitle != null) {
+          _navigateToCommunityDetail(postId, tableName, categoryTitle);
+          return;
+        }
+      }
+
       // 다른 알림 타입 처리 (추후 확장 가능)
       switch (notification.type?.name) {
         case 'announcement':
@@ -494,7 +507,41 @@ class FCMService {
       developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');
     }
   }
-  
+
+  /// 커뮤니티 상세 화면으로 이동
+  Future<void> _navigateToCommunityDetail(
+    int postId,
+    String tableName,
+    String categoryTitle,
+  ) async {
+    try {
+      developer.log('🔔 커뮤니티 상세로 이동 시작: post_id=$postId, table=$tableName', name: 'FCM');
+
+      // navigatorKey를 통해 Navigator 접근
+      final navigator = navigatorKey.currentState;
+      if (navigator == null) {
+        developer.log('❌ Navigator를 찾을 수 없습니다', name: 'FCM_ERROR');
+        return;
+      }
+
+      // 커뮤니티 상세 화면으로 직접 이동
+      await navigator.push(
+        MaterialPageRoute(
+          builder: (context) => CommunityDetailScreen(
+            postId: postId,
+            tableName: tableName,
+            categoryTitle: categoryTitle,
+          ),
+        ),
+      );
+
+      developer.log('✅ 커뮤니티 상세로 이동 완료: post_id=$postId', name: 'FCM');
+    } catch (e, stackTrace) {
+      developer.log('❌ 커뮤니티 상세 이동 실패: $e', name: 'FCM_ERROR');
+      developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');
+    }
+  }
+
   /// 디바이스 ID 가져오기
   Future<String> _getDeviceId() async {
     try {
