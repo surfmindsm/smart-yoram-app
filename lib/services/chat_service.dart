@@ -63,6 +63,51 @@ class ChatService {
 
         if (participantIds.contains(myUserId) && participantIds.contains(otherUserId)) {
           print('✅ CHAT_SERVICE: 기존 채팅방 발견 - ID: ${roomData['id']}');
+
+          // 내 참여자 정보 확인
+          final myParticipant = participants.firstWhere(
+            (p) => p['user_id'] == myUserId,
+            orElse: () => null,
+          );
+
+          // 내가 이전에 삭제했던 채팅방이면 삭제 시점만 업데이트 (is_active는 false 유지)
+          // 실제 재활성화는 첫 메시지를 보낼 때 수행
+          if (myParticipant != null && myParticipant['is_active'] == false) {
+            print('🔄 CHAT_SERVICE: 삭제했던 채팅방 준비 - participantId: ${myParticipant['id']}');
+            final now = DateTime.now().toUtc().toIso8601String();
+            final roomId = roomData['id'] as int;
+
+            // 1. 삭제 시점만 업데이트 (is_active는 false 유지 - 메시지 보낼 때 true로 변경)
+            await _supabaseService.client
+                .from('p2p_chat_participants')
+                .update({
+                  'last_deleted_at': now, // 지금 시점을 삭제 기준으로 설정
+                  'unread_count': 0,
+                  'last_read_at': now,
+                })
+                .eq('id', myParticipant['id']);
+
+            // 2. 채팅방의 마지막 메시지 캐시 초기화
+            await _supabaseService.client
+                .from('p2p_chat_rooms')
+                .update({
+                  'last_message': null,
+                  'last_message_at': null,
+                })
+                .eq('id', roomId);
+
+            print('✅ CHAT_SERVICE: 삭제 시점 업데이트 완료 (첫 메시지 전송 시 활성화됨)');
+
+            // 3. 재조회
+            final updatedRoom = await _supabaseService.client
+                .from('p2p_chat_rooms')
+                .select('*, p2p_chat_participants(*)')
+                .eq('id', roomId)
+                .single();
+
+            return await _buildChatRoomWithDetails(updatedRoom, myUserId);
+          }
+
           return await _buildChatRoomWithDetails(roomData, myUserId);
         }
       }
@@ -124,6 +169,7 @@ class ChatService {
           'joined_at': DateTime.now().toUtc().toIso8601String(),
           'last_read_at': DateTime.now().toUtc().toIso8601String(),
           'unread_count': 0,
+          'is_active': true,
         };
       }).toList();
 
@@ -206,6 +252,57 @@ class ChatService {
     return '$supabaseUrl/storage/v1/object/public/member-photos/$cleanPath';
   }
 
+  /// 채팅방 삭제 (소프트 삭제)
+  ///
+  /// [roomId]: 삭제할 채팅방 ID
+  ///
+  /// 실제로 채팅방을 삭제하지 않고, 현재 사용자의 참여자 상태만 is_active = false로 변경합니다.
+  /// 상대방은 계속 채팅방을 볼 수 있습니다.
+  Future<ApiResponse<void>> deleteChatRoom(int roomId) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      print('🗑️ CHAT_SERVICE: 채팅방 소프트 삭제 시작 - roomId: $roomId, userId: ${currentUser.id}');
+
+      // 내 참여자 정보의 is_active를 false로 변경 + 삭제 시점 기록 (소프트 삭제)
+      await _supabaseService.client
+          .from('p2p_chat_participants')
+          .update({
+            'is_active': false,
+            'last_deleted_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('room_id', roomId)
+          .eq('user_id', currentUser.id);
+
+      print('✅ CHAT_SERVICE: 채팅방 소프트 삭제 완료 (이전 메시지는 다시 안 보임)');
+
+      // 구독 해제
+      unsubscribeFromMessages(roomId);
+
+      return ApiResponse(
+        success: true,
+        message: '채팅방이 삭제되었습니다',
+        data: null,
+      );
+    } catch (e) {
+      print('❌ CHAT_SERVICE: 채팅방 삭제 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '채팅방 삭제 실패: $e',
+        data: null,
+      );
+    }
+  }
+
   /// 내 채팅방 목록 조회
   Future<List<ChatRoom>> getChatRooms() async {
     try {
@@ -221,11 +318,12 @@ class ChatService {
 
       print('📋 CHAT_SERVICE: 채팅방 목록 조회 - userId: $myUserId');
 
-      // 내가 참여한 채팅방 ID 조회
+      // 내가 참여한 채팅방 ID 조회 (is_active = true인 것만)
       final myParticipations = await _supabaseService.client
           .from('p2p_chat_participants')
           .select('room_id, unread_count')
-          .eq('user_id', myUserId);
+          .eq('user_id', myUserId)
+          .eq('is_active', true);
 
       if ((myParticipations as List).isEmpty) {
         print('📋 CHAT_SERVICE: 참여 중인 채팅방 없음');
@@ -287,18 +385,51 @@ class ChatService {
   /// [roomId]: 채팅방 ID
   /// [limit]: 조회할 메시지 개수 (기본 50개)
   /// [offset]: 페이지네이션 오프셋 (기본 0)
+  ///
+  /// 내가 채팅방을 삭제했다가 다시 시작한 경우,
+  /// last_deleted_at 이후의 메시지만 조회합니다.
   Future<List<ChatMessage>> getMessages(
     int roomId, {
     int limit = 50,
     int offset = 0,
   }) async {
     try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        print('❌ CHAT_SERVICE: 로그인된 사용자 없음');
+        return [];
+      }
+
       print('📨 CHAT_SERVICE: 메시지 조회 - roomId: $roomId, limit: $limit');
 
-      final messages = await _supabaseService.client
+      // 내 참여자 정보 조회 (last_deleted_at 확인)
+      final participant = await _supabaseService.client
+          .from('p2p_chat_participants')
+          .select('last_deleted_at')
+          .eq('room_id', roomId)
+          .eq('user_id', currentUser.id)
+          .maybeSingle();
+
+      DateTime? lastDeletedAt;
+      if (participant != null && participant['last_deleted_at'] != null) {
+        lastDeletedAt = DateTime.parse(participant['last_deleted_at'] as String);
+        print('📨 CHAT_SERVICE: 삭제 시점 발견 - $lastDeletedAt');
+      }
+
+      // 메시지 조회 (last_deleted_at 이후만)
+      var query = _supabaseService.client
           .from('p2p_chat_messages')
           .select()
-          .eq('room_id', roomId)
+          .eq('room_id', roomId);
+
+      // 삭제 시점 이후 메시지만 필터링
+      if (lastDeletedAt != null) {
+        query = query.gt('created_at', lastDeletedAt.toIso8601String());
+      }
+
+      final messages = await query
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
@@ -359,14 +490,23 @@ class ChatService {
 
       print('✅ CHAT_SERVICE: 메시지 전송 완료 - ID: ${newMessage['id']}');
 
-      // 2. 채팅방 last_message 업데이트
+      // 2. 내 참여자를 활성화 (is_active = true) - 메시지를 보냈으니 채팅 목록에 표시
+      await _supabaseService.client
+          .from('p2p_chat_participants')
+          .update({'is_active': true})
+          .eq('room_id', roomId)
+          .eq('user_id', currentUser.id);
+
+      print('✅ CHAT_SERVICE: 내 참여자 활성화 완료 (채팅 목록에 표시됨)');
+
+      // 3. 채팅방 last_message 업데이트
       await _supabaseService.client.from('p2p_chat_rooms').update({
         'last_message': message,
         'last_message_at': DateTime.now().toUtc().toIso8601String(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('id', roomId);
 
-      // 3. 상대방 unread_count 증가
+      // 4. 상대방 unread_count 증가
       await _incrementUnreadCount(roomId, currentUser.id);
 
       return ApiResponse(
@@ -385,21 +525,34 @@ class ChatService {
   }
 
   /// 상대방 안 읽은 메시지 개수 증가 (내부 메서드)
+  ///
+  /// 상대방이 채팅방을 삭제했더라도(is_active = false),
+  /// 새 메시지를 보내면 자동으로 재활성화(is_active = true)됩니다.
   Future<void> _incrementUnreadCount(int roomId, int myUserId) async {
     try {
       // 상대방 참여자 조회
       final participants = await _supabaseService.client
           .from('p2p_chat_participants')
-          .select('id, user_id, unread_count')
+          .select('id, user_id, unread_count, is_active')
           .eq('room_id', roomId)
           .neq('user_id', myUserId);
 
       for (var participant in participants as List) {
         final currentCount = participant['unread_count'] as int? ?? 0;
+        final isActive = participant['is_active'] as bool? ?? true;
+
+        // 안 읽은 메시지 증가 + 삭제했던 채팅방이면 재활성화
         await _supabaseService.client
             .from('p2p_chat_participants')
-            .update({'unread_count': currentCount + 1})
+            .update({
+              'unread_count': currentCount + 1,
+              'is_active': true, // 삭제했어도 새 메시지 오면 다시 활성화
+            })
             .eq('id', participant['id']);
+
+        if (!isActive) {
+          print('🔄 CHAT_SERVICE: 상대방이 삭제한 채팅방 재활성화 (새 메시지 도착)');
+        }
       }
 
       print('✅ CHAT_SERVICE: 상대방 unread_count 증가 완료');
@@ -411,6 +564,8 @@ class ChatService {
   /// 읽음 처리
   ///
   /// [roomId]: 채팅방 ID
+  ///
+  /// last_deleted_at 이후의 메시지만 읽음 처리합니다.
   Future<void> markAsRead(int roomId) async {
     try {
       final userResponse = await _authService.getCurrentUser();
@@ -423,13 +578,29 @@ class ChatService {
 
       print('✅ CHAT_SERVICE: 읽음 처리 시작 - roomId: $roomId');
 
+      // 내 참여자 정보 조회 (last_deleted_at 확인)
+      final participant = await _supabaseService.client
+          .from('p2p_chat_participants')
+          .select('last_deleted_at')
+          .eq('room_id', roomId)
+          .eq('user_id', currentUser.id)
+          .maybeSingle();
+
       // 1. 내가 읽지 않은 메시지들(상대방이 보낸 메시지)의 is_read를 true로 업데이트
-      await _supabaseService.client
+      var query = _supabaseService.client
           .from('p2p_chat_messages')
           .update({'is_read': true})
           .eq('room_id', roomId)
           .neq('sender_id', currentUser.id)
           .eq('is_read', false);
+
+      // 삭제 시점 이후 메시지만 읽음 처리
+      if (participant != null && participant['last_deleted_at'] != null) {
+        final lastDeletedAt = DateTime.parse(participant['last_deleted_at'] as String);
+        query = query.gt('created_at', lastDeletedAt.toIso8601String());
+      }
+
+      await query;
 
       // 2. 내 참여자 정보 업데이트 (unread_count를 0으로)
       await _supabaseService.client
