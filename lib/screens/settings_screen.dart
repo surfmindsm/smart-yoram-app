@@ -5,6 +5,7 @@ import '../components/index.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../services/auth_service.dart';
+import '../services/fcm_service.dart';
 import '../services/font_settings_service.dart';
 import '../services/church_service.dart';
 import '../models/church.dart';
@@ -993,6 +994,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(context);
 
               try {
+                // 1. FCM 토큰 비활성화 (로그아웃 전에 실행)
+                try {
+                  await FCMService.instance.deactivateToken();
+                  print('✅ SETTINGS: FCM 토큰 비활성화 완료');
+                } catch (fcmError) {
+                  print('⚠️ SETTINGS: FCM 토큰 비활성화 실패 (계속 진행): $fcmError');
+                  // FCM 토큰 비활성화 실패해도 로그아웃은 계속 진행
+                }
+
+                // 2. 로그아웃 처리
                 await _authService.logout();
 
                 if (mounted) {

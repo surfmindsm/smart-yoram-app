@@ -5,6 +5,7 @@ import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
+import '../services/fcm_service.dart';
 import '../models/user.dart';
 import '../models/api_response.dart';
 import '../services/user_service.dart';
@@ -584,6 +585,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // 아이디 저장 처리
         await _saveIdIfEnabled();
+
+        // FCM 토큰 재등록 (Supabase device_tokens 테이블에 저장)
+        try {
+          await FCMService.instance.refreshTokenRegistration();
+          print('🔑 LOGIN: FCM 토큰 재등록 완료');
+        } catch (e) {
+          print('⚠️ LOGIN: FCM 토큰 재등록 실패 (계속 진행) - $e');
+        }
 
         // 로그인 성공 후 사용자 정보 가져오기
         final userResponse = await _authService.getCurrentUser();

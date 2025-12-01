@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/fcm_config.dart';
 import '../models/push_notification.dart';
 import '../models/push_notification_enhanced.dart';
@@ -28,12 +29,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 class FCMService {
   static FCMService? _instance;
   static FCMService get instance => _instance ??= FCMService._internal();
-  
+
   FCMService._internal();
-  
+
   late FirebaseMessaging _messaging;
   late FlutterLocalNotificationsPlugin _localNotifications;
   String? _currentToken;
+  bool _initialMessageHandled = false; // 앱 종료 상태 알림 중복 처리 방지
   
   /// FCM 초기화 (안전 모드)
   Future<void> initialize() async {
@@ -173,21 +175,24 @@ class FCMService {
   /// 토큰을 백엔드에 등록 (새로운 API 사용)
   Future<void> _registerTokenToBackend(String token) async {
     try {
-      // 새로운 향상된 서비스 사용
+      // 1. Supabase device_tokens 테이블에 저장 (P2P 채팅 푸시 알림용)
+      await _saveTokenToSupabase(token);
+
+      // 2. 기존 REST API에도 등록 (기존 시스템 호환성)
       final result = await NotificationServiceEnhanced.instance.registerDevice(
         token: token,
         platform: Platform.isIOS ? 'ios' : 'android',
         deviceId: await _getDeviceId(),
         appVersion: await _getAppVersion(),
       );
-      
+
       if (result.isSuccess) {
-        developer.log('✅ 디바이스 토큰 등록 성공', name: 'FCM');
+        developer.log('✅ 디바이스 토큰 등록 성공 (REST API)', name: 'FCM');
       } else {
-        developer.log('❌ 디바이스 토큰 등록 실패: ${result.message}', name: 'FCM_ERROR');
+        developer.log('❌ 디바이스 토큰 등록 실패 (REST API): ${result.message}', name: 'FCM_ERROR');
       }
-      
-      // 새로운 API를 사용한 기기 등록
+
+      // 3. 새로운 API를 사용한 기기 등록
       try {
         final deviceResult = await NotificationService.instance.registerDevice(token);
         if (deviceResult.isSuccess) {
@@ -198,32 +203,113 @@ class FCMService {
       } catch (apiError) {
         developer.log('❌ 새로운 API 등록 오류: $apiError', name: 'FCM_ERROR');
       }
-      
+
     } catch (e) {
       developer.log('❌ 토큰 백엔드 등록 중 오류: $e', name: 'FCM_ERROR');
+    }
+  }
+
+  /// Supabase device_tokens 테이블에 FCM 토큰 저장
+  Future<void> _saveTokenToSupabase(String token) async {
+    try {
+      print('🔄 FCM: Supabase 토큰 저장 시도 시작...');
+
+      final authService = AuthService();
+      final userResponse = await authService.getCurrentUser();
+
+      print('👤 FCM: getCurrentUser() 결과: ${userResponse.data != null ? "사용자 존재 (ID: ${userResponse.data!.id})" : "null"}');
+
+      if (userResponse.data == null) {
+        print('⚠️ FCM: 로그인되지 않아 Supabase에 토큰 저장 생략');
+        return;
+      }
+
+      final userId = userResponse.data!.id;
+      final platform = Platform.isIOS ? 'ios' : 'android';
+      final deviceId = await _getDeviceId();
+      final appVersion = await _getAppVersion();
+
+      print('📝 FCM: 저장할 토큰 정보: userId=$userId, platform=$platform, token=${token.substring(0, 20)}...');
+
+      // Supabase client 가져오기
+      final supabase = Supabase.instance.client;
+
+      // upsert로 중복 방지 (user_id + fcm_token 조합은 UNIQUE)
+      final result = await supabase.from('device_tokens').upsert({
+        'user_id': userId,
+        'fcm_token': token,
+        'platform': platform,
+        'device_id': deviceId,
+        'app_version': appVersion,
+        'is_active': true,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id,fcm_token');
+
+      print('✅ FCM: Supabase device_tokens 테이블에 토큰 저장 완료 (result: $result)');
+    } catch (e, stackTrace) {
+      print('❌ FCM: Supabase 토큰 저장 실패: $e');
+      print('❌ FCM: 스택 트레이스: $stackTrace');
+    }
+  }
+
+  /// 로그인 후 토큰 재등록 (외부에서 호출 가능)
+  Future<void> refreshTokenRegistration() async {
+    print('🔄 FCM: refreshTokenRegistration() 호출됨');
+    print('🔄 FCM: _currentToken = ${_currentToken != null ? "존재 (${_currentToken!.substring(0, 20)}...)" : "null"}');
+
+    if (_currentToken != null) {
+      print('🔄 FCM: 로그인 완료 - FCM 토큰 재등록 시작');
+      await _saveTokenToSupabase(_currentToken!);
+    } else {
+      print('⚠️ FCM: FCM 토큰이 없어서 재등록 불가');
+      print('⚠️ FCM: Firebase 초기화 상태를 확인하세요');
     }
   }
   
   /// 메시지 핸들러 설정
   void _setupMessageHandlers() {
-    // 앱이 포어그라운드에 있을 때 메시지 수신
+    // 1. 앱이 포어그라운드에 있을 때 메시지 수신
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       developer.log('포어그라운드 메시지 수신: ${message.messageId}', name: 'FCM');
       _handleForegroundMessage(message);
     });
-    
-    // 알림 탭으로 앱이 열릴 때
+
+    // 2. 앱이 백그라운드에서 알림 탭으로 열릴 때
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      developer.log('알림 탭으로 앱 열림: ${message.messageId}', name: 'FCM');
+      developer.log('백그라운드에서 알림 탭으로 앱 열림: ${message.messageId}', name: 'FCM');
       _handleNotificationTap(message);
     });
-    
-    // 토큰 갱신 리스너
+
+    // 3. 앱이 완전히 종료된 상태에서 알림 탭으로 실행될 때
+    _checkInitialMessage();
+
+    // 4. 토큰 갱신 리스너
     _messaging.onTokenRefresh.listen((String token) {
       developer.log('FCM 토큰 갱신: $token', name: 'FCM');
       _currentToken = token;
       _registerTokenToBackend(token);
     });
+  }
+
+  /// 앱 종료 상태에서 알림 탭으로 실행되었는지 확인
+  Future<void> _checkInitialMessage() async {
+    try {
+      // getInitialMessage는 앱이 종료된 상태에서 알림을 탭하고 실행했을 때만 메시지를 반환
+      RemoteMessage? initialMessage = await _messaging.getInitialMessage();
+
+      if (initialMessage != null && !_initialMessageHandled) {
+        developer.log('앱 종료 상태에서 알림 탭으로 실행: ${initialMessage.messageId}', name: 'FCM');
+        _initialMessageHandled = true;
+
+        // 약간의 지연 후 처리 (앱 초기화 완료 대기)
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _handleNotificationTap(initialMessage);
+        });
+      }
+    } catch (e) {
+      developer.log('초기 메시지 확인 실패: $e', name: 'FCM_ERROR');
+    }
   }
   
   /// 포어그라운드에서 메시지 처리
@@ -245,6 +331,9 @@ class FCMService {
       final channelConfig = FCMConfig.channels[notification.type?.name] ?? 
           FCMConfig.channels['custom']!;
       
+      // 채팅 알림인 경우 BigTextStyle 사용 (2줄 표시)
+      final isChatNotification = message.data['type'] == 'chat_message';
+
       final androidDetails = AndroidNotificationDetails(
         channelId,
         channelConfig.name,
@@ -255,6 +344,16 @@ class FCMService {
         color: const Color(0xFF1976D2),
         enableVibration: true,
         playSound: true,
+        // 채팅 알림인 경우 BigTextStyle 사용
+        styleInformation: isChatNotification
+            ? BigTextStyleInformation(
+                notification.body ?? '',
+                contentTitle: notification.title,
+                summaryText: '',
+                htmlFormatContentTitle: false,
+                htmlFormatContent: false,
+              )
+            : null,
       );
       
       const iosDetails = DarwinNotificationDetails(
@@ -366,15 +465,15 @@ class FCMService {
 
       // ChatService를 통해 채팅방 정보 조회
       final chatService = ChatService();
-      final chatRoomsResponse = await chatService.getChatRooms();
+      final chatRooms = await chatService.getChatRooms();
 
-      if (!chatRoomsResponse.success || chatRoomsResponse.data == null) {
-        developer.log('❌ 채팅방 목록 조회 실패', name: 'FCM_ERROR');
+      if (chatRooms.isEmpty) {
+        developer.log('❌ 채팅방 목록이 비어있습니다', name: 'FCM_ERROR');
         return;
       }
 
       // roomId에 해당하는 채팅방 찾기
-      final chatRoom = chatRoomsResponse.data!.firstWhere(
+      final chatRoom = chatRooms.firstWhere(
         (room) => room.id == roomId,
         orElse: () => throw Exception('채팅방을 찾을 수 없습니다'),
       );
@@ -430,7 +529,45 @@ class FCMService {
       return null;
     }
   }
-  
+
+  /// 로그아웃 시 토큰 비활성화
+  Future<void> deactivateToken() async {
+    try {
+      print('🔄 FCM: 토큰 비활성화 시도');
+
+      final authService = AuthService();
+      final userResponse = await authService.getCurrentUser();
+
+      if (userResponse.data == null) {
+        print('⚠️ FCM: 로그인된 사용자가 없어 토큰 비활성화 생략');
+        return;
+      }
+
+      if (_currentToken == null) {
+        print('⚠️ FCM: 저장된 토큰이 없어 비활성화 생략');
+        return;
+      }
+
+      final userId = userResponse.data!.id;
+      final supabase = Supabase.instance.client;
+
+      // device_tokens 테이블에서 해당 토큰 비활성화
+      await supabase
+          .from('device_tokens')
+          .update({
+            'is_active': false,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('user_id', userId)
+          .eq('fcm_token', _currentToken!);
+
+      print('✅ FCM: 토큰 비활성화 완료 (user_id: $userId)');
+    } catch (e, stackTrace) {
+      print('❌ FCM: 토큰 비활성화 실패: $e');
+      print('❌ FCM: 스택 트레이스: $stackTrace');
+    }
+  }
+
   /// FCM 서비스 정리
   Future<void> dispose() async {
     // 필요시 리소스 정리

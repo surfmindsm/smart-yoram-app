@@ -10,6 +10,7 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'config/naver_map_config.dart';
+import 'firebase_options.dart';
 import 'screens/main_navigation.dart';
 import 'screens/login_screen.dart';
 import 'screens/members_screen.dart';
@@ -44,17 +45,18 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  // Supabase 초기화 (Firebase보다 먼저 - FCMService에서 사용하므로)
+  await Supabase.initialize(
+    url: 'https://adzhdsajdamrflvybhxq.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
+  );
+  print('✅ Supabase 초기화 완료');
+
   // Firebase 초기화를 더 안전하게 처리
   await initializeFirebase();
 
   // 글꼴 설정 서비스 초기화
   await FontSettingsService().initialize();
-
-  // Supabase 초기화 (실제 설정 사용)
-  await Supabase.initialize(
-    url: 'https://adzhdsajdamrflvybhxq.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
-  );
 
   // 네이버 지도 SDK 초기화
   await NaverMapSdk.instance.initialize(clientId: NaverMapConfig.clientId);
@@ -246,8 +248,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
 /// Firebase 초기화를 안전하게 처리하는 함수
 Future<void> initializeFirebase() async {
   try {
-    // Firebase 초기화 시도
-    await Firebase.initializeApp();
+    // Firebase 초기화 시도 (options 추가)
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     print('✅ Firebase가 성공적으로 초기화되었습니다.');
 
     // FCM 서비스 초기화 (Firebase 초기화 성공 시에만)

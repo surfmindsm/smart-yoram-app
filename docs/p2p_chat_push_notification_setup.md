@@ -200,26 +200,45 @@ serve(async (req) => {
 });
 ```
 
-### 1-2. Edge Function 배포
+### 1-2. Firebase Service Account JSON 다운로드
+
+**중요**: FCM Legacy API는 2024년 6월에 종료되었습니다. FCM v1 API를 사용해야 합니다.
+
+1. **Firebase Console** 접속: https://console.firebase.google.com/
+2. 프로젝트 선택 (`smart-yoram`)
+3. ⚙️ **프로젝트 설정** → **서비스 계정** 탭
+4. **새 비공개 키 생성** 버튼 클릭
+5. JSON 파일 다운로드 (예: `smart-yoram-firebase-adminsdk.json`)
+
+### 1-3. Edge Function 배포
 
 ```bash
-# Supabase CLI 설치 (아직 안 했다면)
+# 1. Supabase CLI 설치 (아직 안 했다면)
 npm install -g supabase
 
-# Supabase 프로젝트 링크
-supabase link --project-ref YOUR_PROJECT_REF
+# 2. Supabase 프로젝트 링크 (프로젝트 루트에서 실행)
+cd /path/to/smart_yoram_app
+supabase link --project-ref adzhdsajdamrflvybhxq
 
-# Edge Function 배포
+# 3. Edge Function 배포
 supabase functions deploy send-chat-notification
 
-# 환경변수 설정
-supabase secrets set FCM_SERVER_KEY=your_fcm_server_key_here
+# 4. Firebase Service Account JSON을 환경변수로 설정
+# 다운로드한 JSON 파일 내용을 한 줄로 변환하여 설정
+supabase secrets set FIREBASE_SERVICE_ACCOUNT="$(cat smart-yoram-firebase-adminsdk.json | tr -d '\n')"
+
+# 5. Firebase 프로젝트 ID 설정 (선택사항, 기본값: smart-yoram)
+supabase secrets set FIREBASE_PROJECT_ID=smart-yoram
 ```
 
-**FCM Server Key 확인 방법:**
-1. Firebase Console 접속 (https://console.firebase.google.com/)
-2. 프로젝트 선택 → ⚙️ 프로젝트 설정 → 클라우드 메시징
-3. "Cloud Messaging API (레거시)" 섹션에서 서버 키 복사
+**환경변수 설정 확인:**
+```bash
+supabase secrets list
+```
+
+다음 항목들이 표시되어야 합니다:
+- `FIREBASE_SERVICE_ACCOUNT`
+- `FIREBASE_PROJECT_ID` (선택사항)
 
 ---
 
@@ -317,13 +336,16 @@ ALTER DATABASE postgres SET app.settings.service_role_key TO 'YOUR_SERVICE_ROLE_
 
 ---
 
-## 3단계: device_tokens 테이블 확인
+## 3단계: device_tokens 테이블 생성 (중요!)
 
-Edge Function이 FCM 토큰을 조회하려면 `device_tokens` 테이블이 필요합니다.
+**이 단계는 필수입니다!** Edge Function이 FCM 토큰을 조회하려면 `device_tokens` 테이블이 필요합니다.
 
-### 3-1. 테이블이 없다면 생성
+### 3-1. Supabase SQL Editor에서 테이블 생성
 
 ```sql
+-- ============================================================
+-- device_tokens 테이블 (FCM 토큰 저장용)
+-- ============================================================
 CREATE TABLE IF NOT EXISTS public.device_tokens (
     id BIGSERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -339,6 +361,9 @@ CREATE TABLE IF NOT EXISTS public.device_tokens (
 
 CREATE INDEX idx_device_tokens_user ON public.device_tokens(user_id);
 CREATE INDEX idx_device_tokens_active ON public.device_tokens(user_id, is_active);
+
+-- RLS는 비활성화 (앱에서 직접 upsert)
+ALTER TABLE public.device_tokens DISABLE ROW LEVEL SECURITY;
 ```
 
 ### 3-2. 기존 테이블명이 다르다면
@@ -442,32 +467,38 @@ Edge Function Logs에서 실행 로그 확인
 ### 알림이 발송되지 않는 경우
 
 1. **Edge Function Logs 확인**
-   - Supabase Dashboard → Edge Functions → Logs
+   - Supabase Dashboard → Edge Functions → `send-chat-notification` → Logs
    - 오류 메시지 확인
 
-2. **FCM Server Key 확인**
+2. **Firebase Service Account 확인**
    ```bash
    supabase secrets list
    ```
-   - FCM_SERVER_KEY가 올바르게 설정되었는지 확인
+   - `FIREBASE_SERVICE_ACCOUNT`가 올바르게 설정되었는지 확인
+   - `FIREBASE_PROJECT_ID`가 설정되었는지 확인 (선택사항)
 
-3. **pg_net 확장 확인**
+3. **Firebase Cloud Messaging API 활성화 확인**
+   - Firebase Console → 프로젝트 설정 → Cloud Messaging
+   - Cloud Messaging API (v1)이 활성화되어 있는지 확인
+   - Google Cloud Console에서도 "Firebase Cloud Messaging API" 활성화 필요
+   - https://console.cloud.google.com/apis/library/fcm.googleapis.com
+
+4. **pg_net 확장 확인**
    ```sql
    SELECT * FROM pg_extension WHERE extname = 'pg_net';
    ```
    - 결과가 없으면 `CREATE EXTENSION pg_net;` 실행
 
-4. **Service Role Key 확인**
-   ```sql
-   SHOW app.settings.service_role_key;
-   ```
-   - 올바른 키가 설정되었는지 확인
+5. **Service Role Key 확인 (Trigger Function에서 사용)**
+   - SQL에서 직접 설정한 `service_role_key` 확인
+   - Trigger Function 코드에서 올바른 값으로 변경했는지 확인
 
-5. **device_tokens 테이블 확인**
+6. **device_tokens 테이블 확인**
    ```sql
    SELECT * FROM device_tokens WHERE user_id = YOUR_USER_ID;
    ```
    - FCM 토큰이 저장되어 있는지 확인
+   - `is_active = true`인지 확인
 
 ### Trigger가 실행되지 않는 경우
 
@@ -485,9 +516,19 @@ CREATE TRIGGER on_chat_message_created
 
 ### FCM API 오류가 발생하는 경우
 
-- **InvalidRegistration**: FCM 토큰이 잘못됨 → 앱에서 토큰 재등록 필요
-- **NotRegistered**: FCM 토큰이 만료됨 → device_tokens에서 해당 토큰 삭제 필요
-- **MismatchSenderId**: FCM 프로젝트가 일치하지 않음 → Firebase 프로젝트 설정 확인
+**FCM v1 API 에러 코드:**
+
+- **INVALID_ARGUMENT**: 요청 형식이 잘못됨 → FCM payload 구조 확인
+- **UNREGISTERED**: FCM 토큰이 만료되었거나 유효하지 않음 → device_tokens에서 해당 토큰 삭제 필요
+- **SENDER_ID_MISMATCH**: 토큰이 다른 Firebase 프로젝트에서 발급됨 → Firebase 프로젝트 설정 확인
+- **QUOTA_EXCEEDED**: FCM 할당량 초과 → Firebase 콘솔에서 할당량 확인
+- **UNAVAILABLE**: FCM 서버 일시적 오류 → 재시도 로직 추가 권장
+- **INTERNAL**: FCM 내부 오류 → Firebase 상태 페이지 확인
+
+**인증 관련 에러:**
+
+- **UNAUTHENTICATED**: OAuth2 토큰이 유효하지 않음 → Service Account JSON 확인
+- **PERMISSION_DENIED**: Firebase 프로젝트 권한 부족 → Service Account에 "Firebase Cloud Messaging API Admin" 역할 부여
 
 ---
 
@@ -495,15 +536,23 @@ CREATE TRIGGER on_chat_message_created
 
 1. **Service Role Key 보안**
    - Service Role Key는 절대 클라이언트 앱에 포함하지 말 것
-   - Edge Function과 Database에서만 사용
+   - Edge Function과 Database Trigger Function에서만 사용
+   - Trigger Function은 SECURITY DEFINER로 실행되어 일반 사용자는 내부를 볼 수 없음
 
-2. **FCM Server Key 보안**
+2. **Firebase Service Account JSON 보안**
+   - Service Account JSON은 절대 Git에 커밋하지 말 것
+   - `.gitignore`에 `*-firebase-adminsdk*.json` 추가
    - Supabase Secrets로만 관리
    - 코드에 직접 포함하지 말 것
 
 3. **알림 내용 검증**
    - Edge Function에서 발신자와 수신자 관계 검증
    - 참여하지 않은 채팅방의 메시지는 알림 발송하지 않음
+   - `p2p_chat_participants` 테이블 조회로 권한 확인
+
+4. **Firebase Cloud Messaging API 활성화**
+   - Google Cloud Console에서 "Firebase Cloud Messaging API (v1)" 활성화 필수
+   - API 키 제한 설정 권장 (특정 IP 또는 도메인만 허용)
 
 ---
 
