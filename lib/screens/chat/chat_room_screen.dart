@@ -112,6 +112,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           _chatService.markAsRead(widget.chatRoom.id);
         }
       },
+      onMessageUpdate: (updatedMessage) {
+        // 메시지 업데이트 (읽음 상태 변경)
+        setState(() {
+          final index = _messages.indexWhere((m) => m.id == updatedMessage.id);
+          if (index != -1) {
+            _messages[index] = updatedMessage;
+          }
+        });
+      },
     );
   }
 

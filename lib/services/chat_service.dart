@@ -423,7 +423,15 @@ class ChatService {
 
       print('✅ CHAT_SERVICE: 읽음 처리 시작 - roomId: $roomId');
 
-      // 내 참여자 정보 업데이트
+      // 1. 내가 읽지 않은 메시지들(상대방이 보낸 메시지)의 is_read를 true로 업데이트
+      await _supabaseService.client
+          .from('p2p_chat_messages')
+          .update({'is_read': true})
+          .eq('room_id', roomId)
+          .neq('sender_id', currentUser.id)
+          .eq('is_read', false);
+
+      // 2. 내 참여자 정보 업데이트 (unread_count를 0으로)
       await _supabaseService.client
           .from('p2p_chat_participants')
           .update({
@@ -447,10 +455,12 @@ class ChatService {
   ///
   /// [roomId]: 채팅방 ID
   /// [onMessage]: 새 메시지 수신 시 콜백
+  /// [onMessageUpdate]: 메시지 업데이트(읽음 상태 등) 시 콜백
   RealtimeChannel subscribeToMessages(
     int roomId,
-    void Function(ChatMessage message) onMessage,
-  ) {
+    void Function(ChatMessage message) onMessage, {
+    void Function(ChatMessage message)? onMessageUpdate,
+  }) {
     print('🔔 CHAT_SERVICE: 실시간 메시지 구독 시작 - roomId: $roomId');
 
     // 기존 구독이 있으면 제거
@@ -475,6 +485,23 @@ class ChatService {
             print('🔔 CHAT_SERVICE: 새 메시지 수신 - ${payload.newRecord}');
             final message = ChatMessage.fromJson(payload.newRecord);
             onMessage(message);
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'p2p_chat_messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'room_id',
+            value: roomId,
+          ),
+          callback: (payload) {
+            print('🔔 CHAT_SERVICE: 메시지 업데이트 수신 - ${payload.newRecord}');
+            if (onMessageUpdate != null) {
+              final message = ChatMessage.fromJson(payload.newRecord);
+              onMessageUpdate(message);
+            }
           },
         )
         .subscribe();

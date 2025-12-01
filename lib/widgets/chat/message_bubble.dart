@@ -57,9 +57,26 @@ class MessageBubble extends StatelessWidget {
             ),
           ],
 
-          // 내 메시지: 시간 + 말풍선
+          // 내 메시지: 읽음 표시 + 시간 + 말풍선
           if (isMe) ...[
-            _buildTimeText(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (message.isRead)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 2.h),
+                    child: Text(
+                      '읽음',
+                      style: FigmaTextStyles().caption2.copyWith(
+                            color: NewAppColor.neutral500,
+                            fontSize: 10.sp,
+                          ),
+                    ),
+                  ),
+                _buildTimeText(),
+              ],
+            ),
             SizedBox(width: 4.w),
             Flexible(child: _buildMessageBubble()),
           ],
