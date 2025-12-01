@@ -11,6 +11,8 @@ import '../models/push_notification_enhanced.dart';
 import 'notification_service.dart';
 import 'notification_service_enhanced.dart';
 import 'auth_service.dart';
+import 'chat_service.dart';
+import '../screens/chat/chat_room_screen.dart';
 
 /// FCM 백그라운드 메시지 핸들러 (top-level function)
 @pragma('vm:entry-point')
@@ -291,20 +293,21 @@ class FCMService {
   void _handleNotificationTap(RemoteMessage message) {
     final notification = PushNotificationModel.fromFirebaseMessage(message);
     developer.log('알림 탭 처리: ${notification.title}', name: 'FCM');
-    
+
     // 알림 타입에 따른 화면 이동
-    _navigateToRelevantScreen(notification);
+    _navigateToRelevantScreen(notification, message.data);
   }
   
   /// 로컬 알림 탭 처리
   void _onNotificationTapped(NotificationResponse response) {
     if (response.payload != null) {
       try {
-        final data = jsonDecode(response.payload!);
-        final notification = PushNotificationModel.fromJson(data);
+        final json = jsonDecode(response.payload!);
+        final notification = PushNotificationModel.fromJson(json);
+        final data = json['data'] as Map<String, dynamic>?;
         developer.log('로컬 알림 탭: ${notification.title}', name: 'FCM');
-        
-        _navigateToRelevantScreen(notification);
+
+        _navigateToRelevantScreen(notification, data ?? {});
       } catch (e) {
         developer.log('로컬 알림 탭 처리 실패: $e', name: 'FCM_ERROR');
       }
@@ -312,10 +315,81 @@ class FCMService {
   }
   
   /// 알림 타입에 따른 화면 이동
-  void _navigateToRelevantScreen(PushNotificationModel notification) {
-    // TODO: 실제 화면 이동 로직 구현
-    // 예: Navigator.pushNamed(), context 사용 시 전역 네비게이터 키 필요
-    developer.log('화면 이동: ${notification.type?.displayName ?? '기본'}', name: 'FCM');
+  void _navigateToRelevantScreen(
+    PushNotificationModel notification,
+    Map<String, dynamic> data,
+  ) {
+    try {
+      // data에서 알림 타입 확인
+      final type = data['type'] as String?;
+
+      developer.log('화면 이동: type=$type, data=$data', name: 'FCM');
+
+      // 채팅 메시지 알림
+      if (type == 'chat_message') {
+        final roomId = int.tryParse(data['room_id']?.toString() ?? '');
+        if (roomId != null) {
+          _navigateToChatRoom(roomId, data);
+          return;
+        }
+      }
+
+      // 다른 알림 타입 처리 (추후 확장 가능)
+      switch (notification.type?.name) {
+        case 'announcement':
+          developer.log('공지사항 화면으로 이동 예정', name: 'FCM');
+          // TODO: 공지사항 화면 이동
+          break;
+        case 'worship_reminder':
+          developer.log('예배 화면으로 이동 예정', name: 'FCM');
+          // TODO: 예배 화면 이동
+          break;
+        default:
+          developer.log('기본 알림 처리: ${notification.type?.displayName ?? 'custom'}', name: 'FCM');
+      }
+    } catch (e) {
+      developer.log('화면 이동 실패: $e', name: 'FCM_ERROR');
+    }
+  }
+
+  /// 채팅방으로 이동
+  Future<void> _navigateToChatRoom(int roomId, Map<String, dynamic> data) async {
+    try {
+      // WidgetsBinding을 통해 현재 BuildContext에서 Navigator 찾기
+      final context = WidgetsBinding.instance.rootElement;
+      if (context == null) {
+        developer.log('❌ BuildContext를 찾을 수 없습니다', name: 'FCM_ERROR');
+        return;
+      }
+
+      final navigator = Navigator.of(context);
+
+      // ChatService를 통해 채팅방 정보 조회
+      final chatService = ChatService();
+      final chatRoomsResponse = await chatService.getChatRooms();
+
+      if (!chatRoomsResponse.success || chatRoomsResponse.data == null) {
+        developer.log('❌ 채팅방 목록 조회 실패', name: 'FCM_ERROR');
+        return;
+      }
+
+      // roomId에 해당하는 채팅방 찾기
+      final chatRoom = chatRoomsResponse.data!.firstWhere(
+        (room) => room.id == roomId,
+        orElse: () => throw Exception('채팅방을 찾을 수 없습니다'),
+      );
+
+      // 채팅방 화면으로 직접 이동
+      await navigator.push(
+        MaterialPageRoute(
+          builder: (context) => ChatRoomScreen(chatRoom: chatRoom),
+        ),
+      );
+
+      developer.log('✅ 채팅방으로 이동: room_id=$roomId', name: 'FCM');
+    } catch (e) {
+      developer.log('❌ 채팅방 이동 실패: $e', name: 'FCM_ERROR');
+    }
   }
   
   /// 디바이스 ID 가져오기

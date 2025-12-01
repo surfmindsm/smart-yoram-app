@@ -32,6 +32,9 @@ import 'services/auth_service.dart';
 import 'services/fcm_service.dart';
 import 'services/font_settings_service.dart';
 
+/// 전역 네비게이터 키 (FCM 알림 탭 처리용)
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -84,6 +87,7 @@ class MyApp extends ConsumerWidget {
                 textScaleFactor: fontSettings.textScaleFactor,
               ),
               child: MaterialApp(
+                navigatorKey: navigatorKey,
                 title: 'Smart Yoram App',
                 debugShowCheckedModeBanner: false,
                 localizationsDelegates: const [
