@@ -519,7 +519,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 height: 28.h,
                 alignment: Alignment.center,
                 child: Icon(
-                  Icons.arrow_back_ios,
+                  LucideIcons.chevronLeft,
                   color: NewAppColor.neutral800,
                   size: 20.w,
                 ),

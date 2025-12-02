@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../components/index.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
@@ -175,7 +176,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           child: Container(
             padding: EdgeInsets.all(8.w),
             child: Icon(
-              Icons.arrow_back_ios,
+              LucideIcons.chevronLeft,
               color: NewAppColor.neutral900,
               size: 20.sp,
             ),

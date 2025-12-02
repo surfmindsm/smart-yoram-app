@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/community_models.dart';
@@ -263,7 +264,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       }
 
       // 작성자 본인이 좋아요를 누른 경우 알림 전송하지 않음
-      if (authorId == null || (_currentUser != null && authorId == _currentUser!.id)) {
+      if (authorId == null ||
+          (_currentUser != null && authorId == _currentUser!.id)) {
         print('💗 COMMUNITY_DETAIL: 작성자 본인이므로 알림 전송 생략');
         return;
       }
@@ -272,7 +274,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       final userName = _currentUser?.fullName ?? '누군가';
 
       // 푸시 알림 전송 시도
-      print('💗 COMMUNITY_DETAIL: 좋아요 알림 전송 시도 - authorId: $authorId, userName: $userName');
+      print(
+          '💗 COMMUNITY_DETAIL: 좋아요 알림 전송 시도 - authorId: $authorId, userName: $userName');
 
       // 1. 먼저 작성자의 FCM 토큰 조회
       final authorTokens = await _supabaseService.client
@@ -286,7 +289,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         return;
       }
 
-      print('📱 COMMUNITY_DETAIL: FCM 토큰 조회 성공 - ${(authorTokens as List).length}개');
+      print(
+          '📱 COMMUNITY_DETAIL: FCM 토큰 조회 성공 - ${(authorTokens as List).length}개');
 
       // 2. Supabase Edge Function으로 푸시 알림 전송
       try {
@@ -311,9 +315,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
           // notifications 테이블에도 저장 (알림 센터용)
           try {
-            await _supabaseService.client
-                .from('notifications')
-                .insert({
+            await _supabaseService.client.from('notifications').insert({
               'user_id': authorId,
               'title': '좋아요',
               'body': '$userName님이 회원님의 게시글을 좋아합니다.',
@@ -390,7 +392,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
             onPressed: () => Navigator.pop(context),
             padding: EdgeInsets.zero,
           ),
@@ -457,17 +459,19 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: NewAppColor.primary600,
                                         foregroundColor: Colors.white,
-                                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 14.h),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12.r),
+                                          borderRadius:
+                                              BorderRadius.circular(12.r),
                                         ),
                                         elevation: 0,
                                       ),
                                       child: Text(
                                         _getStatusButtonText(),
                                         style: FigmaTextStyles().body2.copyWith(
-                                          color: Colors.white,
-                                        ),
+                                              color: Colors.white,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -482,16 +486,22 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                         vertical: 14.h,
                                       ),
                                       side: BorderSide(
-                                        color: _isFavorited ? Colors.red : NewAppColor.neutral300,
+                                        color: _isFavorited
+                                            ? Colors.red
+                                            : NewAppColor.neutral300,
                                         width: 1.5,
                                       ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.r),
-                                      ),
+                                      // shape: RoundedRectangleBorder(
+                                      //   borderRadius: BorderRadius.circular(12.r),
+                                      // ),
                                     ),
                                     child: Icon(
-                                      _isFavorited ? Icons.favorite : Icons.favorite_border,
-                                      color: _isFavorited ? Colors.red : NewAppColor.neutral400,
+                                      _isFavorited
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: _isFavorited
+                                          ? Colors.red
+                                          : NewAppColor.neutral400,
                                       size: 20.w,
                                     ),
                                   ),
@@ -502,20 +512,24 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       child: OutlinedButton(
                                         onPressed: _onPhoneButtonPressed,
                                         style: OutlinedButton.styleFrom(
-                                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 14.h),
                                           side: BorderSide(
                                             color: NewAppColor.primary600,
                                             width: 1.5,
                                           ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12.r),
+                                            borderRadius:
+                                                BorderRadius.circular(12.r),
                                           ),
                                         ),
                                         child: Text(
                                           '전화하기',
-                                          style: FigmaTextStyles().body2.copyWith(
-                                            color: NewAppColor.primary600,
-                                          ),
+                                          style: FigmaTextStyles()
+                                              .body2
+                                              .copyWith(
+                                                color: NewAppColor.primary600,
+                                              ),
                                         ),
                                       ),
                                     ),
@@ -528,17 +542,20 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: NewAppColor.primary600,
                                         foregroundColor: Colors.white,
-                                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 14.h),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12.r),
+                                          borderRadius:
+                                              BorderRadius.circular(12.r),
                                         ),
                                         elevation: 0,
                                       ),
                                       child: Text(
                                         '채팅하기',
-                                        style: FigmaTextStyles().body2.copyWith(
-                                          color: Colors.white,
-                                        ),
+                                        style:
+                                            FigmaTextStyles().button1.copyWith(
+                                                  color: Colors.white,
+                                                ),
                                       ),
                                     ),
                                   ),
@@ -721,20 +738,24 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
           ] else ...[
             // 이미지가 없는 경우 상단 여백만 추가 (AppBar 높이만큼)
-            SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
+            SizedBox(
+                height: kToolbarHeight + MediaQuery.of(context).padding.top),
           ],
 
           // === 무료나눔/물품판매 전용 레이아웃 ===
           if (_post is SharingItem) ...[
-            _buildSharingLayout(_post as SharingItem, date, authorName, authorProfilePhotoUrl, churchName, churchLocation, description),
+            _buildSharingLayout(_post as SharingItem, date, authorName,
+                authorProfilePhotoUrl, churchName, churchLocation, description),
           ]
           // === 물품요청 전용 레이아웃 ===
           else if (_post is RequestItem) ...[
-            _buildRequestLayout(_post as RequestItem, date, authorName, authorProfilePhotoUrl, churchName, churchLocation, description),
+            _buildRequestLayout(_post as RequestItem, date, authorName,
+                authorProfilePhotoUrl, churchName, churchLocation, description),
           ]
           // === 행사팀 지원 전용 레이아웃 ===
           else if (_post is MusicTeamSeeker) ...[
-            _buildMusicTeamSeekerLayout(_post as MusicTeamSeeker, date, authorName, authorProfilePhotoUrl, churchName),
+            _buildMusicTeamSeekerLayout(_post as MusicTeamSeeker, date,
+                authorName, authorProfilePhotoUrl, churchName),
           ]
           // === 기타 게시글 기본 레이아웃 ===
           else ...[
@@ -766,8 +787,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             SizedBox(height: 4.h),
                             Text(
                               [
-                                if (churchName != null && churchName.isNotEmpty) churchName,
-                                if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
+                                if (churchName != null && churchName.isNotEmpty)
+                                  churchName,
+                                if (churchLocation != null &&
+                                    churchLocation.isNotEmpty)
+                                  churchLocation,
                               ].join(' · '),
                               style: TextStyle(
                                 color: NewAppColor.neutral600,
@@ -841,7 +865,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       ),
     );
   }
-
 
   Widget _buildProfileImage(String? profilePhotoUrl) {
     // 프로필 이미지 URL 변환
@@ -1429,7 +1452,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     if (_post == null) return '상태 변경';
 
     final currentStatus = (_post as CommunityBasePost).status;
-    final isCompleted = currentStatus == 'completed' || currentStatus == 'closed';
+    final isCompleted =
+        currentStatus == 'completed' || currentStatus == 'closed';
 
     return isCompleted ? '진행중으로 변경' : '완료로 변경';
   }
@@ -1437,8 +1461,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   void _showPostMenu() {
     // 작성자 확인
     final isAuthor = _currentUser != null &&
-                     _post != null &&
-                     (_post as CommunityBasePost).authorId == _currentUser!.id;
+        _post != null &&
+        (_post as CommunityBasePost).authorId == _currentUser!.id;
 
     if (!isAuthor) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1449,7 +1473,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
     // 현재 상태 확인
     final currentStatus = (_post as CommunityBasePost).status;
-    final isCompleted = currentStatus == 'completed' || currentStatus == 'closed';
+    final isCompleted =
+        currentStatus == 'completed' || currentStatus == 'closed';
 
     showModalBottomSheet(
       context: context,
@@ -1462,7 +1487,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ListTile(
                 leading: Icon(
                   isCompleted ? Icons.restart_alt : Icons.check_circle_outline,
-                  color: isCompleted ? NewAppColor.primary600 : NewAppColor.success600,
+                  color: isCompleted
+                      ? NewAppColor.primary600
+                      : NewAppColor.success600,
                 ),
                 title: Text(isCompleted ? '진행중으로 변경' : '완료로 변경'),
                 onTap: () {
@@ -1499,7 +1526,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     if (_post == null) return;
 
     final currentStatus = (_post as CommunityBasePost).status;
-    final isCompleted = currentStatus == 'completed' || currentStatus == 'closed';
+    final isCompleted =
+        currentStatus == 'completed' || currentStatus == 'closed';
 
     // 새로운 상태 결정
     String newStatus;
@@ -1510,7 +1538,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       } else if (widget.tableName == 'community_requests') {
         newStatus = 'requesting';
       } else if (widget.tableName == 'job_posts' ||
-                 widget.tableName == 'community_music_teams') {
+          widget.tableName == 'community_music_teams') {
         newStatus = 'open';
       } else {
         newStatus = 'active';
@@ -1675,7 +1703,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   Text(
                     item.formattedPrice,
                     style: FigmaTextStyles().header2.copyWith(
-                          color: item.isFree ? NewAppColor.success600 : NewAppColor.primary600,
+                          color: item.isFree
+                              ? NewAppColor.success600
+                              : NewAppColor.primary600,
                           fontSize: 24.sp,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1683,7 +1713,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   SizedBox(width: 12.w),
                   // 상태 배지
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                     decoration: BoxDecoration(
                       color: _getStatusColor(item.status),
                       borderRadius: BorderRadius.circular(6.r),
@@ -1718,7 +1749,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     style: TextStyle(color: NewAppColor.neutral400),
                   ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.visibility_outlined, size: 14.sp, color: NewAppColor.neutral500),
+                  Icon(Icons.visibility_outlined,
+                      size: 14.sp, color: NewAppColor.neutral500),
                   SizedBox(width: 4.w),
                   Text(
                     '${item.viewCount}',
@@ -1767,14 +1799,17 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     SizedBox(height: 12.h),
                     _buildInfoRow(label: '상태', value: item.condition),
                     SizedBox(height: 12.h),
-                    _buildInfoRow(label: '구매 시기', value: item.formattedPurchaseDate),
+                    _buildInfoRow(
+                        label: '구매 시기', value: item.formattedPurchaseDate),
                     SizedBox(height: 12.h),
                     _buildInfoRow(label: '지역', value: item.displayLocation),
                     SizedBox(height: 12.h),
                     _buildInfoRow(
                       label: '택배',
                       value: item.deliveryAvailable ? '가능' : '불가능',
-                      valueColor: item.deliveryAvailable ? NewAppColor.success600 : NewAppColor.neutral600,
+                      valueColor: item.deliveryAvailable
+                          ? NewAppColor.success600
+                          : NewAppColor.neutral600,
                       valueWeight: FontWeight.w600,
                     ),
                   ],
@@ -1822,8 +1857,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                         SizedBox(height: 4.h),
                         Text(
                           [
-                            if (churchName != null && churchName.isNotEmpty) churchName,
-                            if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
+                            if (churchName != null && churchName.isNotEmpty)
+                              churchName,
+                            if (churchLocation != null &&
+                                churchLocation.isNotEmpty)
+                              churchLocation,
                           ].join(' · '),
                           style: FigmaTextStyles().body2.copyWith(
                                 color: NewAppColor.neutral600,
@@ -1906,7 +1944,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   onTap: () => _showContactDialog(item.contactPhone),
                 ),
               // 이메일
-              if (item.contactEmail != null && item.contactEmail!.isNotEmpty) ...[
+              if (item.contactEmail != null &&
+                  item.contactEmail!.isNotEmpty) ...[
                 SizedBox(height: 12.h),
                 _buildContactItem(
                   icon: Icons.email_outlined,
@@ -2036,7 +2075,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 children: [
                   // 우선순위
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                     decoration: BoxDecoration(
                       color: urgencyColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6.r),
@@ -2045,7 +2085,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.priority_high, size: 16.sp, color: urgencyColor),
+                        Icon(Icons.priority_high,
+                            size: 16.sp, color: urgencyColor),
                         SizedBox(width: 4.w),
                         Text(
                           urgencyLabel,
@@ -2061,7 +2102,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   SizedBox(width: 8.w),
                   // 상태 배지
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                     decoration: BoxDecoration(
                       color: _getStatusColor(item.status),
                       borderRadius: BorderRadius.circular(6.r),
@@ -2096,7 +2138,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     style: TextStyle(color: NewAppColor.neutral400),
                   ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.visibility_outlined, size: 14.sp, color: NewAppColor.neutral500),
+                  Icon(Icons.visibility_outlined,
+                      size: 14.sp, color: NewAppColor.neutral500),
                   SizedBox(width: 4.w),
                   Text(
                     '${item.viewCount}',
@@ -2155,14 +2198,18 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     _buildInfoRow(
                       label: '택배',
                       value: item.deliveryAvailable ? '가능' : '불가능',
-                      valueColor: item.deliveryAvailable ? NewAppColor.success600 : NewAppColor.neutral600,
+                      valueColor: item.deliveryAvailable
+                          ? NewAppColor.success600
+                          : NewAppColor.neutral600,
                       valueWeight: FontWeight.w600,
                     ),
                     SizedBox(height: 12.h),
                     _buildInfoRow(
                       label: '보상',
                       value: rewardText,
-                      valueColor: item.rewardType == 'payment' ? NewAppColor.primary600 : NewAppColor.neutral600,
+                      valueColor: item.rewardType == 'payment'
+                          ? NewAppColor.primary600
+                          : NewAppColor.neutral600,
                       valueWeight: FontWeight.w600,
                     ),
                   ],
@@ -2210,8 +2257,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                         SizedBox(height: 4.h),
                         Text(
                           [
-                            if (churchName != null && churchName.isNotEmpty) churchName,
-                            if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
+                            if (churchName != null && churchName.isNotEmpty)
+                              churchName,
+                            if (churchLocation != null &&
+                                churchLocation.isNotEmpty)
+                              churchLocation,
                           ].join(' · '),
                           style: FigmaTextStyles().body2.copyWith(
                                 color: NewAppColor.neutral600,
@@ -2294,7 +2344,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   onTap: () => _showContactDialog(item.contactPhone),
                 ),
               // 이메일
-              if (item.contactEmail != null && item.contactEmail!.isNotEmpty) ...[
+              if (item.contactEmail != null &&
+                  item.contactEmail!.isNotEmpty) ...[
                 SizedBox(height: 12.h),
                 _buildContactItem(
                   icon: Icons.email_outlined,
@@ -2366,9 +2417,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                     decoration: BoxDecoration(
-                      color: item.status == 'available' ? NewAppColor.success600 : NewAppColor.neutral500,
+                      color: item.status == 'available'
+                          ? NewAppColor.success600
+                          : NewAppColor.neutral500,
                       borderRadius: BorderRadius.circular(6.r),
                     ),
                     child: Text(
@@ -2401,7 +2455,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     style: TextStyle(color: NewAppColor.neutral400),
                   ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.visibility_outlined, size: 14.sp, color: NewAppColor.neutral500),
+                  Icon(Icons.visibility_outlined,
+                      size: 14.sp, color: NewAppColor.neutral500),
                   SizedBox(width: 4.w),
                   Text(
                     '${item.viewCount}',
@@ -2446,12 +2501,15 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 ),
                 child: Column(
                   children: [
-                    if (item.teamName != null && item.teamName!.isNotEmpty && item.teamName != '없음') ...[
+                    if (item.teamName != null &&
+                        item.teamName!.isNotEmpty &&
+                        item.teamName != '없음') ...[
                       _buildInfoRow(label: '현재 활동 팀명', value: item.teamName!),
                       SizedBox(height: 12.h),
                     ],
                     _buildInfoRow(label: '전공 파트', value: teamTypeDisplay),
-                    if (item.instruments != null && item.instruments!.isNotEmpty) ...[
+                    if (item.instruments != null &&
+                        item.instruments!.isNotEmpty) ...[
                       SizedBox(height: 12.h),
                       _buildInfoRow(
                         label: '호환 악기',
@@ -2547,7 +2605,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               runSpacing: 6.h,
                               children: item.preferredLocation.map((location) {
                                 return Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 8.w, vertical: 4.h),
                                   decoration: BoxDecoration(
                                     color: NewAppColor.primary100,
                                     borderRadius: BorderRadius.circular(4.r),
@@ -2588,7 +2647,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               runSpacing: 4.h,
                               children: item.availableDays.map((day) {
                                 return Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 8.w, vertical: 4.h),
                                   decoration: BoxDecoration(
                                     color: NewAppColor.success00,
                                     borderRadius: BorderRadius.circular(4.r),
@@ -2625,7 +2685,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         Container(height: 8.h, color: NewAppColor.neutral100),
 
         // === 5. 포트폴리오 ===
-        if ((item.portfolio.isNotEmpty) || (item.portfolioFile != null && item.portfolioFile!.isNotEmpty)) ...[
+        if ((item.portfolio.isNotEmpty) ||
+            (item.portfolioFile != null && item.portfolioFile!.isNotEmpty)) ...[
           Container(
             color: Colors.white,
             width: double.infinity,
@@ -2649,7 +2710,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     onTap: () async {
                       final uri = Uri.parse(item.portfolio);
                       if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        await launchUrl(uri,
+                            mode: LaunchMode.externalApplication);
                       }
                     },
                     child: Container(
@@ -2712,12 +2774,14 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       ),
                     ),
                   ),
-                  if (item.portfolioFile != null && item.portfolioFile!.isNotEmpty)
+                  if (item.portfolioFile != null &&
+                      item.portfolioFile!.isNotEmpty)
                     SizedBox(height: 12.h),
                 ],
 
                 // 포트폴리오 파일
-                if (item.portfolioFile != null && item.portfolioFile!.isNotEmpty) ...[
+                if (item.portfolioFile != null &&
+                    item.portfolioFile!.isNotEmpty) ...[
                   InkWell(
                     onTap: () => _downloadAndOpenFile(item.portfolioFile!),
                     child: Container(
@@ -2901,7 +2965,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   onTap: () => _showContactDialog(item.contactPhone),
                 ),
               // 이메일
-              if (item.contactEmail != null && item.contactEmail!.isNotEmpty) ...[
+              if (item.contactEmail != null &&
+                  item.contactEmail!.isNotEmpty) ...[
                 SizedBox(height: 12.h),
                 _buildContactItem(
                   icon: Icons.email_outlined,
@@ -2951,8 +3016,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 subtitle: Text(
                   _authorPhone!,
                   style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
+                        color: NewAppColor.neutral400,
+                      ),
                 ),
                 onTap: () async {
                   Navigator.pop(context);
@@ -2979,8 +3044,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 subtitle: Text(
                   _authorPhone!,
                   style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
-                  ),
+                        color: NewAppColor.neutral400,
+                      ),
                 ),
                 onTap: () async {
                   Navigator.pop(context);
@@ -3087,5 +3152,4 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       }
     }
   }
-
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 
@@ -18,7 +19,7 @@ class SignupSelectionScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: NewAppColor.neutral900),
+          icon: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral900),
           onPressed: () => Navigator.pop(context),
         ),
       ),

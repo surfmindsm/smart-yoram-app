@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide IconButton;
 import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../components/index.dart';
 import '../../models/member.dart';
 import '../../resource/color_style_new.dart';
@@ -254,7 +255,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: material.IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(

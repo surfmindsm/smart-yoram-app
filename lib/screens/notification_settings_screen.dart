@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
 
@@ -28,7 +29,7 @@ class _NotificationSettingsScreenState
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: NewAppColor.neutral800),
+          icon: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral800),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -276,7 +277,7 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
           backgroundColor: NewAppColor.primary600,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: Icon(LucideIcons.chevronLeft, color: Colors.white),
             onPressed: () {
               // 뒤로가기 버튼 클릭 시 선택된 알림음 반환
               Navigator.pop(context, _selectedSound);

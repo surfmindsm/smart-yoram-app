@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../components/index.dart';
 import '../resource/color_style_new.dart';
@@ -78,7 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () => Navigator.pop(context),
-            child: Icon(Icons.arrow_back, color: NewAppColor.neutral900),
+            child: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral900),
           ),
         ),
         title: Text(

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/community_models.dart';
@@ -898,7 +899,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back_ios, color: Colors.black),
+            child: Icon(LucideIcons.chevronLeft, color: Colors.black),
           ),
         ),
         title: Text(
