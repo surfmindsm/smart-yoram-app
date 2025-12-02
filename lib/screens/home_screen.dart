@@ -61,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isWorshipScheduleExpanded = false; // 예배시간 카드 펼침 상태 (초기값: 닫힘)
   final ScrollController _scrollController = ScrollController(); // 스크롤 컨트롤러
   final GlobalKey _worshipKey = GlobalKey(); // 예배시간안내 위젯 키
+  final GlobalKey<_ProfileAlertState> _profileAlertKey = GlobalKey<_ProfileAlertState>(); // ProfileAlert 위젯 키
 
   // 최근 공지사항 관련 상태 변수
   List<Announcement> recentAnnouncements = [];
@@ -439,6 +440,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // 예배 서비스 로드
       await _loadWorshipServices();
 
+      // ProfileAlert 새로고침 (알림 배지 업데이트)
+      _profileAlertKey.currentState?.refreshNotifications();
+
       setState(() {
         isLoading = false;
       });
@@ -533,11 +537,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       child: ProfileAlert(
+        key: _profileAlertKey,  // GlobalKey 사용
         userName: currentMember?.name ?? currentUser?.fullName,
         profileImageUrl: currentMember?.fullProfilePhotoUrl ??
             currentMember?.profilePhotoUrl,
-        onNotificationTap: () {
-          Navigator.push(
+        onNotificationTap: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => const NotificationCenterScreen(),
@@ -2033,7 +2038,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 class ProfileAlert extends StatefulWidget {
   final String? userName;
   final String? profileImageUrl;
-  final VoidCallback? onNotificationTap;
+  final Future<void> Function()? onNotificationTap;
   final VoidCallback? onSettingsTap;
 
   const ProfileAlert({
@@ -2056,21 +2061,34 @@ class _ProfileAlertState extends State<ProfileAlert> {
   @override
   void initState() {
     super.initState();
+    print('🔔 PROFILE_ALERT: initState 호출됨!');
     _loadUnreadCount();
     _setupRealtimeSubscription();
   }
 
+  // 외부에서 호출 가능한 새로고침 메서드
+  void refreshNotifications() {
+    print('🔄 PROFILE_ALERT: refreshNotifications() 호출됨');
+    _loadUnreadCount();
+  }
+
   Future<void> _loadUnreadCount() async {
+    print('🔔 PROFILE_ALERT: 미확인 알림 개수 로드 시작');
     try {
       final response = await NotificationService.instance.getMyNotifications(
         limit: 100,
         isRead: false,
       );
 
+      print('🔔 PROFILE_ALERT: API 응답 - success: ${response.success}, data 개수: ${response.data?.length ?? 0}');
+
       if (response.success && response.data != null && mounted) {
         setState(() {
           unreadCount = response.data!.length;
         });
+        print('✅ PROFILE_ALERT: 미확인 알림 개수 업데이트 완료 - $unreadCount개');
+      } else {
+        print('⚠️ PROFILE_ALERT: 응답은 받았지만 데이터가 없거나 실패');
       }
     } catch (e) {
       print('❌ PROFILE_ALERT: 미확인 알림 개수 로드 실패 - $e');
@@ -2163,6 +2181,7 @@ class _ProfileAlertState extends State<ProfileAlert> {
     print('🎨 PROFILE_ALERT: 렌더링 시작');
     print('🎨 PROFILE_ALERT: userName = ${widget.userName}');
     print('🎨 PROFILE_ALERT: profileImageUrl = ${widget.profileImageUrl}');
+    print('🔔 PROFILE_ALERT: 현재 unreadCount = $unreadCount');
 
     return Container(
       width: double.infinity,
@@ -2225,14 +2244,13 @@ class _ProfileAlertState extends State<ProfileAlert> {
           ),
           // 알림 버튼 (배지 포함)
           InkWell(
-            onTap: () {
-              widget.onNotificationTap?.call();
+            onTap: () async {
+              // 알림 화면으로 이동
+              await widget.onNotificationTap?.call();
               // 알림 화면에서 돌아왔을 때 카운트 새로고침
-              Future.delayed(const Duration(milliseconds: 500), () {
-                if (mounted) {
-                  _loadUnreadCount();
-                }
-              });
+              if (mounted) {
+                _loadUnreadCount();
+              }
             },
             borderRadius: BorderRadius.circular(100),
             child: Stack(
