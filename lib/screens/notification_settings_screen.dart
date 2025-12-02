@@ -25,15 +25,17 @@ class _NotificationSettingsScreenState
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: NewAppColor.primary600,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: NewAppColor.neutral800),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '알림 설정',
-          style: FigmaTextStyles().headline4.copyWith(color: Colors.white),
+          style: FigmaTextStyles()
+              .headline4
+              .copyWith(color: NewAppColor.neutral800),
         ),
         centerTitle: true,
       ),
@@ -104,7 +106,7 @@ class _NotificationSettingsScreenState
       padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 12.h),
       child: Text(
         title,
-        style: FigmaTextStyles().title4.copyWith(
+        style: FigmaTextStyles().body3.copyWith(
               color: NewAppColor.neutral800,
             ),
       ),
@@ -252,7 +254,8 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
 
     try {
       await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource(soundPath.replaceFirst('assets/', '')));
+      await _audioPlayer
+          .play(AssetSource(soundPath.replaceFirst('assets/', '')));
     } catch (e) {
       print('알림음 재생 실패: $e');
       // 파일이 없어도 앱이 크래시되지 않도록 에러를 무시
@@ -285,59 +288,60 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
           ),
           centerTitle: true,
         ),
-      body: ListView.builder(
-        itemCount: _sounds.length,
-        itemBuilder: (context, index) {
-          final soundName = _sounds.keys.elementAt(index);
-          final soundPath = _sounds[soundName]!;
-          final isSelected = soundName == _selectedSound;
+        body: ListView.builder(
+          itemCount: _sounds.length,
+          itemBuilder: (context, index) {
+            final soundName = _sounds.keys.elementAt(index);
+            final soundPath = _sounds[soundName]!;
+            final isSelected = soundName == _selectedSound;
 
-          return InkWell(
-            onTap: () async {
-              // 알림음 미리듣기
-              await _playSound(soundPath);
+            return InkWell(
+              onTap: () async {
+                // 알림음 미리듣기
+                await _playSound(soundPath);
 
-              // 선택된 알림음 표시
-              setState(() {
-                _selectedSound = soundName;
-              });
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: NewAppColor.neutral200,
-                    width: 1,
+                // 선택된 알림음 표시
+                setState(() {
+                  _selectedSound = soundName;
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: NewAppColor.neutral200,
+                      width: 1,
+                    ),
                   ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      soundName,
-                      style: FigmaTextStyles().body2.copyWith(
-                            color: isSelected
-                                ? NewAppColor.primary600
-                                : NewAppColor.neutral900,
-                            fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w400,
-                          ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        soundName,
+                        style: FigmaTextStyles().body2.copyWith(
+                              color: isSelected
+                                  ? NewAppColor.primary600
+                                  : NewAppColor.neutral900,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                      ),
                     ),
-                  ),
-                  if (isSelected)
-                    Icon(
-                      Icons.check,
-                      color: NewAppColor.primary600,
-                      size: 24.w,
-                    ),
-                ],
+                    if (isSelected)
+                      Icon(
+                        Icons.check,
+                        color: NewAppColor.primary600,
+                        size: 24.w,
+                      ),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        ),
       ),
     );
   }
