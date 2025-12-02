@@ -308,6 +308,29 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if (response.data != null && response.data['success'] == true) {
           print('✅ COMMUNITY_DETAIL: 좋아요 푸시 알림 전송 성공');
           print('📊 COMMUNITY_DETAIL: ${response.data['message']}');
+
+          // notifications 테이블에도 저장 (알림 센터용)
+          try {
+            await _supabaseService.client
+                .from('notifications')
+                .insert({
+              'user_id': authorId,
+              'title': '좋아요',
+              'body': '$userName님이 회원님의 게시글을 좋아합니다.',
+              'type': 'like',
+              'related_id': widget.postId,
+              'related_type': widget.tableName,
+              'data': {
+                'liker_id': _currentUser?.id ?? 0,
+                'liker_name': userName,
+                'post_title': postTitle,
+                'category_title': widget.categoryTitle,
+              },
+            });
+            print('✅ COMMUNITY_DETAIL: 알림 센터에 좋아요 알림 저장 성공');
+          } catch (insertError) {
+            print('⚠️ COMMUNITY_DETAIL: 알림 센터 저장 실패 - $insertError');
+          }
         } else {
           print('⚠️ COMMUNITY_DETAIL: 좋아요 푸시 알림 전송 실패 - ${response.data}');
         }

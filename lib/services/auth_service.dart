@@ -76,10 +76,12 @@ class AuthService {
     }
   }
 
-  // 로그인 (Custom Users 테이블 사용)
+  // 로그인 (Custom Users 테이블 + Supabase Auth)
   Future<ApiResponse<AuthResponse>> login(String email, String password) async {
     try {
-      // Custom users 테이블에서 사용자 검색
+      print('🔐 AUTH_SERVICE: 로그인 시도 - $email');
+
+      // 1. Custom users 테이블에서 사용자 검색
       final response = await _supabaseService.client
           .from('users')
           .select('*')
@@ -91,15 +93,67 @@ class AuthService {
         final userData = response as Map<String, dynamic>;
         final storedPassword = userData['hashed_password'] as String;
 
-        // 비밀번호 확인 (단순 문자열 비교)
+        // 2. 비밀번호 확인 (단순 문자열 비교)
         if (password == storedPassword) {
+          print('✅ AUTH_SERVICE: Custom users 테이블 인증 성공');
+
           // User 객체 생성
           final user = app_user.User.fromJson(userData);
           _currentUser = user;
           await _saveUser(user);
           await setAutoLoginEnabled(true);
 
-          // 간단한 Mock AuthResponse
+          // 3. Supabase Auth 로그인 시도 (JWT 토큰 발급용)
+          try {
+            print('🔑 AUTH_SERVICE: Supabase Auth 로그인 시도...');
+            final authResponse = await _supabaseService.client.auth.signInWithPassword(
+              email: email,
+              password: password,
+            );
+
+            if (authResponse.session != null) {
+              print('✅ AUTH_SERVICE: Supabase Auth 로그인 성공');
+              print('🔑 AUTH_SERVICE: JWT 토큰 발급됨 (길이: ${authResponse.session!.accessToken.length})');
+            }
+          } catch (authError) {
+            print('⚠️ AUTH_SERVICE: Supabase Auth 로그인 실패 - $authError');
+            print('🔧 AUTH_SERVICE: Auth 계정 자동 생성 시도...');
+
+            // 4. Auth 계정이 없으면 자동 생성
+            try {
+              final signUpResponse = await _supabaseService.client.auth.signUp(
+                email: email,
+                password: password,
+                data: {
+                  'full_name': user.fullName,
+                },
+              );
+
+              if (signUpResponse.user != null) {
+                print('✅ AUTH_SERVICE: Auth 계정 생성 성공');
+
+                // 생성 후 바로 로그인 시도
+                try {
+                  final signInResponse = await _supabaseService.client.auth.signInWithPassword(
+                    email: email,
+                    password: password,
+                  );
+
+                  if (signInResponse.session != null) {
+                    print('✅ AUTH_SERVICE: Auth 로그인 성공 (계정 생성 후)');
+                    print('🔑 AUTH_SERVICE: JWT 토큰 발급됨');
+                  }
+                } catch (signInError) {
+                  print('⚠️ AUTH_SERVICE: Auth 로그인 실패 (계정 생성 후) - $signInError');
+                }
+              }
+            } catch (signUpError) {
+              print('❌ AUTH_SERVICE: Auth 계정 생성 실패 - $signUpError');
+              // Auth 계정 생성 실패해도 Custom users 인증은 성공했으므로 계속 진행
+            }
+          }
+
+          // 5. Custom users 테이블 인증이 성공했으므로 로그인 성공 반환
           AuthResponse? mockAuthResponse;
 
           return ApiResponse<AuthResponse>(
@@ -122,6 +176,7 @@ class AuthService {
         );
       }
     } catch (e) {
+      print('❌ AUTH_SERVICE: 로그인 오류 - $e');
       return ApiResponse<AuthResponse>(
         success: false,
         message: '로그인 중 오류가 발생했습니다: ${e.toString()}',

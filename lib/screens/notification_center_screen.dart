@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/notification.dart';
 import '../models/push_notification.dart';
+import '../models/api_response.dart';
 import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
 import '../services/notification_service.dart';
@@ -28,28 +29,63 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
   // 실제 알림 데이터 로드
   Future<void> _loadNotifications() async {
+    print('📱 NOTIFICATION_CENTER: 알림 로드 시작');
+    final startTime = DateTime.now();
+
+    if (!mounted) return;
+
     setState(() {
       isLoading = true;
     });
 
     try {
+      print('📱 NOTIFICATION_CENTER: API 호출 중...');
       final response = await _notificationService.getMyNotifications(
         limit: 100,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏱️ NOTIFICATION_CENTER: API 타임아웃 (10초)');
+          return ApiResponse.error('타임아웃');
+        },
       );
 
+      if (!mounted) return;
+
+      final duration = DateTime.now().difference(startTime);
+      print('📱 NOTIFICATION_CENTER: API 응답 완료 (${duration.inSeconds}초)');
+
       if (response.success && response.data != null) {
+        print('✅ NOTIFICATION_CENTER: 알림 ${response.data!.length}개 로드 성공');
         setState(() {
           notifications = response.data!
               .map((myNotification) => _convertToNotificationModel(myNotification))
               .toList();
         });
+      } else {
+        print('❌ NOTIFICATION_CENTER: API 응답 실패 - ${response.message}');
+        // 실패 시 빈 리스트 표시
+        setState(() {
+          notifications = [];
+        });
       }
     } catch (e) {
-      print('❌ NOTIFICATION_CENTER: 알림 로드 실패 - $e');
+      if (!mounted) return;
+
+      final duration = DateTime.now().difference(startTime);
+      print('❌ NOTIFICATION_CENTER: 알림 로드 실패 (${duration.inSeconds}초) - $e');
+      // 에러 시 빈 리스트 표시
+      setState(() {
+        notifications = [];
+      });
     } finally {
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
       });
+      final totalDuration = DateTime.now().difference(startTime);
+      print('📱 NOTIFICATION_CENTER: 로딩 완료 (총 ${totalDuration.inSeconds}초)');
     }
   }
 
