@@ -41,9 +41,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
     try {
       print('📱 NOTIFICATION_CENTER: API 호출 중...');
-      final response = await _notificationService.getMyNotifications(
+      final response = await _notificationService
+          .getMyNotifications(
         limit: 100,
-      ).timeout(
+      )
+          .timeout(
         const Duration(seconds: 10),
         onTimeout: () {
           print('⏱️ NOTIFICATION_CENTER: API 타임아웃 (10초)');
@@ -60,7 +62,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         print('✅ NOTIFICATION_CENTER: 알림 ${response.data!.length}개 로드 성공');
         setState(() {
           notifications = response.data!
-              .map((myNotification) => _convertToNotificationModel(myNotification))
+              .map((myNotification) =>
+                  _convertToNotificationModel(myNotification))
               .toList();
         });
       } else {
@@ -124,7 +127,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     }
 
     // relatedId와 relatedType은 MyNotification의 직접 필드에서 가져옴
-    print('📱 NOTIFICATION_CENTER: 알림 데이터 - ID: ${myNotification.id}, relatedId: ${myNotification.relatedId}, relatedType: ${myNotification.relatedType}');
+    print(
+        '📱 NOTIFICATION_CENTER: 알림 데이터 - ID: ${myNotification.id}, relatedId: ${myNotification.relatedId}, relatedType: ${myNotification.relatedType}');
 
     return NotificationModel(
       id: myNotification.id,
@@ -141,11 +145,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     );
   }
 
-
   Future<void> _markAllAsRead() async {
     try {
       // 읽지 않은 알림들을 API를 통해 읽음 처리
-      final unreadNotifications = notifications.where((n) => !n.isRead).toList();
+      final unreadNotifications =
+          notifications.where((n) => !n.isRead).toList();
 
       for (final notification in unreadNotifications) {
         await _notificationService.markNotificationAsRead(notification.id);
@@ -228,8 +232,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 title: Text(
                   '전체 삭제',
                   style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.danger600,
-                  ),
+                        color: NewAppColor.danger600,
+                      ),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -336,7 +340,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       print('🗑️ NOTIFICATION_CENTER: 알림 삭제 시작 - ID: ${notification.id}');
 
       // 서버에서 알림 삭제
-      final response = await _notificationService.deleteNotification(notification.id);
+      final response =
+          await _notificationService.deleteNotification(notification.id);
 
       if (response.success) {
         // 로컬 상태 업데이트
@@ -370,8 +375,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   }
 
   // 알림 클릭 시 관련 화면으로 이동
-  Future<void> _navigateToNotificationTarget(NotificationModel notification) async {
-    print('📱 NOTIFICATION_CENTER: 알림 클릭 - 카테고리: ${notification.category}, relatedId: ${notification.relatedId}, relatedType: ${notification.relatedType}');
+  Future<void> _navigateToNotificationTarget(
+      NotificationModel notification) async {
+    print(
+        '📱 NOTIFICATION_CENTER: 알림 클릭 - 카테고리: ${notification.category}, relatedId: ${notification.relatedId}, relatedType: ${notification.relatedType}');
 
     // relatedId가 없으면 이동하지 않음
     if (notification.relatedId == null) {
@@ -387,7 +394,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           final tableName = notification.relatedType ?? 'community_sharing';
           final categoryTitle = _getCategoryTitle(tableName);
 
-          print('📱 NOTIFICATION_CENTER: 커뮤니티 게시글로 이동 - postId: ${notification.relatedId}, tableName: $tableName');
+          print(
+              '📱 NOTIFICATION_CENTER: 커뮤니티 게시글로 이동 - postId: ${notification.relatedId}, tableName: $tableName');
 
           await Navigator.push(
             context,
@@ -431,11 +439,13 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         case NotificationCategory.schedule:
         case NotificationCategory.attendance:
           // 일정, 출석 알림 → 현재는 별도 화면 없음 (추후 추가 가능)
-          print('📱 NOTIFICATION_CENTER: ${notification.category} 알림 - 별도 화면 없음');
+          print(
+              '📱 NOTIFICATION_CENTER: ${notification.category} 알림 - 별도 화면 없음');
           break;
 
         default:
-          print('📱 NOTIFICATION_CENTER: 알 수 없는 알림 타입 - ${notification.category}');
+          print(
+              '📱 NOTIFICATION_CENTER: 알 수 없는 알림 타입 - ${notification.category}');
       }
     } catch (e) {
       print('❌ NOTIFICATION_CENTER: 화면 이동 실패 - $e');
@@ -519,7 +529,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           // 제목
           Center(
             child: Text(
-              '알림센터',
+              '알림',
               style: const FigmaTextStyles()
                   .headline4
                   .copyWith(color: Colors.white),
@@ -690,12 +700,13 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               if (!notification.isRead) {
                 try {
                   // API를 통해 읽음 처리
-                  await _notificationService.markNotificationAsRead(notification.id);
+                  await _notificationService
+                      .markNotificationAsRead(notification.id);
 
                   // 로컬 상태 업데이트
                   setState(() {
-                    final notificationIndex =
-                        notifications.indexWhere((n) => n.id == notification.id);
+                    final notificationIndex = notifications
+                        .indexWhere((n) => n.id == notification.id);
                     if (notificationIndex != -1) {
                       notifications[notificationIndex] =
                           notification.copyWith(isRead: true);
@@ -726,6 +737,27 @@ class NotificationItem extends StatelessWidget {
     this.onTap,
   });
 
+  IconData _getCategoryIcon(NotificationCategory category) {
+    switch (category) {
+      case NotificationCategory.notice:
+        return Icons.campaign_outlined;
+      case NotificationCategory.important:
+        return Icons.error_outline;
+      case NotificationCategory.schedule:
+        return Icons.event_outlined;
+      case NotificationCategory.attendance:
+        return Icons.fact_check_outlined;
+      case NotificationCategory.message:
+        return Icons.chat_bubble_outline;
+      case NotificationCategory.like:
+        return Icons.favorite_border;
+      case NotificationCategory.comment:
+        return Icons.mode_comment_outlined;
+      default:
+        return Icons.notifications_outlined;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoryStyle = notification.category.style;
@@ -740,111 +772,83 @@ class NotificationItem extends StatelessWidget {
           ),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 좌측 아이콘
+            Container(
+              width: 24.w,
+              height: 24.h,
+              // decoration: BoxDecoration(
+              //   color: Color(categoryStyle.backgroundColor),
+              //   borderRadius: BorderRadius.circular(6.r),
+              // ),
+              child: Icon(
+                _getCategoryIcon(notification.category),
+                color: Color(categoryStyle.textColor),
+                size: 16.w,
+              ),
+            ),
+
+            SizedBox(width: 10.w),
+
+            // 카드 내용
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 카테고리 뱃지와 메타 정보
+                  // 상단: 분류 타이틀 + 시간
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // 카테고리 뱃지
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: Color(categoryStyle.backgroundColor),
-                          border: Border.all(
-                              color: Color(categoryStyle.borderColor)),
-                          borderRadius: BorderRadius.circular(100.r),
-                        ),
-                        child: Text(
-                          notification.category.displayName,
-                          style: const FigmaTextStyles()
-                              .caption2
-                              .copyWith(color: Color(categoryStyle.textColor)),
-                        ),
+                      // 분류 타이틀 + 읽지 않음 표시
+                      Row(
+                        children: [
+                          Text(
+                            notification.category.displayName,
+                            style: const FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral600,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          // 읽지 않음 표시
+                          if (!notification.isRead) ...[
+                            SizedBox(width: 6.w),
+                            Container(
+                              width: 6.w,
+                              height: 6.h,
+                              decoration: BoxDecoration(
+                                color: NewAppColor.danger600,
+                                borderRadius: BorderRadius.circular(3.r),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-
-                      SizedBox(width: 8.w),
-
-                      // 제목
-                      Text(
-                        notification.title,
-                        style: const FigmaTextStyles()
-                            .body3
-                            .copyWith(color: NewAppColor.neutral500),
-                      ),
-
-                      SizedBox(width: 4.w),
-
-                      // 구분점
-                      Text(
-                        '•',
-                        style: const FigmaTextStyles()
-                            .caption2
-                            .copyWith(color: NewAppColor.neutral500),
-                      ),
-
-                      SizedBox(width: 4.w),
 
                       // 시간
                       Text(
                         notification.timeAgo,
-                        style: const FigmaTextStyles()
-                            .caption2
-                            .copyWith(color: NewAppColor.neutral500),
+                        style: const FigmaTextStyles().caption2.copyWith(
+                              color: NewAppColor.neutral500,
+                            ),
                       ),
-
-                      // 읽지 않음 표시
-                      if (!notification.isRead) ...[
-                        SizedBox(width: 4.w),
-                        Container(
-                          width: 6.w,
-                          height: 6.h,
-                          decoration: BoxDecoration(
-                            color: NewAppColor.danger600,
-                            borderRadius: BorderRadius.circular(3.5.r),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
 
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 8.h),
 
-                  // 메시지 내용 (data 필드 정보 활용)
+                  // 알림 내용
                   Text(
                     notification.displayMessage,
-                    style: const FigmaTextStyles()
-                        .bodyText2
-                        .copyWith(color: NewAppColor.neutral800),
+                    style: const FigmaTextStyles().body3.copyWith(
+                          color: NewAppColor.neutral700,
+                        ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-
-            SizedBox(width: 8.w),
-
-            // // 더보기 버튼
-            // GestureDetector(
-            //   onTap: () {
-            //     // 알림 상세 또는 메뉴 액션
-            //   },
-            //   child: Container(
-            //     width: 24.w,
-            //     height: 24.h,
-            //     alignment: Alignment.center,
-            //     child: Icon(
-            //       Icons.more_horiz,
-            //       color: NewAppColor.neutral500,
-            //       size: 20.w,
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       ),
