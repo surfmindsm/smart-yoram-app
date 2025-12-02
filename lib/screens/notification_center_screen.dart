@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/notification.dart';
+import '../models/push_notification.dart';
 import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
+import '../services/notification_service.dart';
+import 'notification_settings_screen.dart';
 
 class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -13,227 +16,256 @@ class NotificationCenterScreen extends StatefulWidget {
 }
 
 class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
-  NotificationCategory selectedCategory = NotificationCategory.all;
+  final NotificationService _notificationService = NotificationService.instance;
   List<NotificationModel> notifications = [];
-  List<NotificationModel> filteredNotifications = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadDemoData();
+    _loadNotifications();
   }
 
-  void _loadDemoData() {
-    // 데모 데이터 생성
-    notifications = [
-      NotificationModel(
-        id: 1,
-        title: '주일예배 안내',
-        message: '이번 주 주일예배는 오전 11시에 시작됩니다. 와다다다다다다다다다다다다다다',
-        category: NotificationCategory.important,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isRead: false,
-        isImportant: true,
-      ),
-      NotificationModel(
-        id: 2,
-        title: '주일예배 안내',
-        message: '이번 주 주일예배는 오전 11시에 시작됩니다. 와다다다다다다다다다다다다다다',
-        category: NotificationCategory.notice,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isRead: true,
-      ),
-      NotificationModel(
-        id: 3,
-        title: '주일예배 안내',
-        message: '이번 주 주일예배는 오전 11시에 시작됩니다. 와다다다다다다다다다다다다다다',
-        category: NotificationCategory.attendance,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isRead: true,
-      ),
-      NotificationModel(
-        id: 4,
-        title: '주일예배 안내',
-        message: '이번 주 주일예배는 오전 11시에 시작됩니다. 와다다다다다다다다다다다다다다',
-        category: NotificationCategory.schedule,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isRead: true,
-      ),
-      NotificationModel(
-        id: 5,
-        title: '주일예배 안내',
-        message: '이번 주 주일예배는 오전 11시에 시작됩니다. 와다다다다다다다다다다다다다다',
-        category: NotificationCategory.important,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isRead: false,
-        isImportant: true,
-      ),
-      NotificationModel(
-        id: 6,
-        title: '주일예배 안내',
-        message: '이번 주 주일예배는 오전 11시에 시작됩니다. 와다다다다다다다다다다다다다다',
-        category: NotificationCategory.notice,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isRead: true,
-      ),
-      NotificationModel(
-        id: 7,
-        title: '주일예배 안내',
-        message: '이번 주 주일예배는 오전 11시에 시작됩니다. 와다다다다다다다다다다다다다다',
-        category: NotificationCategory.attendance,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isRead: true,
-      ),
-      NotificationModel(
-        id: 8,
-        title: '주일예배 안내',
-        message: '이번 주 주일예배는 오전 11시에 시작됩니다. 와다다다다다다다다다다다다다다',
-        category: NotificationCategory.schedule,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        isRead: true,
-      ),
-    ];
-    _filterNotifications();
-  }
-
-  void _filterNotifications() {
-    if (selectedCategory == NotificationCategory.all) {
-      filteredNotifications = notifications;
-    } else {
-      filteredNotifications = notifications.where((notification) {
-        return notification.category == selectedCategory;
-      }).toList();
-    }
-    setState(() {});
-  }
-
-  void _onCategorySelected(NotificationCategory category) {
-    selectedCategory = category;
-    _filterNotifications();
-  }
-
-  void _markAllAsRead() {
+  // 실제 알림 데이터 로드
+  Future<void> _loadNotifications() async {
     setState(() {
-      notifications = notifications.map((notification) {
-        return notification.copyWith(isRead: true);
-      }).toList();
+      isLoading = true;
     });
-    _filterNotifications();
+
+    try {
+      final response = await _notificationService.getMyNotifications(
+        limit: 100,
+      );
+
+      if (response.success && response.data != null) {
+        setState(() {
+          notifications = response.data!
+              .map((myNotification) => _convertToNotificationModel(myNotification))
+              .toList();
+        });
+      }
+    } catch (e) {
+      print('❌ NOTIFICATION_CENTER: 알림 로드 실패 - $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // MyNotification을 NotificationModel로 변환
+  NotificationModel _convertToNotificationModel(MyNotification myNotification) {
+    // type 문자열을 NotificationCategory로 매핑
+    NotificationCategory category;
+    switch (myNotification.type.toLowerCase()) {
+      case 'announcement':
+      case 'notice':
+        category = NotificationCategory.notice;
+        break;
+      case 'important':
+        category = NotificationCategory.important;
+        break;
+      case 'schedule':
+      case 'worship':
+        category = NotificationCategory.schedule;
+        break;
+      case 'attendance':
+        category = NotificationCategory.attendance;
+        break;
+      case 'message':
+      case 'chat':
+        category = NotificationCategory.message;
+        break;
+      case 'like':
+        category = NotificationCategory.like;
+        break;
+      case 'comment':
+        category = NotificationCategory.comment;
+        break;
+      default:
+        category = NotificationCategory.notice;
+    }
+
+    return NotificationModel(
+      id: myNotification.id,
+      title: myNotification.title,
+      message: myNotification.body,
+      category: category,
+      createdAt: myNotification.createdAt,
+      isRead: myNotification.isRead,
+      isImportant: myNotification.type.toLowerCase() == 'important',
+      userId: myNotification.userId,
+      relatedId: myNotification.data?['related_id'] as int?,
+      relatedType: myNotification.data?['related_type'] as String?,
+      data: myNotification.data,
+    );
+  }
+
+
+  Future<void> _markAllAsRead() async {
+    try {
+      // 읽지 않은 알림들을 API를 통해 읽음 처리
+      final unreadNotifications = notifications.where((n) => !n.isRead).toList();
+
+      for (final notification in unreadNotifications) {
+        await _notificationService.markNotificationAsRead(notification.id);
+      }
+
+      // 로컬 상태 업데이트
+      setState(() {
+        notifications = notifications.map((notification) {
+          return notification.copyWith(isRead: true);
+        }).toList();
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('모든 알림을 읽음 처리했습니다'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ NOTIFICATION_CENTER: 모든 알림 읽음 처리 실패 - $e');
+    }
   }
 
   int get unreadCount {
     return notifications.where((notification) => !notification.isRead).length;
   }
 
-  void _showNotificationMenu(BuildContext context) {
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
-    final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
-        renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero),
-            ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-
-    showMenu(
+  // 삭제 메뉴 표시
+  void _showDeleteMenu() {
+    showModalBottomSheet(
       context: context,
-      position: position,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.r),
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 12.h),
+              // 핸들
+              Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral300,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              // 전체 읽기
+              ListTile(
+                leading: Icon(
+                  Icons.done_all,
+                  color: NewAppColor.neutral800,
+                ),
+                title: Text(
+                  '전체 읽기',
+                  style: FigmaTextStyles().body2,
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _markAllAsRead();
+                },
+              ),
+              Divider(height: 1, color: NewAppColor.neutral200),
+              // 전체 삭제
+              ListTile(
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: NewAppColor.danger600,
+                ),
+                title: Text(
+                  '전체 삭제',
+                  style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.danger600,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _deleteAllNotifications();
+                },
+              ),
+              Divider(height: 1, color: NewAppColor.neutral200),
+              // 닫기
+              ListTile(
+                leading: Icon(
+                  Icons.close,
+                  color: NewAppColor.neutral800,
+                ),
+                title: Text(
+                  '닫기',
+                  style: FigmaTextStyles().body2,
+                ),
+                onTap: () => Navigator.pop(context),
+              ),
+              SizedBox(height: 20.h),
+            ],
+          ),
+        ),
       ),
-      elevation: 8,
-      items: [
-        PopupMenuItem(
-          value: 'settings',
-          height: 32.h,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => Navigator.pop(context, 'settings'),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8.r),
-                topRight: Radius.circular(8.r),
-              ),
-              child: Container(
-                width: 96.w,
-                height: 32.h,
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(8.r),
-                    topRight: Radius.circular(8.r),
-                  ),
-                  border: const Border(
-                    bottom: BorderSide(color: NewAppColor.neutral100),
-                  ),
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '알림 설정',
-                    style: const FigmaTextStyles()
-                        .caption1
-                        .copyWith(color: NewAppColor.neutral800),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete_all',
-          height: 32.h,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => Navigator.pop(context, 'delete_all'),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(8.r),
-                bottomRight: Radius.circular(8.r),
-              ),
-              child: Container(
-                width: 96.w,
-                height: 32.h,
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(8.r),
-                    bottomRight: Radius.circular(8.r),
-                  ),
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '모든 알림 삭제',
-                    style: const FigmaTextStyles()
-                        .caption1
-                        .copyWith(color: NewAppColor.neutral800),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ).then((value) {
-      if (value == 'settings') {
-        // 알림 설정 화면으로 이동
-      } else if (value == 'delete_all') {
-        _deleteAllNotifications();
-      }
-    });
+    );
   }
 
-  void _deleteAllNotifications() {
-    setState(() {
-      notifications.clear();
-    });
-    _filterNotifications();
+  // 알림 설정 화면으로 이동
+  void _goToNotificationSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationSettingsScreen(),
+      ),
+    );
+  }
+
+  Future<void> _deleteAllNotifications() async {
+    // 확인 다이얼로그 표시
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('알림 삭제'),
+        content: const Text('모든 알림을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      // 알림 삭제는 백엔드 API에서 지원하지 않으므로 로컬에서만 처리
+      setState(() {
+        notifications.clear();
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('모든 알림을 삭제했습니다'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ NOTIFICATION_CENTER: 모든 알림 삭제 실패 - $e');
+    }
   }
 
   @override
@@ -245,9 +277,6 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           children: [
             // 헤더
             _buildHeader(),
-
-            // 카테고리 필터
-            _buildCategoryFilter(),
 
             // 읽지 않은 알림 배너
             if (unreadCount > 0) _buildUnreadBanner(),
@@ -289,65 +318,51 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
           // 제목
           Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '알림센터',
-                  style: const FigmaTextStyles()
-                      .headline4
-                      .copyWith(color: Colors.white),
-                ),
-                SizedBox(width: 8.w),
-              ],
-            ),
-          ),
-          // 모두 읽음 버튼
-          Positioned(
-            right: 45.w,
-            top: 0,
-            bottom: 0,
-            child: Center(
-              child: GestureDetector(
-                onTap: _markAllAsRead,
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: NewAppColor.neutral100),
-                    borderRadius: BorderRadius.circular(100.r),
-                  ),
-                  child: Text(
-                    '모두 읽음',
-                    style: const FigmaTextStyles()
-                        .caption1
-                        .copyWith(color: NewAppColor.neutral100),
-                  ),
-                ),
-              ),
+            child: Text(
+              '알림센터',
+              style: const FigmaTextStyles()
+                  .headline4
+                  .copyWith(color: Colors.white),
             ),
           ),
 
-          // 메뉴 버튼
+          // 우측 버튼들
           Positioned(
             right: 20.w,
-            top: 16.h,
-            child: Builder(
-              builder: (BuildContext menuContext) => GestureDetector(
-                onTap: () {
-                  _showNotificationMenu(menuContext);
-                },
-                child: Container(
-                  width: 24.w,
-                  height: 24.h,
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.more_vert,
-                    color: Colors.white,
-                    size: 20.w,
+            top: 0,
+            bottom: 0,
+            child: Row(
+              children: [
+                // 삭제 아이콘
+                GestureDetector(
+                  onTap: _showDeleteMenu,
+                  child: Container(
+                    width: 28.w,
+                    height: 28.h,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: Colors.white,
+                      size: 24.w,
+                    ),
                   ),
                 ),
-              ),
+                SizedBox(width: 16.w),
+                // 설정 아이콘
+                GestureDetector(
+                  onTap: _goToNotificationSettings,
+                  child: Container(
+                    width: 28.w,
+                    height: 28.h,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white,
+                      size: 24.w,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -393,52 +408,18 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     );
   }
 
-  Widget _buildCategoryFilter() {
-    return Container(
-      height: 56.h,
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: NewAppColor.neutral200),
-        ),
-      ),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: NotificationCategory.values.length,
-        separatorBuilder: (context, index) => SizedBox(width: 8.w),
-        itemBuilder: (context, index) {
-          final category = NotificationCategory.values[index];
-          final isSelected = selectedCategory == category;
-
-          return GestureDetector(
-            onTap: () => _onCategorySelected(category),
-            child: Container(
-              height: 36.h,
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 9.h),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? NewAppColor.primary600
-                    : NewAppColor.neutral100,
-                borderRadius: BorderRadius.circular(18.r),
-              ),
-              child: Center(
-                child: Text(
-                  category.displayName,
-                  style: const FigmaTextStyles().caption1.copyWith(
-                        color:
-                            isSelected ? Colors.white : NewAppColor.neutral800,
-                      ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Widget _buildNotificationList() {
-    if (filteredNotifications.isEmpty) {
+    if (isLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(
+            NewAppColor.primary600,
+          ),
+        ),
+      );
+    }
+
+    if (notifications.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -462,23 +443,30 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
     return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
-      itemCount: filteredNotifications.length,
+      itemCount: notifications.length,
       itemBuilder: (context, index) {
-        final notification = filteredNotifications[index];
+        final notification = notifications[index];
         return NotificationItem(
           notification: notification,
-          onTap: () {
+          onTap: () async {
             // 알림 상세 보기 또는 읽음 처리
             if (!notification.isRead) {
-              setState(() {
-                final notificationIndex =
-                    notifications.indexWhere((n) => n.id == notification.id);
-                if (notificationIndex != -1) {
-                  notifications[notificationIndex] =
-                      notification.copyWith(isRead: true);
-                }
-              });
-              _filterNotifications();
+              try {
+                // API를 통해 읽음 처리
+                await _notificationService.markNotificationAsRead(notification.id);
+
+                // 로컬 상태 업데이트
+                setState(() {
+                  final notificationIndex =
+                      notifications.indexWhere((n) => n.id == notification.id);
+                  if (notificationIndex != -1) {
+                    notifications[notificationIndex] =
+                        notification.copyWith(isRead: true);
+                  }
+                });
+              } catch (e) {
+                print('❌ NOTIFICATION_CENTER: 알림 읽음 처리 실패 - $e');
+              }
             }
           },
         );

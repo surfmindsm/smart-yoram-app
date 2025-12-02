@@ -6,6 +6,10 @@ class NotificationModel {
   final DateTime createdAt;
   final bool isRead;
   final bool isImportant;
+  final int? userId; // 알림을 받는 사용자 ID
+  final int? relatedId; // 관련 리소스 ID (게시글, 댓글 등)
+  final String? relatedType; // 관련 리소스 타입 (post, comment, chat 등)
+  final Map<String, dynamic>? data; // 추가 데이터
 
   const NotificationModel({
     required this.id,
@@ -15,6 +19,10 @@ class NotificationModel {
     required this.createdAt,
     this.isRead = false,
     this.isImportant = false,
+    this.userId,
+    this.relatedId,
+    this.relatedType,
+    this.data,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +34,10 @@ class NotificationModel {
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
       isRead: json['is_read'] ?? false,
       isImportant: json['is_important'] ?? false,
+      userId: json['user_id'],
+      relatedId: json['related_id'],
+      relatedType: json['related_type'],
+      data: json['data'] as Map<String, dynamic>?,
     );
   }
 
@@ -38,6 +50,10 @@ class NotificationModel {
       'created_at': createdAt.toIso8601String(),
       'is_read': isRead,
       'is_important': isImportant,
+      'user_id': userId,
+      'related_id': relatedId,
+      'related_type': relatedType,
+      'data': data,
     };
   }
 
@@ -49,6 +65,10 @@ class NotificationModel {
     DateTime? createdAt,
     bool? isRead,
     bool? isImportant,
+    int? userId,
+    int? relatedId,
+    String? relatedType,
+    Map<String, dynamic>? data,
   }) {
     return NotificationModel(
       id: id ?? this.id,
@@ -58,6 +78,10 @@ class NotificationModel {
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
       isImportant: isImportant ?? this.isImportant,
+      userId: userId ?? this.userId,
+      relatedId: relatedId ?? this.relatedId,
+      relatedType: relatedType ?? this.relatedType,
+      data: data ?? this.data,
     );
   }
 
@@ -84,7 +108,10 @@ enum NotificationCategory {
   important('important', '중요'),
   notice('notice', '공지'),
   schedule('schedule', '일정'),
-  attendance('attendance', '출석');
+  attendance('attendance', '출석'),
+  message('message', '메시지'),
+  like('like', '좋아요'),
+  comment('comment', '댓글');
 
   const NotificationCategory(this.value, this.displayName);
 
@@ -124,6 +151,24 @@ enum NotificationCategory {
           backgroundColor: 0xFFFFF1D6, // #fff1d6
           borderColor: 0xFFDB7712, // #db7712
           textColor: 0xFFDB7712, // #db7712
+        );
+      case NotificationCategory.message:
+        return const NotificationCategoryStyle(
+          backgroundColor: 0xFFE5DEFF, // #e5deff (보라색 계열)
+          borderColor: 0xFF7C3AED, // #7c3aed
+          textColor: 0xFF7C3AED, // #7c3aed
+        );
+      case NotificationCategory.like:
+        return const NotificationCategoryStyle(
+          backgroundColor: 0xFFFFE5E5, // #ffe5e5 (핑크색 계열)
+          borderColor: 0xFFF43F5E, // #f43f5e
+          textColor: 0xFFF43F5E, // #f43f5e
+        );
+      case NotificationCategory.comment:
+        return const NotificationCategoryStyle(
+          backgroundColor: 0xFFDEF3FF, // #def3ff (하늘색 계열)
+          borderColor: 0xFF0EA5E9, // #0ea5e9
+          textColor: 0xFF0EA5E9, // #0ea5e9
         );
       default:
         return const NotificationCategoryStyle(

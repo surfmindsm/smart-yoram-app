@@ -17,6 +17,7 @@ import '../services/daily_verse_service.dart';
 import '../services/worship_service.dart';
 import '../services/fcm_service.dart';
 import '../services/home_data_service.dart';
+import '../services/notification_service.dart';
 import 'notices_screen.dart';
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
@@ -2027,7 +2028,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-class ProfileAlert extends StatelessWidget {
+class ProfileAlert extends StatefulWidget {
   final String? userName;
   final String? profileImageUrl;
   final VoidCallback? onNotificationTap;
@@ -2042,11 +2043,41 @@ class ProfileAlert extends StatelessWidget {
   });
 
   @override
+  State<ProfileAlert> createState() => _ProfileAlertState();
+}
+
+class _ProfileAlertState extends State<ProfileAlert> {
+  int unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final response = await NotificationService.instance.getMyNotifications(
+        limit: 100,
+        isRead: false,
+      );
+
+      if (response.success && response.data != null && mounted) {
+        setState(() {
+          unreadCount = response.data!.length;
+        });
+      }
+    } catch (e) {
+      print('❌ PROFILE_ALERT: 미확인 알림 개수 로드 실패 - $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     // ProfileAlert 렌더링 시 로그
     print('🎨 PROFILE_ALERT: 렌더링 시작');
-    print('🎨 PROFILE_ALERT: userName = $userName');
-    print('🎨 PROFILE_ALERT: profileImageUrl = $profileImageUrl');
+    print('🎨 PROFILE_ALERT: userName = ${widget.userName}');
+    print('🎨 PROFILE_ALERT: profileImageUrl = ${widget.profileImageUrl}');
 
     return Container(
       width: double.infinity,
@@ -2066,18 +2097,18 @@ class ProfileAlert extends StatelessWidget {
           CircleAvatar(
             radius: 21.54,
             backgroundImage:
-                profileImageUrl != null && profileImageUrl!.isNotEmpty
+                widget.profileImageUrl != null && widget.profileImageUrl!.isNotEmpty
                     ? (() {
                         print(
-                            '🖼️ CIRCLE_AVATAR: NetworkImage 생성 - URL: $profileImageUrl');
-                        return NetworkImage(profileImageUrl!) as ImageProvider;
+                            '🖼️ CIRCLE_AVATAR: NetworkImage 생성 - URL: ${widget.profileImageUrl}');
+                        return NetworkImage(widget.profileImageUrl!) as ImageProvider;
                       })()
                     : (() {
                         print('🖼️ CIRCLE_AVATAR: 이미지 없음 - 기본 아이콘 표시');
                         return null;
                       })(),
             backgroundColor: Colors.grey[300],
-            child: (profileImageUrl == null || profileImageUrl!.isEmpty)
+            child: (widget.profileImageUrl == null || widget.profileImageUrl!.isEmpty)
                 ? Icon(
                     Icons.person,
                     size: 24,
@@ -2099,7 +2130,7 @@ class ProfileAlert extends StatelessWidget {
                       ),
                 ),
                 Text(
-                  '${userName ?? '사용자'} 님',
+                  '${widget.userName ?? '사용자'} 님',
                   style: FigmaTextStyles().headline5.copyWith(
                         color: NewAppColor.neutral900, // Neutral_900
                       ),
@@ -2107,29 +2138,71 @@ class ProfileAlert extends StatelessWidget {
               ],
             ),
           ),
-          // 알림 버튼 주석처리
-          // InkWell(
-          //   onTap: onNotificationTap,
-          //   borderRadius: BorderRadius.circular(100),
-          //   child: Container(
-          //     width: 36,
-          //     height: 36,
-          //     decoration: ShapeDecoration(
-          //       color: const Color(0xFF0078FF), // Primary_600
-          //       shape: RoundedRectangleBorder(
-          //         borderRadius: BorderRadius.circular(100),
-          //       ),
-          //     ),
-          //     child: const Icon(
-          //       Icons.notifications,
-          //       color: Colors.white,
-          //       size: 20,
-          //     ),
-          //   ),
-          // ),
-          // const SizedBox(width: 8),
+          // 알림 버튼 (배지 포함)
           InkWell(
-            onTap: onSettingsTap,
+            onTap: () {
+              widget.onNotificationTap?.call();
+              // 알림 화면에서 돌아왔을 때 카운트 새로고침
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted) {
+                  _loadUnreadCount();
+                }
+              });
+            },
+            borderRadius: BorderRadius.circular(100),
+            child: Stack(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFF0078FF), // Primary_600
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.notifications,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                // 미확인 알림 배지
+                if (unreadCount > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.danger600,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: NewAppColor.primary200,
+                          width: 2,
+                        ),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Text(
+                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: widget.onSettingsTap,
             borderRadius: BorderRadius.circular(100),
             child: Container(
               width: 36,

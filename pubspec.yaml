@@ -126,6 +126,9 @@ dependencies:
   # 커스텀 날짜 선택기
   calendar_date_picker2: ^1.1.7
 
+  # 오디오 재생
+  audioplayers: ^6.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -166,6 +169,7 @@ flutter:
     - assets/icons/
     - assets/lottie/
     - assets/fonts/
+    - assets/sounds/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
