@@ -46,25 +46,35 @@ class FCMService {
       if (Firebase.apps.isEmpty) {
         throw Exception('Firebase가 초기화되지 않았습니다.');
       }
-      
+
       // Firebase Messaging 인스턴스 초기화
       _messaging = FirebaseMessaging.instance;
-      
+
+      // iOS에서 포어그라운드 알림 자동 표시 설정
+      if (Platform.isIOS) {
+        await _messaging.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        developer.log('✅ iOS 포어그라운드 알림 자동 표시 설정 완료', name: 'FCM');
+      }
+
       // 로컬 알림 플러그인 초기화
       await _initializeLocalNotifications();
-      
+
       // 알림 권한 요청
       await _requestPermissions();
-      
+
       // FCM 토큰 가져오기
       await _getToken();
-      
+
       // 메시지 리스너 설정
       _setupMessageHandlers();
-      
+
       // 백그라운드 메시지 핸들러 설정
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-      
+
       developer.log('FCM 초기화 완료', name: 'FCM');
     } catch (e) {
       developer.log('FCM 초기화 실패: $e', name: 'FCM_ERROR');
@@ -75,27 +85,29 @@ class FCMService {
   /// 로컬 알림 플러그인 초기화
   Future<void> _initializeLocalNotifications() async {
     _localNotifications = FlutterLocalNotificationsPlugin();
-    
+
     // Android 초기화 설정
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    // iOS 초기화 설정
+
+    // iOS 초기화 설정 - 권한 요청 활성화
     const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
     );
-    
+
     const initializationSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
-    
-    await _localNotifications.initialize(
+
+    final initialized = await _localNotifications.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
-    
+
+    developer.log('로컬 알림 플러그인 초기화: ${initialized == true ? "성공" : "실패"}', name: 'FCM');
+
     // Android 알림 채널 생성
     if (Platform.isAndroid) {
       await _createNotificationChannels();
@@ -140,19 +152,44 @@ class FCMService {
       carPlay: false,
       criticalAlert: false,
     );
-    
-    developer.log('알림 권한 상태: ${settings.authorizationStatus}', name: 'FCM');
-    
+
+    developer.log('🔔 FCM 알림 권한 상태: ${settings.authorizationStatus}', name: 'FCM');
+
     // iOS에서 로컬 알림 권한도 요청
     if (Platform.isIOS) {
-      await _localNotifications
+      final iosPlugin = _localNotifications
           .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          );
+              IOSFlutterLocalNotificationsPlugin>();
+
+      if (iosPlugin != null) {
+        final iosGranted = await iosPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        developer.log('🔔 iOS 로컬 알림 권한: ${iosGranted == true ? "허용 ✅" : "거부 ❌"}', name: 'FCM');
+
+        // iOS 권한 상태 재확인
+        final checkResult = await iosPlugin.checkPermissions();
+        developer.log('🔔 iOS 권한 재확인: $checkResult', name: 'FCM');
+      }
+    }
+
+    // Android 13+ 알림 권한 요청
+    if (Platform.isAndroid) {
+      final androidPlugin = _localNotifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidPlugin != null) {
+        final androidGranted = await androidPlugin.requestNotificationsPermission();
+        developer.log('🔔 Android 로컬 알림 권한: ${androidGranted == true ? "허용 ✅" : "거부 ❌"}', name: 'FCM');
+
+        // 권한이 거부되었으면 경고
+        if (androidGranted == false) {
+          developer.log('⚠️ Android 알림 권한이 거부되었습니다. 시스템 설정에서 권한을 허용해주세요.', name: 'FCM');
+        }
+      }
     }
   }
   
@@ -273,7 +310,11 @@ class FCMService {
   void _setupMessageHandlers() {
     // 1. 앱이 포어그라운드에 있을 때 메시지 수신
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      developer.log('포어그라운드 메시지 수신: ${message.messageId}', name: 'FCM');
+      developer.log('🔥🔥🔥 포어그라운드 메시지 수신 🔥🔥🔥', name: 'FCM');
+      developer.log('메시지 ID: ${message.messageId}', name: 'FCM');
+      developer.log('제목: ${message.notification?.title}', name: 'FCM');
+      developer.log('내용: ${message.notification?.body}', name: 'FCM');
+      developer.log('데이터: ${message.data}', name: 'FCM');
       _handleForegroundMessage(message);
     });
 
@@ -316,36 +357,58 @@ class FCMService {
   
   /// 포어그라운드에서 메시지 처리
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    // 로컬 알림으로 표시
-    await _showLocalNotification(message);
-    
-    // 앱 내 알림 처리 (예: 스낵바, 다이얼로그 등)
-    _showInAppNotification(message);
+    developer.log('🔔 포어그라운드 메시지 처리 시작: ${message.notification?.title}', name: 'FCM');
+
+    try {
+      // iOS: setForegroundNotificationPresentationOptions로 자동 표시되므로 로컬 알림 불필요
+      // Android: 로컬 알림을 수동으로 표시해야 함
+      if (Platform.isAndroid) {
+        developer.log('📱 Android: 로컬 알림 표시 시작', name: 'FCM');
+        await _showLocalNotification(message);
+        developer.log('✅ Android: 로컬 알림 표시 완료', name: 'FCM');
+      } else {
+        developer.log('📱 iOS: Firebase가 자동으로 알림 표시 (로컬 알림 불필요)', name: 'FCM');
+      }
+
+      developer.log('✅✅✅ 포어그라운드 알림 처리 완료 ✅✅✅', name: 'FCM');
+    } catch (e, stackTrace) {
+      developer.log('❌ 포어그라운드 메시지 처리 중 오류: $e', name: 'FCM_ERROR');
+      developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');
+    }
   }
   
   /// 로컬 알림 표시
   Future<void> _showLocalNotification(RemoteMessage message) async {
     try {
+      developer.log('📱📱📱 로컬 알림 생성 시작 📱📱📱', name: 'FCM');
+
       final notification = PushNotificationModel.fromFirebaseMessage(message);
-      
+
       // 알림 타입에 따른 채널 설정
       final channelId = notification.type?.channelId ?? FCMConfig.defaultChannelId;
-      final channelConfig = FCMConfig.channels[notification.type?.name] ?? 
+      final channelConfig = FCMConfig.channels[notification.type?.name] ??
           FCMConfig.channels['custom']!;
-      
+
       // 채팅 알림인 경우 BigTextStyle 사용 (2줄 표시)
       final isChatNotification = message.data['type'] == 'chat_message';
 
+      developer.log('📱 알림 타입: ${isChatNotification ? "채팅" : "일반"}', name: 'FCM');
+      developer.log('📱 제목: ${notification.title}, 내용: ${notification.body}', name: 'FCM');
+      developer.log('📱 채널 ID: $channelId', name: 'FCM');
+
+      // Android 알림 설정 - 최대한 강력하게
       final androidDetails = AndroidNotificationDetails(
         channelId,
         channelConfig.name,
         channelDescription: channelConfig.description,
-        importance: channelConfig.importance,
-        priority: Priority.high,
-        icon: 'ic_notification',
+        importance: Importance.max, // max로 변경
+        priority: Priority.max, // max로 변경
+        icon: 'ic_notification', // drawable의 ic_notification 사용
         color: const Color(0xFF1976D2),
         enableVibration: true,
         playSound: true,
+        // 포어그라운드 알림 강제 표시
+        visibility: NotificationVisibility.public,
         // 채팅 알림인 경우 BigTextStyle 사용
         styleInformation: isChatNotification
             ? BigTextStyleInformation(
@@ -356,38 +419,74 @@ class FCMService {
                 htmlFormatContent: false,
               )
             : null,
+        // 자동 취소
+        autoCancel: true,
+        // LED 표시
+        enableLights: true,
+        ledColor: const Color(0xFF1976D2),
+        ledOnMs: 1000,
+        ledOffMs: 500,
       );
-      
+
+      // iOS 알림 설정 - 모든 옵션 활성화
       const iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        presentBanner: true,
+        presentList: true,
+        // 중요 알림
+        interruptionLevel: InterruptionLevel.timeSensitive,
       );
-      
+
       final notificationDetails = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
-      
+
+      // 고유한 알림 ID 생성 (중복 방지)
+      final notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+      developer.log('📱 알림 ID: $notificationId', name: 'FCM');
+      developer.log('📱 알림 표시 시작...', name: 'FCM');
+
       await _localNotifications.show(
-        notification.id ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        notification.title,
-        notification.body,
+        notificationId,
+        notification.title ?? '새 메시지',
+        notification.body ?? '',
         notificationDetails,
         payload: jsonEncode(notification.toJson()),
       );
-      
-      developer.log('로컬 알림 표시 완료: ${notification.title}', name: 'FCM');
-    } catch (e) {
-      developer.log('로컬 알림 표시 실패: $e', name: 'FCM_ERROR');
+
+      developer.log('✅✅✅ 로컬 알림 show() 호출 완료: ${notification.title} ✅✅✅', name: 'FCM');
+
+      // 알림이 실제로 표시되었는지 확인 (Android)
+      if (Platform.isAndroid) {
+        final androidPlugin = _localNotifications
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>();
+
+        if (androidPlugin != null) {
+          final activeNotifications = await androidPlugin.getActiveNotifications();
+          developer.log('📱 현재 활성 알림 개수: ${activeNotifications.length}', name: 'FCM');
+        }
+      }
+
+      // iOS에서 권한 재확인
+      if (Platform.isIOS) {
+        final iosPlugin = _localNotifications
+            .resolvePlatformSpecificImplementation<
+                IOSFlutterLocalNotificationsPlugin>();
+
+        if (iosPlugin != null) {
+          final permissions = await iosPlugin.checkPermissions();
+          developer.log('📱 iOS 현재 권한 상태: $permissions', name: 'FCM');
+        }
+      }
+    } catch (e, stackTrace) {
+      developer.log('❌❌❌ 로컬 알림 표시 실패: $e ❌❌❌', name: 'FCM_ERROR');
+      developer.log('❌ 스택 트레이스: $stackTrace', name: 'FCM_ERROR');
     }
-  }
-  
-  /// 앱 내 알림 표시
-  void _showInAppNotification(RemoteMessage message) {
-    // 전역 네비게이터를 통해 스낵바 표시
-    // 실제 구현에서는 Riverpod 상태 관리나 이벤트 버스 사용 권장
-    developer.log('앱 내 알림 표시: ${message.notification?.title}', name: 'FCM');
   }
   
   /// 알림 탭 처리

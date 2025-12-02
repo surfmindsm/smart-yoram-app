@@ -26,15 +26,17 @@ import UserNotifications
   
   private func setupNotifications(_ application: UIApplication) {
     if #available(iOS 10.0, *) {
+      // UNUserNotificationCenter 델리게이트를 AppDelegate로 설정
       UNUserNotificationCenter.current().delegate = self
+
       let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
       UNUserNotificationCenter.current().requestAuthorization(
         options: authOptions,
         completionHandler: { granted, error in
           if let error = error {
-            print("Notification authorization error: \(error.localizedDescription)")
+            print("❌ Notification authorization error: \(error.localizedDescription)")
           } else {
-            print("Notification authorization granted: \(granted)")
+            print("✅ Notification authorization granted: \(granted)")
           }
         }
       )
@@ -43,9 +45,10 @@ import UserNotifications
         UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: nil)
       application.registerUserNotificationSettings(settings)
     }
-    
+
     DispatchQueue.main.async {
       application.registerForRemoteNotifications()
+      print("✅ Remote notifications registered")
     }
   }
   
@@ -61,7 +64,7 @@ import UserNotifications
       print("⚠️ GoogleService-Info.plist 파일이 올바르지 않거나 더미 데이터입니다. Firebase 기능을 비활성화합니다.")
       return
     }
-    
+
     // Firebase 초기화 시도
     if FirebaseApp.app() == nil {
       do {
@@ -72,6 +75,27 @@ import UserNotifications
       }
     } else {
       print("ℹ️ Firebase가 이미 초기화되어 있습니다.")
+    }
+  }
+
+  // 포어그라운드에서도 알림 표시
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    print("🔔🔔🔔 iOS: willPresent notification called 🔔🔔🔔")
+    print("🔔 Title: \(notification.request.content.title)")
+    print("🔔 Body: \(notification.request.content.body)")
+
+    if #available(iOS 14.0, *) {
+      // iOS 14+: 배너, 사운드, 배지 모두 표시
+      print("✅ iOS 14+: Showing banner, sound, badge, list")
+      completionHandler([.banner, .sound, .badge, .list])
+    } else {
+      // iOS 13 이하: alert, 사운드, 배지 표시
+      print("✅ iOS 13: Showing alert, sound, badge")
+      completionHandler([.alert, .sound, .badge])
     }
   }
 }

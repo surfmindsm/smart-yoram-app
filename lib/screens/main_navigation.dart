@@ -3,7 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
+import 'package:smart_yoram_app/services/chat_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, RealtimeChannel, PostgresChangeEvent;
 import 'home_screen.dart';
 import 'bulletin_screen.dart';
 import 'notices_screen.dart';
@@ -22,15 +24,26 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   final AuthService _authService = AuthService();
+  final ChatService _chatService = ChatService();
 
   int _currentIndex = 0;
   User? _currentUser;
   bool _isLoading = true;
+  int _unreadChatCount = 0;
+  RealtimeChannel? _chatBadgeChannel;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadUnreadCount();
+    _subscribeToChatUpdates();
+  }
+
+  @override
+  void dispose() {
+    _chatBadgeChannel?.unsubscribe();
+    super.dispose();
   }
 
   Future<void> _loadUser() async {
@@ -39,6 +52,36 @@ class _MainNavigationState extends State<MainNavigation> {
       _currentUser = userResponse.data;
       _isLoading = false;
     });
+  }
+
+  /// 안 읽은 채팅 개수 로드
+  Future<void> _loadUnreadCount() async {
+    final count = await _chatService.getTotalUnreadCount();
+    if (mounted) {
+      setState(() {
+        _unreadChatCount = count;
+      });
+    }
+  }
+
+  /// 채팅 업데이트 실시간 구독
+  void _subscribeToChatUpdates() {
+    try {
+      _chatBadgeChannel = Supabase.instance.client
+          .channel('main_nav_chat_badge')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'p2p_chat_participants',
+            callback: (payload) {
+              // 참여자 테이블이 변경되면 배지 업데이트
+              _loadUnreadCount();
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      print('❌ MAIN_NAV: 채팅 배지 구독 실패 - $e');
+    }
   }
 
   List<Widget> get _screens {
@@ -153,6 +196,7 @@ class _MainNavigationState extends State<MainNavigation> {
         icon: Icons.chat_bubble_outline,
         label: '채팅',
         isActive: _currentIndex == 4,
+        badgeCount: _unreadChatCount,
         onTap: () => _onTap(4),
       ),
       // _NavItem(
@@ -181,6 +225,13 @@ class _MainNavigationState extends State<MainNavigation> {
   void _onTap(int index) {
     if (_currentIndex == index) return;
     setState(() => _currentIndex = index);
+
+    // 채팅 탭으로 이동하면 잠시 후 배지 새로고침 (읽음 처리 반영)
+    if (index == 4 && _currentUser != null && !_currentUser!.isCommunityAdmin) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _loadUnreadCount();
+      });
+    }
   }
 }
 
@@ -190,12 +241,14 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.isActive,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -213,10 +266,52 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 24.w,
-                color: iconColor,
+              // 아이콘 + 배지
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    icon,
+                    size: 24.w,
+                    color: iconColor,
+                  ),
+                  // 배지 표시 (개수가 0보다 클 때만)
+                  if (badgeCount > 0)
+                    Positioned(
+                      right: -8,
+                      top: -4,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: badgeCount > 9 ? 5.w : 6.w,
+                          vertical: 2.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: NewAppColor.danger600,
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 1.5,
+                          ),
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 18.w,
+                          minHeight: 18.w,
+                        ),
+                        child: Center(
+                          child: Text(
+                            badgeCount > 99 ? '99+' : badgeCount.toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Pretendard Variable',
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(

@@ -303,6 +303,37 @@ class ChatService {
     }
   }
 
+  /// 총 안 읽은 메시지 개수 조회
+  Future<int> getTotalUnreadCount() async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return 0;
+      }
+
+      final myUserId = currentUser.id;
+
+      // 내가 참여한 활성 채팅방의 unread_count 합계
+      final result = await _supabaseService.client
+          .from('p2p_chat_participants')
+          .select('unread_count')
+          .eq('user_id', myUserId)
+          .eq('is_active', true);
+
+      int totalUnread = 0;
+      for (var participant in result as List) {
+        totalUnread += (participant['unread_count'] as int? ?? 0);
+      }
+
+      return totalUnread;
+    } catch (e) {
+      print('❌ CHAT_SERVICE: 안 읽은 메시지 개수 조회 실패 - $e');
+      return 0;
+    }
+  }
+
   /// 내 채팅방 목록 조회
   Future<List<ChatRoom>> getChatRooms() async {
     try {
