@@ -489,7 +489,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
             _buildHeader(),
 
             // 읽지 않은 알림 배너
-            if (unreadCount > 0) _buildUnreadBanner(),
+            // if (unreadCount > 0) _buildUnreadBanner(),
 
             // 알림 리스트
             Expanded(
@@ -504,7 +504,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   Widget _buildHeader() {
     return Container(
       height: 56.h,
-      color: NewAppColor.primary600,
+      color: Colors.transparent,
       child: Stack(
         children: [
           // 뒤로가기 버튼
@@ -519,7 +519,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.arrow_back_ios,
-                  color: Colors.white,
+                  color: NewAppColor.neutral800,
                   size: 20.w,
                 ),
               ),
@@ -532,7 +532,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               '알림',
               style: const FigmaTextStyles()
                   .headline4
-                  .copyWith(color: Colors.white),
+                  .copyWith(color: NewAppColor.neutral800),
             ),
           ),
 
@@ -552,7 +552,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.delete_outline,
-                      color: Colors.white,
+                      color: NewAppColor.neutral800,
                       size: 24.w,
                     ),
                   ),
@@ -567,7 +567,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.settings_outlined,
-                      color: Colors.white,
+                      color: NewAppColor.neutral800,
                       size: 24.w,
                     ),
                   ),
@@ -652,7 +652,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.symmetric(vertical: 8.h),
       itemCount: notifications.length,
       itemBuilder: (context, index) {
         final notification = notifications[index];
@@ -750,7 +750,7 @@ class NotificationItem extends StatelessWidget {
       case NotificationCategory.message:
         return Icons.chat_bubble_outline;
       case NotificationCategory.like:
-        return Icons.favorite_border;
+        return Icons.favorite;
       case NotificationCategory.comment:
         return Icons.mode_comment_outlined;
       default:
@@ -765,23 +765,26 @@ class NotificationItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16.h),
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: NewAppColor.neutral200),
-          ),
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+        margin: EdgeInsets.symmetric(horizontal: 0.w, vertical: 0.h),
+        decoration: BoxDecoration(
+          color: notification.isRead
+              ? Colors.white
+              : Color(categoryStyle.backgroundColor).withOpacity(0.9),
+          // borderRadius: BorderRadius.circular(8.r),
+          // border: Border.all(
+          //   color: notification.isRead
+          //       ? NewAppColor.neutral200
+          //       : Color(categoryStyle.borderColor).withOpacity(0.3),
+          // ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 좌측 아이콘
-            Container(
+            SizedBox(
               width: 24.w,
               height: 24.h,
-              // decoration: BoxDecoration(
-              //   color: Color(categoryStyle.backgroundColor),
-              //   borderRadius: BorderRadius.circular(6.r),
-              // ),
               child: Icon(
                 _getCategoryIcon(notification.category),
                 color: Color(categoryStyle.textColor),
@@ -800,29 +803,13 @@ class NotificationItem extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // 분류 타이틀 + 읽지 않음 표시
-                      Row(
-                        children: [
-                          Text(
-                            notification.category.displayName,
-                            style: const FigmaTextStyles().body2.copyWith(
-                                  color: NewAppColor.neutral600,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                          // 읽지 않음 표시
-                          if (!notification.isRead) ...[
-                            SizedBox(width: 6.w),
-                            Container(
-                              width: 6.w,
-                              height: 6.h,
-                              decoration: BoxDecoration(
-                                color: NewAppColor.danger600,
-                                borderRadius: BorderRadius.circular(3.r),
-                              ),
+                      // 분류 타이틀
+                      Text(
+                        notification.category.displayName,
+                        style: const FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral600,
+                              // fontWeight: FontWeight.w600,
                             ),
-                          ],
-                        ],
                       ),
 
                       // 시간
@@ -840,8 +827,8 @@ class NotificationItem extends StatelessWidget {
                   // 알림 내용
                   Text(
                     notification.displayMessage,
-                    style: const FigmaTextStyles().body3.copyWith(
-                          color: NewAppColor.neutral700,
+                    style: const FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral900,
                         ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

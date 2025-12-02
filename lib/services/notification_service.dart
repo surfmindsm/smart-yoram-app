@@ -18,7 +18,7 @@ class NotificationService {
   final SupabaseService _supabaseService = SupabaseService();
 
   NotificationService._internal();
-  
+
   /// API 헤더 생성 (Bearer 토큰 포함)
   Future<Map<String, String>> _getHeaders() async {
     print('🔑 NOTIFICATION_API: 토큰 조회 시작...');
