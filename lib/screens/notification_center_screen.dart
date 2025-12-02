@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/notification.dart';
 import '../models/push_notification.dart';
 import '../models/api_response.dart';
@@ -551,9 +552,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                     height: 28.h,
                     alignment: Alignment.center,
                     child: Icon(
-                      Icons.delete_outline,
+                      LucideIcons.trash2,
                       color: NewAppColor.neutral800,
-                      size: 24.w,
+                      size: 22.w,
                     ),
                   ),
                 ),
@@ -566,9 +567,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                     height: 28.h,
                     alignment: Alignment.center,
                     child: Icon(
-                      Icons.settings_outlined,
+                      LucideIcons.settings,
                       color: NewAppColor.neutral800,
-                      size: 24.w,
+                      size: 22.w,
                     ),
                   ),
                 ),
