@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import '../widget/widgets.dart';
@@ -18,6 +19,7 @@ import '../services/worship_service.dart';
 import '../services/fcm_service.dart';
 import '../services/home_data_service.dart';
 import '../services/notification_service.dart';
+import '../services/supabase_service.dart';
 import 'notices_screen.dart';
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
@@ -2048,11 +2050,14 @@ class ProfileAlert extends StatefulWidget {
 
 class _ProfileAlertState extends State<ProfileAlert> {
   int unreadCount = 0;
+  RealtimeChannel? _notificationChannel;
+  final SupabaseService _supabaseService = SupabaseService();
 
   @override
   void initState() {
     super.initState();
     _loadUnreadCount();
+    _setupRealtimeSubscription();
   }
 
   Future<void> _loadUnreadCount() async {
@@ -2070,6 +2075,86 @@ class _ProfileAlertState extends State<ProfileAlert> {
     } catch (e) {
       print('❌ PROFILE_ALERT: 미확인 알림 개수 로드 실패 - $e');
     }
+  }
+
+  Future<void> _setupRealtimeSubscription() async {
+    try {
+      // 현재 사용자 ID 가져오기
+      final authService = AuthService();
+      final userResponse = await authService.getCurrentUser();
+
+      if (!userResponse.success || userResponse.data == null) {
+        print('❌ PROFILE_ALERT: 사용자 정보를 가져올 수 없습니다');
+        return;
+      }
+
+      final userId = userResponse.data!.id;
+      print('🔔 PROFILE_ALERT: 실시간 알림 구독 시작 - User ID: $userId');
+
+      // Realtime 채널 생성 및 구독
+      _notificationChannel = _supabaseService.client
+          .channel('notifications:user_$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.insert,
+            schema: 'public',
+            table: 'notifications',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) {
+              print('🔔 PROFILE_ALERT: 새 알림 수신 - ${payload.newRecord}');
+
+              // 새 알림이 is_read = false인지 확인
+              final isRead = payload.newRecord['is_read'] as bool? ?? false;
+
+              if (!isRead && mounted) {
+                setState(() {
+                  unreadCount++;
+                });
+                print('✅ PROFILE_ALERT: 미확인 알림 개수 업데이트 - $unreadCount');
+              }
+            },
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.update,
+            schema: 'public',
+            table: 'notifications',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) {
+              print('🔔 PROFILE_ALERT: 알림 업데이트 수신 - ${payload.newRecord}');
+
+              // 알림이 읽음 처리되었는지 확인
+              final oldIsRead = payload.oldRecord['is_read'] as bool? ?? false;
+              final newIsRead = payload.newRecord['is_read'] as bool? ?? false;
+
+              // 읽지 않은 알림이 읽음으로 변경된 경우
+              if (!oldIsRead && newIsRead && mounted) {
+                setState(() {
+                  if (unreadCount > 0) unreadCount--;
+                });
+                print('✅ PROFILE_ALERT: 알림 읽음 처리 - 미확인 개수: $unreadCount');
+              }
+            },
+          )
+          .subscribe();
+
+      print('✅ PROFILE_ALERT: 실시간 알림 구독 완료');
+    } catch (e) {
+      print('❌ PROFILE_ALERT: 실시간 알림 구독 설정 실패 - $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _notificationChannel?.unsubscribe();
+    print('🔔 PROFILE_ALERT: 실시간 알림 구독 해제');
+    super.dispose();
   }
 
   @override
@@ -2167,33 +2252,21 @@ class _ProfileAlertState extends State<ProfileAlert> {
                     size: 20,
                   ),
                 ),
-                // 미확인 알림 배지
+                // 미확인 알림 배지 (작은 동그라미)
                 if (unreadCount > 0)
                   Positioned(
-                    right: 0,
-                    top: 0,
+                    right: 2,
+                    top: 2,
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      width: 10,
+                      height: 10,
                       decoration: BoxDecoration(
                         color: NewAppColor.danger600,
-                        borderRadius: BorderRadius.circular(10),
+                        shape: BoxShape.circle,
                         border: Border.all(
                           color: NewAppColor.primary200,
                           width: 2,
                         ),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 18,
-                        minHeight: 18,
-                      ),
-                      child: Text(
-                        unreadCount > 99 ? '99+' : unreadCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),

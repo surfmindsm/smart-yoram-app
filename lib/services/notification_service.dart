@@ -374,6 +374,8 @@ class NotificationService {
           receivedAt: createdAt, // Use created_at as receivedAt
           createdAt: createdAt,
           data: item['data'] as Map<String, dynamic>?,
+          relatedId: item['related_id'] as int?,
+          relatedType: item['related_type'] as String?,
         );
       }).toList();
 
@@ -403,6 +405,65 @@ class NotificationService {
       print('❌ NOTIFICATION_SUPABASE: 알림 읽음 처리 실패 - $e');
       developer.log('알림 읽음 처리 오류: $e', name: 'NOTIFICATION_ERROR');
       return ApiResponse.error('읽음 처리 중 오류가 발생했습니다');
+    }
+  }
+
+  /// 7-1. 개별 알림 삭제 (Supabase)
+  Future<ApiResponse<bool>> deleteNotification(int notificationId) async {
+    try {
+      print('🗑️ NOTIFICATION_SUPABASE: 알림 삭제 시작 - ID: $notificationId');
+
+      // 현재 사용자 정보 가져오기
+      final currentUser = await AuthService().getCurrentUser();
+      if (!currentUser.success || currentUser.data == null) {
+        print('❌ NOTIFICATION_SUPABASE: 로그인 필요');
+        return ApiResponse.error('로그인이 필요합니다');
+      }
+
+      final userId = currentUser.data!.id;
+
+      // Supabase에서 알림 삭제 (user_id 필터 추가로 RLS 정책 만족)
+      await _supabaseService.client
+          .from('notifications')
+          .delete()
+          .eq('id', notificationId)
+          .eq('user_id', userId);
+
+      print('✅ NOTIFICATION_SUPABASE: 알림 삭제 완료 (User: $userId, Notification: $notificationId)');
+      return ApiResponse.success(true);
+    } catch (e) {
+      print('❌ NOTIFICATION_SUPABASE: 알림 삭제 실패 - $e');
+      developer.log('알림 삭제 오류: $e', name: 'NOTIFICATION_ERROR');
+      return ApiResponse.error('알림 삭제 중 오류가 발생했습니다');
+    }
+  }
+
+  /// 7-2. 모든 알림 삭제 (Supabase)
+  Future<ApiResponse<bool>> deleteAllNotifications() async {
+    try {
+      print('🗑️ NOTIFICATION_SUPABASE: 모든 알림 삭제 시작');
+
+      // 현재 사용자 정보 가져오기
+      final currentUser = await AuthService().getCurrentUser();
+      if (!currentUser.success || currentUser.data == null) {
+        print('❌ NOTIFICATION_SUPABASE: 로그인 필요');
+        return ApiResponse.error('로그인이 필요합니다');
+      }
+
+      final userId = currentUser.data!.id;
+
+      // Supabase에서 현재 사용자의 모든 알림 삭제
+      await _supabaseService.client
+          .from('notifications')
+          .delete()
+          .eq('user_id', userId);
+
+      print('✅ NOTIFICATION_SUPABASE: 모든 알림 삭제 완료');
+      return ApiResponse.success(true);
+    } catch (e) {
+      print('❌ NOTIFICATION_SUPABASE: 모든 알림 삭제 실패 - $e');
+      developer.log('모든 알림 삭제 오류: $e', name: 'NOTIFICATION_ERROR');
+      return ApiResponse.error('모든 알림 삭제 중 오류가 발생했습니다');
     }
   }
   

@@ -473,7 +473,9 @@ class MyNotification {
   final DateTime? readAt;
   final DateTime receivedAt;
   final DateTime createdAt;
-  
+  final int? relatedId;
+  final String? relatedType;
+
   const MyNotification({
     required this.id,
     required this.notificationId,
@@ -487,6 +489,8 @@ class MyNotification {
     this.readAt,
     required this.receivedAt,
     required this.createdAt,
+    this.relatedId,
+    this.relatedType,
   });
   
   factory MyNotification.fromJson(Map<String, dynamic> json) {
@@ -505,6 +509,8 @@ class MyNotification {
           : null,
       receivedAt: DateTime.parse(json['received_at']),
       createdAt: DateTime.parse(json['created_at']),
+      relatedId: json['related_id'],
+      relatedType: json['related_type'],
     );
   }
   
@@ -522,6 +528,8 @@ class MyNotification {
       'read_at': readAt?.toIso8601String(),
       'received_at': receivedAt.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
+      'related_id': relatedId,
+      'related_type': relatedType,
     };
   }
   
@@ -542,6 +550,8 @@ class MyNotification {
       readAt: readAt ?? this.readAt,
       receivedAt: receivedAt,
       createdAt: createdAt,
+      relatedId: relatedId,
+      relatedType: relatedType,
     );
   }
 }

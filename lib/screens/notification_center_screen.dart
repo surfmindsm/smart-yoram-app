@@ -7,6 +7,7 @@ import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
 import '../services/notification_service.dart';
 import 'notification_settings_screen.dart';
+import 'community/community_detail_screen.dart';
 
 class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -122,6 +123,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         category = NotificationCategory.notice;
     }
 
+    // relatedId와 relatedType은 MyNotification의 직접 필드에서 가져옴
+    print('📱 NOTIFICATION_CENTER: 알림 데이터 - ID: ${myNotification.id}, relatedId: ${myNotification.relatedId}, relatedType: ${myNotification.relatedType}');
+
     return NotificationModel(
       id: myNotification.id,
       title: myNotification.title,
@@ -131,8 +135,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       isRead: myNotification.isRead,
       isImportant: myNotification.type.toLowerCase() == 'important',
       userId: myNotification.userId,
-      relatedId: myNotification.data?['related_id'] as int?,
-      relatedType: myNotification.data?['related_type'] as String?,
+      relatedId: myNotification.relatedId,
+      relatedType: myNotification.relatedType,
       data: myNotification.data,
     );
   }
@@ -286,21 +290,181 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     if (confirmed != true) return;
 
     try {
-      // 알림 삭제는 백엔드 API에서 지원하지 않으므로 로컬에서만 처리
-      setState(() {
-        notifications.clear();
-      });
+      // 서버에서 알림 삭제
+      final response = await _notificationService.deleteAllNotifications();
 
+      if (response.success) {
+        // 로컬 상태 업데이트
+        setState(() {
+          notifications.clear();
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('모든 알림을 삭제했습니다'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('삭제 실패: ${response.message}'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ NOTIFICATION_CENTER: 모든 알림 삭제 실패 - $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('모든 알림을 삭제했습니다'),
+            content: Text('알림 삭제 중 오류가 발생했습니다'),
             duration: Duration(seconds: 2),
           ),
         );
       }
+    }
+  }
+
+  // 개별 알림 삭제
+  Future<void> _deleteNotification(NotificationModel notification) async {
+    try {
+      print('🗑️ NOTIFICATION_CENTER: 알림 삭제 시작 - ID: ${notification.id}');
+
+      // 서버에서 알림 삭제
+      final response = await _notificationService.deleteNotification(notification.id);
+
+      if (response.success) {
+        // 로컬 상태 업데이트
+        setState(() {
+          notifications.removeWhere((n) => n.id == notification.id);
+        });
+
+        print('✅ NOTIFICATION_CENTER: 알림 삭제 완료');
+      } else {
+        print('❌ NOTIFICATION_CENTER: 알림 삭제 실패 - ${response.message}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('삭제 실패: ${response.message}'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
     } catch (e) {
-      print('❌ NOTIFICATION_CENTER: 모든 알림 삭제 실패 - $e');
+      print('❌ NOTIFICATION_CENTER: 알림 삭제 예외 - $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('알림 삭제 중 오류가 발생했습니다'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  // 알림 클릭 시 관련 화면으로 이동
+  Future<void> _navigateToNotificationTarget(NotificationModel notification) async {
+    print('📱 NOTIFICATION_CENTER: 알림 클릭 - 카테고리: ${notification.category}, relatedId: ${notification.relatedId}, relatedType: ${notification.relatedType}');
+
+    // relatedId가 없으면 이동하지 않음
+    if (notification.relatedId == null) {
+      print('⚠️ NOTIFICATION_CENTER: relatedId가 없어 이동할 수 없습니다');
+      return;
+    }
+
+    try {
+      switch (notification.category) {
+        case NotificationCategory.like:
+        case NotificationCategory.comment:
+          // 좋아요, 댓글 알림 → 커뮤니티 게시글 상세로 이동
+          final tableName = notification.relatedType ?? 'community_sharing';
+          final categoryTitle = _getCategoryTitle(tableName);
+
+          print('📱 NOTIFICATION_CENTER: 커뮤니티 게시글로 이동 - postId: ${notification.relatedId}, tableName: $tableName');
+
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CommunityDetailScreen(
+                postId: notification.relatedId!,
+                tableName: tableName,
+                categoryTitle: categoryTitle,
+              ),
+            ),
+          );
+          break;
+
+        case NotificationCategory.message:
+          // 메시지 알림 → 채팅 목록으로 이동 (채팅방 직접 이동은 ChatRoom 객체 필요)
+          print('📱 NOTIFICATION_CENTER: 채팅 알림 - 채팅 목록으로 이동');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('채팅 탭에서 확인해주세요'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          break;
+
+        case NotificationCategory.notice:
+        case NotificationCategory.important:
+          // 공지사항 알림 → 공지사항 목록으로 이동 (상세 화면은 Announcement 객체 필요)
+          print('📱 NOTIFICATION_CENTER: 공지사항 알림 - 공지사항 목록으로 이동');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('공지사항 탭에서 확인해주세요'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          break;
+
+        case NotificationCategory.schedule:
+        case NotificationCategory.attendance:
+          // 일정, 출석 알림 → 현재는 별도 화면 없음 (추후 추가 가능)
+          print('📱 NOTIFICATION_CENTER: ${notification.category} 알림 - 별도 화면 없음');
+          break;
+
+        default:
+          print('📱 NOTIFICATION_CENTER: 알 수 없는 알림 타입 - ${notification.category}');
+      }
+    } catch (e) {
+      print('❌ NOTIFICATION_CENTER: 화면 이동 실패 - $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('화면 이동에 실패했습니다'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  // tableName을 카테고리 제목으로 변환
+  String _getCategoryTitle(String tableName) {
+    switch (tableName) {
+      case 'community_sharing':
+        return '무료나눔/물품판매';
+      case 'community_requests':
+        return '물품 요청';
+      case 'music_team_recruit':
+        return '행사팀 모집';
+      case 'music_seekers':
+        return '행사팀 지원';
+      case 'church_news':
+        return '행사 소식';
+      default:
+        return '커뮤니티';
     }
   }
 
@@ -482,29 +646,70 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       itemCount: notifications.length,
       itemBuilder: (context, index) {
         final notification = notifications[index];
-        return NotificationItem(
-          notification: notification,
-          onTap: () async {
-            // 알림 상세 보기 또는 읽음 처리
-            if (!notification.isRead) {
-              try {
-                // API를 통해 읽음 처리
-                await _notificationService.markNotificationAsRead(notification.id);
-
-                // 로컬 상태 업데이트
-                setState(() {
-                  final notificationIndex =
-                      notifications.indexWhere((n) => n.id == notification.id);
-                  if (notificationIndex != -1) {
-                    notifications[notificationIndex] =
-                        notification.copyWith(isRead: true);
-                  }
-                });
-              } catch (e) {
-                print('❌ NOTIFICATION_CENTER: 알림 읽음 처리 실패 - $e');
-              }
-            }
+        return Dismissible(
+          key: Key('notification_${notification.id}'),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: EdgeInsets.only(right: 20.w),
+            color: NewAppColor.danger600,
+            child: Icon(
+              Icons.delete,
+              color: Colors.white,
+              size: 24.w,
+            ),
+          ),
+          confirmDismiss: (direction) async {
+            // 삭제 확인 다이얼로그
+            return await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('알림 삭제'),
+                content: const Text('이 알림을 삭제하시겠습니까?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('취소'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('삭제'),
+                  ),
+                ],
+              ),
+            );
           },
+          onDismissed: (direction) async {
+            // 서버에서 삭제
+            await _deleteNotification(notification);
+          },
+          child: NotificationItem(
+            notification: notification,
+            onTap: () async {
+              // 알림 읽음 처리
+              if (!notification.isRead) {
+                try {
+                  // API를 통해 읽음 처리
+                  await _notificationService.markNotificationAsRead(notification.id);
+
+                  // 로컬 상태 업데이트
+                  setState(() {
+                    final notificationIndex =
+                        notifications.indexWhere((n) => n.id == notification.id);
+                    if (notificationIndex != -1) {
+                      notifications[notificationIndex] =
+                          notification.copyWith(isRead: true);
+                    }
+                  });
+                } catch (e) {
+                  print('❌ NOTIFICATION_CENTER: 알림 읽음 처리 실패 - $e');
+                }
+              }
+
+              // 관련 화면으로 이동
+              await _navigateToNotificationTarget(notification);
+            },
+          ),
         );
       },
     );
@@ -609,9 +814,9 @@ class NotificationItem extends StatelessWidget {
 
                   SizedBox(height: 12.h),
 
-                  // 메시지 내용
+                  // 메시지 내용 (data 필드 정보 활용)
                   Text(
-                    notification.message,
+                    notification.displayMessage,
                     style: const FigmaTextStyles()
                         .bodyText2
                         .copyWith(color: NewAppColor.neutral800),

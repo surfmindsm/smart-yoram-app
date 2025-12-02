@@ -101,6 +101,73 @@ class NotificationModel {
       return '${difference.inDays ~/ 7}주 전';
     }
   }
+
+  // data 필드를 활용한 구체적인 메시지 표시
+  String get displayMessage {
+    if (data == null || data!.isEmpty) {
+      // data가 없으면 기본 message 반환
+      return message;
+    }
+
+    // 카테고리별로 메시지 커스터마이징
+    switch (category) {
+      case NotificationCategory.like:
+        final likerName = data!['liker_name'] as String?;
+        final postTitle = data!['post_title'] as String?;
+        final categoryTitle = data!['category_title'] as String?;
+
+        if (likerName != null && postTitle != null) {
+          return '$likerName님이 \'$postTitle\' 게시글에 좋아요를 눌렀습니다';
+        } else if (likerName != null) {
+          return '$likerName님이 좋아요를 눌렀습니다';
+        }
+        break;
+
+      case NotificationCategory.comment:
+        final commenterName = data!['commenter_name'] as String? ?? data!['liker_name'] as String?;
+        final postTitle = data!['post_title'] as String?;
+        final commentContent = data!['comment_content'] as String?;
+
+        if (commenterName != null && postTitle != null && commentContent != null) {
+          return '$commenterName님이 \'$postTitle\' 게시글에 댓글을 달았습니다: "$commentContent"';
+        } else if (commenterName != null && postTitle != null) {
+          return '$commenterName님이 \'$postTitle\' 게시글에 댓글을 달았습니다';
+        } else if (commenterName != null) {
+          return '$commenterName님이 댓글을 달았습니다';
+        }
+        break;
+
+      case NotificationCategory.message:
+        final senderName = data!['sender_name'] as String?;
+        final messagePreview = data!['message_preview'] as String?;
+
+        if (senderName != null && messagePreview != null) {
+          return '$senderName: $messagePreview';
+        } else if (senderName != null) {
+          return '$senderName님이 메시지를 보냈습니다';
+        }
+        break;
+
+      case NotificationCategory.notice:
+      case NotificationCategory.important:
+        final noticeTitle = data!['notice_title'] as String?;
+        final noticeContent = data!['notice_content'] as String?;
+
+        if (noticeTitle != null) {
+          return noticeTitle;
+        } else if (noticeContent != null) {
+          return noticeContent;
+        }
+        break;
+
+      default:
+        // 다른 카테고리는 기본 message 사용
+        break;
+    }
+
+    // 커스터마이징 실패 시 기본 message 반환
+    return message;
+  }
 }
 
 enum NotificationCategory {
