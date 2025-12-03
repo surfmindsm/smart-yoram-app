@@ -11,6 +11,7 @@ import '../models/push_notification.dart';
 import '../models/push_notification_enhanced.dart';
 import 'notification_service.dart';
 import 'notification_service_enhanced.dart';
+import 'notification_settings_service.dart';
 import 'auth_service.dart';
 import 'chat_service.dart';
 import '../screens/chat/chat_room_screen.dart';
@@ -403,6 +404,22 @@ class FCMService {
   Future<void> _showLocalNotification(RemoteMessage message) async {
     try {
       developer.log('📱📱📱 로컬 알림 생성 시작 📱📱📱', name: 'FCM');
+
+      // 알림 타입 확인
+      final notificationType = message.data['type'] as String?;
+      developer.log('📱 알림 타입 확인: $notificationType', name: 'FCM');
+
+      // 사용자 설정 확인 - 알림이 꺼져있으면 표시하지 않음
+      final settingsService = NotificationSettingsService.instance;
+      final shouldShow = await settingsService.shouldShowNotification(notificationType);
+
+      if (!shouldShow) {
+        developer.log('⚠️ 사용자가 이 알림 타입을 끔: $notificationType', name: 'FCM');
+        developer.log('❌ 알림 표시 취소됨 (사용자 설정)', name: 'FCM');
+        return; // 알림 표시하지 않고 종료
+      }
+
+      developer.log('✅ 알림 표시 허용됨 (사용자 설정)', name: 'FCM');
 
       final notification = PushNotificationModel.fromFirebaseMessage(message);
 

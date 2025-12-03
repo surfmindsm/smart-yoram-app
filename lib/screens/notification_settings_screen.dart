@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
+import '../services/notification_settings_service.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -20,9 +21,67 @@ class _NotificationSettingsScreenState
   bool chatNotifications = true;
   bool likeNotifications = true;
   bool churchNewsNotifications = true;
+  bool _isLoading = true;
+
+  final _settingsService = NotificationSettingsService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  /// 저장된 설정 로드
+  Future<void> _loadSettings() async {
+    try {
+      final chat = await _settingsService.getChatNotifications();
+      final like = await _settingsService.getLikeNotifications();
+      final news = await _settingsService.getChurchNewsNotifications();
+      final sound = await _settingsService.getNotificationSound();
+
+      setState(() {
+        chatNotifications = chat;
+        likeNotifications = like;
+        churchNewsNotifications = news;
+        selectedSound = sound;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('알림 설정 로드 실패: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral800),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            '알림 설정',
+            style: FigmaTextStyles()
+                .headline4
+                .copyWith(color: NewAppColor.neutral800),
+          ),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(NewAppColor.primary600),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -61,6 +120,8 @@ class _NotificationSettingsScreenState
                 setState(() {
                   selectedSound = result;
                 });
+                // 알림음 설정 저장
+                await _settingsService.setNotificationSound(result);
               }
             },
           ),
@@ -72,30 +133,36 @@ class _NotificationSettingsScreenState
             title: '채팅',
             subtitle: '새로운 채팅 메시지 알림을 받습니다',
             value: chatNotifications,
-            onChanged: (value) {
+            onChanged: (value) async {
               setState(() {
                 chatNotifications = value;
               });
+              // 채팅 알림 설정 저장
+              await _settingsService.setChatNotifications(value);
             },
           ),
           _buildSwitchTile(
             title: '좋아요',
             subtitle: '내 게시글에 좋아요를 받으면 알림을 받습니다',
             value: likeNotifications,
-            onChanged: (value) {
+            onChanged: (value) async {
               setState(() {
                 likeNotifications = value;
               });
+              // 좋아요 알림 설정 저장
+              await _settingsService.setLikeNotifications(value);
             },
           ),
           _buildSwitchTile(
             title: '교회 소식',
             subtitle: '교회 공지사항 및 소식 알림을 받습니다',
             value: churchNewsNotifications,
-            onChanged: (value) {
+            onChanged: (value) async {
               setState(() {
                 churchNewsNotifications = value;
               });
+              // 교회 소식 알림 설정 저장
+              await _settingsService.setChurchNewsNotifications(value);
             },
           ),
         ],

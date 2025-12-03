@@ -20,4 +20,5 @@ export 'daily_verse_service.dart';
 export 'worship_service.dart';
 export 'fcm_service.dart';
 export 'notification_service.dart';
+export 'notification_settings_service.dart';
 export 'sermon_service.dart';
