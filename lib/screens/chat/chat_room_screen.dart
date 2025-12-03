@@ -202,6 +202,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       appBar: AppBar(
         backgroundColor: NewAppColor.neutral100,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
