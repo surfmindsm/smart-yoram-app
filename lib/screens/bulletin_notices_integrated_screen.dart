@@ -20,7 +20,7 @@ class _BulletinNoticesIntegratedScreenState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 0);
   }
 
   @override
@@ -37,50 +37,29 @@ class _BulletinNoticesIntegratedScreenState
         child: Column(
           children: [
             // 상단 헤더
-            Container(
-              height: 56.h,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                children: [
-                  Text(
-                    '교회소식',
-                    style: TextStyle(
-                      color: NewAppColor.neutral900,
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Pretendard Variable',
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Container(
+            //   height: 56.h,
+            //   padding: EdgeInsets.symmetric(horizontal: 16.w),
+            //   child: Row(
+            //     children: [
+            //       Text(
+            //         '',
+            //         style: TextStyle(
+            //           color: NewAppColor.neutral900,
+            //           fontSize: 20.sp,
+            //           fontWeight: FontWeight.w700,
+            //           fontFamily: 'Pretendard Variable',
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
 
-            // 탭바
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  width: 2,
-                  color: NewAppColor.neutral200,
-                ),
-              ),
+            // 토글 버튼
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              child: _buildToggleButton(),
             ),
-            child: Row(
-              children: [
-                _buildTab(
-                  index: 0,
-                  label: '주보',
-                ),
-                SizedBox(width: 24.w),
-                _buildTab(
-                  index: 1,
-                  label: '교회소식',
-                ),
-              ],
-            ),
-          ),
 
             // 탭 콘텐츠
             Expanded(
@@ -98,50 +77,87 @@ class _BulletinNoticesIntegratedScreenState
     );
   }
 
-  Widget _buildTab({
-    required int index,
-    required String label,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _tabController.animateTo(index);
-        });
-      },
-      child: AnimatedBuilder(
-        animation: _tabController,
-        builder: (context, child) {
-          final isCurrentlySelected = _tabController.index == index;
-          return Container(
-            height: 48.h,
-            decoration: isCurrentlySelected
-                ? const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        width: 2,
-                        color: NewAppColor.neutral900,
+  Widget _buildToggleButton() {
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, child) {
+        return Container(
+          height: 48.h,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: NewAppColor.transparent,
+              width: 0,
+            ),
+            borderRadius: BorderRadius.circular(24.r),
+          ),
+          child: Row(
+            children: [
+              // 주보 버튼
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _tabController.animateTo(0);
+                    });
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: _tabController.index == 0
+                          ? NewAppColor.neutral700
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(24.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '주보',
+                        style: TextStyle(
+                          color: _tabController.index == 0
+                              ? Colors.white
+                              : NewAppColor.neutral600,
+                          fontSize: 16.sp,
+                          fontFamily: 'Pretendard Variable',
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  )
-                : null,
-            child: Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isCurrentlySelected
-                      ? NewAppColor.neutral900
-                      : NewAppColor.neutral400,
-                  fontSize: 16.sp,
-                  fontFamily: 'Pretendard Variable',
-                  fontWeight: FontWeight.w500,
-                  height: 1.5,
-                  letterSpacing: -0.4,
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
+              // 교회소식 버튼
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _tabController.animateTo(1);
+                    });
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: _tabController.index == 1
+                          ? NewAppColor.neutral700
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(24.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '교회소식',
+                        style: TextStyle(
+                          color: _tabController.index == 1
+                              ? Colors.white
+                              : NewAppColor.neutral600,
+                          fontSize: 16.sp,
+                          fontFamily: 'Pretendard Variable',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -481,22 +481,17 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                   // 좋아요 버튼
                                   OutlinedButton(
                                     onPressed: _toggleFavorite,
-                                    // style: OutlinedButton.styleFrom(
-                                    //   padding: EdgeInsets.symmetric(
-                                    //     horizontal: 16.w,
-                                    //     vertical: 14.h,
-                                    //   ),
-                                    //   side: BorderSide(
-                                    //     color: _isFavorited
-                                    //         ? Colors.red
-                                    //         : NewAppColor.neutral300,
-                                    //     width: 1.5,
-                                    //   ),
-                                    //   shape: RoundedRectangleBorder(
-                                    //     borderRadius:
-                                    //         BorderRadius.circular(12.r),
-                                    //   ),
-                                    // ),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16.w,
+                                        vertical: 14.h,
+                                      ),
+                                      side: BorderSide.none,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12.r),
+                                      ),
+                                    ),
                                     child: Icon(
                                       _isFavorited
                                           ? Icons.favorite
@@ -504,7 +499,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       color: _isFavorited
                                           ? Colors.red
                                           : NewAppColor.neutral400,
-                                      size: 20.w,
+                                      size: 28.w,
                                     ),
                                   ),
                                   SizedBox(width: 8.w),

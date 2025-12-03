@@ -153,11 +153,11 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
           enableDoubleTapZooming: true,
           // 텍스트 선택 활성화
           enableTextSelection: true,
-          // 스크롤 헤드 표시 (페이지 네비게이션)
-          canShowScrollHead: true,
-          // 스크롤 상태 표시
-          canShowScrollStatus: true,
-          // 페이지네이션 다이얼로그 표시
+          // 스크롤 헤드 표시 (페이지 네비게이션) - 꺼짐
+          canShowScrollHead: false,
+          // 스크롤 상태 표시 (하단 페이지 번호) - 꺼짐
+          canShowScrollStatus: false,
+          // 페이지네이션 다이얼로그 표시 (탭하면 페이지 이동)
           canShowPaginationDialog: true,
           onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
             print('PDF 로드 실패: ${details.error}');

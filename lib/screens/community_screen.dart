@@ -6,7 +6,6 @@ import 'package:smart_yoram_app/models/user.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_favorites_screen.dart';
-import 'package:smart_yoram_app/screens/settings_screen.dart';
 
 /// 커뮤니티 메인 화면
 /// 웹 명세서 기반 9개 카테고리 구조
@@ -22,7 +21,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   User? _currentUser;
   bool _isLoading = true;
-  String _selectedLocation = '신사동';
 
   @override
   void initState() {
@@ -244,22 +242,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ];
     }
 
-    // member 권한: 기본 카테고리만 (사역자 모집, 행사팀 모집/지원 제외)
-    if (_currentUser!.isMember) {
-      return [
-        ...baseCategories,
-        CommunityCategory(
-          id: 'church-news',
-          title: '교회 소식',
-          subtitle: '교회 행사 및 소식',
-          icon: Icons.event_outlined,
-          color: Colors.purple,
-          backgroundColor: Colors.purple.shade50,
-        ),
-      ];
-    }
-
-    // 일반 사용자 및 교회 관리자 (member가 아닌 경우)
+    // 모든 사용자에게 전체 카테고리 표시
     return [
       ...baseCategories,
       CommunityCategory(
@@ -370,56 +353,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
       MaterialPageRoute(
         builder: (context) => const CommunityFavoritesScreen(),
       ),
-    );
-  }
-
-  /// 지역 선택 다이얼로그
-  void _showLocationPicker() {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-      ),
-      builder: (context) {
-        final locations = ['신사동', '역삼동', '논현동', '청담동', '압구정동'];
-
-        return Container(
-          padding: EdgeInsets.symmetric(vertical: 24.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '지역 선택',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Pretendard Variable',
-                ),
-              ),
-              SizedBox(height: 16.h),
-              ...locations.map((location) {
-                return ListTile(
-                  title: Text(
-                    location,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontFamily: 'Pretendard Variable',
-                    ),
-                  ),
-                  selected: _selectedLocation == location,
-                  selectedTileColor: NewAppColor.primary100,
-                  onTap: () {
-                    setState(() {
-                      _selectedLocation = location;
-                    });
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
-            ],
-          ),
-        );
-      },
     );
   }
 }

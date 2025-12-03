@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../components/index.dart';
-import '../resource/color_style.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../models/bulletin.dart';
@@ -222,233 +217,133 @@ class _BulletinScreenState extends State<BulletinScreen> {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
       body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            // 상단 패딩 - showTopPadding이 true일 때만 적용
-            if (widget.showTopPadding)
-              SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          // 상단 패딩 - showTopPadding이 true일 때만 적용
+          if (widget.showTopPadding)
+            SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
 
-            // 검색 및 필터 헤더
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Row(
-                children: [
-                  // 검색 텍스트
-                  Text(
-                    '주보를 검색해 보세요',
-                    style: const FigmaTextStyles().body1.copyWith(
-                          color: NewAppColor.neutral900,
-                        ),
-                  ),
-                  const Spacer(),
-                  // 연도 드롭다운
-                  _buildYearDropdown(),
-                  SizedBox(width: 4.w),
-                  // 월 드롭다운
-                  _buildMonthDropdown(),
-                ],
-              ),
+          // 검색 및 필터 헤더
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Row(
+              children: [
+                // 검색 텍스트
+                // Text(
+                //   '주보를 검색해 보세요',
+                //   style: const FigmaTextStyles().body1.copyWith(
+                //         color: NewAppColor.neutral900,
+                //       ),
+                // ),
+                const Spacer(),
+                // 연도 드롭다운
+                _buildYearDropdown(),
+                SizedBox(width: 4.w),
+                // 월 드롭다운
+                _buildMonthDropdown(),
+              ],
             ),
-            SizedBox(height: 24.h),
+          ),
+          SizedBox(height: 24.h),
 
-            // 주보 목록
-            Expanded(
-              child: isLoading
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(NewAppColor.primary500),
-                          ),
-                          SizedBox(height: 16.h),
-                          Text(
-                            '주보를 불러오는 중...',
-                            style: const FigmaTextStyles().body1.copyWith(
-                                  color: NewAppColor.neutral600,
-                                ),
-                          ),
-                        ],
+          // 주보 목록
+          Expanded(
+            child: isLoading
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              NewAppColor.primary500),
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          '주보를 불러오는 중...',
+                          style: const FigmaTextStyles().body1.copyWith(
+                                color: NewAppColor.neutral600,
+                              ),
+                        ),
+                      ],
+                    ),
+                  )
+                : filteredBulletins.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.description,
+                              size: 64.sp,
+                              color: NewAppColor.neutral400,
+                            ),
+                            SizedBox(height: 16.h),
+                            Text(
+                              '주보가 없습니다',
+                              style: const FigmaTextStyles().title3.copyWith(
+                                    color: NewAppColor.neutral600,
+                                  ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              '아직 등록된 주보가 없습니다',
+                              style: const FigmaTextStyles().caption1.copyWith(
+                                    color: NewAppColor.neutral600,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadBulletins,
+                        color: NewAppColor.primary500,
+                        child: ListView.builder(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          itemCount: filteredBulletins.length,
+                          itemBuilder: (context, index) {
+                            final bulletin = filteredBulletins[index];
+                            return _buildBulletinCard(bulletin);
+                          },
+                        ),
                       ),
-                    )
-                  : filteredBulletins.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.description,
-                                size: 64.sp,
-                                color: NewAppColor.neutral400,
-                              ),
-                              SizedBox(height: 16.h),
-                              Text(
-                                '주보가 없습니다',
-                                style: const FigmaTextStyles().title3.copyWith(
-                                      color: NewAppColor.neutral600,
-                                    ),
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                '아직 등록된 주보가 없습니다',
-                                style: const FigmaTextStyles().caption1.copyWith(
-                                      color: NewAppColor.neutral600,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _loadBulletins,
-                          color: NewAppColor.primary500,
-                          child: ListView.builder(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
-                            itemCount: filteredBulletins.length,
-                            itemBuilder: (context, index) {
-                              final bulletin = filteredBulletins[index];
-                              return _buildBulletinCard(bulletin);
-                            },
-                          ),
-                        ),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildBulletinCard(Bulletin bulletin) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 24.h),
-      padding: EdgeInsets.all(24.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(0),
-        border: Border(
-          bottom: BorderSide(
-            color: NewAppColor.neutral200,
-            width: 1,
-          ),
+    return GestureDetector(
+      onTap: () => _navigateToFullscreen(bulletin),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 8.h),
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 제목만 표시
-          Text(
-            bulletin.title,
-            style: const FigmaTextStyles().title3.copyWith(
-                  color: Colors.black,
-                ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: 16.h),
-
-          // 미리보기 이미지
-          GestureDetector(
-            onTap: () => _navigateToFullscreen(bulletin),
-            child: Container(
-              height: 180.h,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12.r),
-                color: Colors.white,
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                children: [
-                  // 미리보기 콘텐츠
-                  Positioned.fill(
-                    child: _buildPreviewWidget(bulletin),
-                  ),
-                  // 어두운 오버레이
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
-                      ),
+        child: Row(
+          children: [
+            // 제목
+            Expanded(
+              child: Text(
+                bulletin.title,
+                style: const FigmaTextStyles().title3.copyWith(
+                      color: NewAppColor.neutral900,
                     ),
-                  ),
-                  // 페이지 수 표시
-                  Positioned(
-                    bottom: 10.h,
-                    right: 10.w,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 0.h,
-                      ),
-                      height: 20.h,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(100.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '+1',
-                          style: const FigmaTextStyles().caption3.copyWith(
-                                color: NewAppColor.neutral100,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
-  }
-
-  String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '${bytes}B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
-  }
-
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
+            SizedBox(width: 12.w),
+            // 오른쪽 화살표 아이콘
+            Icon(
+              Icons.chevron_right,
+              size: 24.sp,
+              color: NewAppColor.neutral400,
+            ),
+          ],
         ),
-        title: Text(
-          '주보 검색',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColor.secondary07,
-          ),
-        ),
-        content: AppInput(
-          controller: _searchController,
-          placeholder: '검색어를 입력하세요',
-          prefixIcon: Icons.search,
-        ),
-        actions: [
-          AppButton(
-            text: '취소',
-            variant: ButtonVariant.ghost,
-            size: ButtonSize.sm,
-            onPressed: () {
-              _searchController.clear();
-              Navigator.pop(context);
-            },
-          ),
-          AppButton(
-            text: '검색',
-            size: ButtonSize.sm,
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
       ),
     );
   }
@@ -458,202 +353,11 @@ class _BulletinScreenState extends State<BulletinScreen> {
       MaterialPageRoute(
         builder: (context) => BulletinFullscreenViewer(
           bulletin: bulletin,
-          localPath: null, // 초기에는 null로 설정
-          fileType: _getFileType(bulletin.fileUrl),
+          localPath: null,
+          fileType: FileTypeHelper.getFileType(bulletin.fileUrl),
         ),
       ),
     );
-  }
-
-  // FileType 반환
-  FileType _getFileType(String? fileUrl) {
-    final result = FileTypeHelper.getFileType(fileUrl);
-    print('파일 타입 판단: $fileUrl -> $result');
-    return result;
-  }
-
-  // 미리보기 위젯 빌드
-  Widget _buildPreviewWidget(Bulletin bulletin) {
-    print('미리보기 위젯 빌드 - fileUrl: ${bulletin.fileUrl}');
-
-    if (bulletin.fileUrl == null || bulletin.fileUrl!.isEmpty) {
-      return Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: Colors.grey[200],
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.description,
-              size: 48.sp,
-              color: Colors.grey[400],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '미리보기 없음',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 이미지 파일인 경우
-    if (_isImageFile(bulletin.fileUrl!)) {
-      print('이미지 파일로 인식됨: ${bulletin.fileUrl}');
-      return CachedNetworkImage(
-        imageUrl: bulletin.fileUrl!,
-        width: double.infinity,
-        height: double.infinity,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: Colors.grey[200],
-          child: Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.grey[400],
-            ),
-          ),
-        ),
-        errorWidget: (context, url, error) {
-          print('이미지 로드 오류: $error, URL: $url');
-          return Container(
-            color: Colors.grey[200],
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.broken_image,
-                  size: 48.sp,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  '이미지 로드 실패',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[500],
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '$error',
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    color: Colors.red[400],
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    }
-
-    // PDF 파일인 경우 - 첫 페이지 미리보기
-    print('PDF 파일로 인식됨: ${bulletin.fileUrl}');
-    return _buildPdfPreview(bulletin.fileUrl!);
-  }
-
-  // PDF 첫 페이지 미리보기 렌더링
-  Widget _buildPdfPreview(String pdfUrl) {
-    final cleanedUrl = FileTypeHelper.cleanUrl(pdfUrl);
-
-    return Container(
-      width: double.infinity,
-      height: 260.h, // 미리보기 높이 제한
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: SfPdfViewer.network(
-          cleanedUrl,
-          pageLayoutMode: PdfPageLayoutMode.single,
-          scrollDirection: PdfScrollDirection.horizontal,
-          enableDoubleTapZooming: false,
-          enableTextSelection: false,
-          canShowScrollHead: false,
-          canShowScrollStatus: false,
-          canShowPaginationDialog: false,
-          onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
-            print('PDF 로드 실패: ${details.error}');
-          },
-        ),
-      ),
-    );
-  }
-
-  // 파일 타입 확인
-  bool _isImageFile(String url) {
-    final lowercaseUrl = url.toLowerCase();
-    return lowercaseUrl.endsWith('.jpg') ||
-        lowercaseUrl.endsWith('.jpeg') ||
-        lowercaseUrl.endsWith('.png') ||
-        lowercaseUrl.endsWith('.gif') ||
-        lowercaseUrl.endsWith('.webp');
-  }
-
-  // 파일 타입 아이콘 반환
-  IconData _getFileTypeIcon(String? fileUrl) {
-    if (fileUrl == null) return Icons.description;
-
-    if (_isImageFile(fileUrl)) {
-      return Icons.image;
-    } else {
-      return Icons.description;
-    }
-  }
-
-  // 파일 타입 텍스트 반환
-  String _getFileTypeText(String? fileUrl) {
-    if (fileUrl == null) return 'FILE';
-
-    if (_isImageFile(fileUrl)) {
-      return 'IMAGE';
-    } else {
-      return 'PDF';
-    }
-  }
-
-  Future<void> _downloadBulletin(Bulletin bulletin) async {
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${bulletin.title} 다운로드 중...'),
-          action: SnackBarAction(
-            label: '취소',
-            onPressed: () {},
-          ),
-        ),
-      );
-
-      final response =
-          await _bulletinService.downloadBulletin(bulletin.id);
-
-      if (!response.success) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('다운로드 실패: ${response.message}')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('다운로드 실패: $e')),
-        );
-      }
-    }
   }
 
   // 연도 드롭다운
@@ -681,11 +385,12 @@ class _BulletinScreenState extends State<BulletinScreen> {
               child: Text(
                 year == 0 ? '전체' : '$year년',
                 style: const FigmaTextStyles().caption1.copyWith(
-                  color: isSelected
-                      ? NewAppColor.primary600
-                      : NewAppColor.neutral800,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                ),
+                      color: isSelected
+                          ? NewAppColor.primary600
+                          : NewAppColor.neutral800,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w400,
+                    ),
               ),
             ),
           );
@@ -709,8 +414,8 @@ class _BulletinScreenState extends State<BulletinScreen> {
             Text(
               selectedYear == 0 ? '전체' : '$selectedYear년',
               style: const FigmaTextStyles().caption1.copyWith(
-                color: NewAppColor.neutral800,
-              ),
+                    color: NewAppColor.neutral800,
+                  ),
             ),
             Icon(
               Icons.keyboard_arrow_down,
@@ -748,11 +453,12 @@ class _BulletinScreenState extends State<BulletinScreen> {
               child: Text(
                 monthNames[month],
                 style: const FigmaTextStyles().caption1.copyWith(
-                  color: isSelected
-                      ? NewAppColor.primary600
-                      : NewAppColor.neutral800,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                ),
+                      color: isSelected
+                          ? NewAppColor.primary600
+                          : NewAppColor.neutral800,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w400,
+                    ),
               ),
             ),
           );
@@ -776,8 +482,8 @@ class _BulletinScreenState extends State<BulletinScreen> {
             Text(
               monthNames[selectedMonth],
               style: const FigmaTextStyles().caption1.copyWith(
-                color: NewAppColor.neutral800,
-              ),
+                    color: NewAppColor.neutral800,
+                  ),
             ),
             Icon(
               Icons.keyboard_arrow_down,

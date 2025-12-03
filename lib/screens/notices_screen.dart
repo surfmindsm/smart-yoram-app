@@ -12,7 +12,7 @@ import 'notice_detail_screen.dart';
 
 class NoticesScreen extends StatefulWidget {
   final bool showAppBar;
-  
+
   const NoticesScreen({
     super.key,
     this.showAppBar = true, // 기본값은 true (홈에서 들어올 때)
@@ -63,9 +63,6 @@ class _NoticesScreenState extends State<NoticesScreen>
       _loadAnnouncements();
     }
   }
-
-
-
 
   Future<void> _loadAnnouncements() async {
     print('🔄 공지사항 로드 시작 - 카테고리: $selectedCategory, 날짜필터: $selectedDateFilter');
@@ -134,8 +131,8 @@ class _NoticesScreenState extends State<NoticesScreen>
               title: Text(
                 '교회 소식',
                 style: const FigmaTextStyles().headline4.copyWith(
-                  color: Colors.white,
-                ),
+                      color: Colors.white,
+                    ),
               ),
               backgroundColor: NewAppColor.primary600,
               elevation: 0,
@@ -146,28 +143,28 @@ class _NoticesScreenState extends State<NoticesScreen>
         children: [
           // 상단 안전 영역 - AppBar가 없을 때만 적용
           if (!widget.showAppBar)
-            SizedBox(height: MediaQuery.of(context).padding.top + 22.h),
+            SizedBox(height: MediaQuery.of(context).padding.top + 0.h),
 
           // 탭바
           Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
+            height: 56.h,
+            decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  width: 2,
-                  color: NewAppColor.neutral200,
+                  color: Colors.transparent,
+                  width: 2.0,
                 ),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: List.generate(tabCategories.length, (index) {
-                final category = tabCategories[index];
-                final isSelected = _tabController.index == index;
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 22.w),
+              child: Row(
+                children: List.generate(tabCategories.length, (index) {
+                  final category = tabCategories[index];
+                  final isSelected = _tabController.index == index;
 
-                return Expanded(
-                  child: GestureDetector(
+                  return GestureDetector(
                     onTap: () {
                       setState(() {
                         _tabController.animateTo(index);
@@ -175,41 +172,37 @@ class _NoticesScreenState extends State<NoticesScreen>
                     },
                     child: Container(
                       height: 56.h,
-                      decoration: isSelected ? const BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            width: 2,
-                            color: NewAppColor.neutral900,
-                          ),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      decoration: BoxDecoration(
+                        border: isSelected
+                            ? Border(
+                                bottom: BorderSide(
+                                  color: NewAppColor.primary600,
+                                  width: 2.0,
+                                ),
+                              )
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          category['label']!,
+                          style: const FigmaTextStyles().title4.copyWith(
+                                color: isSelected
+                                    ? NewAppColor.primary600
+                                    : NewAppColor.neutral400,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
-                      ) : null,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            category['label']!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: isSelected
-                                ? NewAppColor.neutral900
-                                : NewAppColor.neutral400,
-                              fontSize: 15.sp,
-                              fontFamily: 'Pretendard Variable',
-                              fontWeight: FontWeight.w400,
-                              height: 1.47,
-                              letterSpacing: -0.38,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
           ),
+
+          // 고정 여백
+          SizedBox(height: 16.h),
 
           // 공지사항 목록
           Expanded(
@@ -242,8 +235,8 @@ class _NoticesScreenState extends State<NoticesScreen>
             Text(
               '교회 소식을 불러오는 중...',
               style: const FigmaTextStyles().body1.copyWith(
-                color: NewAppColor.neutral600,
-              ),
+                    color: NewAppColor.neutral600,
+                  ),
             ),
           ],
         ),
@@ -264,15 +257,15 @@ class _NoticesScreenState extends State<NoticesScreen>
             Text(
               '교회 소식이 없습니다',
               style: const FigmaTextStyles().title3.copyWith(
-                color: NewAppColor.neutral600,
-              ),
+                    color: NewAppColor.neutral600,
+                  ),
             ),
             SizedBox(height: 8.h),
             Text(
               '새로운 소식이 등록되는 대로 알려드릴게요',
               style: const FigmaTextStyles().caption1.copyWith(
-                color: NewAppColor.neutral600,
-              ),
+                    color: NewAppColor.neutral600,
+                  ),
             ),
           ],
         ),
@@ -280,7 +273,7 @@ class _NoticesScreenState extends State<NoticesScreen>
     }
 
     return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
       itemCount: announcements.length,
       itemBuilder: (context, index) {
         final announcement = announcements[index];
@@ -329,9 +322,21 @@ class _NoticesScreenState extends State<NoticesScreen>
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildCategoryTag('예배/모임'),
-                              SizedBox(width: 4.w),
-                              _buildSubcategoryTag('주말예배'),
+                              _buildCategoryTag(
+                                AnnouncementCategories.getCategoryLabel(
+                                  announcement.category,
+                                ),
+                              ),
+                              if (announcement.subcategory != null &&
+                                  announcement.subcategory!.isNotEmpty) ...[
+                                SizedBox(width: 4.w),
+                                _buildSubcategoryTag(
+                                  AnnouncementCategories.getSubcategoryLabel(
+                                    announcement.category,
+                                    announcement.subcategory,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                           SizedBox(height: 12.h),
@@ -466,8 +471,9 @@ class _NoticesScreenState extends State<NoticesScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       clipBehavior: Clip.antiAlias,
-      decoration: const BoxDecoration(
-        color: Color(0xFF0078FF), // Primary_600
+      decoration: BoxDecoration(
+        color: const Color(0xFF0078FF), // Primary_600
+        borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -496,6 +502,7 @@ class _NoticesScreenState extends State<NoticesScreen>
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: NewAppColor.neutral100,
+        borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -518,7 +525,6 @@ class _NoticesScreenState extends State<NoticesScreen>
     );
   }
 
-
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
@@ -528,7 +534,7 @@ class _NoticesScreenState extends State<NoticesScreen>
     } else if (difference == 1) {
       return '어제';
     } else if (difference < 7) {
-      return '${difference}일 전';
+      return '$difference일 전';
     } else {
       return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
     }
@@ -542,15 +548,6 @@ class _NoticesScreenState extends State<NoticesScreen>
           announcement: announcement,
         ),
       ),
-    );
-  }
-
-  void _shareAnnouncement(Announcement announcement) {
-    // 공유 기능은 나중에 구현
-    AppToast.show(
-      context,
-      '공유 기능이 준비 중입니다',
-      type: ToastType.info,
     );
   }
 }

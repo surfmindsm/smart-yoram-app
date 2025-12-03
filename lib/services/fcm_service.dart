@@ -198,12 +198,16 @@ class FCMService {
     try {
       _currentToken = await _messaging.getToken();
       developer.log('FCM 토큰: $_currentToken', name: 'FCM');
-      
-      // 토큰이 변경될 때마다 백엔드에 등록
+
+      // 토큰이 변경될 때마다 백엔드에 등록 (백그라운드에서 실행 - await 제거)
       if (_currentToken != null) {
-        await _registerTokenToBackend(_currentToken!);
+        // 백그라운드로 실행하여 앱 초기화를 차단하지 않음
+        _registerTokenToBackend(_currentToken!).catchError((e) {
+          developer.log('백그라운드 토큰 등록 실패: $e', name: 'FCM_ERROR');
+        });
+        developer.log('✅ FCM 토큰 백그라운드 등록 시작 (앱 초기화 차단하지 않음)', name: 'FCM');
       }
-      
+
       return _currentToken;
     } catch (e) {
       developer.log('FCM 토큰 가져오기 실패: $e', name: 'FCM_ERROR');
@@ -211,40 +215,58 @@ class FCMService {
     }
   }
   
-  /// 토큰을 백엔드에 등록 (새로운 API 사용)
+  /// 토큰을 백엔드에 등록 (새로운 API 사용 - 병렬 처리 + 타임아웃)
   Future<void> _registerTokenToBackend(String token) async {
     try {
-      // 1. Supabase device_tokens 테이블에 저장 (P2P 채팅 푸시 알림용)
-      await _saveTokenToSupabase(token);
+      final deviceId = await _getDeviceId();
+      final appVersion = await _getAppVersion();
 
-      // 2. 기존 REST API에도 등록 (기존 시스템 호환성)
-      final result = await NotificationServiceEnhanced.instance.registerDevice(
-        token: token,
-        platform: Platform.isIOS ? 'ios' : 'android',
-        deviceId: await _getDeviceId(),
-        appVersion: await _getAppVersion(),
-      );
+      // 모든 API 호출을 병렬로 처리 (타임아웃 10초)
+      final results = await Future.wait([
+        // 1. Supabase device_tokens 테이블에 저장
+        _saveTokenToSupabase(token)
+            .timeout(const Duration(seconds: 10))
+            .catchError((e) {
+          developer.log('❌ Supabase 토큰 저장 실패: $e', name: 'FCM_ERROR');
+        }),
 
-      if (result.isSuccess) {
-        developer.log('✅ 디바이스 토큰 등록 성공 (REST API)', name: 'FCM');
-      } else {
-        developer.log('❌ 디바이스 토큰 등록 실패 (REST API): ${result.message}', name: 'FCM_ERROR');
-      }
+        // 2. 기존 REST API에 등록
+        NotificationServiceEnhanced.instance
+            .registerDevice(
+              token: token,
+              platform: Platform.isIOS ? 'ios' : 'android',
+              deviceId: deviceId,
+              appVersion: appVersion,
+            )
+            .timeout(const Duration(seconds: 10))
+            .then((result) {
+          if (result.isSuccess) {
+            developer.log('✅ 디바이스 토큰 등록 성공 (REST API)', name: 'FCM');
+          } else {
+            developer.log('❌ 디바이스 토큰 등록 실패 (REST API): ${result.message}', name: 'FCM_ERROR');
+          }
+        }).catchError((e) {
+          developer.log('❌ REST API 등록 타임아웃/오류: $e', name: 'FCM_ERROR');
+        }),
 
-      // 3. 새로운 API를 사용한 기기 등록
-      try {
-        final deviceResult = await NotificationService.instance.registerDevice(token);
-        if (deviceResult.isSuccess) {
-          developer.log('✅ 새로운 API 기기 등록 성공', name: 'FCM');
-        } else {
-          developer.log('❌ 새로운 API 기기 등록 실패: ${deviceResult.message}', name: 'FCM_ERROR');
-        }
-      } catch (apiError) {
-        developer.log('❌ 새로운 API 등록 오류: $apiError', name: 'FCM_ERROR');
-      }
+        // 3. 새로운 API 기기 등록
+        NotificationService.instance
+            .registerDevice(token)
+            .timeout(const Duration(seconds: 10))
+            .then((result) {
+          if (result.isSuccess) {
+            developer.log('✅ 새로운 API 기기 등록 성공', name: 'FCM');
+          } else {
+            developer.log('❌ 새로운 API 기기 등록 실패: ${result.message}', name: 'FCM_ERROR');
+          }
+        }).catchError((e) {
+          developer.log('❌ 새로운 API 등록 타임아웃/오류: $e', name: 'FCM_ERROR');
+        }),
+      ], eagerError: false); // 에러가 나도 다른 Future는 계속 실행
 
+      developer.log('✅ 백엔드 토큰 등록 완료 (병렬 처리)', name: 'FCM');
     } catch (e) {
-      developer.log('❌ 토큰 백엔드 등록 중 오류: $e', name: 'FCM_ERROR');
+      developer.log('❌ 토큰 백엔드 등록 중 치명적 오류: $e', name: 'FCM_ERROR');
     }
   }
 

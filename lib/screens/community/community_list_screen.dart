@@ -1547,91 +1547,73 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
   /// 빠른 필터 (교회 소식)
   Widget _buildQuickChurchNewsFilters() {
+    final List<Map<String, String>> tabs = [
+      {'label': '전체', 'value': 'all'},
+      {'label': '긴급', 'value': 'urgent'},
+      {'label': '중요', 'value': 'important'},
+      {'label': '일반', 'value': 'normal'},
+      {'label': '종료제거', 'value': 'hide_completed'},
+    ];
+
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      height: 56.h,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: const Border(
+        border: Border(
           bottom: BorderSide(
-            color: NewAppColor.neutral200,
-            width: 1,
+            color: Colors.transparent,
+            width: 2.0,
           ),
         ),
       ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 우선순위 필터 그룹: 전체, 긴급, 중요, 일반
-              _buildSmallFilterChip(
-                label: '전체',
-                isSelected: _priorityFilter == 'all',
-                onTap: () {
-                  setState(() {
-                    _priorityFilter = 'all';
-                    _updateFilteredItems();
-                  });
-                },
-              ),
-              SizedBox(width: 6.w),
-              _buildSmallFilterChip(
-                label: '긴급',
-                isSelected: _priorityFilter == 'urgent',
-                onTap: () {
-                  setState(() {
-                    _priorityFilter = 'urgent';
-                    _updateFilteredItems();
-                  });
-                },
-              ),
-              SizedBox(width: 6.w),
-              _buildSmallFilterChip(
-                label: '중요',
-                isSelected: _priorityFilter == 'important',
-                onTap: () {
-                  setState(() {
-                    _priorityFilter = 'important';
-                    _updateFilteredItems();
-                  });
-                },
-              ),
-              SizedBox(width: 6.w),
-              _buildSmallFilterChip(
-                label: '일반',
-                isSelected: _priorityFilter == 'normal',
-                onTap: () {
-                  setState(() {
-                    _priorityFilter = 'normal';
-                    _updateFilteredItems();
-                  });
-                },
-              ),
-              SizedBox(width: 8.w),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 22.w),
+        child: Row(
+          children: tabs.map((tab) {
+            final isHideCompletedTab = tab['value'] == 'hide_completed';
+            final isSelected = isHideCompletedTab
+                ? _hideCompleted
+                : _priorityFilter == tab['value'];
 
-              // 구분선
-              Container(
-                width: 1,
-                height: 20.h,
-                color: NewAppColor.neutral300,
-              ),
-              SizedBox(width: 8.w),
-
-              // 종료 제거 필터
-              _buildSmallFilterChip(
-                label: '종료제거',
-                isSelected: _hideCompleted,
-                onTap: () {
-                  setState(() {
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (isHideCompletedTab) {
                     _hideCompleted = !_hideCompleted;
-                    _updateFilteredItems();
-                  });
-                },
+                  } else {
+                    _priorityFilter = tab['value']!;
+                  }
+                  _updateFilteredItems();
+                });
+              },
+              child: Container(
+                height: 56.h,
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                decoration: BoxDecoration(
+                  border: isSelected
+                      ? Border(
+                          bottom: BorderSide(
+                            color: NewAppColor.primary600,
+                            width: 2.0,
+                          ),
+                        )
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    tab['label']!,
+                    style: const FigmaTextStyles().title4.copyWith(
+                          color: isSelected
+                              ? NewAppColor.primary600
+                              : NewAppColor.neutral400,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ),
               ),
-            ],
-          ),
+            );
+          }).toList(),
         ),
       ),
     );
