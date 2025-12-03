@@ -9,6 +9,7 @@ import 'package:smart_yoram_app/screens/chat/chat_room_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:smart_yoram_app/components/app_dialog.dart';
 
 /// 채팅 목록 화면
 class ChatListScreen extends StatefulWidget {
@@ -157,110 +158,83 @@ class _ChatListScreenState extends State<ChatListScreen>
       backgroundColor: NewAppColor.neutral100,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _chatRooms.isEmpty
-              ? Column(
-                  children: [
-                    Container(
-                      color: NewAppColor.transparent,
-                      child: SafeArea(
-                        bottom: false,
-                        child: Column(
-                          children: [
-                            Container(
-                              height: 56.h,
-                              padding: EdgeInsets.symmetric(horizontal: 16.w),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '채팅',
-                                    style: FigmaTextStyles().header1.copyWith(
-                                          color: NewAppColor.neutral900,
-                                          fontSize: 20.sp,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(child: _buildEmptyState()),
-                  ],
-                )
-              : Column(
-                  children: [
-                    // 고정된 AppBar
-                    Container(
-                      color: NewAppColor.transparent,
-                      child: SafeArea(
-                        bottom: false,
-                        child: Column(
-                          children: [
-                            Container(
-                              height: 56.h,
-                              padding: EdgeInsets.symmetric(horizontal: 16.w),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '채팅',
-                                    style: FigmaTextStyles().header1.copyWith(
-                                          color: NewAppColor.neutral900,
-                                          fontSize: 20.sp,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // 스크롤 가능한 영역
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: _loadChatRooms,
-                        child: CustomScrollView(
-                          slivers: [
-                            // 필터 칩
-                            SliverToBoxAdapter(
-                              child: _buildFilterChips(),
-                            ),
-                            // 채팅방 리스트 또는 필터 결과 없음 메시지
-                            _filteredChatRooms.isEmpty
-                                ? SliverFillRemaining(
-                                    child: _buildFilteredEmptyState(),
-                                  )
-                                : SliverList(
-                                    delegate: SliverChildBuilderDelegate(
-                                      (context, index) {
-                                        final chatRoom =
-                                            _filteredChatRooms[index];
-                                        return Column(
-                                          children: [
-                                            _buildChatListTile(chatRoom),
-                                            if (index <
-                                                _filteredChatRooms.length - 1)
-                                              Divider(
-                                                height: 1,
-                                                thickness: 1,
-                                                color: NewAppColor.neutral200,
-                                                indent: 72.w,
-                                              ),
-                                          ],
-                                        );
-                                      },
-                                      childCount: _filteredChatRooms.length,
+          : Column(
+              children: [
+                // 고정된 AppBar
+                Container(
+                  color: NewAppColor.transparent,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 56.h,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: Row(
+                            children: [
+                              Text(
+                                '채팅',
+                                style: FigmaTextStyles().header1.copyWith(
+                                      color: NewAppColor.neutral900,
+                                      fontSize: 20.sp,
+                                      fontWeight: FontWeight.w700,
                                     ),
-                                  ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
+                // 스크롤 가능한 영역
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _loadChatRooms,
+                    child: CustomScrollView(
+                      slivers: [
+                        // 필터 칩 (항상 표시)
+                        SliverToBoxAdapter(
+                          child: _buildFilterChips(),
+                        ),
+                        // 채팅방이 아예 없을 때
+                        if (_chatRooms.isEmpty)
+                          SliverFillRemaining(
+                            child: _buildEmptyState(),
+                          )
+                        // 채팅방은 있지만 필터 결과가 없을 때
+                        else if (_filteredChatRooms.isEmpty)
+                          SliverFillRemaining(
+                            child: _buildFilteredEmptyState(),
+                          )
+                        // 채팅방 리스트
+                        else
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final chatRoom = _filteredChatRooms[index];
+                                return Column(
+                                  children: [
+                                    _buildChatListTile(chatRoom),
+                                    if (index < _filteredChatRooms.length - 1)
+                                      Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: NewAppColor.neutral200,
+                                        indent: 72.w,
+                                      ),
+                                  ],
+                                );
+                              },
+                              childCount: _filteredChatRooms.length,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -423,52 +397,13 @@ class _ChatListScreenState extends State<ChatListScreen>
   /// 채팅방 삭제
   Future<void> _deleteChatRoom(ChatRoom chatRoom) async {
     // 삭제 확인 다이얼로그
-    final shouldDelete = await showDialog<bool>(
+    final shouldDelete = await AppAlertDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          '채팅방 삭제',
-          style: FigmaTextStyles().header2.copyWith(
-                color: NewAppColor.neutral900,
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        content: Text(
-          '이 채팅방을 삭제하시겠습니까?\n모든 메시지가 삭제됩니다.',
-          style: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral700,
-                fontSize: 14.sp,
-              ),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              '취소',
-              style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral600,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              '삭제',
-              style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.danger600,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ),
-        ],
-      ),
+      title: '채팅방 삭제',
+      description: '이 채팅방을 삭제하시겠습니까?\n모든 메시지가 삭제됩니다.',
+      confirmText: '삭제',
+      cancelText: '취소',
+      destructive: true,
     );
 
     if (shouldDelete != true) return;

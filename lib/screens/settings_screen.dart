@@ -979,53 +979,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _logout() {
+    // Settings screen의 context를 저장 (dialog context와 분리)
+    final settingsContext = context;
+
     showDialog(
       context: context,
-      builder: (context) => AppDialog(
+      builder: (dialogContext) => AppDialog(
         title: '로그아웃',
         content: const Text('정말 로그아웃하시겠습니까?'),
         actions: [
           AppButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             variant: ButtonVariant.ghost,
             child: const Text('취소'),
           ),
           AppButton(
             onPressed: () async {
-              Navigator.pop(context);
+              // 다이얼로그 먼저 닫기
+              Navigator.pop(dialogContext);
 
-              try {
-                // 1. FCM 토큰 비활성화 (로그아웃 전에 실행)
+              // 다음 프레임에서 로그아웃 처리 (UI 안정화)
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
                 try {
-                  await FCMService.instance.deactivateToken();
-                  print('✅ SETTINGS: FCM 토큰 비활성화 완료');
-                } catch (fcmError) {
-                  print('⚠️ SETTINGS: FCM 토큰 비활성화 실패 (계속 진행): $fcmError');
-                  // FCM 토큰 비활성화 실패해도 로그아웃은 계속 진행
-                }
+                  // 1. FCM 토큰 비활성화 (로그아웃 전에 실행)
+                  try {
+                    await FCMService.instance.deactivateToken();
+                    print('✅ SETTINGS: FCM 토큰 비활성화 완료');
+                  } catch (fcmError) {
+                    print('⚠️ SETTINGS: FCM 토큰 비활성화 실패 (계속 진행): $fcmError');
+                    // FCM 토큰 비활성화 실패해도 로그아웃은 계속 진행
+                  }
 
-                // 2. 로그아웃 처리
-                await _authService.logout();
+                  // 2. 로그아웃 처리
+                  await _authService.logout();
+                  print('✅ SETTINGS: 로그아웃 처리 완료');
 
-                if (mounted) {
-                  // 토스트 없이 바로 로그인 화면으로 이동
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/login',
-                    (route) => false,
-                  );
+                  // 3. 로그인 화면으로 이동 (mounted 체크)
+                  if (mounted) {
+                    Navigator.of(settingsContext).pushNamedAndRemoveUntil(
+                      '/login',
+                      (route) => false,
+                    );
+                    print('✅ SETTINGS: 로그인 화면으로 이동 완료');
+                  }
+                } catch (e) {
+                  print('❌ SETTINGS: 로그아웃 오류: $e');
+
+                  // 에러가 발생해도 로그인 화면으로 이동 시도
+                  if (mounted) {
+                    try {
+                      Navigator.of(settingsContext).pushNamedAndRemoveUntil(
+                        '/login',
+                        (route) => false,
+                      );
+                    } catch (navError) {
+                      print('❌ SETTINGS: 네비게이션 오류: $navError');
+                    }
+                  }
                 }
-              } catch (e) {
-                if (mounted) {
-                  // 에러 발생 시에만 SnackBar로 표시 (context가 유효한 상태)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('로그아웃 오류: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
+              });
             },
             variant: ButtonVariant.destructive,
             child: const Text('로그아웃'),

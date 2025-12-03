@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
-import '../resource/color_style.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
 
 class AppDialog extends StatelessWidget {
   final String? title;
@@ -30,15 +31,15 @@ class AppDialog extends StatelessWidget {
         width: width ?? MediaQuery.of(context).size.width * 0.9,
         height: height,
         constraints: BoxConstraints(
-          maxWidth: 400,
+          maxWidth: 400.w,
           maxHeight: MediaQuery.of(context).size.height * 0.8,
         ),
         decoration: BoxDecoration(
-          color: AppColor.white,
-          borderRadius: BorderRadius.circular(16),
+          color: NewAppColor.white,
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: AppColor.secondary07.withOpacity(0.15),
+              color: NewAppColor.neutral900.withOpacity(0.1),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -51,17 +52,14 @@ class AppDialog extends StatelessWidget {
             // Header
             if (title != null) ...[
               Padding(
-                padding: const EdgeInsets.all(24).copyWith(bottom: 8),
+                padding: EdgeInsets.all(24.w).copyWith(bottom: 8.h),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         title!,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: AppColor.secondary07,
-                          height: 1.3,
+                        style: FigmaTextStyles().subtitle1.copyWith(
+                          color: NewAppColor.neutral900,
                         ),
                       ),
                     ),
@@ -69,11 +67,11 @@ class AppDialog extends StatelessWidget {
                       GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: EdgeInsets.all(4.w),
                           child: Icon(
                             Icons.close,
-                            size: 20,
-                            color: AppColor.secondary05,
+                            size: 20.sp,
+                            color: NewAppColor.neutral600,
                           ),
                         ),
                       ),
@@ -85,14 +83,12 @@ class AppDialog extends StatelessWidget {
             // Description
             if (description != null) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24)
-                    .copyWith(bottom: 16),
+                padding: EdgeInsets.symmetric(horizontal: 24.w)
+                    .copyWith(bottom: 16.h),
                 child: Text(
                   description!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColor.secondary06,
-                    height: 1.5,
+                  style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral700,
                   ),
                 ),
               ),
@@ -102,22 +98,22 @@ class AppDialog extends StatelessWidget {
             if (content != null) ...[
               Flexible(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
                   child: content!,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
             ],
 
             // Actions
             if (actions != null && actions!.isNotEmpty) ...[
               Padding(
-                padding: const EdgeInsets.all(24).copyWith(top: 8),
+                padding: EdgeInsets.all(24.w).copyWith(top: 8.h),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     for (int i = 0; i < actions!.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 12),
+                      if (i > 0) SizedBox(width: 12.w),
                       actions![i],
                     ],
                   ],
@@ -185,28 +181,31 @@ class AppAlertDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: onCancel ?? () => Navigator.of(context).pop(false),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+          ),
           child: Text(
             cancelText,
-            style: TextStyle(
-              color: AppColor.secondary06,
-              fontWeight: FontWeight.w500,
+            style: FigmaTextStyles().subtitle3.copyWith(
+              color: NewAppColor.neutral600,
             ),
           ),
         ),
         ElevatedButton(
           onPressed: onConfirm ?? () => Navigator.of(context).pop(true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: destructive ? AppColor.error : AppColor.primary7,
-            foregroundColor: AppColor.white,
+            backgroundColor: destructive ? NewAppColor.danger600 : NewAppColor.primary600,
+            foregroundColor: NewAppColor.white,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             elevation: 0,
           ),
           child: Text(
             confirmText,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
+            style: FigmaTextStyles().subtitle3.copyWith(
+              color: NewAppColor.white,
             ),
           ),
         ),
@@ -253,24 +252,23 @@ class AppLoadingDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
-          color: AppColor.white,
-          borderRadius: BorderRadius.circular(12),
+          color: NewAppColor.white,
+          borderRadius: BorderRadius.circular(12.r),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColor.primary7),
+              valueColor: AlwaysStoppedAnimation<Color>(NewAppColor.primary600),
             ),
             if (message != null) ...[
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               Text(
                 message!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColor.secondary06,
+                style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral700,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -294,5 +292,298 @@ class AppLoadingDialog extends StatelessWidget {
 
   static void hide(BuildContext context) {
     Navigator.of(context).pop();
+  }
+}
+
+// Info Dialog - 단순 정보 표시
+class AppInfoDialog extends StatelessWidget {
+  final String title;
+  final String description;
+  final String buttonText;
+  final VoidCallback? onConfirm;
+
+  const AppInfoDialog({
+    Key? key,
+    required this.title,
+    required this.description,
+    this.buttonText = '확인',
+    this.onConfirm,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppDialog(
+      title: title,
+      description: description,
+      actions: [
+        ElevatedButton(
+          onPressed: onConfirm ?? () => Navigator.of(context).pop(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: NewAppColor.primary600,
+            foregroundColor: NewAppColor.white,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            elevation: 0,
+          ),
+          child: Text(
+            buttonText,
+            style: FigmaTextStyles().subtitle3.copyWith(
+              color: NewAppColor.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Future<void> show({
+    required BuildContext context,
+    required String title,
+    required String description,
+    String buttonText = '확인',
+    VoidCallback? onConfirm,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AppInfoDialog(
+        title: title,
+        description: description,
+        buttonText: buttonText,
+        onConfirm: onConfirm,
+      ),
+    );
+  }
+}
+
+// Error Dialog - 에러 표시
+class AppErrorDialog extends StatelessWidget {
+  final String title;
+  final String message;
+  final String buttonText;
+  final VoidCallback? onConfirm;
+
+  const AppErrorDialog({
+    Key? key,
+    this.title = '오류',
+    required this.message,
+    this.buttonText = '확인',
+    this.onConfirm,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppDialog(
+      title: title,
+      content: Row(
+        children: [
+          Icon(
+            Icons.error_outline,
+            color: NewAppColor.danger600,
+            size: 24.sp,
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              message,
+              style: FigmaTextStyles().body2.copyWith(
+                color: NewAppColor.neutral700,
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: onConfirm ?? () => Navigator.of(context).pop(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: NewAppColor.primary600,
+            foregroundColor: NewAppColor.white,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            elevation: 0,
+          ),
+          child: Text(
+            buttonText,
+            style: FigmaTextStyles().subtitle3.copyWith(
+              color: NewAppColor.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Future<void> show({
+    required BuildContext context,
+    String title = '오류',
+    required String message,
+    String buttonText = '확인',
+    VoidCallback? onConfirm,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AppErrorDialog(
+        title: title,
+        message: message,
+        buttonText: buttonText,
+        onConfirm: onConfirm,
+      ),
+    );
+  }
+}
+
+// Input Dialog - 텍스트 입력
+class AppInputDialog extends StatefulWidget {
+  final String title;
+  final String? hintText;
+  final String? initialValue;
+  final String confirmText;
+  final String cancelText;
+  final int maxLines;
+  final TextInputType keyboardType;
+  final String? Function(String?)? validator;
+
+  const AppInputDialog({
+    Key? key,
+    required this.title,
+    this.hintText,
+    this.initialValue,
+    this.confirmText = '확인',
+    this.cancelText = '취소',
+    this.maxLines = 1,
+    this.keyboardType = TextInputType.text,
+    this.validator,
+  }) : super(key: key);
+
+  @override
+  State<AppInputDialog> createState() => _AppInputDialogState();
+
+  static Future<String?> show({
+    required BuildContext context,
+    required String title,
+    String? hintText,
+    String? initialValue,
+    String confirmText = '확인',
+    String cancelText = '취소',
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AppInputDialog(
+        title: title,
+        hintText: hintText,
+        initialValue: initialValue,
+        confirmText: confirmText,
+        cancelText: cancelText,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        validator: validator,
+      ),
+    );
+  }
+}
+
+class _AppInputDialogState extends State<AppInputDialog> {
+  late TextEditingController _controller;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleConfirm() {
+    if (widget.validator != null) {
+      final error = widget.validator!(_controller.text);
+      if (error != null) {
+        setState(() {
+          _errorText = error;
+        });
+        return;
+      }
+    }
+    Navigator.of(context).pop(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppDialog(
+      title: widget.title,
+      content: TextField(
+        controller: _controller,
+        decoration: InputDecoration(
+          hintText: widget.hintText,
+          hintStyle: FigmaTextStyles().body2.copyWith(
+            color: NewAppColor.neutral400,
+          ),
+          errorText: _errorText,
+          filled: true,
+          fillColor: NewAppColor.neutral100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.r),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        ),
+        style: FigmaTextStyles().body2.copyWith(
+          color: NewAppColor.neutral900,
+        ),
+        maxLines: widget.maxLines,
+        keyboardType: widget.keyboardType,
+        autofocus: true,
+        onChanged: (_) {
+          if (_errorText != null) {
+            setState(() {
+              _errorText = null;
+            });
+          }
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+          ),
+          child: Text(
+            widget.cancelText,
+            style: FigmaTextStyles().subtitle3.copyWith(
+              color: NewAppColor.neutral600,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _handleConfirm,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: NewAppColor.primary600,
+            foregroundColor: NewAppColor.white,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            elevation: 0,
+          ),
+          child: Text(
+            widget.confirmText,
+            style: FigmaTextStyles().subtitle3.copyWith(
+              color: NewAppColor.white,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

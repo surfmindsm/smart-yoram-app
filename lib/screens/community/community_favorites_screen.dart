@@ -6,6 +6,7 @@ import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/wishlist_models.dart';
 import 'package:smart_yoram_app/services/wishlist_service.dart';
 import 'package:smart_yoram_app/screens/community/community_detail_screen.dart';
+import 'package:smart_yoram_app/components/app_dialog.dart';
 
 /// 찜한 글 목록 화면
 class CommunityFavoritesScreen extends StatefulWidget {
@@ -59,22 +60,13 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
   }
 
   Future<void> _removeFromWishlist(WishlistItem item) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppAlertDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('찜하기 제거'),
-        content: const Text('이 글을 찜한 글에서 제거하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('제거', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: '찜하기 제거',
+      description: '이 글을 찜한 글에서 제거하시겠습니까?',
+      confirmText: '제거',
+      cancelText: '취소',
+      destructive: true,
     );
 
     if (confirmed == true) {
