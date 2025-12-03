@@ -46,7 +46,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       // 사용자 정보를 DB에서 강제로 새로 가져오기
       final response = await _authService.getCurrentUser(forceRefresh: true);
 
-      print('📝 PROFILE_EDIT: API 응답 - 성공: ${response.success}, 데이터: ${response.data}');
+      print(
+          '📝 PROFILE_EDIT: API 응답 - 성공: ${response.success}, 데이터: ${response.data}');
 
       if (response.success && response.data != null) {
         final userData = response.data!;
@@ -92,34 +93,19 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (_fullNameController.text.trim().isEmpty) {
-      AppToast.show(
-        context,
-        '이름을 입력해주세요.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    if (_emailController.text.trim().isEmpty) {
-      AppToast.show(
-        context,
-        '이메일을 입력해주세요.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
     setState(() {
       _isSaving = true;
     });
 
     try {
-      // 실제 사용자 정보 업데이트
+      // 실제 사용자 정보 업데이트 (전화번호, 주소만)
       final response = await _authService.updateUserProfile(
-        fullName: _fullNameController.text.trim(),
-        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-        address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
+        address: _addressController.text.trim().isEmpty
+            ? null
+            : _addressController.text.trim(),
       );
 
       if (mounted) {
@@ -169,8 +155,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.neutral100,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Container(
@@ -185,8 +172,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         title: Text(
           '개인정보 수정',
           style: const FigmaTextStyles().title2.copyWith(
-            color: NewAppColor.neutral900,
-          ),
+                color: NewAppColor.neutral900,
+              ),
         ),
         centerTitle: true,
         actions: [
@@ -195,9 +182,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             child: Text(
               '저장',
               style: const FigmaTextStyles().body1.copyWith(
-                color: _isSaving ? NewAppColor.neutral400 : NewAppColor.primary600,
-                fontWeight: FontWeight.w600,
-              ),
+                    color: _isSaving
+                        ? NewAppColor.neutral400
+                        : NewAppColor.primary600,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ),
         ],
@@ -213,17 +202,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   _buildSection(
                     title: '기본 정보',
                     children: [
-                      _buildInputField(
+                      _buildReadOnlyField(
                         label: '이름',
-                        controller: _fullNameController,
-                        placeholder: '이름을 입력하세요',
+                        value: _fullNameController.text,
                       ),
                       SizedBox(height: 16.h),
-                      _buildInputField(
+                      _buildReadOnlyField(
                         label: '이메일',
-                        controller: _emailController,
-                        placeholder: '이메일을 입력하세요',
-                        keyboardType: TextInputType.emailAddress,
+                        value: _emailController.text,
                       ),
                     ],
                   ),
@@ -296,8 +282,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           Text(
             title,
             style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
+                  color: NewAppColor.neutral900,
+                ),
           ),
           SizedBox(height: 20.h),
           ...children,
@@ -319,9 +305,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         Text(
           label,
           style: const FigmaTextStyles().body1.copyWith(
-            color: NewAppColor.neutral900,
-            fontWeight: FontWeight.w500,
-          ),
+                color: NewAppColor.neutral900,
+                fontWeight: FontWeight.w500,
+              ),
         ),
         SizedBox(height: 8.h),
         AppInput(
@@ -344,9 +330,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         Text(
           label,
           style: const FigmaTextStyles().body1.copyWith(
-            color: NewAppColor.neutral900,
-            fontWeight: FontWeight.w500,
-          ),
+                color: NewAppColor.neutral900,
+                fontWeight: FontWeight.w500,
+              ),
         ),
         SizedBox(height: 8.h),
         Container(
@@ -360,8 +346,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           child: Text(
             value,
             style: const FigmaTextStyles().body1.copyWith(
-              color: NewAppColor.neutral600,
-            ),
+                  color: NewAppColor.neutral600,
+                ),
           ),
         ),
       ],

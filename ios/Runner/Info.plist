@@ -28,6 +28,11 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>nmap</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>This app uses the camera to scan QR codes and capture images for learning activities and assignments.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

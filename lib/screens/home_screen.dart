@@ -941,52 +941,58 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          padding: EdgeInsets.all(12.r),
-                          decoration: BoxDecoration(
-                            color: NewAppColor.neutral100,
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(6.r),
-                                decoration: BoxDecoration(
-                                  color: NewAppColor.success200,
-                                  borderRadius: BorderRadius.circular(6.r),
+                        child: GestureDetector(
+                          onTap: () {
+                            final phone = currentChurch?.phone ?? '031-563-5210';
+                            _makePhoneCall(phone);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(12.r),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.neutral100,
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(6.r),
+                                  decoration: BoxDecoration(
+                                    color: NewAppColor.success200,
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                  child: Icon(
+                                    Icons.phone,
+                                    color: NewAppColor.success600,
+                                    size: 16,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.phone,
-                                  color: NewAppColor.success600,
-                                  size: 16,
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '전화',
+                                        style: const FigmaTextStyles()
+                                            .body3
+                                            .copyWith(
+                                              color: NewAppColor.neutral600,
+                                            ),
+                                      ),
+                                      Text(
+                                        currentChurch?.phone ?? '031-563-5210',
+                                        style: const FigmaTextStyles()
+                                            .body2
+                                            .copyWith(
+                                              color: NewAppColor.neutral900,
+                                            ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '전화',
-                                      style: const FigmaTextStyles()
-                                          .body3
-                                          .copyWith(
-                                            color: NewAppColor.neutral600,
-                                          ),
-                                    ),
-                                    Text(
-                                      currentChurch?.phone ?? '031-563-5210',
-                                      style: const FigmaTextStyles()
-                                          .body2
-                                          .copyWith(
-                                            color: NewAppColor.neutral900,
-                                          ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -1044,65 +1050,71 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   SizedBox(height: 12.h),
                   // 교회 주소 (파란색 배경)
-                  Container(
-                    padding: EdgeInsets.all(12.r),
-                    decoration: BoxDecoration(
-                      color: NewAppColor.neutral100,
-                      borderRadius: BorderRadius.circular(12.r),
-                      // border: Border.all(
-                      //   color: NewAppColor.primary300,
-                      //   width: 1,
-                      // ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: 2.h),
-                          child: Icon(
-                            Icons.location_on,
-                            color: NewAppColor.primary600,
-                            size: 16,
+                  GestureDetector(
+                    onTap: () {
+                      final address = currentChurch?.address ?? '경기도 구리시 검배로 136번길 32';
+                      _openNaverMap(address);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(12.r),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.neutral100,
+                        borderRadius: BorderRadius.circular(12.r),
+                        // border: Border.all(
+                        //   color: NewAppColor.primary300,
+                        //   width: 1,
+                        // ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 2.h),
+                            child: Icon(
+                              Icons.location_on,
+                              color: NewAppColor.primary600,
+                              size: 16,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '교회 주소',
-                                style: const FigmaTextStyles().body3.copyWith(
-                                      color: NewAppColor.neutral600,
-                                    ),
-                              ),
-                              SizedBox(height: 4.h),
-                              RichText(
-                                text: TextSpan(
-                                  style: const FigmaTextStyles().body2.copyWith(
-                                        color: NewAppColor.neutral900,
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '교회 주소',
+                                  style: const FigmaTextStyles().body3.copyWith(
+                                        color: NewAppColor.neutral600,
                                       ),
-                                  children: [
-                                    TextSpan(
-                                      text: currentChurch?.address ??
-                                          '경기도 구리시 검배로 136번길 32\n',
-                                    ),
-                                    if (currentChurch?.district != null)
-                                      TextSpan(
-                                        text: '(${currentChurch!.district})',
-                                        style: const FigmaTextStyles()
-                                            .body2
-                                            .copyWith(
-                                              color: NewAppColor.neutral900,
-                                            ),
-                                      ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                SizedBox(height: 4.h),
+                                RichText(
+                                  text: TextSpan(
+                                    style: const FigmaTextStyles().body2.copyWith(
+                                          color: NewAppColor.neutral900,
+                                        ),
+                                    children: [
+                                      TextSpan(
+                                        text: currentChurch?.address ??
+                                            '경기도 구리시 검배로 136번길 32\n',
+                                      ),
+                                      if (currentChurch?.district != null)
+                                        TextSpan(
+                                          text: '(${currentChurch!.district})',
+                                          style: const FigmaTextStyles()
+                                              .body2
+                                              .copyWith(
+                                                color: NewAppColor.neutral900,
+                                              ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -2030,6 +2042,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('링크 오류: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 전화 걸기 메서드
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    try {
+      // 전화번호에서 공백과 대시 제거
+      final cleanNumber = phoneNumber.replaceAll(RegExp(r'[\s-]'), '');
+      final Uri telUri = Uri.parse('tel:$cleanNumber');
+
+      // iOS 시뮬레이터에서는 전화 기능이 제한되므로 try-catch로 처리
+      try {
+        await launchUrl(telUri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        print('전화 걸기 오류: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('전화를 걸 수 없습니다.\niOS 시뮬레이터에서는 전화 기능이 제한됩니다.\n실제 기기에서 테스트해주세요.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('전화 연결 오류: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 네이버 지도 열기 메서드
+  Future<void> _openNaverMap(String address) async {
+    try {
+      // 네이버 지도 앱 URL scheme
+      final appUri = Uri.parse('nmap://search?query=${Uri.encodeComponent(address)}&appname=com.example.smart_yoram_app');
+
+      // 네이버 지도 웹 URL (앱이 없을 경우 폴백)
+      final webUri = Uri.parse('https://map.naver.com/v5/search/${Uri.encodeComponent(address)}');
+
+      // 먼저 앱으로 열기 시도
+      bool launched = false;
+      try {
+        if (await canLaunchUrl(appUri)) {
+          launched = await launchUrl(appUri, mode: LaunchMode.externalApplication);
+        }
+      } catch (e) {
+        print('네이버 지도 앱 실행 실패: $e');
+      }
+
+      // 앱으로 열기에 실패하면 웹으로 열기
+      if (!launched) {
+        if (await canLaunchUrl(webUri)) {
+          await launchUrl(webUri, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('지도를 열 수 없습니다'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('지도 연결 오류: $e'),
             backgroundColor: Colors.red,
           ),
         );

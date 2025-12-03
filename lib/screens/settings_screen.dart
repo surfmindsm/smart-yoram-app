@@ -9,6 +9,7 @@ import '../services/auth_service.dart';
 import '../services/fcm_service.dart';
 import '../services/font_settings_service.dart';
 import '../services/church_service.dart';
+import '../services/bug_report_service.dart';
 import '../models/church.dart';
 import '../models/user.dart';
 import '../utils/admin_permission_utils.dart';
@@ -42,6 +43,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
   final ChurchService _churchService = ChurchService();
+  final BugReportService _bugReportService = BugReportService();
 
   // 설정 값들
   bool _pushNotifications = true;
@@ -73,8 +75,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.neutral100,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -85,8 +89,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text(
           '설정',
           style: const FigmaTextStyles().headline4.copyWith(
-            color: NewAppColor.neutral900,
-          ),
+                color: NewAppColor.neutral900,
+              ),
         ),
       ),
       body: Column(
@@ -96,191 +100,173 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               children: [
-          // 계정 섹션
-          _buildGroupedSection(
-            title: '계정',
-            items: [
-              _GroupedSettingItem(
-                icon: Icons.person_outline,
-                title: '개인정보 수정',
-                subtitle: '이름, 전화번호, 주소 등',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileEditScreen(),
-                  ),
-                ),
-              ),
-              _GroupedSettingItem(
-                icon: Icons.lock_outline,
-                title: '비밀번호 변경',
-                subtitle: '로그인 비밀번호 변경',
-                onTap: _changePassword,
-              ),
-            ],
-          ),
-
-          // 관리자 메뉴 섹션 (관리자만 표시)
-          if (_currentUser?.isAdmin == true) ...[
-            SizedBox(height: 16.h),
-            _buildGroupedSection(
-              title: '관리자 메뉴',
-              items: [
-                _GroupedSettingItem(
-                  icon: Icons.people_outline,
-                  title: '교인 관리',
-                  subtitle: '교인 목록, 정보 수정, 상태 관리',
-                  onTap: () => Navigator.pushNamed(context, '/admin/members'),
-                ),
-                _GroupedSettingItem(
-                  icon: Icons.church_outlined,
-                  title: '심방 신청 관리',
-                  subtitle: '신청 목록, 상태 변경, 담당자 지정',
-                  onTap: () => Navigator.pushNamed(context, '/admin/pastoral-care'),
-                ),
-                _GroupedSettingItem(
-                  icon: Icons.announcement_outlined,
-                  title: '공지사항 관리',
-                  subtitle: '공지 작성, 수정, 삭제',
-                  onTap: () => Navigator.pushNamed(context, '/admin/notices'),
-                ),
-              ],
-            ),
-          ],
-
-          SizedBox(height: 16.h),
-
-          // 알림 설정 섹션
-          _buildGroupedSection(
-            title: '알림 설정',
-            items: [
-              _GroupedSettingItem(
-                icon: Icons.notifications_outlined,
-                title: '푸시 알림',
-                subtitle: '모든 푸시 알림 수신',
-                trailing: AppSwitch(
-                  value: _pushNotifications,
-                  onChanged: (value) => setState(() => _pushNotifications = value),
-                ),
-              ),
-              _GroupedSettingItem(
-                icon: Icons.campaign_outlined,
-                title: '교회 공지',
-                subtitle: '새로운 공지사항 알림',
-                trailing: AppSwitch(
-                  value: _churchNotices,
-                  onChanged: (value) => setState(() => _churchNotices = value),
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 16.h),
-
-          // 앱 설정 섹션
-          Consumer<FontSettingsService>(
-            builder: (context, fontSettings, child) {
-              return _buildGroupedSection(
-                title: '앱 설정',
-                items: [
-                  _GroupedSettingItem(
-                    icon: Icons.text_fields_outlined,
-                    title: '글꼴 크기',
-                    subtitle: FontSettingsService.getFontSizeDescription(fontSettings.fontSize),
-                    trailing: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: NewAppColor.neutral200),
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            FontSettingsService.getFontSizeDescription(fontSettings.fontSize),
-                            style: const FigmaTextStyles().caption1.copyWith(
-                              color: NewAppColor.neutral800,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(
-                            Icons.keyboard_arrow_down,
-                            size: 12.sp,
-                            color: NewAppColor.neutral800,
-                          ),
-                        ],
+                // 계정 섹션
+                _buildGroupedSection(
+                  title: '계정',
+                  items: [
+                    _GroupedSettingItem(
+                      icon: Icons.person_outline,
+                      title: '개인정보 수정',
+                      subtitle: '이름, 전화번호, 주소 등',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileEditScreen(),
+                        ),
                       ),
                     ),
-                    onTap: () => _showFontSizeOptions(),
+                    _GroupedSettingItem(
+                      icon: Icons.lock_outline,
+                      title: '비밀번호 변경',
+                      subtitle: '로그인 비밀번호 변경',
+                      onTap: _changePassword,
+                    ),
+                  ],
+                ),
+
+                // 관리자 메뉴 섹션 (관리자만 표시)
+                if (_currentUser?.isAdmin == true) ...[
+                  SizedBox(height: 16.h),
+                  _buildGroupedSection(
+                    title: '관리자 메뉴',
+                    items: [
+                      _GroupedSettingItem(
+                        icon: Icons.people_outline,
+                        title: '교인 관리',
+                        subtitle: '교인 목록, 정보 수정, 상태 관리',
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/admin/members'),
+                      ),
+                      _GroupedSettingItem(
+                        icon: Icons.church_outlined,
+                        title: '심방 신청 관리',
+                        subtitle: '신청 목록, 상태 변경, 담당자 지정',
+                        onTap: () => Navigator.pushNamed(
+                            context, '/admin/pastoral-care'),
+                      ),
+                      _GroupedSettingItem(
+                        icon: Icons.announcement_outlined,
+                        title: '공지사항 관리',
+                        subtitle: '공지 작성, 수정, 삭제',
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/admin/notices'),
+                      ),
+                    ],
                   ),
                 ],
-              );
-            },
-          ),
 
-          SizedBox(height: 16.h),
+                SizedBox(height: 16.h),
 
-          // 교회 정보 섹션
-          _buildGroupedSection(
-            title: '교회 정보',
-            items: [
-              _GroupedSettingItem(
-                icon: Icons.phone_outlined,
-                title: '연락처',
-                onTap: _showChurchContact,
-              ),
-              _GroupedSettingItem(
-                icon: Icons.location_on_outlined,
-                title: '위치',
-                onTap: _showChurchLocation,
-              ),
-            ],
-          ),
+                // 앱 설정 섹션
+                Consumer<FontSettingsService>(
+                  builder: (context, fontSettings, child) {
+                    return _buildGroupedSection(
+                      title: '앱 설정',
+                      items: [
+                        _GroupedSettingItem(
+                          icon: Icons.text_fields_outlined,
+                          title: '글꼴 크기',
+                          subtitle: FontSettingsService.getFontSizeDescription(
+                              fontSettings.fontSize),
+                          trailing: Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 12.w, vertical: 7.h),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: NewAppColor.neutral200),
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  FontSettingsService.getFontSizeDescription(
+                                      fontSettings.fontSize),
+                                  style:
+                                      const FigmaTextStyles().caption1.copyWith(
+                                            color: NewAppColor.neutral800,
+                                          ),
+                                ),
+                                SizedBox(width: 8.w),
+                                Icon(
+                                  Icons.keyboard_arrow_down,
+                                  size: 12.sp,
+                                  color: NewAppColor.neutral800,
+                                ),
+                              ],
+                            ),
+                          ),
+                          onTap: () => _showFontSizeOptions(),
+                        ),
+                      ],
+                    );
+                  },
+                ),
 
-          // 도움말 및 지원
-          _buildGroupedSection(
-            title: '도움말 및 지원',
-            items: [
-              _GroupedSettingItem(
-                icon: Icons.help_outline,
-                title: '도움말',
-                onTap: _showHelp,
-              ),
-              _GroupedSettingItem(
-                icon: Icons.bug_report_outlined,
-                title: '문제 신고',
-                onTap: _reportBug,
-              ),
-              _GroupedSettingItem(
-                icon: Icons.info_outline,
-                title: '앱 정보',
-                onTap: _showAppInfo,
-              ),
-              _GroupedSettingItem(
-                icon: Icons.privacy_tip_outlined,
-                title: '개인정보처리방침',
-                onTap: _showPrivacyPolicy,
-              ),
-              _GroupedSettingItem(
-                icon: Icons.description_outlined,
-                title: '서비스 이용약관',
-                onTap: _showTermsOfService,
-              ),
-            ],
-          ),
+                SizedBox(height: 16.h),
 
-          // 로그아웃 섹션
-          _buildGroupedSection(
-            title: '계정 관리',
-            items: [
-              _GroupedSettingItem(
-                icon: Icons.logout,
-                title: '로그아웃',
-                onTap: _logout,
-              ),
-            ],
-          ),
-          SizedBox(height: 32.h),
+                // 알림 설정 섹션
+                _buildGroupedSection(
+                  title: '알림 설정',
+                  items: [
+                    _GroupedSettingItem(
+                      icon: Icons.notifications_outlined,
+                      title: '푸시 알림',
+                      subtitle: '모든 푸시 알림 수신',
+                      trailing: AppSwitch(
+                        value: _pushNotifications,
+                        onChanged: (value) =>
+                            setState(() => _pushNotifications = value),
+                      ),
+                    ),
+                    _GroupedSettingItem(
+                      icon: Icons.campaign_outlined,
+                      title: '교회 공지',
+                      subtitle: '새로운 공지사항 알림',
+                      trailing: AppSwitch(
+                        value: _churchNotices,
+                        onChanged: (value) =>
+                            setState(() => _churchNotices = value),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 16.h),
+
+                // 도움말 및 지원
+                _buildGroupedSection(
+                  title: '도움말 및 지원',
+                  items: [
+                    _GroupedSettingItem(
+                      icon: Icons.bug_report_outlined,
+                      title: '문제 신고',
+                      onTap: _reportBug,
+                    ),
+                    _GroupedSettingItem(
+                      icon: Icons.privacy_tip_outlined,
+                      title: '개인정보처리방침',
+                      onTap: _showPrivacyPolicy,
+                    ),
+                    _GroupedSettingItem(
+                      icon: Icons.description_outlined,
+                      title: '서비스 이용약관',
+                      onTap: _showTermsOfService,
+                    ),
+                  ],
+                ),
+
+                // 로그아웃 섹션
+                _buildGroupedSection(
+                  title: '계정 관리',
+                  items: [
+                    _GroupedSettingItem(
+                      icon: Icons.logout,
+                      title: '로그아웃',
+                      onTap: _logout,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 32.h),
               ],
             ),
           ),
@@ -288,7 +274,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
 
   // 그룹화된 섹션 위젯
   Widget _buildGroupedSection({
@@ -304,8 +289,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Text(
             title,
             style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
+                  color: NewAppColor.neutral900,
+                ),
           ),
         ),
         // 그룹화된 컨테이너
@@ -351,12 +336,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: EdgeInsets.symmetric(horizontal: 15.5.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: !isLast ? Border(
-            bottom: BorderSide(
-              width: 1,
-              color: NewAppColor.neutral200,
-            ),
-          ) : null,
+          border: !isLast
+              ? Border(
+                  bottom: BorderSide(
+                    width: 1,
+                    color: NewAppColor.neutral200,
+                  ),
+                )
+              : null,
         ),
         child: Row(
           children: [
@@ -575,9 +562,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         } else {
           AppToast.show(
             context,
-            response.message.isNotEmpty
-              ? response.message
-              : '비밀번호 변경에 실패했습니다.',
+            response.message.isNotEmpty ? response.message : '비밀번호 변경에 실패했습니다.',
             type: ToastType.error,
           );
         }
@@ -623,13 +608,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                   child: Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                     margin: EdgeInsets.only(bottom: 8.h),
                     decoration: BoxDecoration(
-                      color: isSelected ? NewAppColor.primary100 : Colors.transparent,
+                      color: isSelected
+                          ? NewAppColor.primary100
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
-                        color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral200,
+                        color: isSelected
+                            ? NewAppColor.primary600
+                            : NewAppColor.neutral200,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -643,16 +633,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 option,
                                 style: TextStyle(
                                   fontSize: 16.sp,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                                  color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral900,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  color: isSelected
+                                      ? NewAppColor.primary600
+                                      : NewAppColor.neutral900,
                                 ),
                               ),
                               SizedBox(height: 4.h),
                               Text(
-                                FontSettingsService.getFontSizeDescription(option),
+                                FontSettingsService.getFontSizeDescription(
+                                    option),
                                 style: TextStyle(
                                   fontSize: 14.sp,
-                                  color: isSelected ? NewAppColor.primary500 : NewAppColor.neutral600,
+                                  color: isSelected
+                                      ? NewAppColor.primary500
+                                      : NewAppColor.neutral600,
                                 ),
                               ),
                             ],
@@ -682,7 +679,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
 
   void _showChurchContact() async {
     print('🏛️ SETTINGS: 교회 연락처 정보 조회 시작');
@@ -718,15 +714,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (church.phone != null && church.phone!.isNotEmpty)
-                    Text('전화: ${church.phone}', style: TextStyle(fontSize: 14.sp)),
+                    Text('전화: ${church.phone}',
+                        style: TextStyle(fontSize: 14.sp)),
                   if (church.phone != null && church.phone!.isNotEmpty)
                     SizedBox(height: 8.h),
                   if (church.email != null && church.email!.isNotEmpty)
-                    Text('이메일: ${church.email}', style: TextStyle(fontSize: 14.sp)),
+                    Text('이메일: ${church.email}',
+                        style: TextStyle(fontSize: 14.sp)),
                   if (church.email != null && church.email!.isNotEmpty)
                     SizedBox(height: 8.h),
-                  if (church.pastorName != null && church.pastorName!.isNotEmpty)
-                    Text('담임목사: ${church.pastorName}', style: TextStyle(fontSize: 14.sp)),
+                  if (church.pastorName != null &&
+                      church.pastorName!.isNotEmpty)
+                    Text('담임목사: ${church.pastorName}',
+                        style: TextStyle(fontSize: 14.sp)),
                 ],
               ),
               actions: [
@@ -838,59 +838,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _showHelp() {
-    showDialog(
-      context: context,
-      builder: (context) => AppDialog(
-        title: '도움말',
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppCard(
-                child: ExpansionTile(
-                  title: Text('로그인이 안돼요'),
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(16.w),
-                      child: Text(
-                        '이메일과 비밀번호를 다시 한번 확인해주세요. 비밀번호를 잊으셨다면 "비밀번호 찾기"를 이용해주세요.',
-                        style: TextStyle(fontSize: 14.sp),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 8.h),
-              AppCard(
-                child: ExpansionTile(
-                  title: Text('알림을 받지 못해요'),
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(16.w),
-                      child: Text(
-                        '설정 > 알림 설정에서 원하는 알림을 켜주세요. 또한 기기 설정에서 앱 알림이 허용되어 있는지 확인해주세요.',
-                        style: TextStyle(fontSize: 14.sp),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: Text('닫기'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _reportBug() {
+    final issueTypeController = TextEditingController();
+    final descriptionController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (context) => AppDialog(
@@ -899,65 +850,135 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             AppInput(
-              placeholder: '문제 유형',
+              controller: issueTypeController,
+              placeholder: '문제 유형 (예: 로그인 오류, 화면 표시 문제)',
             ),
             SizedBox(height: 16.h),
             AppInput(
-              placeholder: '문제 설명',
+              controller: descriptionController,
+              placeholder: '문제 설명을 자세히 입력해주세요',
               maxLines: 3,
             ),
           ],
         ),
         actions: [
           AppButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              issueTypeController.dispose();
+              descriptionController.dispose();
+              Navigator.pop(context);
+            },
             variant: ButtonVariant.ghost,
-            child: Text('취소'),
+            child: const Text('취소'),
           ),
           AppButton(
-            onPressed: () {
-              Navigator.pop(context);
-              AppToast.show(
-                context,
-                '문제가 신고되었습니다.',
-                type: ToastType.success,
-              );
-            },
-            child: Text('전송'),
+            onPressed: () => _handleBugReport(
+              issueTypeController.text,
+              descriptionController.text,
+              issueTypeController,
+              descriptionController,
+            ),
+            child: const Text('전송'),
           ),
         ],
       ),
     );
   }
 
-  void _showAppInfo() {
+  Future<void> _handleBugReport(
+    String issueType,
+    String description,
+    TextEditingController issueTypeController,
+    TextEditingController descriptionController,
+  ) async {
+    // 입력값 검증
+    if (issueType.trim().isEmpty) {
+      AppToast.show(
+        context,
+        '문제 유형을 입력해주세요.',
+        type: ToastType.error,
+      );
+      return;
+    }
+
+    if (description.trim().isEmpty) {
+      AppToast.show(
+        context,
+        '문제 설명을 입력해주세요.',
+        type: ToastType.error,
+      );
+      return;
+    }
+
+    // 사용자 정보 확인
+    if (_currentUser == null) {
+      AppToast.show(
+        context,
+        '사용자 정보를 찾을 수 없습니다.',
+        type: ToastType.error,
+      );
+      return;
+    }
+
+    // 다이얼로그 닫기
+    Navigator.pop(context);
+
+    // 로딩 표시
     showDialog(
       context: context,
-      builder: (context) => AppDialog(
-        title: '앱 정보',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('스마트 교회요람',
-                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8.h),
-            Text('버전 1.0.0', style: TextStyle(fontSize: 14.sp)),
-            SizedBox(height: 16.h),
-            Text('© 2024 스마트 교회요람', style: TextStyle(fontSize: 12.sp)),
-            SizedBox(height: 8.h),
-            Text('교회 생활을 더욱 편리하게 만들어주는 앱입니다.',
-                style: TextStyle(fontSize: 14.sp)),
-          ],
-        ),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: Text('닫기'),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
       ),
     );
+
+    try {
+      // 문제 신고 제출
+      final response = await _bugReportService.submitBugReport(
+        userId: _currentUser!.id,
+        churchId: _currentUser!.churchId,
+        issueType: issueType.trim(),
+        description: description.trim(),
+      );
+
+      // 컨트롤러 정리
+      issueTypeController.dispose();
+      descriptionController.dispose();
+
+      if (mounted) {
+        // 로딩 다이얼로그 닫기
+        Navigator.pop(context);
+
+        if (response.success) {
+          AppToast.show(
+            context,
+            '문제가 성공적으로 신고되었습니다.\n빠른 시일 내에 확인하겠습니다.',
+            type: ToastType.success,
+          );
+        } else {
+          AppToast.show(
+            context,
+            response.message.isNotEmpty ? response.message : '문제 신고에 실패했습니다.',
+            type: ToastType.error,
+          );
+        }
+      }
+    } catch (e) {
+      // 컨트롤러 정리
+      issueTypeController.dispose();
+      descriptionController.dispose();
+
+      if (mounted) {
+        // 로딩 다이얼로그 닫기
+        Navigator.pop(context);
+
+        AppToast.show(
+          context,
+          '문제 신고 중 오류가 발생했습니다: $e',
+          type: ToastType.error,
+        );
+      }
+    }
   }
 
   void _showPrivacyPolicy() {
@@ -1046,5 +1067,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
 }

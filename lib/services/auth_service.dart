@@ -216,19 +216,37 @@ class AuthService {
         );
       }
 
-      // DB에서 최신 사용자 정보 가져오기
+      // DB에서 최신 사용자 정보 가져오기 (members 테이블 조인)
       if (_currentUser != null) {
         print('👤 AUTH_SERVICE: DB에서 최신 사용자 정보 조회 - ID: ${_currentUser!.id}');
 
+        // users 테이블과 members 테이블 LEFT JOIN
         final response = await _supabaseService.client
             .from('users')
-            .select('*')
+            .select('*, members!left(phone, address, name)')
             .eq('id', _currentUser!.id)
             .single();
 
         print('👤 AUTH_SERVICE: DB 응답 데이터: $response');
 
-        final updatedUser = app_user.User.fromJson(response);
+        // members 테이블의 phone, address, name 정보를 users 데이터에 병합
+        final userData = Map<String, dynamic>.from(response);
+        if (userData['members'] != null) {
+          final memberData = userData['members'];
+          if (memberData is List && memberData.isNotEmpty) {
+            final member = memberData.first;
+            userData['phone'] = member['phone'] ?? userData['phone'];
+            userData['address'] = member['address'] ?? userData['address'];
+            userData['full_name'] = member['name'] ?? userData['full_name'];
+          } else if (memberData is Map) {
+            userData['phone'] = memberData['phone'] ?? userData['phone'];
+            userData['address'] = memberData['address'] ?? userData['address'];
+            userData['full_name'] = memberData['name'] ?? userData['full_name'];
+          }
+        }
+        userData.remove('members'); // members 필드 제거
+
+        final updatedUser = app_user.User.fromJson(userData);
         _currentUser = updatedUser;
         await _saveUser(updatedUser);
 
@@ -257,7 +275,7 @@ class AuthService {
     }
   }
 
-  // 사용자 정보 업데이트 (Custom users 테이블 사용)
+  // 사용자 정보 업데이트 (members 테이블 업데이트)
   Future<ApiResponse<app_user.User>> updateUserProfile({
     String? fullName,
     String? phone,
@@ -272,29 +290,29 @@ class AuthService {
         );
       }
 
-      final updateData = <String, dynamic>{};
-      if (fullName != null) updateData['full_name'] = fullName;
-      if (phone != null) updateData['phone'] = phone;
-      if (address != null) updateData['address'] = address;
-      updateData['updated_at'] = DateTime.now().toIso8601String();
+      print('📝 AUTH_SERVICE: 사용자 정보 업데이트 시작 - user_id: ${_currentUser!.id}');
 
-      final response = await _supabaseService.client
-          .from('users')
-          .update(updateData)
-          .eq('id', _currentUser!.id)
-          .select()
-          .single();
+      // members 테이블 업데이트 (user_id로 조회)
+      final memberUpdateData = <String, dynamic>{};
+      if (fullName != null) memberUpdateData['name'] = fullName;
+      if (phone != null) memberUpdateData['phone'] = phone;
+      if (address != null) memberUpdateData['address'] = address;
 
-      final updatedUser = app_user.User.fromJson(response);
-      _currentUser = updatedUser;
-      await _saveUser(updatedUser);
+      if (memberUpdateData.isNotEmpty) {
+        print('📝 AUTH_SERVICE: members 테이블 업데이트 데이터: $memberUpdateData');
 
-      return ApiResponse<app_user.User>(
-        success: true,
-        message: '사용자 정보가 성공적으로 업데이트되었습니다.',
-        data: updatedUser,
-      );
+        await _supabaseService.client
+            .from('members')
+            .update(memberUpdateData)
+            .eq('user_id', _currentUser!.id);
+
+        print('✅ AUTH_SERVICE: members 테이블 업데이트 완료');
+      }
+
+      // 업데이트된 정보 다시 조회
+      return await getCurrentUser(forceRefresh: true);
     } catch (e) {
+      print('❌ AUTH_SERVICE: 사용자 정보 업데이트 오류: $e');
       return ApiResponse<app_user.User>(
         success: false,
         message: '사용자 정보 업데이트 중 오류가 발생했습니다: ${e.toString()}',
