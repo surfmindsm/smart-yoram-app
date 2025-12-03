@@ -16,6 +16,7 @@ class ChatRoom {
   final String? otherUserPhotoUrl; // 상대방 프로필 사진
   final int? otherUserId; // 상대방 ID
   final int unreadCount; // 안 읽은 메시지 개수
+  final int? authorId; // 게시글 작성자 ID (판매자/구인자)
 
   ChatRoom({
     required this.id,
@@ -30,6 +31,7 @@ class ChatRoom {
     this.otherUserPhotoUrl,
     this.otherUserId,
     this.unreadCount = 0,
+    this.authorId,
   });
 
   factory ChatRoom.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class ChatRoom {
       otherUserPhotoUrl: json['other_user_photo_url'] as String?,
       otherUserId: json['other_user_id'] as int?,
       unreadCount: json['unread_count'] as int? ?? 0,
+      authorId: json['author_id'] as int?,
     );
   }
 

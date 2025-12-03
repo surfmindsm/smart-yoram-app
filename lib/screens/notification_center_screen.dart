@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../models/notification.dart';
 import '../models/push_notification.dart';
 import '../models/api_response.dart';
@@ -657,43 +658,44 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       itemCount: notifications.length,
       itemBuilder: (context, index) {
         final notification = notifications[index];
-        return Dismissible(
+        return Slidable(
           key: Key('notification_${notification.id}'),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            padding: EdgeInsets.only(right: 20.w),
-            color: NewAppColor.danger600,
-            child: Icon(
-              Icons.delete,
-              color: Colors.white,
-              size: 24.w,
-            ),
-          ),
-          confirmDismiss: (direction) async {
-            // 삭제 확인 다이얼로그
-            return await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('알림 삭제'),
-                content: const Text('이 알림을 삭제하시겠습니까?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('취소'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('삭제'),
-                  ),
-                ],
+          endActionPane: ActionPane(
+            motion: const DrawerMotion(),
+            extentRatio: 0.3,
+            children: [
+              SlidableAction(
+                onPressed: (context) async {
+                  // 삭제 확인 다이얼로그
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('알림 삭제'),
+                      content: const Text('이 알림을 삭제하시겠습니까?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('취소'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('삭제'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed == true) {
+                    await _deleteNotification(notification);
+                  }
+                },
+                backgroundColor: NewAppColor.danger600,
+                foregroundColor: Colors.white,
+                label: '나가기',
+                borderRadius: BorderRadius.zero,
               ),
-            );
-          },
-          onDismissed: (direction) async {
-            // 서버에서 삭제
-            await _deleteNotification(notification);
-          },
+            ],
+          ),
           child: NotificationItem(
             notification: notification,
             onTap: () async {

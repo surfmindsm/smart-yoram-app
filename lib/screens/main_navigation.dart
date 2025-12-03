@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
@@ -7,9 +8,7 @@ import 'package:smart_yoram_app/services/chat_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, RealtimeChannel, PostgresChangeEvent;
 import 'home_screen.dart';
-import 'bulletin_screen.dart';
-import 'notices_screen.dart';
-import 'settings_screen.dart';
+import 'bulletin_notices_integrated_screen.dart';
 import 'members_screen.dart';
 import 'community_screen.dart';
 import 'chat/chat_list_screen.dart';
@@ -98,8 +97,7 @@ class _MainNavigationState extends State<MainNavigation> {
     return [
       const HomeScreen(),
       const MembersScreen(),
-      const BulletinScreen(),
-      const NoticesScreen(showAppBar: false), // main navigation에서는 앱바 없음
+      const BulletinNoticesIntegratedScreen(), // 주보+교회소식 통합
       const ChatListScreen(), // 채팅 목록
       // const SermonsScreen(), // 명설교 화면 추가 (주석처리)
       if (_currentUser!.hasCommunityAccess) const CommunityScreen(),
@@ -146,7 +144,7 @@ class _MainNavigationState extends State<MainNavigation> {
     if (_currentUser == null) {
       return [
         _NavItem(
-          icon: Icons.home_outlined,
+          icon: LucideIcons.house,
           label: '홈',
           isActive: true,
           onTap: () {},
@@ -158,7 +156,7 @@ class _MainNavigationState extends State<MainNavigation> {
     if (_currentUser!.isCommunityAdmin) {
       return [
         _NavItem(
-          icon: Icons.forum_outlined,
+          icon: LucideIcons.usersRound,
           label: '커뮤니티',
           isActive: _currentIndex == 0,
           onTap: () => _onTap(0),
@@ -169,35 +167,29 @@ class _MainNavigationState extends State<MainNavigation> {
     // 일반 사용자 및 교회 관리자
     final items = <Widget>[
       _NavItem(
-        icon: Icons.home_outlined,
+        icon: LucideIcons.house,
         label: '홈',
         isActive: _currentIndex == 0,
         onTap: () => _onTap(0),
       ),
       _NavItem(
-        icon: Icons.group_outlined,
+        icon: LucideIcons.users,
         label: '주소록',
         isActive: _currentIndex == 1,
         onTap: () => _onTap(1),
       ),
       _NavItem(
-        icon: Icons.menu_book_outlined,
-        label: '주보',
+        icon: LucideIcons.newspaper,
+        label: '교회소식',
         isActive: _currentIndex == 2,
         onTap: () => _onTap(2),
       ),
       _NavItem(
-        icon: Icons.campaign_outlined,
-        label: '교회소식',
-        isActive: _currentIndex == 3,
-        onTap: () => _onTap(3),
-      ),
-      _NavItem(
-        icon: Icons.chat_bubble_outline,
+        icon: LucideIcons.messageCircle,
         label: '채팅',
-        isActive: _currentIndex == 4,
+        isActive: _currentIndex == 3,
         badgeCount: _unreadChatCount,
-        onTap: () => _onTap(4),
+        onTap: () => _onTap(3),
       ),
       // _NavItem(
       //   icon: Icons.video_library_outlined,
@@ -211,10 +203,10 @@ class _MainNavigationState extends State<MainNavigation> {
     if (_currentUser!.hasCommunityAccess) {
       items.add(
         _NavItem(
-          icon: Icons.forum_outlined,
+          icon: LucideIcons.usersRound,
           label: '커뮤니티',
-          isActive: _currentIndex == 5, // 채팅 추가로 인덱스 변경 4 -> 5
-          onTap: () => _onTap(5),
+          isActive: _currentIndex == 4, // 주보+교회소식 통합으로 인덱스 변경
+          onTap: () => _onTap(4),
         ),
       );
     }
@@ -227,7 +219,7 @@ class _MainNavigationState extends State<MainNavigation> {
     setState(() => _currentIndex = index);
 
     // 채팅 탭으로 이동하면 잠시 후 배지 새로고침 (읽음 처리 반영)
-    if (index == 4 && _currentUser != null && !_currentUser!.isCommunityAdmin) {
+    if (index == 3 && _currentUser != null && !_currentUser!.isCommunityAdmin) {
       Future.delayed(const Duration(milliseconds: 500), () {
         _loadUnreadCount();
       });

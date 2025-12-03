@@ -14,7 +14,12 @@ import '../services/bulletin_service.dart';
 import 'bulletin_fullscreen_viewer.dart';
 
 class BulletinScreen extends StatefulWidget {
-  const BulletinScreen({super.key});
+  final bool showTopPadding;
+
+  const BulletinScreen({
+    super.key,
+    this.showTopPadding = true, // 기본값은 true (독립 화면일 때)
+  });
 
   @override
   State<BulletinScreen> createState() => _BulletinScreenState();
@@ -32,9 +37,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
   int selectedYear = 0; // 전체로 초기화
   int selectedMonth = 0; // 전체로 초기화
 
-  // 드롭다운 열림 상태
-  bool isYearDropdownOpen = false;
-  bool isMonthDropdownOpen = false;
+  // PopupMenuButton을 위한 GlobalKey는 필요없음
 
   // 연도 목록 (과거 5년 + 현재년도, 미래 없음)
   late List<int> availableYears;
@@ -218,149 +221,99 @@ class _BulletinScreenState extends State<BulletinScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
-      body: GestureDetector(
-        onTap: () {
-          // 드롭다운이 열려있으면 닫기
-          if (isYearDropdownOpen || isMonthDropdownOpen) {
-            setState(() {
-              isYearDropdownOpen = false;
-              isMonthDropdownOpen = false;
-            });
-          }
-        },
-        child: Stack(
+      body: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            // 메인 콘텐츠
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+            // 상단 패딩 - showTopPadding이 true일 때만 적용
+            if (widget.showTopPadding)
+              SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
 
-                // 검색 및 필터 헤더
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Row(
-                    children: [
-                      // 검색 텍스트
-                      Text(
-                        '주보를 검색해 보세요',
-                        style: const FigmaTextStyles().body1.copyWith(
-                              color: NewAppColor.neutral900,
-                            ),
-                      ),
-                      const Spacer(),
-                      // 연도 드롭다운 (버튼만)
-                      _buildDropdownButton(
-                        value: selectedYear == 0 ? '전체' : '${selectedYear}년',
-                        width: 80.w,
-                        isOpen: isYearDropdownOpen,
-                        onTap: () => _toggleYearDropdown(),
-                      ),
-                      SizedBox(width: 4.w),
-                      // 월 드롭다운 (버튼만)
-                      _buildDropdownButton(
-                        value: selectedMonth == 0 ? '전체' : monthNames[selectedMonth],
-                        width: 80.w,
-                        isOpen: isMonthDropdownOpen,
-                        onTap: () => _toggleMonthDropdown(),
-                      ),
-                    ],
+            // 검색 및 필터 헤더
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Row(
+                children: [
+                  // 검색 텍스트
+                  Text(
+                    '주보를 검색해 보세요',
+                    style: const FigmaTextStyles().body1.copyWith(
+                          color: NewAppColor.neutral900,
+                        ),
                   ),
-                ),
-                SizedBox(height: 24.h),
+                  const Spacer(),
+                  // 연도 드롭다운
+                  _buildYearDropdown(),
+                  SizedBox(width: 4.w),
+                  // 월 드롭다운
+                  _buildMonthDropdown(),
+                ],
+              ),
+            ),
+            SizedBox(height: 24.h),
 
-                // 주보 목록
-                Expanded(
-                  child: isLoading
+            // 주보 목록
+            Expanded(
+              child: isLoading
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(NewAppColor.primary500),
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            '주보를 불러오는 중...',
+                            style: const FigmaTextStyles().body1.copyWith(
+                                  color: NewAppColor.neutral600,
+                                ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : filteredBulletins.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(NewAppColor.primary500),
+                              Icon(
+                                Icons.description,
+                                size: 64.sp,
+                                color: NewAppColor.neutral400,
                               ),
                               SizedBox(height: 16.h),
                               Text(
-                                '주보를 불러오는 중...',
-                                style: const FigmaTextStyles().body1.copyWith(
+                                '주보가 없습니다',
+                                style: const FigmaTextStyles().title3.copyWith(
+                                      color: NewAppColor.neutral600,
+                                    ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                '아직 등록된 주보가 없습니다',
+                                style: const FigmaTextStyles().caption1.copyWith(
                                       color: NewAppColor.neutral600,
                                     ),
                               ),
                             ],
                           ),
                         )
-                      : filteredBulletins.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.description,
-                                    size: 64.sp,
-                                    color: NewAppColor.neutral400,
-                                  ),
-                                  SizedBox(height: 16.h),
-                                  Text(
-                                    '주보가 없습니다',
-                                    style: const FigmaTextStyles().title3.copyWith(
-                                          color: NewAppColor.neutral600,
-                                        ),
-                                  ),
-                                  SizedBox(height: 8.h),
-                                  Text(
-                                    '아직 등록된 주보가 없습니다',
-                                    style: const FigmaTextStyles().caption1.copyWith(
-                                          color: NewAppColor.neutral600,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: _loadBulletins,
-                              color: NewAppColor.primary500,
-                              child: ListView.builder(
-                                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                                itemCount: filteredBulletins.length,
-                                itemBuilder: (context, index) {
-                                  final bulletin = filteredBulletins[index];
-                                  return _buildBulletinCard(bulletin);
-                                },
-                              ),
-                            ),
-                ),
-              ],
+                      : RefreshIndicator(
+                          onRefresh: _loadBulletins,
+                          color: NewAppColor.primary500,
+                          child: ListView.builder(
+                            padding: EdgeInsets.symmetric(horizontal: 20.w),
+                            itemCount: filteredBulletins.length,
+                            itemBuilder: (context, index) {
+                              final bulletin = filteredBulletins[index];
+                              return _buildBulletinCard(bulletin);
+                            },
+                          ),
+                        ),
             ),
-
-            // 드롭다운 오버레이들 (최상위 레이어)
-            if (isYearDropdownOpen)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 10.h + 32.h,
-                right: 20.w + 80.w + 4.w,
-                child: _buildDropdownList(
-                  width: 80.w,
-                  items: availableYears,
-                  selectedValue: selectedYear,
-                  onSelect: (year) => _selectYear(year),
-                  isYear: true,
-                ),
-              ),
-            if (isMonthDropdownOpen)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 10.h + 32.h,
-                right: 20.w,
-                child: _buildDropdownList(
-                  width: 80.w,
-                  items: availableMonths,
-                  selectedValue: selectedMonth,
-                  onSelect: (month) => _selectMonth(month),
-                  isYear: false,
-                ),
-              ),
           ],
         ),
-      ),
     );
   }
 
@@ -703,27 +656,48 @@ class _BulletinScreenState extends State<BulletinScreen> {
     }
   }
 
-  // 드롭다운 버튼만 (오버레이 없음)
-  Widget _buildDropdownButton({
-    required String value,
-    required double width,
-    required bool isOpen,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
+  // 연도 드롭다운
+  Widget _buildYearDropdown() {
+    return PopupMenuButton<int>(
+      offset: Offset(0, 8.h),
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      onSelected: (year) {
+        setState(() {
+          selectedYear = year;
+        });
+        _filterBulletins();
+      },
+      itemBuilder: (context) {
+        return availableYears.map((year) {
+          final isSelected = year == selectedYear;
+          return PopupMenuItem<int>(
+            value: year,
+            height: 32.h,
+            child: Container(
+              width: 64.w,
+              child: Text(
+                year == 0 ? '전체' : '$year년',
+                style: const FigmaTextStyles().caption1.copyWith(
+                  color: isSelected
+                      ? NewAppColor.primary600
+                      : NewAppColor.neutral800,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+          );
+        }).toList();
+      },
       child: Container(
-        width: width,
+        width: 80.w,
         height: 32.h,
         padding: EdgeInsets.symmetric(horizontal: 10.w),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: isOpen
-            ? BorderRadius.only(
-                topLeft: Radius.circular(8.r),
-                topRight: Radius.circular(8.r),
-              )
-            : BorderRadius.circular(8.r),
+          borderRadius: BorderRadius.circular(8.r),
           border: Border.all(
             color: NewAppColor.neutral100,
             width: 1,
@@ -733,13 +707,13 @@ class _BulletinScreenState extends State<BulletinScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              value,
+              selectedYear == 0 ? '전체' : '$selectedYear년',
               style: const FigmaTextStyles().caption1.copyWith(
-                    color: NewAppColor.neutral800,
-                  ),
+                color: NewAppColor.neutral800,
+              ),
             ),
             Icon(
-              isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              Icons.keyboard_arrow_down,
               size: 12.sp,
               color: NewAppColor.neutral800,
             ),
@@ -749,111 +723,70 @@ class _BulletinScreenState extends State<BulletinScreen> {
     );
   }
 
-  // 드롭다운 리스트만 (최상위 레이어용)
-  Widget _buildDropdownList({
-    required double width,
-    required List<int> items,
-    required int selectedValue,
-    required Function(int) onSelect,
-    required bool isYear,
-  }) {
-    return Material(
-      elevation: 8,
-      borderRadius: BorderRadius.only(
-        bottomLeft: Radius.circular(8.r),
-        bottomRight: Radius.circular(8.r),
+  // 월 드롭다운
+  Widget _buildMonthDropdown() {
+    return PopupMenuButton<int>(
+      offset: Offset(0, 8.h),
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.r),
       ),
-      child: Container(
-        width: width,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(8.r),
-            bottomRight: Radius.circular(8.r),
-          ),
-          border: const Border(
-            left: BorderSide(color: NewAppColor.neutral100, width: 1),
-            right: BorderSide(color: NewAppColor.neutral100, width: 1),
-            bottom: BorderSide(color: NewAppColor.neutral100, width: 1),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: items.map((item) {
-            final isSelected = isYear ? item == selectedValue : item == selectedValue;
-            final isLast = item == items.last;
-
-            return GestureDetector(
-              onTap: () => onSelect(item),
-              child: Container(
-                width: double.infinity,
-                height: 32.h,
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                decoration: BoxDecoration(
-                  color: isSelected ? NewAppColor.primary500 : Colors.white,
-                  borderRadius: isLast
-                    ? BorderRadius.only(
-                        bottomLeft: Radius.circular(8.r),
-                        bottomRight: Radius.circular(8.r),
-                      )
-                    : BorderRadius.zero,
-                  border: Border(
-                    bottom: isLast ? BorderSide.none : const BorderSide(color: NewAppColor.neutral100, width: 1),
-                  ),
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    isYear
-                      ? (item == 0 ? '전체' : '$item년')
-                      : (item < monthNames.length ? monthNames[item] : '오류($item)'),
-                    style: const FigmaTextStyles().caption1.copyWith(
-                      color: isSelected ? Colors.white : NewAppColor.neutral800,
-                    ),
-                  ),
+      onSelected: (month) {
+        setState(() {
+          selectedMonth = month;
+        });
+        _filterBulletins();
+      },
+      itemBuilder: (context) {
+        return availableMonths.map((month) {
+          final isSelected = month == selectedMonth;
+          return PopupMenuItem<int>(
+            value: month,
+            height: 32.h,
+            child: Container(
+              width: 64.w,
+              child: Text(
+                monthNames[month],
+                style: const FigmaTextStyles().caption1.copyWith(
+                  color: isSelected
+                      ? NewAppColor.primary600
+                      : NewAppColor.neutral800,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
-            );
-          }).toList(),
+            ),
+          );
+        }).toList();
+      },
+      child: Container(
+        width: 80.w,
+        height: 32.h,
+        padding: EdgeInsets.symmetric(horizontal: 10.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8.r),
+          border: Border.all(
+            color: NewAppColor.neutral100,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              monthNames[selectedMonth],
+              style: const FigmaTextStyles().caption1.copyWith(
+                color: NewAppColor.neutral800,
+              ),
+            ),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 12.sp,
+              color: NewAppColor.neutral800,
+            ),
+          ],
         ),
       ),
     );
-  }
-
-  // 드롭다운 토글 메서드들
-  void _toggleYearDropdown() {
-    setState(() {
-      isYearDropdownOpen = !isYearDropdownOpen;
-      if (isYearDropdownOpen) {
-        isMonthDropdownOpen = false; // 다른 드롭다운 닫기
-      }
-    });
-    // print('Year dropdown open: $isYearDropdownOpen'); // 디버깅
-  }
-
-  void _toggleMonthDropdown() {
-    setState(() {
-      isMonthDropdownOpen = !isMonthDropdownOpen;
-      if (isMonthDropdownOpen) {
-        isYearDropdownOpen = false; // 다른 드롭다운 닫기
-      }
-    });
-  }
-
-  // 선택 메서드들
-  void _selectYear(int year) {
-    setState(() {
-      selectedYear = year;
-      isYearDropdownOpen = false;
-    });
-    _filterBulletins();
-  }
-
-  void _selectMonth(int month) {
-    setState(() {
-      selectedMonth = month;
-      isMonthDropdownOpen = false;
-    });
-    _filterBulletins();
   }
 }

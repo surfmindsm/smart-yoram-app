@@ -72,4 +72,9 @@ class NewAppColor {
   static const Color danger800 = Color(0xffba2532);
   static const Color danger900 = Color(0xff981b25);
   static const Color danger1000 = Color(0xff86131d);
+
+  //tranparent Color
+  static const Color transparent = Color.fromARGB(0, 0, 0, 0);
+  static const Color white = Color(0xffffffff);
+  static const Color black = Color.fromARGB(255, 0, 0, 0);
 }

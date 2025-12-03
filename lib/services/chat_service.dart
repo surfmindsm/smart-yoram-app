@@ -236,6 +236,7 @@ class ChatService {
       otherUserPhotoUrl: otherUserPhotoUrl,
       otherUserId: otherParticipant?['user_id'] as int?,
       unreadCount: myParticipant['unread_count'] as int? ?? 0,
+      authorId: null, // 배치 조회에서 설정됨
     );
   }
 
@@ -375,13 +376,21 @@ class ChatService {
 
       print('📋 CHAT_SERVICE: 채팅방 ${(rooms as List).length}개 조회 완료');
 
+      // 게시글 작성자 ID를 배치로 조회
+      final authorIdMap = await _batchFetchAuthorIds(rooms as List);
+
       // ChatRoom 객체 리스트 생성
       final chatRooms = <ChatRoom>[];
       for (var roomData in rooms) {
         final chatRoom = await _buildChatRoomWithDetails(roomData, myUserId);
 
-        // 안 읽은 메시지 개수 업데이트
         final roomId = chatRoom.id;
+        final postKey = '${chatRoom.postTable}_${chatRoom.postId}';
+        final authorId = authorIdMap[postKey];
+
+        print('🔍 CHAT_SERVICE: 채팅방 $roomId - postTable: ${chatRoom.postTable}, postId: ${chatRoom.postId}, authorId: $authorId');
+
+        // 안 읽은 메시지 개수 업데이트 + authorId 추가
         final updatedChatRoom = ChatRoom(
           id: chatRoom.id,
           postId: chatRoom.postId,
@@ -395,6 +404,7 @@ class ChatService {
           otherUserPhotoUrl: chatRoom.otherUserPhotoUrl,
           otherUserId: chatRoom.otherUserId,
           unreadCount: unreadMap[roomId] ?? 0,
+          authorId: authorId,
         );
 
         chatRooms.add(updatedChatRoom);
@@ -405,6 +415,59 @@ class ChatService {
       print('❌ CHAT_SERVICE: 채팅방 목록 조회 실패 - $e');
       return [];
     }
+  }
+
+  /// 게시글 작성자 ID를 배치로 조회 (N+1 문제 방지)
+  Future<Map<String, int>> _batchFetchAuthorIds(List rooms) async {
+    final authorIdMap = <String, int>{};
+
+    // postTable별로 그룹화
+    final postsByTable = <String, List<int>>{};
+    for (var roomData in rooms) {
+      final postTable = roomData['post_table'] as String?;
+      final postId = roomData['post_id'] as int?;
+
+      if (postTable != null && postId != null) {
+        if (!postsByTable.containsKey(postTable)) {
+          postsByTable[postTable] = [];
+        }
+        postsByTable[postTable]!.add(postId);
+      }
+    }
+
+    print('🔍 CHAT_SERVICE: 배치 조회 시작 - ${postsByTable.keys.length}개 테이블');
+
+    // 각 테이블별로 배치 조회
+    for (var entry in postsByTable.entries) {
+      final tableName = entry.key;
+      final postIds = entry.value;
+
+      try {
+        print('🔍 CHAT_SERVICE: $tableName 테이블에서 ${postIds.length}개 게시글 작성자 조회');
+
+        final posts = await _supabaseService.client
+            .from(tableName)
+            .select('id, author_id')
+            .inFilter('id', postIds);
+
+        print('✅ CHAT_SERVICE: $tableName 테이블에서 ${(posts as List).length}개 작성자 조회 완료');
+
+        for (var post in posts) {
+          final postId = post['id'] as int;
+          final authorId = post['author_id'] as int?;
+          if (authorId != null) {
+            final key = '${tableName}_$postId';
+            authorIdMap[key] = authorId;
+            print('   - postId: $postId, authorId: $authorId');
+          }
+        }
+      } catch (e) {
+        print('⚠️ CHAT_SERVICE: $tableName 테이블 조회 실패 - $e');
+      }
+    }
+
+    print('✅ CHAT_SERVICE: 총 ${authorIdMap.length}개 작성자 ID 조회 완료');
+    return authorIdMap;
   }
 
   // ==========================================================================

@@ -198,9 +198,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: NewAppColor.neutral100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.neutral100,
         elevation: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
@@ -309,7 +309,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                             return MessageBubble(
                               message: message,
                               isMe: isMe,
-                              otherUserPhotoUrl: widget.chatRoom.otherUserPhotoUrl,
+                              otherUserPhotoUrl:
+                                  widget.chatRoom.otherUserPhotoUrl,
                               showProfile: showProfile,
                             );
                           },
@@ -350,10 +351,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   Widget _buildMessageInput() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NewAppColor.neutral100,
         border: Border(
           top: BorderSide(
-            color: NewAppColor.neutral200,
+            color: NewAppColor.transparent,
             width: 1,
           ),
         ),
@@ -362,26 +363,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            // 이미지 첨부 버튼 (선택 사항)
-            // IconButton(
-            //   icon: Icon(Icons.add_photo_alternate, color: NewAppColor.neutral600),
-            //   onPressed: () {
-            //     // TODO: 이미지 첨부 기능
-            //   },
-            // ),
-            // SizedBox(width: 8.w),
-
             // 입력 필드
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: TextField(
                   controller: _messageController,
                   decoration: InputDecoration(
-                    hintText: '메시지를 입력하세요',
+                    hintText: '메시지 보내기',
                     hintStyle: FigmaTextStyles().body2.copyWith(
                           color: NewAppColor.neutral400,
                           fontSize: 15.sp,
@@ -419,7 +411,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 height: 40.w,
                 decoration: BoxDecoration(
                   color: (!_hasText || _isSending)
-                      ? NewAppColor.neutral300
+                      ? NewAppColor.transparent
                       : NewAppColor.primary600,
                   shape: BoxShape.circle,
                 ),
@@ -430,13 +422,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           height: 20.w,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: NewAppColor.neutral500,
                           ),
                         ),
                       )
                     : Icon(
-                        Icons.send,
-                        color: Colors.white,
+                        _hasText ? LucideIcons.send : LucideIcons.send,
+                        color: _hasText
+                            ? NewAppColor.white
+                            : NewAppColor.neutral300,
                         size: 20.sp,
                       ),
               ),

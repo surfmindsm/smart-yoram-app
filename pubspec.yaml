@@ -129,6 +129,9 @@ dependencies:
   # 오디오 재생
   audioplayers: ^6.1.0
 
+  # 슬라이드 액션
+  flutter_slidable: ^3.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

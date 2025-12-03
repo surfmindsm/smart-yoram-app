@@ -469,9 +469,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       ),
                                       child: Text(
                                         _getStatusButtonText(),
-                                        style: FigmaTextStyles().body2.copyWith(
-                                              color: Colors.white,
-                                            ),
+                                        style:
+                                            FigmaTextStyles().button1.copyWith(
+                                                  color: Colors.white,
+                                                ),
                                       ),
                                     ),
                                   ),
@@ -480,21 +481,22 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                   // 좋아요 버튼
                                   OutlinedButton(
                                     onPressed: _toggleFavorite,
-                                    style: OutlinedButton.styleFrom(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 16.w,
-                                        vertical: 14.h,
-                                      ),
-                                      side: BorderSide(
-                                        color: _isFavorited
-                                            ? Colors.red
-                                            : NewAppColor.neutral300,
-                                        width: 1.5,
-                                      ),
-                                      // shape: RoundedRectangleBorder(
-                                      //   borderRadius: BorderRadius.circular(12.r),
-                                      // ),
-                                    ),
+                                    // style: OutlinedButton.styleFrom(
+                                    //   padding: EdgeInsets.symmetric(
+                                    //     horizontal: 16.w,
+                                    //     vertical: 14.h,
+                                    //   ),
+                                    //   side: BorderSide(
+                                    //     color: _isFavorited
+                                    //         ? Colors.red
+                                    //         : NewAppColor.neutral300,
+                                    //     width: 1.5,
+                                    //   ),
+                                    //   shape: RoundedRectangleBorder(
+                                    //     borderRadius:
+                                    //         BorderRadius.circular(12.r),
+                                    //   ),
+                                    // ),
                                     child: Icon(
                                       _isFavorited
                                           ? Icons.favorite
@@ -526,7 +528,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                         child: Text(
                                           '전화하기',
                                           style: FigmaTextStyles()
-                                              .body2
+                                              .button1
                                               .copyWith(
                                                 color: NewAppColor.primary600,
                                               ),

@@ -89,22 +89,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: NewAppColor.neutral100,
       body: SafeArea(
         child: Column(
           children: [
             // 상단 헤더
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(
-                    color: NewAppColor.neutral200,
-                    width: 1,
-                  ),
-                ),
-              ),
+              height: 56.h,
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -188,7 +180,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         height: 1,
         thickness: 1,
         indent: 72.w,
-        color: NewAppColor.neutral200,
+        color: NewAppColor.transparent,
       ),
       itemBuilder: (context, index) {
         final category = categories[index];
@@ -311,7 +303,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
     switch (category.id) {
       case 'sharing-market':
-        listType = CommunityListType.freeSharing; // 통합된 나눔/판매 (임시로 freeSharing 사용)
+        listType =
+            CommunityListType.freeSharing; // 통합된 나눔/판매 (임시로 freeSharing 사용)
         break;
       case 'item-request':
         listType = CommunityListType.itemRequest;

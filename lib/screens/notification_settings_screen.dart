@@ -28,6 +28,7 @@ class _NotificationSettingsScreenState
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral800),
           onPressed: () => Navigator.pop(context),
