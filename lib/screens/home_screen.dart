@@ -70,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // 오늘의 말씀 관련 상태 변수
   DailyVerse? _currentVerse;
   bool _isRefreshingVerse = false;
-  bool _isLoadingVerse = true;
+  bool _isLoadingVerse = false; // 초기 로딩 상태를 false로 변경 (샘플 데이터를 즉시 표시)
 
   // 예배 서비스 데이터 (실제 API 데이터)
   List<WorshipService> worshipServices = [];
@@ -79,6 +79,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    // 초기에 샘플 말씀을 즉시 표시 (로딩 대기 시간 제거)
+    _setInitialSampleVerse();
+
     _loadEssentialDataFast();
     _initializeFCMInBackground();
 
@@ -86,6 +90,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     Future.delayed(Duration(seconds: 2), () {
       _loadAnnouncementsDirectly();
     });
+  }
+
+  /// 📖 초기 샘플 말씀 설정 (즉시 표시)
+  void _setInitialSampleVerse() {
+    _currentVerse = DailyVerse(
+      id: 0,
+      verse: '여호와는 나의 목자시니 내게 부족함이 없으리로다',
+      reference: '시편 23:1',
+      isActive: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
   }
 
   // 🚀 필수 데이터 빠른 로드
@@ -169,31 +185,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 📖 오늘의 말씀 비동기 로드
+  // 📖 오늘의 말씀 비동기 로드 (로딩 스피너 없이 조용히 업데이트)
   Future<void> _loadTodaysVerseAsync() async {
     if (!mounted) return;
 
-    setState(() {
-      _isLoadingVerse = true;
-    });
+    // 로딩 상태를 설정하지 않음 - 샘플 데이터가 이미 표시되어 있음
 
     try {
       final verse = await _homeDataService.loadTodaysVerse();
 
-      if (mounted) {
+      if (mounted && verse != null) {
         setState(() {
           _currentVerse = verse;
-          _isLoadingVerse = false;
         });
+        print('✅ HOME: 오늘의 말씀 업데이트 완료 (${verse.reference})');
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _currentVerse = null;
-          _isLoadingVerse = false;
-        });
-      }
-      print('❌ HOME: 오늘의 말씀 로드 실패 - $e');
+      // 오류가 발생해도 샘플 데이터를 그대로 유지
+      print('⚠️ HOME: 오늘의 말씀 로드 실패, 샘플 데이터 유지 - $e');
     }
   }
 

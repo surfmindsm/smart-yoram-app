@@ -51,31 +51,35 @@ class HomeDataService {
     }
   }
 
-  /// 📖 오늘의 말씀 로드 (별도로 처리)
+  /// 📖 오늘의 말씀 로드 (별도로 처리) - 오프라인 우선 전략
   Future<DailyVerse?> loadTodaysVerse() async {
     try {
       print('📖 HOME_DATA: 오늘의 말씀 로드 시작');
 
-      // 캐시 확인 (5분 캐시)
+      // 캐시 확인 (오래된 캐시라도 즉시 반환)
       final cached = await _cacheService.getCachedData<DailyVerse>(
         'daily_verse',
         fromJson: (json) => DailyVerse.fromJson(json),
       );
 
-      if (cached != null && _isTodaysVerse(cached)) {
-        print('📖 HOME_DATA: 캐시된 오늘의 말씀 사용');
+      if (cached != null) {
+        print('📖 HOME_DATA: 캐시된 오늘의 말씀 즉시 사용 (오프라인 우선)');
+
+        // 백그라운드에서 새 데이터 로드 시도 (fire-and-forget)
+        _refreshVerseInBackground();
+
         return cached;
       }
 
-      // API에서 새로 로드
+      // 캐시가 없으면 API에서 로드 (3초 타임아웃)
       final verse = await _dailyVerseService.getRandomVerse();
 
       if (verse != null) {
-        // 캐시에 저장 (30분)
+        // 캐시에 저장 (24시간 - 하루 동안 유지)
         await _cacheService.cacheData(
           'daily_verse',
           verse.toJson(),
-          cacheMinutes: 30,
+          cacheMinutes: 1440, // 24시간
           persistToDisk: true,
         );
 
@@ -87,6 +91,29 @@ class HomeDataService {
       print('❌ HOME_DATA: 오늘의 말씀 로드 실패 - $e');
       return null;
     }
+  }
+
+  /// 🔄 백그라운드에서 오늘의 말씀 새로고침 (fire-and-forget)
+  void _refreshVerseInBackground() {
+    Future.microtask(() async {
+      try {
+        print('🔄 HOME_DATA: 백그라운드에서 오늘의 말씀 갱신 시작');
+
+        final verse = await _dailyVerseService.getRandomVerse();
+
+        if (verse != null) {
+          await _cacheService.cacheData(
+            'daily_verse',
+            verse.toJson(),
+            cacheMinutes: 1440,
+            persistToDisk: true,
+          );
+          print('✅ HOME_DATA: 백그라운드 갱신 완료');
+        }
+      } catch (e) {
+        print('⚠️ HOME_DATA: 백그라운드 갱신 실패 (무시) - $e');
+      }
+    });
   }
 
   /// 👤 현재 사용자 정보 로드 (캐시 우선)

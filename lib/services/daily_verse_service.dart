@@ -26,7 +26,7 @@ class DailyVerseService {
           ...ApiConfig.defaultHeaders,
           'Authorization': 'Bearer $token',
         },
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 3));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
