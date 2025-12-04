@@ -248,6 +248,8 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
 
   Widget _buildItemCard(WishlistItem item) {
     final hasImage = item.postImageUrl != null && item.postImageUrl!.isNotEmpty;
+    final isSharingType = item.postType == 'community-sharing' ||
+                          item.postType == 'sharing-offer';
 
     return InkWell(
       onTap: () => _navigateToDetail(item),
@@ -307,10 +309,11 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
                       Expanded(
                         child: Text(
                           [
+                            // churchLocation 우선, 없으면 location
                             if (item.churchLocation != null &&
                                 item.churchLocation!.isNotEmpty)
-                              item.churchLocation,
-                            if (item.location != null && item.location!.isNotEmpty)
+                              item.churchLocation
+                            else if (item.location != null && item.location!.isNotEmpty)
                               item.location,
                             item.formattedDate,
                           ].join(' · '),
@@ -324,43 +327,70 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
                       ),
                     ],
                   ),
-                  // 가격 (물품 판매/나눔인 경우)
-                  if (item.formattedPrice != null) ...[
+                  // 가격 + 조회수 (물품 판매/나눔인 경우)
+                  if (isSharingType) ...[
                     SizedBox(height: 8.h),
-                    Text(
-                      item.formattedPrice!,
-                      style: TextStyle(
-                        color: NewAppColor.neutral900,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Pretendard Variable',
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                  // 조회수
-                  SizedBox(height: 8.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      if (item.viewCount != null) ...[
-                        Icon(
-                          LucideIcons.eye,
-                          size: 14.sp,
-                          color: NewAppColor.neutral600,
-                        ),
-                        SizedBox(width: 4.w),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // 가격
                         Text(
-                          '${item.viewCount}',
+                          item.formattedPrice ?? '가격 미정',
                           style: TextStyle(
-                            color: NewAppColor.neutral600,
-                            fontSize: 12.sp,
+                            color: NewAppColor.neutral900,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
                             fontFamily: 'Pretendard Variable',
+                            height: 1.4,
                           ),
                         ),
+                        // 조회수
+                        if (item.viewCount != null)
+                          Row(
+                            children: [
+                              Icon(
+                                LucideIcons.eye,
+                                size: 14.sp,
+                                color: NewAppColor.neutral600,
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                '${item.viewCount}',
+                                style: TextStyle(
+                                  color: NewAppColor.neutral600,
+                                  fontSize: 12.sp,
+                                  fontFamily: 'Pretendard Variable',
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
+                    ),
+                  ] else ...[
+                    // 물품 판매/나눔이 아닌 경우 조회수만 표시
+                    if (item.viewCount != null) ...[
+                      SizedBox(height: 8.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Icon(
+                            LucideIcons.eye,
+                            size: 14.sp,
+                            color: NewAppColor.neutral600,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${item.viewCount}',
+                            style: TextStyle(
+                              color: NewAppColor.neutral600,
+                              fontSize: 12.sp,
+                              fontFamily: 'Pretendard Variable',
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
-                  ),
+                  ],
                 ],
               ),
             ),

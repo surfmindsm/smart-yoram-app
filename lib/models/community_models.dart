@@ -551,6 +551,23 @@ class JobPost extends CommunityBasePost {
   });
 
   factory JobPost.fromJson(Map<String, dynamic> json) {
+    // contact_info가 있으면 파싱 (기존 데이터 지원)
+    String? contactPhone = json['contactPhone'] ?? json['contact_phone'];
+    String? contactEmail = json['contactEmail'] ?? json['contact_email'];
+
+    if ((contactPhone == null || contactPhone.isEmpty) && json['contact_info'] != null) {
+      final contactInfo = json['contact_info'] as String;
+      if (contactInfo.contains('/')) {
+        final parts = contactInfo.split('/');
+        contactPhone = parts[0].trim();
+        if (parts.length > 1) {
+          contactEmail = parts[1].trim();
+        }
+      } else {
+        contactPhone = contactInfo;
+      }
+    }
+
     return JobPost(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
@@ -569,12 +586,12 @@ class JobPost extends CommunityBasePost {
       updatedAt: json['updatedAt'] != null || json['updated_at'] != null
           ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,
-      company: json['company'],
+      company: json['company'] ?? json['company_name'],
       churchIntro: json['churchIntro'] ?? json['church_intro'] ?? '',
-      position: json['position'] ?? '',
+      position: json['position'] ?? json['job_type'] ?? '', // job_type에서 position 읽기
       jobType: json['jobType'] ?? json['job_type'] ?? '',
       employmentType: json['employment_type'] ?? 'full-time',
-      salary: json['salary'] ?? '',
+      salary: json['salary'] ?? json['salary_range'] ?? '',
       benefits: json['benefits'] != null ? List<String>.from(json['benefits']) : null,
       qualifications: json['qualifications'] != null ? List<String>.from(json['qualifications']) : null,
       requiredDocuments: json['requiredDocuments'] != null ? List<String>.from(json['requiredDocuments']) : null,
@@ -583,8 +600,8 @@ class JobPost extends CommunityBasePost {
       district: json['district'],
       deliveryAvailable: json['delivery_available'] ?? false,
       deadline: json['deadline'] ?? json['application_deadline'],
-      contactPhone: json['contactPhone'] ?? json['contact_phone'],
-      contactEmail: json['contactEmail'] ?? json['contact_email'],
+      contactPhone: contactPhone,
+      contactEmail: contactEmail,
       applications: json['applications'],
     );
   }

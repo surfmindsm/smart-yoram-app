@@ -58,7 +58,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   String? _selectedProvince; // 도/시
   String? _selectedDistrict; // 시/군/구
   bool _deliveryAvailable = false; // 택배 가능 여부
-  final TextEditingController _purchaseDateController = TextEditingController(); // 구매 시기 (텍스트)
+  final TextEditingController _purchaseDateController =
+      TextEditingController(); // 구매 시기 (텍스트)
 
   // 물품요청 전용
   String _selectedUrgency = 'normal'; // low, normal, high
@@ -72,17 +73,22 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   final TextEditingController _jobTypeController = TextEditingController();
   String? _selectedEmploymentType; // full-time, part-time, contract, volunteer
   final TextEditingController _salaryController = TextEditingController();
-  final TextEditingController _qualificationsController = TextEditingController();
-  final TextEditingController _preferredQualificationsController = TextEditingController();
+  bool _isSalaryNegotiable = false; // 급여 협의 여부
+  final TextEditingController _qualificationsController =
+      TextEditingController();
+  final TextEditingController _preferredQualificationsController =
+      TextEditingController();
   final TextEditingController _benefitsController = TextEditingController();
   final TextEditingController _deadlineController = TextEditingController();
 
   // 행사팀모집 전용
-  String? _selectedRecruitmentType; // new_member, substitute, project, permanent
+  String?
+      _selectedRecruitmentType; // new_member, substitute, project, permanent
   String? _selectedEventType; // sunday-service, wednesday-service, etc.
   String? _selectedTeamType; // solo, praise-team, worship-team, etc.
   final TextEditingController _eventDateController = TextEditingController();
-  final TextEditingController _rehearsalTimeController = TextEditingController();
+  final TextEditingController _rehearsalTimeController =
+      TextEditingController();
   final TextEditingController _worshipTypeController = TextEditingController();
   List<String> _selectedInstruments = []; // 필요 악기/파트
   final TextEditingController _scheduleController = TextEditingController();
@@ -99,20 +105,27 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   String? _portfolioFileUrl; // 포트폴리오 파일 URL
   List<String> _preferredLocations = [];
   List<String> _availableDays = [];
-  final TextEditingController _availableTimeController = TextEditingController();
+  final TextEditingController _availableTimeController =
+      TextEditingController();
   final TextEditingController _introductionController = TextEditingController();
   String? _selectedTimeSlot; // 활동 가능 시간대
-  final TextEditingController _youtubeController = TextEditingController(); // YouTube 링크
+  final TextEditingController _youtubeController =
+      TextEditingController(); // YouTube 링크
 
   // 교회소식 전용
   String? _selectedNewsCategory; // worship, event, retreat, mission, etc.
   String _selectedPriority = 'normal'; // urgent, important, normal
-  final TextEditingController _newsEventDateController = TextEditingController();
-  final TextEditingController _newsEventTimeController = TextEditingController();
+  final TextEditingController _newsEventDateController =
+      TextEditingController();
+  final TextEditingController _newsEventTimeController =
+      TextEditingController();
   final TextEditingController _organizerController = TextEditingController();
-  final TextEditingController _targetAudienceController = TextEditingController();
-  final TextEditingController _participationFeeController = TextEditingController();
-  final TextEditingController _contactPersonController = TextEditingController();
+  final TextEditingController _targetAudienceController =
+      TextEditingController();
+  final TextEditingController _participationFeeController =
+      TextEditingController();
+  final TextEditingController _contactPersonController =
+      TextEditingController();
 
   bool _isLoading = false;
   List<XFile> _selectedImages = [];
@@ -123,7 +136,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   @override
   void initState() {
     super.initState();
-    print('🔍 initState 호출됨 - existingPost: ${widget.existingPost != null ? "있음" : "없음"}');
+    print(
+        '🔍 initState 호출됨 - existingPost: ${widget.existingPost != null ? "있음" : "없음"}');
     if (widget.existingPost != null) {
       print('📦 existingPost 내용: ${widget.existingPost}');
       _loadExistingPost();
@@ -177,7 +191,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
     // Map 타입인 경우 (myPosts에서 온 경우)
     if (post is Map<String, dynamic>) {
-      final tableName = post['tableName'] as String? ?? post['table'] as String?;
+      final tableName =
+          post['tableName'] as String? ?? post['table'] as String?;
 
       // 공통 필드
       _titleController.text = post['title'] ?? '';
@@ -191,7 +206,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         } else if (post['images'] is String) {
           _existingImageUrls = [post['images'] as String];
         }
-        print('📸 기존 이미지 로드됨: ${_existingImageUrls.length}장 - $_existingImageUrls');
+        print(
+            '📸 기존 이미지 로드됨: ${_existingImageUrls.length}장 - $_existingImageUrls');
       }
 
       // 상태 로드
@@ -211,13 +227,15 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         if (post['purchase_date'] != null) {
           _purchaseDateController.text = post['purchase_date'].toString();
         }
-        _contactController.text = post['contact_info'] ?? post['contact_phone'] ?? '';
+        _contactController.text =
+            post['contact_info'] ?? post['contact_phone'] ?? '';
         _emailController.text = post['contact_email'] ?? '';
       } else if (tableName == 'community_requests') {
         _rewardType = post['reward_type'];
         _rewardAmountController.text = post['reward_amount']?.toString() ?? '';
         _selectedUrgency = post['urgency'] ?? 'normal';
-        _contactController.text = post['contact_info'] ?? post['contact_phone'] ?? '';
+        _contactController.text =
+            post['contact_info'] ?? post['contact_phone'] ?? '';
         _emailController.text = post['contact_email'] ?? '';
       } else if (tableName == 'job_posts') {
         _companyController.text = post['company'] ?? '';
@@ -225,7 +243,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         _positionController.text = post['position'] ?? '';
         _jobTypeController.text = post['job_type'] ?? '';
         _selectedEmploymentType = post['employment_type'];
-        _salaryController.text = post['salary'] ?? '';
+        final salary = post['salary'] ?? '';
+        if (salary == '협의' || salary.toLowerCase() == 'negotiable') {
+          _isSalaryNegotiable = true;
+          _salaryController.text = '협의';
+        } else {
+          _salaryController.text = salary;
+        }
         _deadlineController.text = post['deadline'] ?? '';
         _contactController.text = post['contact_phone'] ?? '';
         _emailController.text = post['contact_email'] ?? '';
@@ -283,7 +307,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _deliveryAvailable = post.deliveryAvailable ?? false;
       // 이미지 로드
       _existingImageUrls = List<String>.from(post.images);
-      print('📸 기존 이미지 로드됨 (SharingItem): ${_existingImageUrls.length}장 - $_existingImageUrls');
+      print(
+          '📸 기존 이미지 로드됨 (SharingItem): ${_existingImageUrls.length}장 - $_existingImageUrls');
     } else if (post is RequestItem) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
@@ -301,7 +326,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       // 이미지 로드
       if (post.images != null) {
         _existingImageUrls = List<String>.from(post.images!);
-        print('📸 기존 이미지 로드됨 (RequestItem): ${_existingImageUrls.length}장 - $_existingImageUrls');
+        print(
+            '📸 기존 이미지 로드됨 (RequestItem): ${_existingImageUrls.length}장 - $_existingImageUrls');
       }
     } else if (post is JobPost) {
       _titleController.text = post.title;
@@ -312,7 +338,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _positionController.text = post.position ?? '';
       _jobTypeController.text = post.jobType ?? '';
       _selectedEmploymentType = post.employmentType;
-      _salaryController.text = post.salary ?? '';
+      final salary = post.salary ?? '';
+      if (salary == '협의' || salary.toLowerCase() == 'negotiable') {
+        _isSalaryNegotiable = true;
+        _salaryController.text = '협의';
+      } else {
+        _salaryController.text = salary;
+      }
       _deadlineController.text = post.deadline ?? '';
       _contactController.text = post.contactPhone ?? '';
       _emailController.text = post.contactEmail ?? '';
@@ -354,7 +386,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       // 이미지 로드
       if (post.images != null) {
         _existingImageUrls = List<String>.from(post.images!);
-        print('📸 기존 이미지 로드됨 (ChurchNews): ${_existingImageUrls.length}장 - $_existingImageUrls');
+        print(
+            '📸 기존 이미지 로드됨 (ChurchNews): ${_existingImageUrls.length}장 - $_existingImageUrls');
       }
     }
 
@@ -370,7 +403,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         widget.type == CommunityListType.myFavorites) {
       if (widget.existingPost is Map<String, dynamic>) {
         final post = widget.existingPost as Map<String, dynamic>;
-        final tableName = post['tableName'] as String? ?? post['table'] as String?;
+        final tableName =
+            post['tableName'] as String? ?? post['table'] as String?;
         final isFree = post['is_free'] == true;
 
         if (tableName == 'community_sharing') {
@@ -399,7 +433,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             _descriptionController.text.trim().isNotEmpty &&
             _selectedCategory != null &&
             _selectedCondition != null &&
-            (_selectedProvince != null || _locationController.text.trim().isNotEmpty) &&
+            (_selectedProvince != null ||
+                _locationController.text.trim().isNotEmpty) &&
             _contactController.text.trim().isNotEmpty;
 
       case CommunityListType.itemRequest:
@@ -409,15 +444,15 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             _contactController.text.trim().isNotEmpty;
 
       case CommunityListType.jobPosting:
-        // 필수: 제목, 설명, 교회/기관명, 직무, 고용형태, 급여, 마감일, 연락처
+        // 필수: 제목, 설명, 교회/기관명, 직책, 고용형태, 급여(또는 협의), 마감일
+        // 연락처는 선택사항 (개인정보 보호)
         return _titleController.text.trim().isNotEmpty &&
             _descriptionController.text.trim().isNotEmpty &&
             _companyController.text.trim().isNotEmpty &&
-            _positionController.text.trim().isNotEmpty &&
+            _selectedCategory != null &&
             _selectedEmploymentType != null &&
-            _salaryController.text.trim().isNotEmpty &&
-            _deadlineController.text.trim().isNotEmpty &&
-            _contactController.text.trim().isNotEmpty;
+            (_salaryController.text.trim().isNotEmpty || _isSalaryNegotiable) &&
+            _deadlineController.text.trim().isNotEmpty;
 
       case CommunityListType.musicTeamRecruit:
         // 필수: 제목, 설명, 행사일, 리허설 시간, 필요 악기/파트, 연락처
@@ -468,148 +503,152 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               textButtonTheme: TextButtonThemeData(
                 style: ButtonStyle(
                   foregroundColor: MaterialStateProperty.resolveWith((states) {
-                  // 취소 버튼 완전히 숨기기
-                  if (states.contains(MaterialState.disabled)) {
-                    return Colors.transparent;
-                  }
-                  return Colors.white;
-                }),
-                backgroundColor: MaterialStateProperty.resolveWith((states) {
-                  // 취소 버튼 완전히 숨기기
-                  if (states.contains(MaterialState.disabled)) {
-                    return Colors.transparent;
-                  }
-                  return const Color(0xFF2196F3);
-                }),
-                textStyle: MaterialStateProperty.all(
-                  FigmaTextStyles().button2.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16.sp,
+                    // 취소 버튼 완전히 숨기기
+                    if (states.contains(MaterialState.disabled)) {
+                      return Colors.transparent;
+                    }
+                    return Colors.white;
+                  }),
+                  backgroundColor: MaterialStateProperty.resolveWith((states) {
+                    // 취소 버튼 완전히 숨기기
+                    if (states.contains(MaterialState.disabled)) {
+                      return Colors.transparent;
+                    }
+                    return const Color(0xFF2196F3);
+                  }),
+                  textStyle: MaterialStateProperty.all(
+                    FigmaTextStyles().button2.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16.sp,
+                        ),
                   ),
-                ),
-                shape: MaterialStateProperty.all(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
+                  shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
                   ),
+                  padding: MaterialStateProperty.all(
+                    EdgeInsets.symmetric(horizontal: 48.w, vertical: 14.h),
+                  ),
+                  minimumSize: MaterialStateProperty.resolveWith((states) {
+                    // 취소 버튼 크기 0으로
+                    if (states.contains(MaterialState.disabled)) {
+                      return Size.zero;
+                    }
+                    return Size(140.w, 48.h);
+                  }),
+                  overlayColor: MaterialStateProperty.resolveWith((states) {
+                    if (states.contains(MaterialState.disabled)) {
+                      return Colors.transparent;
+                    }
+                    return null;
+                  }),
                 ),
-                padding: MaterialStateProperty.all(
-                  EdgeInsets.symmetric(horizontal: 48.w, vertical: 14.h),
+              ),
+              dialogTheme: DialogThemeData(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r),
                 ),
-                minimumSize: MaterialStateProperty.resolveWith((states) {
-                  // 취소 버튼 크기 0으로
-                  if (states.contains(MaterialState.disabled)) {
-                    return Size.zero;
+                elevation: 4,
+                backgroundColor: Colors.white,
+              ),
+              textTheme: TextTheme(
+                // 년월 표시 텍스트 (July 2019)
+                headlineMedium: FigmaTextStyles().headline3.copyWith(
+                      color: const Color(0xFF333333),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 24.sp,
+                    ),
+                labelLarge: const TextStyle(
+                  fontSize: 0, // "날짜 선택" 텍스트 숨기기
+                  height: 0,
+                ),
+              ),
+              datePickerTheme: DatePickerThemeData(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                // 헤더 완전히 제거
+                headerBackgroundColor: Colors.white,
+                headerForegroundColor: Colors.white,
+                headerHeadlineStyle: const TextStyle(
+                  fontSize: 0,
+                  height: 0,
+                  color: Colors.transparent,
+                ),
+                headerHelpStyle: const TextStyle(
+                  fontSize: 0,
+                  height: 0,
+                  color: Colors.transparent,
+                ),
+                // 상단 여백 최소화
+                rangePickerHeaderHeadlineStyle:
+                    const TextStyle(fontSize: 0, height: 0),
+                rangePickerHeaderHelpStyle:
+                    const TextStyle(fontSize: 0, height: 0),
+                // 요일 스타일 (M T W T F S S)
+                weekdayStyle: FigmaTextStyles().caption1.copyWith(
+                      color: const Color(0xFF999999),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1,
+                      fontSize: 13.sp,
+                    ),
+                // 날짜 숫자 스타일
+                dayStyle: FigmaTextStyles().body2.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15.sp,
+                    ),
+                // 년 선택 스타일
+                yearStyle: FigmaTextStyles().headline4.copyWith(
+                      color: const Color(0xFF333333),
+                      fontWeight: FontWeight.w600,
+                    ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                // 선택된 날짜 - 파란색 원형
+                dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.selected)) {
+                    return const Color(0xFF2196F3);
                   }
-                  return Size(140.w, 48.h);
+                  return Colors.transparent;
                 }),
-                overlayColor: MaterialStateProperty.resolveWith((states) {
+                dayForegroundColor: MaterialStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.selected)) {
+                    return Colors.white;
+                  }
                   if (states.contains(MaterialState.disabled)) {
-                    return Colors.transparent;
+                    return const Color(0xFFDDDDDD);
+                  }
+                  return const Color(0xFF333333);
+                }),
+                dayOverlayColor: MaterialStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.hovered)) {
+                    return const Color(0xFF2196F3).withOpacity(0.1);
                   }
                   return null;
                 }),
+                // 날짜를 원형으로
+                dayShape: MaterialStateProperty.all(
+                  const CircleBorder(),
+                ),
+                // 오늘 날짜 스타일
+                todayBorder: BorderSide.none,
+                todayForegroundColor:
+                    MaterialStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.selected)) {
+                    return Colors.white;
+                  }
+                  return const Color(0xFF64B5F6); // 연한 파란색
+                }),
+                todayBackgroundColor:
+                    MaterialStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.selected)) {
+                    return const Color(0xFF2196F3);
+                  }
+                  return Colors.transparent;
+                }),
               ),
             ),
-            dialogTheme: DialogThemeData(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              elevation: 4,
-              backgroundColor: Colors.white,
-            ),
-            textTheme: TextTheme(
-              // 년월 표시 텍스트 (July 2019)
-              headlineMedium: FigmaTextStyles().headline3.copyWith(
-                color: const Color(0xFF333333),
-                fontWeight: FontWeight.w700,
-                fontSize: 24.sp,
-              ),
-              labelLarge: const TextStyle(
-                fontSize: 0, // "날짜 선택" 텍스트 숨기기
-                height: 0,
-              ),
-            ),
-            datePickerTheme: DatePickerThemeData(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              // 헤더 완전히 제거
-              headerBackgroundColor: Colors.white,
-              headerForegroundColor: Colors.white,
-              headerHeadlineStyle: const TextStyle(
-                fontSize: 0,
-                height: 0,
-                color: Colors.transparent,
-              ),
-              headerHelpStyle: const TextStyle(
-                fontSize: 0,
-                height: 0,
-                color: Colors.transparent,
-              ),
-              // 상단 여백 최소화
-              rangePickerHeaderHeadlineStyle: const TextStyle(fontSize: 0, height: 0),
-              rangePickerHeaderHelpStyle: const TextStyle(fontSize: 0, height: 0),
-              // 요일 스타일 (M T W T F S S)
-              weekdayStyle: FigmaTextStyles().caption1.copyWith(
-                color: const Color(0xFF999999),
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1,
-                fontSize: 13.sp,
-              ),
-              // 날짜 숫자 스타일
-              dayStyle: FigmaTextStyles().body2.copyWith(
-                fontWeight: FontWeight.w500,
-                fontSize: 15.sp,
-              ),
-              // 년 선택 스타일
-              yearStyle: FigmaTextStyles().headline4.copyWith(
-                color: const Color(0xFF333333),
-                fontWeight: FontWeight.w600,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              // 선택된 날짜 - 파란색 원형
-              dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
-                  return const Color(0xFF2196F3);
-                }
-                return Colors.transparent;
-              }),
-              dayForegroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
-                  return Colors.white;
-                }
-                if (states.contains(MaterialState.disabled)) {
-                  return const Color(0xFFDDDDDD);
-                }
-                return const Color(0xFF333333);
-              }),
-              dayOverlayColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.hovered)) {
-                  return const Color(0xFF2196F3).withOpacity(0.1);
-                }
-                return null;
-              }),
-              // 날짜를 원형으로
-              dayShape: MaterialStateProperty.all(
-                const CircleBorder(),
-              ),
-              // 오늘 날짜 스타일
-              todayBorder: BorderSide.none,
-              todayForegroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
-                  return Colors.white;
-                }
-                return const Color(0xFF64B5F6); // 연한 파란색
-              }),
-              todayBackgroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
-                  return const Color(0xFF2196F3);
-                }
-                return Colors.transparent;
-              }),
-            ),
-          ),
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: BoxDecoration(
@@ -645,16 +684,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           TextSpan(
             text: text,
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           TextSpan(
             text: ' *',
             style: FigmaTextStyles().body2.copyWith(
-              color: Colors.red,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
         ],
       ),
@@ -670,7 +709,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         widget.type == CommunityListType.myFavorites) {
       if (widget.existingPost is Map<String, dynamic>) {
         final post = widget.existingPost as Map<String, dynamic>;
-        final tableName = post['tableName'] as String? ?? post['table'] as String?;
+        final tableName =
+            post['tableName'] as String? ?? post['table'] as String?;
         final isFree = post['is_free'] == true;
 
         if (tableName == 'community_sharing') {
@@ -719,10 +759,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       case CommunityListType.jobPosting:
         title = '사역자 모집 작성 가이드';
         tips = [
-          '✓ 교회 소개를 상세히 작성해주세요',
-          '✓ 모집 직무와 고용 형태를 명확히 입력해주세요',
-          '✓ 급여 및 복리후생을 투명하게 공개해주세요',
-          '✓ 자격 요건을 구체적으로 작성해주세요',
+          '✓ 모집 제목을 명확하게 작성해주세요',
+          '✓ 교회/기관명과 직책을 정확히 입력해주세요',
+          '✓ 상세 내용에 교회 소개, 업무 내용, 자격 요건, 복리후생을 포함해주세요',
+          '✓ 급여는 투명하게 공개하거나 협의로 설정해주세요',
           '✓ 지원 마감일을 정확히 입력해주세요',
         ];
         break;
@@ -845,7 +885,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       // existingPost가 Map인 경우 tableName 정보로 타입 판단
       if (widget.existingPost is Map<String, dynamic>) {
         final post = widget.existingPost as Map<String, dynamic>;
-        final tableName = post['tableName'] as String? ?? post['table'] as String?;
+        final tableName =
+            post['tableName'] as String? ?? post['table'] as String?;
         final isFree = post['is_free'] == true;
 
         if (tableName == 'community_sharing') {
@@ -999,7 +1040,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       // existingPost가 Map인 경우 tableName 정보로 타입 판단
       if (widget.existingPost is Map<String, dynamic>) {
         final post = widget.existingPost as Map<String, dynamic>;
-        final tableName = post['tableName'] as String? ?? post['table'] as String?;
+        final tableName =
+            post['tableName'] as String? ?? post['table'] as String?;
         final isFree = post['is_free'] == true;
 
         if (tableName == 'community_sharing') {
@@ -1142,8 +1184,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               hintText: _isFreeSharing ? '무료나눔' : '숫자로만 입력 (예: 50000)',
             ),
             style: FigmaTextStyles().body2.copyWith(
-              color: _isFreeSharing ? NewAppColor.neutral400 : NewAppColor.neutral900,
-            ),
+                  color: _isFreeSharing
+                      ? NewAppColor.neutral400
+                      : NewAppColor.neutral900,
+                ),
             keyboardType: TextInputType.number,
           ),
           SizedBox(height: 12.h),
@@ -1183,8 +1227,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Text(
                   '무료 나눔',
                   style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral900,
-                  ),
+                        color: NewAppColor.neutral900,
+                      ),
                 ),
               ),
             ],
@@ -1226,7 +1270,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   required: true,
                   enabled: _selectedProvince != null,
                   items: _selectedProvince != null
-                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                      ? LocationData.getDistricts(_selectedProvince!)
+                          .map((district) {
                           return buildDropdownItem<String>(
                             value: district,
                             text: district,
@@ -1273,8 +1318,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Text(
                   '택배 가능',
                   style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral900,
-                  ),
+                        color: NewAppColor.neutral900,
+                      ),
                 ),
               ),
             ],
@@ -1285,9 +1330,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '구매 시기 (선택)',
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           SizedBox(height: 8.h),
           TextField(
@@ -1296,8 +1341,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               hintText: '예: 2023년 3월, 작년 여름 등',
             ),
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-            ),
+                  color: NewAppColor.neutral900,
+                ),
           ),
           SizedBox(height: 24.h),
 
@@ -1324,9 +1369,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '이메일',
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           SizedBox(height: 8.h),
           TextFormField(
@@ -1357,17 +1402,17 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             Text(
               label,
               style: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral900,
-                fontWeight: FontWeight.w500,
-              ),
+                    color: NewAppColor.neutral900,
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
             if (required)
               Text(
                 ' *',
                 style: FigmaTextStyles().body2.copyWith(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w500,
-                ),
+                      color: Colors.red,
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
           ],
         ),
@@ -1378,14 +1423,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             Text(
               '최대 ${maxCount}장, 각 파일 최대 10MB',
               style: FigmaTextStyles().caption1.copyWith(
-                color: NewAppColor.neutral500,
-              ),
+                    color: NewAppColor.neutral500,
+                  ),
             ),
             Text(
               '${_existingImageUrls.length + _selectedImages.length}/$maxCount',
               style: FigmaTextStyles().caption1.copyWith(
-                color: NewAppColor.neutral500,
-              ),
+                    color: NewAppColor.neutral500,
+                  ),
             ),
           ],
         ),
@@ -1396,7 +1441,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             scrollDirection: Axis.horizontal,
             children: [
               // 사진 추가 버튼
-              if ((_existingImageUrls.length + _selectedImages.length) < maxCount)
+              if ((_existingImageUrls.length + _selectedImages.length) <
+                  maxCount)
                 GestureDetector(
                   onTap: _pickImages,
                   child: Container(
@@ -1414,19 +1460,20 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add, size: 32.sp, color: NewAppColor.neutral400),
+                        Icon(Icons.add,
+                            size: 32.sp, color: NewAppColor.neutral400),
                         SizedBox(height: 4.h),
                         Text(
                           '이미지 추가',
                           style: FigmaTextStyles().caption1.copyWith(
-                            color: NewAppColor.neutral400,
-                          ),
+                                color: NewAppColor.neutral400,
+                              ),
                         ),
                         Text(
                           '최대 10 MB',
                           style: FigmaTextStyles().caption2.copyWith(
-                            color: NewAppColor.neutral400,
-                          ),
+                                color: NewAppColor.neutral400,
+                              ),
                         ),
                       ],
                     ),
@@ -1455,7 +1502,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                               color: Colors.grey[200],
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
+                                  value: loadingProgress.expectedTotalBytes !=
+                                          null
                                       ? loadingProgress.cumulativeBytesLoaded /
                                           loadingProgress.expectedTotalBytes!
                                       : null,
@@ -1470,10 +1518,12 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.broken_image, size: 40.sp, color: Colors.grey),
+                                  Icon(Icons.broken_image,
+                                      size: 40.sp, color: Colors.grey),
                                   Text(
                                     '이미지 로드 실패',
-                                    style: TextStyle(fontSize: 10.sp, color: Colors.grey),
+                                    style: TextStyle(
+                                        fontSize: 10.sp, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -1573,9 +1623,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '요청 정보',
             style: FigmaTextStyles().headline4.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w700,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w700,
+                ),
           ),
           SizedBox(height: 24.h),
 
@@ -1607,10 +1657,19 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   value: _selectedCategory,
                   required: true,
                   items: buildSimpleDropdownItems(
-                    items: const ['가구', '전자제품', '도서', '의류', '장난감', '생활용품', '기타'],
+                    items: const [
+                      '가구',
+                      '전자제품',
+                      '도서',
+                      '의류',
+                      '장난감',
+                      '생활용품',
+                      '기타'
+                    ],
                     currentValue: _selectedCategory,
                   ),
-                  onChanged: (value) => setState(() => _selectedCategory = value),
+                  onChanged: (value) =>
+                      setState(() => _selectedCategory = value),
                   validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
                 ),
               ),
@@ -1622,12 +1681,25 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   value: _selectedUrgency,
                   required: true,
                   items: [
-                    buildDropdownItem<String>(value: 'low', text: '낮음', currentValue: _selectedUrgency),
-                    buildDropdownItem<String>(value: 'normal', text: '보통', currentValue: _selectedUrgency),
-                    buildDropdownItem<String>(value: 'medium', text: '중간', currentValue: _selectedUrgency),
-                    buildDropdownItem<String>(value: 'high', text: '높음', currentValue: _selectedUrgency),
+                    buildDropdownItem<String>(
+                        value: 'low',
+                        text: '낮음',
+                        currentValue: _selectedUrgency),
+                    buildDropdownItem<String>(
+                        value: 'normal',
+                        text: '보통',
+                        currentValue: _selectedUrgency),
+                    buildDropdownItem<String>(
+                        value: 'medium',
+                        text: '중간',
+                        currentValue: _selectedUrgency),
+                    buildDropdownItem<String>(
+                        value: 'high',
+                        text: '높음',
+                        currentValue: _selectedUrgency),
                   ],
-                  onChanged: (value) => setState(() => _selectedUrgency = value!),
+                  onChanged: (value) =>
+                      setState(() => _selectedUrgency = value!),
                   validator: (value) => value == null ? '우선순위를 선택해주세요' : null,
                 ),
               ),
@@ -1639,9 +1711,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '거래 지역',
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           SizedBox(height: 8.h),
           Row(
@@ -1674,7 +1746,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   value: _selectedDistrict,
                   enabled: _selectedProvince != null,
                   items: _selectedProvince != null
-                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                      ? LocationData.getDistricts(_selectedProvince!)
+                          .map((district) {
                           return buildDropdownItem<String>(
                             value: district,
                             text: district,
@@ -1723,8 +1796,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Text(
                   '택배 가능',
                   style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral900,
-                  ),
+                        color: NewAppColor.neutral900,
+                      ),
                 ),
               ),
             ],
@@ -1735,9 +1808,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '보상 정보',
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           SizedBox(height: 8.h),
           Row(
@@ -1747,9 +1820,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   hintText: '보상 유형 선택',
                   value: _rewardType,
                   items: [
-                    buildDropdownItem<String>(value: 'none', text: '없음', currentValue: _rewardType),
-                    buildDropdownItem<String>(value: 'exchange', text: '교환', currentValue: _rewardType),
-                    buildDropdownItem<String>(value: 'payment', text: '금액', currentValue: _rewardType),
+                    buildDropdownItem<String>(
+                        value: 'none', text: '없음', currentValue: _rewardType),
+                    buildDropdownItem<String>(
+                        value: 'exchange',
+                        text: '교환',
+                        currentValue: _rewardType),
+                    buildDropdownItem<String>(
+                        value: 'payment',
+                        text: '금액',
+                        currentValue: _rewardType),
                   ],
                   onChanged: (value) => setState(() => _rewardType = value),
                 ),
@@ -1779,9 +1859,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '상세 설명',
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           SizedBox(height: 8.h),
           TextFormField(
@@ -1829,9 +1909,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     Text(
                       '이메일 (선택)',
                       style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color: NewAppColor.neutral900,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     SizedBox(height: 8.h),
                     TextFormField(
@@ -1857,9 +1937,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     return Text(
       text,
       style: FigmaTextStyles().caption1.copyWith(
-        color: NewAppColor.primary700,
-        height: 1.4,
-      ),
+            color: NewAppColor.primary700,
+            height: 1.4,
+          ),
     );
   }
 
@@ -1875,9 +1955,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '모집 정보',
             style: FigmaTextStyles().headline4.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w700,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w700,
+                ),
           ),
           SizedBox(height: 24.h),
 
@@ -1899,7 +1979,25 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 2. 직책 * | 고용 형태 (Row)
+          // 2. 교회/기관명 *
+          _buildRequiredLabel('교회/기관명'),
+          SizedBox(height: 8.h),
+          TextFormField(
+            controller: _companyController,
+            decoration: _buildInputDecoration(
+              hintText: '예: 은혜교회, 사랑의교회',
+            ),
+            style: FigmaTextStyles().body2,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '교회/기관명을 입력해주세요';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 24.h),
+
+          // 3. 직책 * | 고용 형태 (Row)
           Row(
             children: [
               Expanded(
@@ -1909,14 +2007,33 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   value: _selectedCategory,
                   required: true,
                   items: [
-                    buildDropdownItem<String>(value: 'pastor', text: '목사', currentValue: _selectedCategory),
-                    buildDropdownItem<String>(value: 'minister', text: '전도사', currentValue: _selectedCategory),
-                    buildDropdownItem<String>(value: 'worship', text: '찬양사역자', currentValue: _selectedCategory),
-                    buildDropdownItem<String>(value: 'admin', text: '행정간사', currentValue: _selectedCategory),
-                    buildDropdownItem<String>(value: 'education', text: '교육간사', currentValue: _selectedCategory),
-                    buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedCategory),
+                    buildDropdownItem<String>(
+                        value: 'pastor',
+                        text: '목사',
+                        currentValue: _selectedCategory),
+                    buildDropdownItem<String>(
+                        value: 'minister',
+                        text: '전도사',
+                        currentValue: _selectedCategory),
+                    buildDropdownItem<String>(
+                        value: 'worship',
+                        text: '찬양사역자',
+                        currentValue: _selectedCategory),
+                    buildDropdownItem<String>(
+                        value: 'admin',
+                        text: '행정간사',
+                        currentValue: _selectedCategory),
+                    buildDropdownItem<String>(
+                        value: 'education',
+                        text: '교육간사',
+                        currentValue: _selectedCategory),
+                    buildDropdownItem<String>(
+                        value: 'other',
+                        text: '기타',
+                        currentValue: _selectedCategory),
                   ],
-                  onChanged: (value) => setState(() => _selectedCategory = value),
+                  onChanged: (value) =>
+                      setState(() => _selectedCategory = value),
                   validator: (value) => value == null ? '직책을 선택해주세요' : null,
                 ),
               ),
@@ -1926,13 +2043,27 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   label: '고용 형태',
                   hintText: '고용 형태',
                   value: _selectedEmploymentType,
+                  required: true,
                   items: [
-                    buildDropdownItem<String>(value: 'full-time', text: '정규직', currentValue: _selectedEmploymentType),
-                    buildDropdownItem<String>(value: 'contract', text: '계약직', currentValue: _selectedEmploymentType),
-                    buildDropdownItem<String>(value: 'part-time', text: '시간제', currentValue: _selectedEmploymentType),
-                    buildDropdownItem<String>(value: 'volunteer', text: '자원봉사', currentValue: _selectedEmploymentType),
+                    buildDropdownItem<String>(
+                        value: 'full-time',
+                        text: '정규직',
+                        currentValue: _selectedEmploymentType),
+                    buildDropdownItem<String>(
+                        value: 'contract',
+                        text: '계약직',
+                        currentValue: _selectedEmploymentType),
+                    buildDropdownItem<String>(
+                        value: 'part-time',
+                        text: '시간제',
+                        currentValue: _selectedEmploymentType),
+                    buildDropdownItem<String>(
+                        value: 'volunteer',
+                        text: '자원봉사',
+                        currentValue: _selectedEmploymentType),
                   ],
-                  onChanged: (value) => setState(() => _selectedEmploymentType = value),
+                  onChanged: (value) =>
+                      setState(() => _selectedEmploymentType = value),
                 ),
               ),
             ],
@@ -1946,35 +2077,50 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '급여 조건',
-                      style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRequiredLabel('급여 조건'),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _salaryController,
+                      enabled: !_isSalaryNegotiable,
                       decoration: _buildInputDecoration(
-                        hintText: '예: 월 300만원, 협의',
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.only(left: 12.w, right: 8.w),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '₩',
-                                style: FigmaTextStyles().body2.copyWith(
-                                  color: NewAppColor.neutral400,
-                                  fontSize: 18.sp,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        hintText: _isSalaryNegotiable ? '협의' : '예: 월 300만원',
                       ),
                       style: FigmaTextStyles().body2,
+                      onChanged: (value) {
+                        setState(() {}); // validation 업데이트
+                      },
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 20.w,
+                          height: 20.h,
+                          child: Checkbox(
+                            value: _isSalaryNegotiable,
+                            onChanged: (value) {
+                              setState(() {
+                                _isSalaryNegotiable = value ?? false;
+                                if (_isSalaryNegotiable) {
+                                  _salaryController.text = '협의';
+                                } else {
+                                  _salaryController.clear();
+                                }
+                              });
+                            },
+                            activeColor: NewAppColor.primary600,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          '급여 협의',
+                          style: FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral700,
+                              ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1987,9 +2133,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '근무 지역',
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           SizedBox(height: 8.h),
           Row(
@@ -2022,7 +2168,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   value: _selectedDistrict,
                   enabled: _selectedProvince != null,
                   items: _selectedProvince != null
-                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                      ? LocationData.getDistricts(_selectedProvince!)
+                          .map((district) {
                           return buildDropdownItem<String>(
                             value: district,
                             text: district,
@@ -2075,109 +2222,59 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           SizedBox(height: 32.h),
 
           // ===== 섹션 2: 상세 내용 =====
-          Text(
-            '상세 내용',
-            style: FigmaTextStyles().headline4.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: 24.h),
+          // Text(
+          //   '상세 내용',
+          //   style: FigmaTextStyles().headline4.copyWith(
+          //     color: NewAppColor.neutral900,
+          //     fontWeight: FontWeight.w700,
+          //   ),
+          // ),
+          // SizedBox(height: 24.h),
 
-          // 5. 업무 내용
-          Text(
-            '업무 내용',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          // 5. 상세 내용 (통합)
+          _buildRequiredLabel('상세 내용'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
             decoration: _buildInputDecoration(
-              hintText: '담당하게 될 업무와 역할을 자세히 설명해주세요',
-            ),
-            style: FigmaTextStyles().body2,
-            maxLines: 6,
-          ),
-          SizedBox(height: 24.h),
+              hintText: '''아래 내용을 포함하여 작성해주세요:
 
-          // 6. 자격 요건
-          Text(
-            '자격 요건',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _qualificationsController,
-            decoration: _buildInputDecoration(
-              hintText: '예: 신학대 졸업, 목사 안수, 청년 사역 경험',
+• 교회 소개 (비전, 역사, 특징 등)
+• 담당 업무 및 역할
+• 자격 요건 (학력, 경력, 자격증 등)
+• 우대 사항
+• 복리후생 (4대보험, 연차, 숙소 제공 등)
+• 기타 참고사항''',
             ),
             style: FigmaTextStyles().body2,
-            maxLines: 4,
-          ),
-          SizedBox(height: 24.h),
-
-          // 7. 우대 사항
-          Text(
-            '우대 사항',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _preferredQualificationsController,
-            decoration: _buildInputDecoration(
-              hintText: '예: 청년 사역 경험, 찬양 가능',
-            ),
-            style: FigmaTextStyles().body2,
-            maxLines: 4,
-          ),
-          SizedBox(height: 24.h),
-
-          // 8. 복리후생
-          Text(
-            '복리후생',
-            style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _benefitsController,
-            decoration: _buildInputDecoration(
-              hintText: '예: 4대보험, 연차, 숙소 제공',
-            ),
-            style: FigmaTextStyles().body2,
-            maxLines: 4,
+            maxLines: 15,
           ),
           SizedBox(height: 32.h),
 
           // ===== 섹션 3: 연락처 정보 =====
           Text(
-            '연락처 정보',
+            '연락처 정보(선택)',
             style: FigmaTextStyles().headline4.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w700,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w700,
+                ),
           ),
           SizedBox(height: 24.h),
 
-          // 9. 담당자 연락처 * | 이메일(선택) (Row)
+          // 6. 담당자 연락처(선택) | 이메일(선택) (Row)
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildRequiredLabel('담당자 연락처'),
+                    Text(
+                      '담당자 연락처',
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral900,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
@@ -2186,12 +2283,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       ),
                       style: FigmaTextStyles().body2,
                       keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return '연락처를 입력해주세요';
-                        }
-                        return null;
-                      },
                     ),
                   ],
                 ),
@@ -2202,11 +2293,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '이메일 (선택)',
+                      '이메일',
                       style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color: NewAppColor.neutral900,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     SizedBox(height: 8.h),
                     TextFormField(
@@ -2257,7 +2348,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             ),
             maxLength: 100,
             onChanged: (value) => setState(() {}),
-            validator: (value) => value?.trim().isEmpty ?? true ? '제목을 입력해주세요' : null,
+            validator: (value) =>
+                value?.trim().isEmpty ?? true ? '제목을 입력해주세요' : null,
           ),
           SizedBox(height: 24.h),
 
@@ -2268,17 +2360,48 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             value: _selectedEventType,
             required: true,
             items: [
-              buildDropdownItem<String>(value: 'sunday-service', text: '주일예배', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'wednesday-service', text: '수요예배', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'dawn-service', text: '새벽예배', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'special-service', text: '특별예배', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'revival', text: '부흥회', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'praise-meeting', text: '찬양집회', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'wedding', text: '결혼식', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'funeral', text: '장례식', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'retreat', text: '수련회', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'concert', text: '콘서트', currentValue: _selectedEventType),
-              buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'sunday-service',
+                  text: '주일예배',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'wednesday-service',
+                  text: '수요예배',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'dawn-service',
+                  text: '새벽예배',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'special-service',
+                  text: '특별예배',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'revival',
+                  text: '부흥회',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'praise-meeting',
+                  text: '찬양집회',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'wedding',
+                  text: '결혼식',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'funeral',
+                  text: '장례식',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'retreat',
+                  text: '수련회',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'concert',
+                  text: '콘서트',
+                  currentValue: _selectedEventType),
+              buildDropdownItem<String>(
+                  value: 'other', text: '기타', currentValue: _selectedEventType),
             ],
             onChanged: (value) => setState(() => _selectedEventType = value),
             validator: (value) => value == null ? '행사 유형을 선택해주세요' : null,
@@ -2292,15 +2415,36 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             value: _selectedTeamType,
             required: true,
             items: [
-              buildDropdownItem<String>(value: 'solo', text: '현재 솔로 활동', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'praise-team', text: '찬양팀', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'worship-team', text: '워십팀', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'acoustic-team', text: '어쿠스틱 팀', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'band', text: '밴드', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'orchestra', text: '오케스트라', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'choir', text: '합창단', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'dance-team', text: '무용팀', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'solo',
+                  text: '현재 솔로 활동',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'praise-team',
+                  text: '찬양팀',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'worship-team',
+                  text: '워십팀',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'acoustic-team',
+                  text: '어쿠스틱 팀',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'band', text: '밴드', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'orchestra',
+                  text: '오케스트라',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'choir', text: '합창단', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'dance-team',
+                  text: '무용팀',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'other', text: '기타', currentValue: _selectedTeamType),
             ],
             onChanged: (value) => setState(() => _selectedTeamType = value),
             validator: (value) => value == null ? '팀 형태를 선택해주세요' : null,
@@ -2334,11 +2478,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                           context: context,
                           initialDate: DateTime.now(),
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
                         );
                         if (date != null) {
                           setState(() {
-                            _eventDateController.text = date.toString().split(' ')[0];
+                            _eventDateController.text =
+                                date.toString().split(' ')[0];
                           });
                         }
                       },
@@ -2404,7 +2550,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   value: _selectedDistrict,
                   enabled: _selectedProvince != null,
                   items: _selectedProvince != null
-                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                      ? LocationData.getDistricts(_selectedProvince!)
+                          .map((district) {
                           return buildDropdownItem<String>(
                             value: district,
                             text: district,
@@ -2529,7 +2676,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         hintText: '010-1234-5678',
                       ),
                       keyboardType: TextInputType.phone,
-                      validator: (value) => value?.trim().isEmpty ?? true ? '연락처를 입력해주세요' : null,
+                      validator: (value) =>
+                          value?.trim().isEmpty ?? true ? '연락처를 입력해주세요' : null,
                     ),
                   ],
                 ),
@@ -2619,9 +2767,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     Text(
                       '현재 활동 팀명 (선택)',
                       style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color: NewAppColor.neutral900,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     SizedBox(height: 8.h),
                     TextFormField(
@@ -2644,15 +2792,36 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             value: _selectedTeamType,
             required: true,
             items: [
-              buildDropdownItem<String>(value: 'solo', text: '현재 솔로 활동', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'praise-team', text: '찬양팀', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'worship-team', text: '워십팀', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'acoustic-team', text: '어쿠스틱 팀', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'band', text: '밴드', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'orchestra', text: '오케스트라', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'choir', text: '합창단', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'dance-team', text: '무용팀', currentValue: _selectedTeamType),
-              buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'solo',
+                  text: '현재 솔로 활동',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'praise-team',
+                  text: '찬양팀',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'worship-team',
+                  text: '워십팀',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'acoustic-team',
+                  text: '어쿠스틱 팀',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'band', text: '밴드', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'orchestra',
+                  text: '오케스트라',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'choir', text: '합창단', currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'dance-team',
+                  text: '무용팀',
+                  currentValue: _selectedTeamType),
+              buildDropdownItem<String>(
+                  value: 'other', text: '기타', currentValue: _selectedTeamType),
             ],
             onChanged: (value) => setState(() => _selectedTeamType = value),
             validator: (value) => value == null ? '팀 형태를 선택해주세요' : null,
@@ -2663,9 +2832,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             '연주 경력',
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           SizedBox(height: 8.h),
           TextFormField(
@@ -2714,7 +2883,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   value: _selectedDistrict,
                   enabled: _selectedProvince != null,
                   items: _selectedProvince != null
-                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                      ? LocationData.getDistricts(_selectedProvince!)
+                          .map((district) {
                           return buildDropdownItem<String>(
                             value: district,
                             text: district,
@@ -2745,10 +2915,12 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       _selectedDistrict = null;
                     });
                   } else {
-                    AppToast.show(context, '이미 추가된 지역입니다', type: ToastType.warning);
+                    AppToast.show(context, '이미 추가된 지역입니다',
+                        type: ToastType.warning);
                   }
                 } else {
-                  AppToast.show(context, '도/시와 시/군/구를 선택해주세요', type: ToastType.warning);
+                  AppToast.show(context, '도/시와 시/군/구를 선택해주세요',
+                      type: ToastType.warning);
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -2808,7 +2980,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                               day,
                               textAlign: TextAlign.center,
                               style: FigmaTextStyles().body2.copyWith(
-                                    color: _availableDays.contains(day) ? Colors.white : NewAppColor.neutral700,
+                                    color: _availableDays.contains(day)
+                                        ? Colors.white
+                                        : NewAppColor.neutral700,
                                     fontWeight: FontWeight.w500,
                                   ),
                             ),
@@ -2839,12 +3013,30 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             hintText: '활동 가능 시간대',
             value: _selectedTimeSlot,
             items: [
-              buildDropdownItem<String>(value: 'morning', text: '오전 (9:00-12:00)', currentValue: _selectedTimeSlot),
-              buildDropdownItem<String>(value: 'afternoon', text: '오후 (13:00-18:00)', currentValue: _selectedTimeSlot),
-              buildDropdownItem<String>(value: 'evening', text: '저녁 (18:00-21:00)', currentValue: _selectedTimeSlot),
-              buildDropdownItem<String>(value: 'night', text: '야간 (21:00-23:00)', currentValue: _selectedTimeSlot),
-              buildDropdownItem<String>(value: 'anytime', text: '상시 가능', currentValue: _selectedTimeSlot),
-              buildDropdownItem<String>(value: 'negotiable', text: '협의 후 결정', currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(
+                  value: 'morning',
+                  text: '오전 (9:00-12:00)',
+                  currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(
+                  value: 'afternoon',
+                  text: '오후 (13:00-18:00)',
+                  currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(
+                  value: 'evening',
+                  text: '저녁 (18:00-21:00)',
+                  currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(
+                  value: 'night',
+                  text: '야간 (21:00-23:00)',
+                  currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(
+                  value: 'anytime',
+                  text: '상시 가능',
+                  currentValue: _selectedTimeSlot),
+              buildDropdownItem<String>(
+                  value: 'negotiable',
+                  text: '협의 후 결정',
+                  currentValue: _selectedTimeSlot),
             ],
             onChanged: (value) {
               setState(() {
@@ -2879,9 +3071,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           Text(
             'YouTube 링크 (선택)',
             style: FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral900,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           SizedBox(height: 8.h),
           TextFormField(
@@ -2913,7 +3105,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.upload_file, size: 40.r, color: NewAppColor.neutral500),
+                    Icon(Icons.upload_file,
+                        size: 40.r, color: NewAppColor.neutral500),
                     SizedBox(height: 8.h),
                     Text(
                       '파일을 드래그',
@@ -2928,7 +3121,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         backgroundColor: NewAppColor.primary500,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 24.w, vertical: 12.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.r),
                         ),
@@ -2944,7 +3138,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     SizedBox(height: 8.h),
                     if (_portfolioFileUrl != null) ...[
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12.w, vertical: 8.h),
                         decoration: BoxDecoration(
                           color: NewAppColor.primary100,
                           borderRadius: BorderRadius.circular(4.r),
@@ -2952,15 +3147,16 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle, size: 16.r, color: NewAppColor.primary600),
+                            Icon(Icons.check_circle,
+                                size: 16.r, color: NewAppColor.primary600),
                             SizedBox(width: 4.w),
                             Text(
                               '파일 업로드 완료',
                               style: FigmaTextStyles().body2.copyWith(
-                                fontSize: 12.sp,
-                                color: NewAppColor.primary600,
-                                fontWeight: FontWeight.w600,
-                              ),
+                                    fontSize: 12.sp,
+                                    color: NewAppColor.primary600,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
                             SizedBox(width: 8.w),
                             InkWell(
@@ -2969,7 +3165,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                                   _portfolioFileUrl = null;
                                 });
                               },
-                              child: Icon(Icons.close, size: 16.r, color: NewAppColor.primary600),
+                              child: Icon(Icons.close,
+                                  size: 16.r, color: NewAppColor.primary600),
                             ),
                           ],
                         ),
@@ -3034,9 +3231,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     Text(
                       '이메일 (선택)',
                       style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color: NewAppColor.neutral900,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     SizedBox(height: 8.h),
                     TextFormField(
@@ -3079,13 +3276,34 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             value: _selectedNewsCategory,
             required: true,
             items: [
-              buildDropdownItem<String>(value: 'worship', text: '특별예배/연합예배', currentValue: _selectedNewsCategory),
-              buildDropdownItem<String>(value: 'event', text: '행사', currentValue: _selectedNewsCategory),
-              buildDropdownItem<String>(value: 'retreat', text: '수련회', currentValue: _selectedNewsCategory),
-              buildDropdownItem<String>(value: 'mission', text: '선교', currentValue: _selectedNewsCategory),
-              buildDropdownItem<String>(value: 'education', text: '교육', currentValue: _selectedNewsCategory),
-              buildDropdownItem<String>(value: 'volunteer', text: '봉사', currentValue: _selectedNewsCategory),
-              buildDropdownItem<String>(value: 'other', text: '기타', currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(
+                  value: 'worship',
+                  text: '특별예배/연합예배',
+                  currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(
+                  value: 'event',
+                  text: '행사',
+                  currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(
+                  value: 'retreat',
+                  text: '수련회',
+                  currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(
+                  value: 'mission',
+                  text: '선교',
+                  currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(
+                  value: 'education',
+                  text: '교육',
+                  currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(
+                  value: 'volunteer',
+                  text: '봉사',
+                  currentValue: _selectedNewsCategory),
+              buildDropdownItem<String>(
+                  value: 'other',
+                  text: '기타',
+                  currentValue: _selectedNewsCategory),
             ],
             onChanged: (value) => setState(() => _selectedNewsCategory = value),
             validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
@@ -3106,7 +3324,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 100,
             onChanged: (value) => setState(() {}),
@@ -3133,7 +3352,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLines: 6,
             maxLength: 1000,
@@ -3154,9 +3374,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             value: _selectedPriority,
             required: true,
             items: [
-              buildDropdownItem<String>(value: 'urgent', text: '긴급', currentValue: _selectedPriority),
-              buildDropdownItem<String>(value: 'important', text: '중요', currentValue: _selectedPriority),
-              buildDropdownItem<String>(value: 'normal', text: '일반', currentValue: _selectedPriority),
+              buildDropdownItem<String>(
+                  value: 'urgent', text: '긴급', currentValue: _selectedPriority),
+              buildDropdownItem<String>(
+                  value: 'important',
+                  text: '중요',
+                  currentValue: _selectedPriority),
+              buildDropdownItem<String>(
+                  value: 'normal', text: '일반', currentValue: _selectedPriority),
             ],
             onChanged: (value) => setState(() => _selectedPriority = value!),
           ),
@@ -3176,11 +3401,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             readOnly: true,
             decoration: InputDecoration(
               hintText: '날짜를 선택해주세요',
-              prefixIcon: Icon(Icons.calendar_today, size: 20.r, color: NewAppColor.neutral600),
+              prefixIcon: Icon(Icons.calendar_today,
+                  size: 20.r, color: NewAppColor.neutral600),
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             onTap: () async {
               final date = await showCustomDatePicker(
@@ -3211,11 +3438,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             controller: _newsEventTimeController,
             decoration: InputDecoration(
               hintText: '-- --:--',
-              suffixIcon: Icon(Icons.access_time, size: 20.r, color: NewAppColor.neutral600),
+              suffixIcon: Icon(Icons.access_time,
+                  size: 20.r, color: NewAppColor.neutral600),
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
           ),
           SizedBox(height: 24.h),
@@ -3257,7 +3486,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                   value: _selectedDistrict,
                   enabled: _selectedProvince != null,
                   items: _selectedProvince != null
-                      ? LocationData.getDistricts(_selectedProvince!).map((district) {
+                      ? LocationData.getDistricts(_selectedProvince!)
+                          .map((district) {
                           return buildDropdownItem<String>(
                             value: district,
                             text: district,
@@ -3293,7 +3523,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 100,
             onChanged: (value) => setState(() {}),
@@ -3311,7 +3542,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 50,
             onChanged: (value) => setState(() {}),
@@ -3341,7 +3573,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 50,
             onChanged: (value) => setState(() {}),
@@ -3365,7 +3598,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 50,
             onChanged: (value) => setState(() {}),
@@ -3389,7 +3623,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             maxLength: 50,
             onChanged: (value) => setState(() {}),
@@ -3412,7 +3647,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             keyboardType: TextInputType.phone,
           ),
@@ -3434,7 +3670,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
             keyboardType: TextInputType.emailAddress,
           ),
@@ -3453,8 +3690,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     return InputDecoration(
       hintText: hintText,
       hintStyle: FigmaTextStyles().body2.copyWith(
-        color: NewAppColor.neutral400,
-      ),
+            color: NewAppColor.neutral400,
+          ),
       counterText: counterText,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
@@ -3517,7 +3754,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       }
 
       // 지역 필수 (택배 가능 체크하면 통과)
-      if (!_deliveryAvailable && _selectedProvince == null && _selectedDistrict == null) {
+      if (!_deliveryAvailable &&
+          _selectedProvince == null &&
+          _selectedDistrict == null) {
         AppToast.show(
           context,
           '거래 지역을 선택하거나 택배 가능을 체크해주세요',
@@ -3618,7 +3857,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         targetHeight = maxSize;
         targetWidth = (image.width * maxSize / image.height).round();
       }
-      print('📐 이미지 리사이즈: ${image.width}x${image.height} → ${targetWidth}x${targetHeight}');
+      print(
+          '📐 이미지 리사이즈: ${image.width}x${image.height} → ${targetWidth}x${targetHeight}');
     }
 
     // 이미지 리사이즈
@@ -3643,7 +3883,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     final compressedBytes = byteData!.buffer.asUint8List();
 
     final compressedSize = compressedBytes.length;
-    print('📊 압축 후 크기: ${(compressedSize / 1024 / 1024).toStringAsFixed(2)}MB (${((1 - compressedSize / originalSize) * 100).toStringAsFixed(1)}% 감소)');
+    print(
+        '📊 압축 후 크기: ${(compressedSize / 1024 / 1024).toStringAsFixed(2)}MB (${((1 - compressedSize / originalSize) * 100).toStringAsFixed(1)}% 감소)');
 
     return compressedBytes;
   }
@@ -3666,7 +3907,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
         // 파일명 생성: timestamp_random.png (압축 후 PNG)
         final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final random = (DateTime.now().microsecond % 10000).toString().padLeft(4, '0');
+        final random =
+            (DateTime.now().microsecond % 10000).toString().padLeft(4, '0');
         final fileName = '${timestamp}_$random.png';
 
         print('📤 이미지 업로드 중 (${i + 1}/${_selectedImages.length}): $fileName');
@@ -3675,17 +3917,15 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         final compressedBytes = await _compressImage(imageFile);
 
         // Supabase Storage에 업로드
-        final path = await supabase.storage
-            .from('community-images')
-            .uploadBinary(
-              fileName,
-              compressedBytes,
-            );
+        final path =
+            await supabase.storage.from('community-images').uploadBinary(
+                  fileName,
+                  compressedBytes,
+                );
 
         // Public URL 생성
-        final publicUrl = supabase.storage
-            .from('community-images')
-            .getPublicUrl(fileName);
+        final publicUrl =
+            supabase.storage.from('community-images').getPublicUrl(fileName);
 
         imageUrls.add(publicUrl);
         print('✅ 업로드 완료: $publicUrl');
@@ -3770,7 +4010,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       final extension = file.extension ?? 'bin';
       final fileName = '${timestamp}_portfolio.$extension';
 
-      print('📤 파일 업로드 중: $fileName (${(file.size / 1024 / 1024).toStringAsFixed(2)}MB)');
+      print(
+          '📤 파일 업로드 중: $fileName (${(file.size / 1024 / 1024).toStringAsFixed(2)}MB)');
 
       Uint8List fileBytes;
       if (file.bytes != null) {
@@ -3791,7 +4032,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           contentType = 'application/msword';
           break;
         case 'docx':
-          contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          contentType =
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
           break;
         case 'mp3':
           contentType = 'audio/mpeg';
@@ -3805,17 +4047,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       }
 
       // Supabase Storage에 업로드 (community-files 버킷 사용)
-      await supabase.storage
-          .from('community-files')
-          .uploadBinary(
+      await supabase.storage.from('community-files').uploadBinary(
             fileName,
             fileBytes,
           );
 
       // Public URL 생성
-      final publicUrl = supabase.storage
-          .from('community-files')
-          .getPublicUrl(fileName);
+      final publicUrl =
+          supabase.storage.from('community-files').getPublicUrl(fileName);
 
       print('✅ 파일 업로드 완료: $publicUrl');
       return publicUrl;
@@ -3845,7 +4084,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       images: imageUrls,
       isFree: _isFreeSharing,
       price: _isFreeSharing ? null : int.tryParse(_priceController.text),
-      purchaseDate: _purchaseDateController.text.trim().isEmpty ? null : _purchaseDateController.text.trim(),
+      purchaseDate: _purchaseDateController.text.trim().isEmpty
+          ? null
+          : _purchaseDateController.text.trim(),
       contactPhone: _contactController.text.trim(),
       contactEmail: _emailController.text.trim().isEmpty
           ? null
@@ -3885,19 +4126,21 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       company: _companyController.text.trim(),
-      churchIntro: _churchIntroController.text.trim(),
-      position: _positionController.text.trim(),
-      jobType: _jobTypeController.text.trim(),
+      churchIntro: '', // 상세 내용에 통합됨
+      position: _selectedCategory ?? 'other', // UI의 직책 dropdown
+      jobType: '', // 사용하지 않음
       employmentType: _selectedEmploymentType ?? 'full-time',
       salary: _salaryController.text.trim(),
-      qualifications: _qualificationsController.text.trim(),
+      qualifications: '', // 상세 내용에 통합됨
       province: _selectedProvince,
       district: _selectedDistrict,
       deliveryAvailable: _deliveryAvailable,
       deadline: _deadlineController.text.trim().isEmpty
           ? null
           : _deadlineController.text.trim(),
-      contactPhone: _contactController.text.trim(),
+      contactPhone: _contactController.text.trim().isEmpty
+          ? null
+          : _contactController.text.trim(),
       contactEmail: _emailController.text.trim().isEmpty
           ? null
           : _emailController.text.trim(),
@@ -3939,7 +4182,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   Future<bool> _submitMusicTeamSeeking() async {
     final response = await _communityService.createMusicTeamSeeker(
       title: _titleController.text.trim(),
-      teamName: _teamNameController.text.trim().isEmpty ? '없음' : _teamNameController.text.trim(),
+      teamName: _teamNameController.text.trim().isEmpty
+          ? '없음'
+          : _teamNameController.text.trim(),
       instrument: _selectedInstrument ?? 'other', // 미선택 시 기본값 'other'
       experience: _experienceController.text.trim(),
       portfolio: _youtubeController.text.trim(), // YouTube 링크를 portfolio로 사용

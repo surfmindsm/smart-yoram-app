@@ -1131,7 +1131,7 @@ class CommunityService {
     String? district,
     bool? deliveryAvailable,
     String? deadline,
-    required String contactPhone,
+    String? contactPhone,
     String? contactEmail,
   }) async {
     try {
@@ -1156,34 +1156,21 @@ class CommunityService {
         location = province;
       }
 
-      // contact_phone + contact_email을 합쳐서 contact_info 생성
-      String contactInfo = contactPhone;
-      if (contactEmail != null && contactEmail.isNotEmpty) {
-        contactInfo = '$contactPhone / $contactEmail';
-      }
-
-      // description에 교회소개와 모집분야 정보 추가
-      String fullDescription = description;
-      if (churchIntro.isNotEmpty) {
-        fullDescription = '【교회 소개】\n$churchIntro\n\n【모집 분야】\n$position\n\n【상세 내용】\n$description';
-      } else if (position.isNotEmpty) {
-        fullDescription = '【모집 분야】\n$position\n\n【상세 내용】\n$description';
-      }
-
       final data = {
         'title': title,
-        'description': fullDescription,
+        'description': description,
         'company_name': company,
-        'job_type': jobType,
+        'job_type': position.isNotEmpty ? position : jobType, // position을 job_type에 저장
         'employment_type': employmentType,
         'salary_range': salary,
         'requirements': qualifications,
         'location': location,
         'application_deadline': deadline,
-        'contact_info': contactInfo,
+        'contact_phone': contactPhone,
+        'contact_email': contactEmail,
         'church_id': currentUser.churchId,
         'author_id': currentUser.id,
-        'status': 'active',
+        'status': 'open', // 'active' 대신 'open' 사용
         'created_at': DateTime.now().toUtc().toIso8601String(),
       };
 

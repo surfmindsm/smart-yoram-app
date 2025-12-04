@@ -468,29 +468,31 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                     child: widget.tableName ==
                                             'community_sharing'
                                         ? _buildSharingStatusDropdown()
-                                        : ElevatedButton(
-                                            onPressed: _togglePostStatus,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  NewAppColor.primary600,
-                                              foregroundColor: Colors.white,
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 14.h),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12.r),
-                                              ),
-                                              elevation: 0,
-                                            ),
-                                            child: Text(
-                                              _getStatusButtonText(),
-                                              style: FigmaTextStyles()
-                                                  .button1
-                                                  .copyWith(
-                                                    color: Colors.white,
+                                        : widget.tableName == 'job_posts'
+                                            ? _buildJobPostingStatusDropdown()
+                                            : ElevatedButton(
+                                                onPressed: _togglePostStatus,
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      NewAppColor.primary600,
+                                                  foregroundColor: Colors.white,
+                                                  padding: EdgeInsets.symmetric(
+                                                      vertical: 14.h),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(12.r),
                                                   ),
-                                            ),
-                                          ),
+                                                  elevation: 0,
+                                                ),
+                                                child: Text(
+                                                  _getStatusButtonText(),
+                                                  style: FigmaTextStyles()
+                                                      .button1
+                                                      .copyWith(
+                                                        color: Colors.white,
+                                                      ),
+                                                ),
+                                              ),
                                   ),
                                 // 작성자가 아닌 경우: 좋아요 + 전화/채팅 버튼
                                 if (!_isAuthor()) ...[
@@ -553,11 +555,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                     child: ElevatedButton(
                                       onPressed: _onChatButtonPressed,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            NewAppColor.primary600,
+                                        backgroundColor: NewAppColor.primary600,
                                         foregroundColor: Colors.white,
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 14.h),
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 14.h),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(12.r),
@@ -566,11 +567,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       ),
                                       child: Text(
                                         '채팅하기',
-                                        style: FigmaTextStyles()
-                                            .button1
-                                            .copyWith(
-                                              color: Colors.white,
-                                            ),
+                                        style:
+                                            FigmaTextStyles().button1.copyWith(
+                                                  color: Colors.white,
+                                                ),
                                       ),
                                     ),
                                   ),
@@ -765,6 +765,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           // === 물품요청 전용 레이아웃 ===
           else if (_post is RequestItem) ...[
             _buildRequestLayout(_post as RequestItem, date, authorName,
+                authorProfilePhotoUrl, churchName, churchLocation, description),
+          ]
+          // === 사역자 모집 전용 레이아웃 ===
+          else if (_post is JobPost) ...[
+            _buildJobPostingLayout(_post as JobPost, date, authorName,
                 authorProfilePhotoUrl, churchName, churchLocation, description),
           ]
           // === 행사팀 지원 전용 레이아웃 ===
@@ -1470,6 +1475,157 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         );
       }
     }
+  }
+
+  /// 사역자 모집 상태 드롭다운 버튼
+  Widget _buildJobPostingStatusDropdown() {
+    if (_post == null) return const SizedBox.shrink();
+
+    final currentStatus = (_post as CommunityBasePost).status;
+
+    // 현재 상태에 따른 스타일 정의
+    Color getStatusColor(String status) {
+      switch (status) {
+        case 'open':
+        case 'active': // 'active'도 모집중으로 처리
+          return NewAppColor.primary600;
+        case 'closed':
+          return NewAppColor.neutral600;
+        default:
+          return NewAppColor.neutral600;
+      }
+    }
+
+    String getStatusText(String status) {
+      switch (status) {
+        case 'open':
+        case 'active': // 'active'도 모집중으로 처리
+          return '모집중';
+        case 'closed':
+          return '마감';
+        default:
+          return '상태 없음';
+      }
+    }
+
+    IconData getStatusIcon(String status) {
+      switch (status) {
+        case 'open':
+        case 'active': // 'active'도 모집중으로 처리
+          return Icons.work_outline;
+        case 'closed':
+          return Icons.work_off_outlined;
+        default:
+          return Icons.help_outline;
+      }
+    }
+
+    return PopupMenuButton<String>(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      onSelected: (String newStatus) {
+        if (newStatus != currentStatus) {
+          _updateStatus(newStatus);
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        final isOpen = currentStatus == 'open' || currentStatus == 'active';
+        return [
+          PopupMenuItem<String>(
+            value: 'open',
+            enabled: !isOpen,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.work_outline,
+                  color: NewAppColor.primary600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '모집중',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: isOpen
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (isOpen) ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.primary600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'closed',
+            enabled: currentStatus != 'closed',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.work_off_outlined,
+                  color: NewAppColor.neutral600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '마감',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'closed'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'closed') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.neutral600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ];
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: getStatusColor(currentStatus),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              getStatusIcon(currentStatus),
+              color: Colors.white,
+              size: 20.sp,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              getStatusText(currentStatus),
+              style: FigmaTextStyles().button1.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// 물품 판매/나눔 상태 드롭다운 버튼
@@ -2362,7 +2518,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 3. 상품 설명 ===
         Container(
@@ -2395,7 +2551,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 2. 상품 정보 카드 ===
         Container(
@@ -2449,7 +2605,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 4. 연락처 정보 ===
         Container(
@@ -2469,12 +2625,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ),
               SizedBox(height: 16.h),
               // 전화번호
-              if (item.contactPhone.isNotEmpty)
+              if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                 _buildContactItem(
                   icon: Icons.phone_outlined,
                   label: '전화번호',
-                  value: item.contactPhone,
-                  onTap: () => _showContactDialog(item.contactPhone),
+                  value: item.contactPhone!,
+                  onTap: () => _showContactDialog(item.contactPhone!),
                 ),
               // 이메일
               if (item.contactEmail != null &&
@@ -2535,6 +2691,249 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 color: valueColor ?? NewAppColor.neutral900,
                 fontWeight: valueWeight ?? FontWeight.w500,
               ),
+        ),
+      ],
+    );
+  }
+
+  /// 사역자 모집 전용 레이아웃
+  Widget _buildJobPostingLayout(
+    JobPost item,
+    String date,
+    String? authorName,
+    String? authorProfilePhotoUrl,
+    String? churchName,
+    String? churchLocation,
+    String? description,
+  ) {
+    // 직책 표시명 변환
+    String getPositionDisplayName(String position) {
+      switch (position) {
+        case 'pastor':
+          return '목사';
+        case 'minister':
+          return '전도사';
+        case 'worship':
+          return '찬양사역자';
+        case 'admin':
+          return '행정간사';
+        case 'education':
+          return '교육간사';
+        case 'other':
+          return '기타';
+        default:
+          return position;
+      }
+    }
+
+    // 고용형태 표시명 변환
+    String getEmploymentTypeDisplayName(String type) {
+      switch (type) {
+        case 'full-time':
+          return '정규직';
+        case 'part-time':
+          return '시간제';
+        case 'contract':
+          return '계약직';
+        case 'volunteer':
+          return '자원봉사';
+        default:
+          return type;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // === 1. 프로필 정보 섹션 ===
+        Container(
+          color: NewAppColor.neutral100,
+          padding: EdgeInsets.all(20.r),
+          child: Row(
+            children: [
+              // 프로필 이미지
+              _buildProfileImage(authorProfilePhotoUrl),
+              SizedBox(width: 12.w),
+              // 사용자 정보
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 사용자 이름
+                    Text(
+                      authorName ?? '알 수 없음',
+                      style: FigmaTextStyles().body1.copyWith(
+                            color: NewAppColor.neutral900,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    SizedBox(height: 4.h),
+                    // 교회 정보 + 지역
+                    Text(
+                      [
+                        if (churchName != null && churchName.isNotEmpty)
+                          churchName
+                        else
+                          '커뮤니티 회원',
+                        if (churchLocation != null && churchLocation.isNotEmpty)
+                          churchLocation,
+                      ].join(' · '),
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral600,
+                            fontSize: 13.sp,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 1.h, color: NewAppColor.neutral200),
+
+        // === 2. 모집 기본 정보 (제목, 시간) ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 제목
+              Text(
+                item.title,
+                style: FigmaTextStyles().header1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+              ),
+              SizedBox(height: 8.h),
+              // 올린시간
+              Text(
+                date,
+                style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral600,
+                      fontSize: 13.sp,
+                    ),
+              ),
+            ],
+          ),
+        ),
+
+        // === 3. 상세 내용 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                description ?? '상세 내용이 없습니다.',
+                style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral800,
+                      fontSize: 15.sp,
+                      height: 1.6,
+                    ),
+              ),
+            ],
+          ),
+        ),
+
+        // === 4. 모집 정보 카드 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral100,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Column(
+                  children: [
+                    if (item.company != null && item.company!.isNotEmpty) ...[
+                      _buildInfoRow(label: '교회/기관명', value: item.company!),
+                      SizedBox(height: 12.h),
+                    ],
+                    _buildInfoRow(
+                        label: '직책', value: getPositionDisplayName(item.position)),
+                    SizedBox(height: 12.h),
+                    _buildInfoRow(
+                        label: '고용형태',
+                        value: getEmploymentTypeDisplayName(item.employmentType)),
+                    SizedBox(height: 12.h),
+                    _buildInfoRow(label: '급여', value: item.salary),
+                    if (churchLocation != null && churchLocation.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _buildInfoRow(label: '근무 지역', value: churchLocation),
+                    ],
+                    if (item.deadline != null && item.deadline!.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _buildInfoRow(
+                        label: '지원 마감일',
+                        value: item.deadline!,
+                        valueColor: NewAppColor.warning600,
+                        valueWeight: FontWeight.w600,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // === 5. 연락처 정보 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '연락처 정보',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              // 전화번호
+              if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                _buildContactItem(
+                  icon: Icons.phone_outlined,
+                  label: '전화번호',
+                  value: item.contactPhone!,
+                  onTap: () => _showContactDialog(item.contactPhone!),
+                ),
+              // 이메일
+              if (item.contactEmail != null &&
+                  item.contactEmail!.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                _buildContactItem(
+                  icon: Icons.email_outlined,
+                  label: '이메일',
+                  value: item.contactEmail!,
+                  onTap: () {
+                    // TODO: 이메일 보내기 기능
+                  },
+                ),
+              ],
+              SizedBox(height: 20.h),
+            ],
+          ),
         ),
       ],
     );
@@ -2652,31 +3051,31 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ),
               SizedBox(height: 12.h),
 
-              // 우선순위
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: urgencyColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6.r),
-                  border: Border.all(color: urgencyColor, width: 1.5),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.priority_high, size: 16.sp, color: urgencyColor),
-                    SizedBox(width: 4.w),
-                    Text(
-                      urgencyLabel,
-                      style: FigmaTextStyles().caption2.copyWith(
-                            color: urgencyColor,
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 12.h),
+              // // 우선순위
+              // Container(
+              //   padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              //   decoration: BoxDecoration(
+              //     color: urgencyColor.withOpacity(0.1),
+              //     borderRadius: BorderRadius.circular(6.r),
+              //     border: Border.all(color: urgencyColor, width: 1.5),
+              //   ),
+              //   child: Row(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: [
+              //       Icon(Icons.priority_high, size: 16.sp, color: urgencyColor),
+              //       SizedBox(width: 4.w),
+              //       Text(
+              //         urgencyLabel,
+              //         style: FigmaTextStyles().caption2.copyWith(
+              //               color: urgencyColor,
+              //               fontSize: 13.sp,
+              //               fontWeight: FontWeight.w600,
+              //             ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
+              // SizedBox(height: 12.h),
 
               // 카테고리 + 올린시간
               Row(
@@ -2710,7 +3109,39 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
+        // === 3. 상세 설명 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Text(
+              //   '상세 설명',
+              //   style: FigmaTextStyles().body1.copyWith(
+              //         color: NewAppColor.neutral900,
+              //         fontSize: 16.sp,
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              // ),
+              // SizedBox(height: 12.h),
+              Text(
+                description ?? '상세 설명이 없습니다.',
+                style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral800,
+                      fontSize: 15.sp,
+                      height: 1.6,
+                    ),
+              ),
+              // SizedBox(height: 80.h),
+            ],
+          ),
+        ),
+
+        // 구분선
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 2. 요청 정보 카드 ===
         Container(
@@ -2729,7 +3160,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     ),
               ),
               SizedBox(height: 16.h),
-
               // 요청 정보 그리드
               Container(
                 padding: EdgeInsets.all(16.r),
@@ -2775,40 +3205,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
-
-        // === 3. 상세 설명 ===
-        Container(
-          color: NewAppColor.neutral100,
-          width: double.infinity,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '상세 설명',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                description ?? '상세 설명이 없습니다.',
-                style: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral800,
-                      fontSize: 15.sp,
-                      height: 1.6,
-                    ),
-              ),
-              SizedBox(height: 80.h),
-            ],
-          ),
-        ),
-
-        // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 4. 연락처 정보 ===
         Container(
@@ -2828,12 +3225,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ),
               SizedBox(height: 16.h),
               // 전화번호
-              if (item.contactPhone.isNotEmpty)
+              if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                 _buildContactItem(
                   icon: Icons.phone_outlined,
                   label: '전화번호',
-                  value: item.contactPhone,
-                  onTap: () => _showContactDialog(item.contactPhone),
+                  value: item.contactPhone!,
+                  onTap: () => _showContactDialog(item.contactPhone!),
                 ),
               // 이메일
               if (item.contactEmail != null &&
@@ -2964,7 +3361,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 2. 기본 정보 카드 ===
         Container(
@@ -3016,7 +3413,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 3. 경력 정보 ===
         if (item.experience.isNotEmpty) ...[
@@ -3047,7 +3444,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ],
             ),
           ),
-          Container(height: 8.h, color: NewAppColor.neutral100),
+          Container(height: 8.h, color: NewAppColor.white),
         ],
 
         // === 4. 활동 조건 ===
@@ -3174,7 +3571,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 5. 포트폴리오 ===
         if ((item.portfolio.isNotEmpty) ||
@@ -3338,7 +3735,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ],
             ),
           ),
-          Container(height: 8.h, color: NewAppColor.neutral100),
+          Container(height: 8.h, color: NewAppColor.white),
         ],
 
         // === 6. 자기소개 ===
@@ -3370,7 +3767,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ],
             ),
           ),
-          Container(height: 8.h, color: NewAppColor.neutral100),
+          Container(height: 8.h, color: NewAppColor.white),
         ],
 
         // === 7. 작성자 정보 ===
@@ -3429,7 +3826,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 8. 연락처 정보 ===
         Container(
@@ -3449,12 +3846,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ),
               SizedBox(height: 16.h),
               // 전화번호
-              if (item.contactPhone.isNotEmpty)
+              if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                 _buildContactItem(
                   icon: Icons.phone_outlined,
                   label: '전화번호',
-                  value: item.contactPhone,
-                  onTap: () => _showContactDialog(item.contactPhone),
+                  value: item.contactPhone!,
+                  onTap: () => _showContactDialog(item.contactPhone!),
                 ),
               // 이메일
               if (item.contactEmail != null &&
