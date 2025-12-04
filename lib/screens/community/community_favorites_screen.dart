@@ -22,8 +22,7 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
 
   bool _isLoading = true;
   WishlistData? _wishlistData;
-  String? _selectedFilter; // 카테고리 필터
-  final TextEditingController _searchController = TextEditingController();
+  String _selectedTab = 'sharing'; // 선택된 탭 (물품판매가 기본)
 
   int _currentPage = 1;
   final int _pageSize = 20;
@@ -32,12 +31,6 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
   void initState() {
     super.initState();
     _loadWishlists();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadWishlists() async {
@@ -87,67 +80,29 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
     }
   }
 
-  List<WishlistItem> _getFilteredItems() {
-    if (_wishlistData == null) return [];
-
-    var items = _wishlistData!.items;
-
-    // 카테고리 필터
-    if (_selectedFilter != null && _selectedFilter != 'all') {
-      items = items.where((item) => item.postType == _selectedFilter).toList();
-    }
-
-    // 검색어 필터
-    final searchQuery = _searchController.text.toLowerCase();
-    if (searchQuery.isNotEmpty) {
-      items = items.where((item) {
-        return item.postTitle.toLowerCase().contains(searchQuery) ||
-            item.postDescription.toLowerCase().contains(searchQuery);
-      }).toList();
-    }
-
-    return items;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.neutral100,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '내가 찜한 글',
-              style: FigmaTextStyles().headline4.copyWith(
-                    color: NewAppColor.neutral900,
-                  ),
-            ),
-            Text(
-              '관심있는 게시물들을 한 곳에서 확인하세요',
-              style: FigmaTextStyles().caption3.copyWith(
-                    color: NewAppColor.neutral500,
-                  ),
-            ),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            color: NewAppColor.neutral200,
-          ),
+        title: Text(
+          '내가 찜한 글',
+          style: FigmaTextStyles().headline4.copyWith(
+                color: NewAppColor.neutral900,
+              ),
         ),
       ),
       body: Column(
         children: [
-          _buildFilterBar(),
+          _buildTabBar(),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -158,68 +113,87 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
     );
   }
 
-  Widget _buildFilterBar() {
+  Widget _buildTabBar() {
+    final List<Map<String, String>> tabs = [
+      {'label': '물품판매', 'value': 'sharing'},
+      {'label': '물품요청', 'value': 'item-request'},
+      {'label': '사역자모집', 'value': 'job-posting'},
+      {'label': '행사팀모집', 'value': 'music-team-recruit'},
+      {'label': '행사팀지원', 'value': 'music-team-seeking'},
+      {'label': '교회소식', 'value': 'church-events'},
+    ];
+
     return Container(
-      color: Colors.white,
-      padding: EdgeInsets.all(16.r),
-      child: Row(
-        children: [
-          // 검색바
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: '검색',
-                hintStyle: FigmaTextStyles().body3.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                filled: true,
-                fillColor: NewAppColor.neutral100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide.none,
+      height: 56.h,
+      decoration: BoxDecoration(
+        color: NewAppColor.neutral100,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.transparent,
+            width: 2.0,
+          ),
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 22.w),
+        child: Row(
+          children: tabs.map((tab) {
+            final isSelected = _selectedTab == tab['value'];
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedTab = tab['value']!;
+                });
+              },
+              child: Container(
+                height: 56.h,
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                decoration: BoxDecoration(
+                  border: isSelected
+                      ? Border(
+                          bottom: BorderSide(
+                            color: NewAppColor.primary600,
+                            width: 2.0,
+                          ),
+                        )
+                      : null,
                 ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.w,
-                  vertical: 8.h,
+                child: Center(
+                  child: Text(
+                    tab['label']!,
+                    style: const FigmaTextStyles().title4.copyWith(
+                          color: isSelected
+                              ? NewAppColor.primary600
+                              : NewAppColor.neutral400,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
                 ),
               ),
-              onChanged: (value) => setState(() {}),
-            ),
-          ),
-          SizedBox(width: 8.w),
-          // 카테고리 필터
-          PopupMenuButton<String>(
-            icon: Icon(Icons.filter_list, color: NewAppColor.neutral600),
-            onSelected: (value) {
-              setState(() => _selectedFilter = value);
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'all', child: Text('전체')),
-              const PopupMenuItem(
-                  value: 'community-sharing', child: Text('무료나눔')),
-              const PopupMenuItem(
-                  value: 'sharing-offer', child: Text('물품판매')),
-              const PopupMenuItem(
-                  value: 'item-request', child: Text('물품요청')),
-              const PopupMenuItem(
-                  value: 'job-posting', child: Text('사역자모집')),
-              const PopupMenuItem(
-                  value: 'music-team-recruit', child: Text('행사팀모집')),
-              const PopupMenuItem(
-                  value: 'music-team-seeking', child: Text('행사팀지원')),
-              const PopupMenuItem(
-                  value: 'church-events', child: Text('행사소식')),
-            ],
-          ),
-        ],
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
   Widget _buildContent() {
-    final items = _getFilteredItems();
+    final allItems = _wishlistData?.items ?? [];
+
+    // 탭에 따라 필터링
+    List<WishlistItem> items;
+    if (_selectedTab == 'sharing') {
+      // 물품판매 탭: 무료나눔과 물품판매 모두 표시
+      items = allItems
+          .where((item) =>
+              item.postType == 'community-sharing' ||
+              item.postType == 'sharing-offer')
+          .toList();
+    } else {
+      items = allItems.where((item) => item.postType == _selectedTab).toList();
+    }
 
     if (items.isEmpty) {
       return _buildEmptyState();
@@ -228,9 +202,12 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
     return RefreshIndicator(
       onRefresh: _loadWishlists,
       child: ListView.separated(
-        padding: EdgeInsets.all(16.r),
         itemCount: items.length,
-        separatorBuilder: (context, index) => SizedBox(height: 12.h),
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          thickness: 1,
+          color: NewAppColor.neutral200,
+        ),
         itemBuilder: (context, index) {
           return _buildItemCard(items[index]);
         },
@@ -239,6 +216,8 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
   }
 
   Widget _buildEmptyState() {
+    String emptyMessage = '해당 카테고리에 찜한 글이 없습니다';
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -250,7 +229,7 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
           ),
           SizedBox(height: 16.h),
           Text(
-            '찜한 글이 없습니다',
+            emptyMessage,
             style: FigmaTextStyles().body2.copyWith(
                   color: NewAppColor.neutral500,
                 ),
@@ -268,117 +247,133 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
   }
 
   Widget _buildItemCard(WishlistItem item) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12.r),
-      child: InkWell(
-        onTap: () => _navigateToDetail(item),
-        borderRadius: BorderRadius.circular(12.r),
-        child: Container(
-          padding: EdgeInsets.all(16.r),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(
-              color: NewAppColor.neutral200,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 상단: 카테고리 + 날짜 + 삭제 버튼
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.pink.shade50,
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Text(
-                      item.postTypeName,
-                      style: FigmaTextStyles().caption3.copyWith(
-                            color: Colors.pink,
-                          ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    item.formattedDate,
-                    style: FigmaTextStyles().caption3.copyWith(
-                          color: NewAppColor.neutral400,
-                        ),
-                  ),
-                  SizedBox(width: 8.w),
-                  IconButton(
-                    icon: const Icon(Icons.favorite, color: Colors.pink),
-                    onPressed: () => _removeFromWishlist(item),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
+    final hasImage = item.postImageUrl != null && item.postImageUrl!.isNotEmpty;
+
+    return InkWell(
+      onTap: () => _navigateToDetail(item),
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        color: NewAppColor.neutral100,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 썸네일 이미지 (왼쪽)
+            if (hasImage) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8.r),
+                child: Image.network(
+                  item.postImageUrl!,
+                  width: 120.w,
+                  height: 120.w,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 120.w,
+                      height: 120.w,
+                      color: NewAppColor.neutral200,
+                      child: Icon(
+                        LucideIcons.image,
+                        size: 48.sp,
+                        color: NewAppColor.neutral400,
+                      ),
+                    );
+                  },
+                ),
               ),
-              SizedBox(height: 12.h),
-              // 이미지 + 제목
-              Row(
+              SizedBox(width: 16.w),
+            ],
+            // 게시글 정보 (오른쪽)
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (item.needsImage && item.postImageUrl != null) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.r),
-                      child: Image.network(
-                        item.postImageUrl!,
-                        width: 60.w,
-                        height: 60.h,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 60.w,
-                            height: 60.h,
-                            color: NewAppColor.neutral100,
-                            child: Icon(
-                              Icons.image_not_supported,
-                              color: NewAppColor.neutral400,
-                            ),
-                          );
-                        },
+                  // 제목
+                  Text(
+                    item.postTitle,
+                    style: TextStyle(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard Variable',
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 8.h),
+                  // 지역 + 날짜
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          [
+                            if (item.churchLocation != null &&
+                                item.churchLocation!.isNotEmpty)
+                              item.churchLocation,
+                            if (item.location != null && item.location!.isNotEmpty)
+                              item.location,
+                            item.formattedDate,
+                          ].join(' · '),
+                          style: TextStyle(
+                            color: NewAppColor.neutral600,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // 가격 (물품 판매/나눔인 경우)
+                  if (item.formattedPrice != null) ...[
+                    SizedBox(height: 8.h),
+                    Text(
+                      item.formattedPrice!,
+                      style: TextStyle(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard Variable',
+                        height: 1.4,
                       ),
                     ),
-                    SizedBox(width: 12.w),
                   ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.postTitle,
-                          style: FigmaTextStyles().subtitle2.copyWith(
-                                color: NewAppColor.neutral900,
-                              ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                  // 조회수
+                  SizedBox(height: 8.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (item.viewCount != null) ...[
+                        Icon(
+                          LucideIcons.eye,
+                          size: 14.sp,
+                          color: NewAppColor.neutral600,
                         ),
-                        if (item.postDescription.isNotEmpty) ...[
-                          SizedBox(height: 4.h),
-                          Text(
-                            item.postDescription,
-                            style: FigmaTextStyles().body3.copyWith(
-                                  color: NewAppColor.neutral600,
-                                ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        SizedBox(width: 4.w),
+                        Text(
+                          '${item.viewCount}',
+                          style: TextStyle(
+                            color: NewAppColor.neutral600,
+                            fontSize: 12.sp,
+                            fontFamily: 'Pretendard Variable',
                           ),
-                        ],
+                        ),
                       ],
-                    ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            // 찜하기 버튼 (우측 상단)
+            SizedBox(width: 8.w),
+            IconButton(
+              icon: const Icon(Icons.favorite, color: Colors.red),
+              onPressed: () => _removeFromWishlist(item),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              iconSize: 24.sp,
+            ),
+          ],
         ),
       ),
     );

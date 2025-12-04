@@ -9,6 +9,12 @@ class WishlistItem {
   final String postDescription;
   final String? postImageUrl;
   final DateTime createdAt;
+  final double? price;
+  final bool? isFree;
+  final String? location;
+  final String? churchLocation;
+  final int? viewCount;
+  final int? likes;
 
   WishlistItem({
     required this.id,
@@ -18,6 +24,12 @@ class WishlistItem {
     required this.postDescription,
     this.postImageUrl,
     required this.createdAt,
+    this.price,
+    this.isFree,
+    this.location,
+    this.churchLocation,
+    this.viewCount,
+    this.likes,
   });
 
   factory WishlistItem.fromJson(Map<String, dynamic> json) {
@@ -31,6 +43,12 @@ class WishlistItem {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
+      price: json['price'] != null ? (json['price'] as num).toDouble() : null,
+      isFree: json['is_free'],
+      location: json['location'],
+      churchLocation: json['church_location'],
+      viewCount: json['view_count'],
+      likes: json['likes'],
     );
   }
 
@@ -79,6 +97,29 @@ class WishlistItem {
       'music-team-recruit',
     ];
     return !noImageTypes.contains(postType);
+  }
+
+  /// 가격 포맷팅
+  String? get formattedPrice {
+    if (isFree == true) {
+      return '무료 나눔';
+    } else if (price != null) {
+      final priceInt = price!.toInt();
+      if (priceInt >= 10000) {
+        final man = priceInt ~/ 10000;
+        final remainder = priceInt % 10000;
+        if (remainder == 0) {
+          return '$man만원';
+        } else {
+          return '$man만 ${remainder ~/ 1000}천원';
+        }
+      } else if (priceInt >= 1000) {
+        return '${priceInt ~/ 1000}천원';
+      } else {
+        return '${priceInt}원';
+      }
+    }
+    return null;
   }
 }
 

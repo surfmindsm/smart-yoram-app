@@ -15,6 +15,11 @@ class ChatRoom {
   final String? otherUserName; // 상대방 이름
   final String? otherUserPhotoUrl; // 상대방 프로필 사진
   final int? otherUserId; // 상대방 ID
+  final String? otherUserChurch; // 상대방 교회
+  final String? otherUserLocation; // 상대방 지역
+  final String? postImageUrl; // 상품 이미지
+  final int? postPrice; // 상품 가격
+  final String? postStatus; // 거래 상태 (available, reserved, sold)
   final int unreadCount; // 안 읽은 메시지 개수
   final int? authorId; // 게시글 작성자 ID (판매자/구인자)
 
@@ -30,6 +35,11 @@ class ChatRoom {
     this.otherUserName,
     this.otherUserPhotoUrl,
     this.otherUserId,
+    this.otherUserChurch,
+    this.otherUserLocation,
+    this.postImageUrl,
+    this.postPrice,
+    this.postStatus,
     this.unreadCount = 0,
     this.authorId,
   });
@@ -49,6 +59,11 @@ class ChatRoom {
       otherUserName: json['other_user_name'] as String?,
       otherUserPhotoUrl: json['other_user_photo_url'] as String?,
       otherUserId: json['other_user_id'] as int?,
+      otherUserChurch: json['other_user_church'] as String?,
+      otherUserLocation: json['other_user_location'] as String?,
+      postImageUrl: json['post_image_url'] as String?,
+      postPrice: json['post_price'] as int?,
+      postStatus: json['post_status'] as String?,
       unreadCount: json['unread_count'] as int? ?? 0,
       authorId: json['author_id'] as int?,
     );

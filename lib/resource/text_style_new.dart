@@ -305,7 +305,7 @@ class FigmaTextStyles {
         fontSize: 16,
         decoration: TextDecoration.none,
         fontStyle: FontStyle.normal,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w600,
         height: 24 / 16,
         letterSpacing: -0.5,
       );

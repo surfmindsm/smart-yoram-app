@@ -202,22 +202,138 @@ class ChatService {
     );
 
     String? otherUserPhotoUrl;
+    String? otherUserChurch;
+    String? otherUserLocation;
     if (otherParticipant != null) {
       final otherUserId = otherParticipant['user_id'] as int;
 
-      // 상대방 프로필 사진 조회
+      // 상대방 프로필 사진, 교회 조회
       try {
+        print('🔍 CHAT_SERVICE: 상대방 정보 조회 시작 - otherUserId: $otherUserId');
+
+        // 1. members 테이블에서 프로필 사진과 church_id 조회
         final member = await _supabaseService.client
             .from('members')
-            .select('profile_photo_url')
+            .select('profile_photo_url, church_id')
             .eq('user_id', otherUserId)
             .maybeSingle();
 
-        if (member != null && member['profile_photo_url'] != null) {
-          otherUserPhotoUrl = _getFullProfilePhotoUrl(member['profile_photo_url'] as String);
+        print('🔍 CHAT_SERVICE: member 조회 결과 - $member');
+
+        int? churchId;
+
+        if (member != null) {
+          // 프로필 사진 설정
+          if (member['profile_photo_url'] != null) {
+            otherUserPhotoUrl = _getFullProfilePhotoUrl(member['profile_photo_url'] as String);
+          }
+          churchId = member['church_id'] as int?;
+        } else {
+          // 2. members 테이블에 없으면 users 테이블에서 church_id 조회
+          print('🔍 CHAT_SERVICE: members에 없음, users 테이블 조회');
+          final user = await _supabaseService.client
+              .from('users')
+              .select('church_id')
+              .eq('id', otherUserId)
+              .maybeSingle();
+
+          print('🔍 CHAT_SERVICE: user 조회 결과 - $user');
+
+          if (user != null) {
+            churchId = user['church_id'] as int?;
+          }
+        }
+
+        // 3. 교회 정보 조회
+        if (churchId != null) {
+          print('🔍 CHAT_SERVICE: 교회 조회 시작 - church_id: $churchId');
+
+          // 9998은 커뮤니티 회원
+          if (churchId == 9998) {
+            otherUserChurch = '커뮤니티 회원';
+            print('✅ CHAT_SERVICE: 커뮤니티 회원으로 설정');
+          } else {
+            final church = await _supabaseService.client
+                .from('churches')
+                .select('name')
+                .eq('id', churchId)
+                .maybeSingle();
+
+            print('🔍 CHAT_SERVICE: church 조회 결과 - $church');
+
+            if (church != null) {
+              otherUserChurch = church['name'] as String?;
+              print('✅ CHAT_SERVICE: 교회 이름 설정 - $otherUserChurch');
+            }
+          }
         }
       } catch (e) {
-        print('⚠️ CHAT_SERVICE: 프로필 사진 조회 실패 - $e');
+        print('⚠️ CHAT_SERVICE: 프로필 정보 조회 실패 - $e');
+      }
+    }
+
+    // 게시글 이미지, 가격, 상태, 지역 조회
+    String? postImageUrl;
+    int? postPrice;
+    String? postStatus;
+    if (roomData['post_table'] != null && roomData['post_id'] != null) {
+      try {
+        final postTable = roomData['post_table'] as String;
+        final postId = roomData['post_id'] as int;
+
+        print('🔍 CHAT_SERVICE: 게시글 조회 시작 - table: $postTable, id: $postId');
+
+        final post = await _supabaseService.client
+            .from(postTable)
+            .select('images, price, status, location, province, district')
+            .eq('id', postId)
+            .maybeSingle();
+
+        print('🔍 CHAT_SERVICE: 게시글 조회 결과 - $post');
+
+        if (post != null) {
+          // 이미지
+          if (post['images'] != null) {
+            final images = post['images'] as List?;
+            if (images != null && images.isNotEmpty) {
+              postImageUrl = images[0] as String?;
+              print('✅ CHAT_SERVICE: 이미지 URL 설정 - $postImageUrl');
+            }
+          }
+          // 가격 (실수로 저장될 수 있으므로 int로 변환)
+          final priceValue = post['price'];
+          if (priceValue != null) {
+            if (priceValue is int) {
+              postPrice = priceValue;
+            } else if (priceValue is double) {
+              postPrice = priceValue.toInt();
+            }
+            print('✅ CHAT_SERVICE: 가격 설정 - $postPrice');
+          }
+          // 상태
+          postStatus = post['status'] as String?;
+          print('✅ CHAT_SERVICE: 상태 설정 - $postStatus');
+
+          // 지역 정보 (게시글에서 가져오기)
+          // 우선순위: province + district > location (레거시 필드)
+          if (post['province'] != null || post['district'] != null) {
+            final provincePart = post['province'] as String? ?? '';
+            final districtPart = post['district'] as String? ?? '';
+            otherUserLocation = [provincePart, districtPart]
+                .where((e) => e.isNotEmpty)
+                .join(' ')
+                .trim();
+            if (otherUserLocation!.isEmpty) {
+              otherUserLocation = null;
+            }
+            print('✅ CHAT_SERVICE: 지역 설정 (province+district) - $otherUserLocation');
+          } else if (post['location'] != null && (post['location'] as String).isNotEmpty) {
+            otherUserLocation = post['location'] as String;
+            print('✅ CHAT_SERVICE: 지역 설정 (location) - $otherUserLocation');
+          }
+        }
+      } catch (e) {
+        print('⚠️ CHAT_SERVICE: 게시글 정보 조회 실패 - $e');
       }
     }
 
@@ -235,6 +351,11 @@ class ChatService {
       otherUserName: otherParticipant?['user_name'] as String?,
       otherUserPhotoUrl: otherUserPhotoUrl,
       otherUserId: otherParticipant?['user_id'] as int?,
+      otherUserChurch: otherUserChurch,
+      otherUserLocation: otherUserLocation,
+      postImageUrl: postImageUrl,
+      postPrice: postPrice,
+      postStatus: postStatus,
       unreadCount: myParticipant['unread_count'] as int? ?? 0,
       authorId: null, // 배치 조회에서 설정됨
     );
@@ -403,6 +524,11 @@ class ChatService {
           otherUserName: chatRoom.otherUserName,
           otherUserPhotoUrl: chatRoom.otherUserPhotoUrl,
           otherUserId: chatRoom.otherUserId,
+          otherUserChurch: chatRoom.otherUserChurch,
+          otherUserLocation: chatRoom.otherUserLocation,
+          postImageUrl: chatRoom.postImageUrl,
+          postPrice: chatRoom.postPrice,
+          postStatus: chatRoom.postStatus,
           unreadCount: unreadMap[roomId] ?? 0,
           authorId: authorId,
         );

@@ -58,11 +58,15 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   bool? _deliveryAvailableFilter; // 택배가능 필터
   String _priceFilter = 'all'; // 가격 필터: all(전체), free(무료), paid(판매)
   bool _hideCompleted = false; // 판매/나눔/요청 완료 제거 필터
-  String _employmentTypeFilter = 'all'; // 고용형태 필터: all(전체), full-time(정규직), part-time(시간제), volunteer(자원봉사)
-  String _teamTypeFilter = 'all'; // 팀형태 필터: all(전체), praise-team(찬양팀), worship-team(워십팀), band(밴드)
-  String _instrumentFilter = 'all'; // 악기/파트 필터 (행사팀 지원): all(전체), solo(솔로), praise-team(찬양팀), etc.
+  String _employmentTypeFilter =
+      'all'; // 고용형태 필터: all(전체), full-time(정규직), part-time(시간제), volunteer(자원봉사)
+  String _teamTypeFilter =
+      'all'; // 팀형태 필터: all(전체), praise-team(찬양팀), worship-team(워십팀), band(밴드)
+  String _instrumentFilter =
+      'all'; // 악기/파트 필터 (행사팀 지원): all(전체), solo(솔로), praise-team(찬양팀), etc.
   String? _selectedDayFilter; // 활동 가능 요일 필터 (행사팀 지원)
-  String _priorityFilter = 'all'; // 우선순위 필터 (교회소식): all(전체), urgent(긴급), important(중요), normal(일반)
+  String _priorityFilter =
+      'all'; // 우선순위 필터 (교회소식): all(전체), urgent(긴급), important(중요), normal(일반)
 
   @override
   void initState() {
@@ -154,7 +158,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     List<dynamic> filtered = _items;
 
     // 가격 필터 (무료나눔/물품판매)
-    if ((widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale) && _priceFilter != 'all') {
+    if ((widget.type == CommunityListType.freeSharing ||
+            widget.type == CommunityListType.itemSale) &&
+        _priceFilter != 'all') {
       filtered = filtered.where((item) {
         if (item is SharingItem) {
           if (_priceFilter == 'free') {
@@ -172,7 +178,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       filtered = filtered.where((item) {
         if (item is SharingItem) {
           final status = item.status.toLowerCase();
-          return status != 'completed' && status != 'closed' && status != 'sold';
+          return status != 'completed' &&
+              status != 'closed' &&
+              status != 'sold';
         } else if (item is RequestItem) {
           final status = item.status.toLowerCase();
           return status != 'completed' && status != 'closed';
@@ -185,7 +193,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 고용형태 필터 (사역자 모집)
-    if (_employmentTypeFilter != 'all' && widget.type == CommunityListType.jobPosting) {
+    if (_employmentTypeFilter != 'all' &&
+        widget.type == CommunityListType.jobPosting) {
       filtered = filtered.where((item) {
         if (item is JobPost) {
           return item.employmentType == _employmentTypeFilter;
@@ -195,7 +204,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 팀형태 필터 (행사팀 모집)
-    if (_teamTypeFilter != 'all' && widget.type == CommunityListType.musicTeamRecruit) {
+    if (_teamTypeFilter != 'all' &&
+        widget.type == CommunityListType.musicTeamRecruit) {
       filtered = filtered.where((item) {
         if (item is MusicTeamRecruitment) {
           // teamTypes는 배열이므로 contains로 확인
@@ -219,8 +229,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     // 카테고리 필터 (무료나눔/물품판매/물품요청)
     if (_selectedCategory != null &&
         (widget.type == CommunityListType.freeSharing ||
-         widget.type == CommunityListType.itemSale ||
-         widget.type == CommunityListType.itemRequest)) {
+            widget.type == CommunityListType.itemSale ||
+            widget.type == CommunityListType.itemRequest)) {
       filtered = filtered.where((item) {
         if (item is SharingItem) {
           return item.category == _selectedCategory;
@@ -232,7 +242,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 직종 필터 (사역자 모집)
-    if (_selectedCategory != null && widget.type == CommunityListType.jobPosting) {
+    if (_selectedCategory != null &&
+        widget.type == CommunityListType.jobPosting) {
       filtered = filtered.where((item) {
         if (item is JobPost) {
           return item.jobType == _selectedCategory;
@@ -242,7 +253,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 예배 형태 필터 (행사팀 모집)
-    if (_selectedCategory != null && widget.type == CommunityListType.musicTeamRecruit) {
+    if (_selectedCategory != null &&
+        widget.type == CommunityListType.musicTeamRecruit) {
       filtered = filtered.where((item) {
         if (item is MusicTeamRecruitment) {
           return item.worshipType == _selectedCategory;
@@ -308,7 +320,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 택배가능 필터 (무료나눔/물품판매)
-    if (_deliveryAvailableFilter != null && (widget.type == CommunityListType.freeSharing || widget.type == CommunityListType.itemSale)) {
+    if (_deliveryAvailableFilter != null &&
+        (widget.type == CommunityListType.freeSharing ||
+            widget.type == CommunityListType.itemSale)) {
       filtered = filtered.where((item) {
         if (item is SharingItem) {
           return item.deliveryAvailable == _deliveryAvailableFilter;
@@ -318,7 +332,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 악기/파트 필터 (행사팀 지원)
-    if (_instrumentFilter != 'all' && widget.type == CommunityListType.musicTeamSeeking) {
+    if (_instrumentFilter != 'all' &&
+        widget.type == CommunityListType.musicTeamSeeking) {
       filtered = filtered.where((item) {
         if (item is MusicTeamSeeker) {
           return item.instrument == _instrumentFilter;
@@ -328,7 +343,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 활동 가능 요일 필터 (행사팀 지원)
-    if (_selectedDayFilter != null && widget.type == CommunityListType.musicTeamSeeking) {
+    if (_selectedDayFilter != null &&
+        widget.type == CommunityListType.musicTeamSeeking) {
       filtered = filtered.where((item) {
         if (item is MusicTeamSeeker) {
           return item.availableDays.contains(_selectedDayFilter);
@@ -349,18 +365,21 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 행사팀 지원 지역 필터 (활동 가능 지역 배열에서 확인)
-    if (_selectedCity != null && widget.type == CommunityListType.musicTeamSeeking) {
+    if (_selectedCity != null &&
+        widget.type == CommunityListType.musicTeamSeeking) {
       filtered = filtered.where((item) {
         if (item is MusicTeamSeeker) {
           // preferredLocation 배열에 선택된 도시가 포함되어 있는지 확인
-          return item.preferredLocation.any((loc) => loc.contains(_selectedCity!));
+          return item.preferredLocation
+              .any((loc) => loc.contains(_selectedCity!));
         }
         return false;
       }).toList();
     }
 
     // 우선순위 필터 (교회 소식)
-    if (_priorityFilter != 'all' && widget.type == CommunityListType.churchNews) {
+    if (_priorityFilter != 'all' &&
+        widget.type == CommunityListType.churchNews) {
       filtered = filtered.where((item) {
         if (item is ChurchNews) {
           return item.priority?.toLowerCase() == _priorityFilter;
@@ -370,7 +389,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 카테고리 필터 (교회 소식)
-    if (_selectedCategory != null && widget.type == CommunityListType.churchNews) {
+    if (_selectedCategory != null &&
+        widget.type == CommunityListType.churchNews) {
       filtered = filtered.where((item) {
         if (item is ChurchNews) {
           return item.category == _selectedCategory;
@@ -396,9 +416,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: NewAppColor.neutral100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.neutral100,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -422,12 +442,12 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               widget.type == CommunityListType.musicTeamSeeking ||
               widget.type == CommunityListType.churchNews)
             IconButton(
-              icon: const Icon(Icons.filter_list, color: Colors.black),
+              icon: const Icon(LucideIcons.filter, color: Colors.black),
               onPressed: _showAdvancedFilterBottomSheet,
             ),
           // 검색 버튼
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
+            icon: const Icon(LucideIcons.search, color: Colors.black),
             onPressed: () {
               // TODO: 검색 기능
               ScaffoldMessenger.of(context).showSnackBar(
@@ -482,10 +502,19 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         ],
       ),
       floatingActionButton: _canCreatePost()
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
               onPressed: _navigateToCreate,
               backgroundColor: NewAppColor.primary600,
-              child: Icon(Icons.add, color: Colors.white, size: 32.sp),
+              icon: Icon(LucideIcons.plus, color: Colors.white, size: 20.sp),
+              label: Text(
+                '글쓰기',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Pretendard Variable',
+                ),
+              ),
             )
           : null,
     );
@@ -497,7 +526,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.inbox_outlined,
+            LucideIcons.inbox,
             size: 64.sp,
             color: NewAppColor.neutral300,
           ),
@@ -620,13 +649,15 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       // 테이블 이름과 isFree 정보 전달
       final tableName = item['tableName'] ?? item['table'];
       final isFree = item['is_free'] == true;
-      statusLabel = _getStatusLabel(item['status'], tableName: tableName, isFree: isFree);
+      statusLabel =
+          _getStatusLabel(item['status'], tableName: tableName, isFree: isFree);
 
       // 이미지 추출 (images 필드가 있는 경우)
       if (item['images'] != null) {
         if (item['images'] is List && (item['images'] as List).isNotEmpty) {
           imageUrl = (item['images'] as List).first.toString();
-        } else if (item['images'] is String && (item['images'] as String).isNotEmpty) {
+        } else if (item['images'] is String &&
+            (item['images'] as String).isNotEmpty) {
           // JSON 문자열인 경우 파싱 시도
           try {
             final parsed = item['images'] as String;
@@ -634,7 +665,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               // 간단한 JSON 배열 파싱
               final urls = parsed.substring(1, parsed.length - 1).split(',');
               if (urls.isNotEmpty) {
-                imageUrl = urls.first.trim().replaceAll('"', '').replaceAll("'", '');
+                imageUrl =
+                    urls.first.trim().replaceAll('"', '').replaceAll("'", '');
               }
             } else {
               imageUrl = parsed;
@@ -647,7 +679,11 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     final hasImage = imageUrl != null;
-    final isCompleted = status != null && (status.toLowerCase() == 'completed' || status.toLowerCase() == 'closed' || status.toLowerCase() == 'sold');
+    final isCompleted = status != null &&
+        (status.toLowerCase() == 'completed' ||
+            status.toLowerCase() == 'closed' ||
+            status.toLowerCase() == 'sold' ||
+            status.toLowerCase() == 'ing');
 
     return InkWell(
       onTap: () => _navigateToDetail(item),
@@ -656,134 +692,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 게시글 정보 (왼쪽)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 상태 칩 (이미지가 없고, 예약중/완료인 경우만)
-                  if (statusLabel != null && status != null && _shouldShowStatus(status) && !hasImage) ...[
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Text(
-                        statusLabel,
-                        style: TextStyle(
-                          color: _getStatusColor(status),
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Pretendard Variable',
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 6.h),
-                  ],
-                  // 제목
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: isCompleted ? NewAppColor.neutral500 : NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Pretendard Variable',
-                      height: 1.4,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  // 가격 (물품 판매/나눔인 경우)
-                  if (priceText != null) ...[
-                    SizedBox(height: 6.h),
-                    Text(
-                      priceText,
-                      style: TextStyle(
-                        color: isCompleted ? NewAppColor.neutral500 : NewAppColor.neutral900,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Pretendard Variable',
-                      ),
-                    ),
-                  ],
-                  SizedBox(height: 8.h),
-                  // 작성자 프로필 사진 + 작성자 · 교회명 · 지역 · 시간
-                  Row(
-                    children: [
-                      // 프로필 사진
-                      if (authorProfilePhotoUrl != null && authorProfilePhotoUrl.isNotEmpty)
-                        Padding(
-                          padding: EdgeInsets.only(right: 8.w),
-                          child: ClipOval(
-                            child: Image.network(
-                              authorProfilePhotoUrl,
-                              width: 20.w,
-                              height: 20.w,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 20.w,
-                                  height: 20.w,
-                                  decoration: BoxDecoration(
-                                    color: NewAppColor.neutral300,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 12.sp,
-                                    color: NewAppColor.neutral500,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      // 텍스트 정보
-                      Expanded(
-                        child: Text(
-                          [
-                            if (authorName != null && authorName.isNotEmpty) authorName,
-                            if (churchName != null && churchName.isNotEmpty) churchName,
-                            if (churchLocation != null && churchLocation.isNotEmpty) churchLocation,
-                            date,
-                          ].join(' · '),
-                          style: TextStyle(
-                            color: isCompleted ? NewAppColor.neutral400 : NewAppColor.neutral600,
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: 'Pretendard Variable',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // 조회수
-                  SizedBox(height: 8.h),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.remove_red_eye_outlined,
-                        size: 16.sp,
-                        color: NewAppColor.neutral500,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '$viewCount',
-                        style: TextStyle(
-                          color: NewAppColor.neutral500,
-                          fontSize: 13.sp,
-                          fontFamily: 'Pretendard Variable',
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // 썸네일 이미지 (오른쪽)
+            // 썸네일 이미지 (왼쪽)
             if (hasImage) ...[
-              SizedBox(width: 16.w),
               Stack(
                 children: [
                   ClipRRect(
@@ -801,7 +711,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                             height: 120.w,
                             color: NewAppColor.neutral200,
                             child: Icon(
-                              Icons.image_outlined,
+                              LucideIcons.image,
                               size: 48.sp,
                               color: NewAppColor.neutral400,
                             ),
@@ -811,25 +721,19 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                     ),
                   ),
                   // 상태 칩 (예약중, 완료만 표시)
-                  if (status != null && statusLabel != null && _shouldShowStatus(status))
+                  if (status != null &&
+                      statusLabel != null &&
+                      _shouldShowStatus(status))
                     Positioned(
                       top: 8.h,
                       left: 8.w,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.all(6.w),
                         decoration: BoxDecoration(
                           color: _getStatusColor(status),
                           borderRadius: BorderRadius.circular(4.r),
                         ),
-                        child: Text(
-                          statusLabel,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Pretendard Variable',
-                          ),
-                        ),
+                        child: _getStatusIcon(status),
                       ),
                     ),
                   // 택배가능 배지 (우측 상단)
@@ -838,25 +742,156 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                       top: 8.h,
                       right: 8.w,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.all(6.w),
                         decoration: BoxDecoration(
-                          color: NewAppColor.primary600,
+                          color: NewAppColor.primary500,
                           borderRadius: BorderRadius.circular(4.r),
                         ),
-                        child: Text(
-                          '택배가능',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Pretendard Variable',
-                          ),
+                        child: Icon(
+                          LucideIcons.truck,
+                          size: 16.sp,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                 ],
               ),
+              SizedBox(width: 16.w),
             ],
+            // 게시글 정보 (오른쪽)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 상태 칩 (이미지가 없고, 예약중/완료인 경우만)
+                  if (statusLabel != null &&
+                      status != null &&
+                      _shouldShowStatus(status) &&
+                      !hasImage) ...[
+                    Container(
+                      padding: EdgeInsets.all(6.w),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: _getStatusIcon(status,
+                          useColor: _getStatusColor(status)),
+                    ),
+                    SizedBox(height: 6.h),
+                  ],
+                  // 제목
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: isCompleted
+                          ? NewAppColor.neutral500
+                          : NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard Variable',
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 8.h),
+                  // 작성자 프로필 사진 + 작성자 · 교회명 · 지역 · 시간
+                  Row(
+                    children: [
+                      // 프로필 사진
+                      if (authorProfilePhotoUrl != null &&
+                          authorProfilePhotoUrl.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(right: 8.w),
+                          child: ClipOval(
+                            child: Image.network(
+                              authorProfilePhotoUrl,
+                              width: 20.w,
+                              height: 20.w,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 20.w,
+                                  height: 20.w,
+                                  decoration: const BoxDecoration(
+                                    color: NewAppColor.neutral300,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    LucideIcons.user,
+                                    size: 12.sp,
+                                    color: NewAppColor.neutral500,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      // 텍스트 정보
+                      Expanded(
+                        child: Text(
+                          [
+                            // if (authorName != null && authorName.isNotEmpty)
+                            //   authorName,
+                            // if (churchName != null && churchName.isNotEmpty)
+                            //   churchName,
+                            if (churchLocation != null &&
+                                churchLocation.isNotEmpty)
+                              churchLocation,
+                            date,
+                          ].join(' · '),
+                          style: TextStyle(
+                            color: isCompleted
+                                ? NewAppColor.neutral400
+                                : NewAppColor.neutral600,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'Pretendard Variable',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // 가격 (물품 판매/나눔인 경우)
+                  if (priceText != null) ...[
+                    SizedBox(height: 8.h),
+                    Text(
+                      priceText,
+                      style: TextStyle(
+                        color: isCompleted
+                            ? NewAppColor.neutral500
+                            : NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard Variable',
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                  // 조회수
+                  SizedBox(height: 8.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Icon(
+                        LucideIcons.eye,
+                        size: 14.sp,
+                        color: NewAppColor.neutral600,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        '$viewCount',
+                        style: TextStyle(
+                          color: NewAppColor.neutral600,
+                          fontSize: 12.sp,
+                          fontFamily: 'Pretendard Variable',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -875,6 +910,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       case 'cancelled':
         return Colors.red;
       case 'ing': // 예약중
+      case 'reserved': // 예약중 (레거시)
         return NewAppColor.warning600;
       case 'requesting':
         return NewAppColor.primary600;
@@ -885,7 +921,28 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
   }
 
-  String _getStatusLabel(String? status, {String? tableName, bool isFree = false}) {
+  Widget _getStatusIcon(String? status, {Color? useColor}) {
+    if (status == null) {
+      return Icon(LucideIcons.info, size: 16.sp, color: useColor ?? Colors.white);
+    }
+
+    final iconColor = useColor ?? Colors.white;
+
+    switch (status.toLowerCase()) {
+      case 'ing': // 예약중
+      case 'reserved': // 예약중 (레거시)
+        return Icon(LucideIcons.clock, size: 16.sp, color: iconColor);
+      case 'completed':
+      case 'closed':
+      case 'sold':
+        return Icon(LucideIcons.check, size: 16.sp, color: iconColor);
+      default:
+        return Icon(LucideIcons.info, size: 16.sp, color: iconColor);
+    }
+  }
+
+  String _getStatusLabel(String? status,
+      {String? tableName, bool isFree = false}) {
     if (status == null) return '';
 
     final statusLower = status.toLowerCase();
@@ -896,6 +953,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         case 'active':
           return '나눔 가능';
         case 'ing':
+        case 'reserved': // 레거시 지원
           return '예약중';
         case 'completed':
           return '나눔 완료';
@@ -910,6 +968,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         case 'active':
           return '판매중';
         case 'ing':
+        case 'reserved': // 레거시 지원
           return '예약중';
         case 'completed':
         case 'sold':
@@ -926,6 +985,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         case 'requesting':
           return '요청중';
         case 'ing':
+        case 'reserved': // 레거시 지원
           return '예약중';
         case 'completed':
           return '완료';
@@ -951,7 +1011,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
 
     // 찬양팀 모집/구함 상태
-    if (tableName == 'community_music_teams' || tableName == 'music_team_seekers') {
+    if (tableName == 'community_music_teams' ||
+        tableName == 'music_team_seekers') {
       switch (statusLower) {
         case 'active':
         case 'open':
@@ -988,6 +1049,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       case 'cancelled':
         return '취소';
       case 'ing':
+      case 'reserved': // 레거시 지원
         return '예약중';
       default:
         return status;
@@ -1052,6 +1114,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         ),
       ).then((result) {
         // 상세 화면에서 돌아왔을 때 항상 목록 새로고침 (조회수 반영)
+        print('📋 COMMUNITY_LIST: 상세 화면에서 돌아옴 - result: $result');
         _loadItems();
       });
     }
@@ -1088,7 +1151,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NewAppColor.neutral100,
         border: const Border(
           bottom: BorderSide(
             color: NewAppColor.neutral200,
@@ -1103,71 +1166,72 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-            // 가격 필터 그룹: 전체, 무료, 유료
-            _buildSmallFilterChip(
-              label: '전체',
-              isSelected: _priceFilter == 'all',
-              onTap: () {
-                setState(() {
-                  _priceFilter = 'all';
-                  _updateFilteredItems();
-                });
-              },
-            ),
-            SizedBox(width: 6.w),
-            _buildSmallFilterChip(
-              label: '무료',
-              isSelected: _priceFilter == 'free',
-              onTap: () {
-                setState(() {
-                  _priceFilter = 'free';
-                  _updateFilteredItems();
-                });
-              },
-            ),
-            SizedBox(width: 6.w),
-            _buildSmallFilterChip(
-              label: '유료',
-              isSelected: _priceFilter == 'paid',
-              onTap: () {
-                setState(() {
-                  _priceFilter = 'paid';
-                  _updateFilteredItems();
-                });
-              },
-            ),
-            SizedBox(width: 8.w),
+              // 가격 필터 그룹: 전체, 무료, 유료
+              _buildSmallFilterChip(
+                label: '전체',
+                isSelected: _priceFilter == 'all',
+                onTap: () {
+                  setState(() {
+                    _priceFilter = 'all';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '무료',
+                isSelected: _priceFilter == 'free',
+                onTap: () {
+                  setState(() {
+                    _priceFilter = 'free';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '유료',
+                isSelected: _priceFilter == 'paid',
+                onTap: () {
+                  setState(() {
+                    _priceFilter = 'paid';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 8.w),
 
-            // 구분선
-            Container(
-              width: 1,
-              height: 20.h,
-              color: NewAppColor.neutral300,
-            ),
-            SizedBox(width: 8.w),
+              // 구분선
+              Container(
+                width: 1,
+                height: 20.h,
+                color: NewAppColor.neutral300,
+              ),
+              SizedBox(width: 8.w),
 
-            // 상태 필터 그룹: 완료제거, 택배가능
-            _buildSmallFilterChip(
-              label: '완료제거',
-              isSelected: _hideCompleted,
-              onTap: () {
-                setState(() {
-                  _hideCompleted = !_hideCompleted;
-                  _updateFilteredItems();
-                });
-              },
-            ),
-            SizedBox(width: 6.w),
-            _buildSmallFilterChip(
-              label: '택배가능',
-              isSelected: _deliveryAvailableFilter == true,
-              onTap: () {
-                setState(() {
-                  _deliveryAvailableFilter = _deliveryAvailableFilter == true ? null : true;
-                  _updateFilteredItems();
-                });
-              },
-            ),
+              // 상태 필터 그룹: 완료제거, 택배가능
+              _buildSmallFilterChip(
+                label: '완료제거',
+                isSelected: _hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = !_hideCompleted;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '택배가능',
+                isSelected: _deliveryAvailableFilter == true,
+                onTap: () {
+                  setState(() {
+                    _deliveryAvailableFilter =
+                        _deliveryAvailableFilter == true ? null : true;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
             ],
           ),
         ),
@@ -1204,7 +1268,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NewAppColor.neutral100,
         border: const Border(
           bottom: BorderSide(
             color: NewAppColor.neutral200,
@@ -1263,7 +1327,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NewAppColor.neutral100,
         border: const Border(
           bottom: BorderSide(
             color: NewAppColor.neutral200,
@@ -1355,7 +1419,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NewAppColor.neutral100,
         border: const Border(
           bottom: BorderSide(
             color: NewAppColor.neutral200,
@@ -1447,7 +1511,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NewAppColor.neutral100,
         border: const Border(
           bottom: BorderSide(
             color: NewAppColor.neutral200,
@@ -1558,7 +1622,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     return Container(
       height: 56.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NewAppColor.neutral100,
         border: Border(
           bottom: BorderSide(
             color: Colors.transparent,
@@ -1623,9 +1687,10 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   bool _shouldShowStatus(String status) {
     final statusLower = status.toLowerCase();
     return statusLower == 'ing' ||
-           statusLower == 'completed' ||
-           statusLower == 'closed' ||
-           statusLower == 'sold';
+        statusLower == 'reserved' || // 레거시 지원
+        statusLower == 'completed' ||
+        statusLower == 'closed' ||
+        statusLower == 'sold';
   }
 
   /// 필터 칩 위젯
@@ -1645,9 +1710,9 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         child: Text(
           label,
           style: FigmaTextStyles().body2.copyWith(
-            color: isSelected ? Colors.white : NewAppColor.neutral700,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-          ),
+                color: isSelected ? Colors.white : NewAppColor.neutral700,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
         ),
       ),
     );
@@ -1698,10 +1763,12 @@ class _AdvancedFilterBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<_AdvancedFilterBottomSheet> createState() => _AdvancedFilterBottomSheetState();
+  State<_AdvancedFilterBottomSheet> createState() =>
+      _AdvancedFilterBottomSheetState();
 }
 
-class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> {
+class _AdvancedFilterBottomSheetState
+    extends State<_AdvancedFilterBottomSheet> {
   String? _tempCity;
   String? _tempDistrict;
   String? _tempCategory;
@@ -1774,7 +1841,7 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NewAppColor.neutral100,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       child: SafeArea(
@@ -1800,7 +1867,7 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.close, size: 24.sp),
+                    child: Icon(LucideIcons.x, size: 24.sp),
                   ),
                 ],
               ),
@@ -1860,7 +1927,9 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
                     decoration: BoxDecoration(
                       border: Border.all(color: NewAppColor.neutral300),
                       borderRadius: BorderRadius.circular(8.r),
-                      color: _tempCity == null ? NewAppColor.neutral100 : Colors.white,
+                      color: _tempCity == null
+                          ? NewAppColor.neutral100
+                          : Colors.white,
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String?>(
@@ -1873,7 +1942,8 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
                             child: Text('전체 구'),
                           ),
                           if (_tempCity != null)
-                            ...LocationData.getDistricts(_tempCity!).map((district) {
+                            ...LocationData.getDistricts(_tempCity!)
+                                .map((district) {
                               return DropdownMenuItem<String?>(
                                 value: district,
                                 child: Text(district),
@@ -1911,15 +1981,20 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
                           });
                         },
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 8.h),
                           decoration: BoxDecoration(
-                            color: _tempCategory == null ? NewAppColor.primary600 : NewAppColor.neutral100,
+                            color: _tempCategory == null
+                                ? NewAppColor.primary600
+                                : NewAppColor.neutral100,
                             borderRadius: BorderRadius.circular(20.r),
                           ),
                           child: Text(
                             '전체',
                             style: FigmaTextStyles().body2.copyWith(
-                                  color: _tempCategory == null ? Colors.white : NewAppColor.neutral700,
+                                  color: _tempCategory == null
+                                      ? Colors.white
+                                      : NewAppColor.neutral700,
                                 ),
                           ),
                         ),
@@ -1932,15 +2007,20 @@ class _AdvancedFilterBottomSheetState extends State<_AdvancedFilterBottomSheet> 
                             });
                           },
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16.w, vertical: 8.h),
                             decoration: BoxDecoration(
-                              color: _tempCategory == category ? NewAppColor.primary600 : NewAppColor.neutral100,
+                              color: _tempCategory == category
+                                  ? NewAppColor.primary600
+                                  : NewAppColor.neutral100,
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Text(
                               category,
                               style: FigmaTextStyles().body2.copyWith(
-                                    color: _tempCategory == category ? Colors.white : NewAppColor.neutral700,
+                                    color: _tempCategory == category
+                                        ? Colors.white
+                                        : NewAppColor.neutral700,
                                   ),
                             ),
                           ),

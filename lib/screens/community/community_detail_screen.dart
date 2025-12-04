@@ -10,7 +10,9 @@ import 'package:smart_yoram_app/services/wishlist_service.dart';
 import 'package:smart_yoram_app/services/chat_service.dart';
 import 'package:smart_yoram_app/services/supabase_service.dart';
 import 'package:smart_yoram_app/services/notification_service.dart';
+import 'package:smart_yoram_app/services/report_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
+import 'package:smart_yoram_app/models/report_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_create_screen.dart';
@@ -43,6 +45,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   final AuthService _authService = AuthService();
   final WishlistService _wishlistService = WishlistService();
   final SupabaseService _supabaseService = SupabaseService();
+  final ReportService _reportService = ReportService();
 
   bool _isLoading = true;
   dynamic _post;
@@ -51,6 +54,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   bool _isFavoriteLoading = false;
   int _currentImageIndex = 0;
   String? _authorPhone; // 작성자 전화번호
+  bool _hasChanges = false; // 상태 변경 여부 추적
 
   @override
   void initState() {
@@ -372,33 +376,42 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: EdgeInsets.all(8.r),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (bool didPop) {
+        if (didPop && _hasChanges) {
+          // 뒤로 가기 후 리스트 새로고침을 위해 결과 전달
+          // PopScope는 pop 후에 호출되므로 여기서는 처리할 수 없음
+        }
+      },
+      child: Scaffold(
+        backgroundColor: NewAppColor.neutral100,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: Container(
+            margin: EdgeInsets.all(8.r),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+              onPressed: () => Navigator.pop(context, _hasChanges),
+              padding: EdgeInsets.zero,
+            ),
           ),
-          child: IconButton(
-            icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-            padding: EdgeInsets.zero,
-          ),
-        ),
-        actions: [
-          if (_canEdit())
+          actions: [
+            // 모든 사용자에게 더보기 버튼 표시 (작성자: 수정/삭제, 타인: 신고하기)
             Container(
               margin: EdgeInsets.all(8.r),
               decoration: BoxDecoration(
@@ -418,26 +431,24 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 padding: EdgeInsets.zero,
               ),
             ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _post == null
-              ? _buildErrorState()
-              : Stack(
-                  children: [
-                    // 컨텐츠
-                    _buildContent(),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _post == null
+                ? _buildErrorState()
+                : Column(
+                    children: [
+                      // 컨텐츠 - Expanded로 감싸서 남은 공간 차지
+                      Expanded(
+                        child: _buildContent(),
+                      ),
 
-                    // 하단 버튼들
-                    if (_post != null)
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
+                      // 하단 버튼들 - 항상 하단에 고정
+                      if (_post != null)
+                        Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: NewAppColor.neutral100,
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
@@ -454,27 +465,32 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                 // 작성자인 경우: 상태 수정 버튼만
                                 if (_isAuthor())
                                   Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: _togglePostStatus,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: NewAppColor.primary600,
-                                        foregroundColor: Colors.white,
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 14.h),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12.r),
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      child: Text(
-                                        _getStatusButtonText(),
-                                        style:
-                                            FigmaTextStyles().button1.copyWith(
-                                                  color: Colors.white,
-                                                ),
-                                      ),
-                                    ),
+                                    child: widget.tableName ==
+                                            'community_sharing'
+                                        ? _buildSharingStatusDropdown()
+                                        : ElevatedButton(
+                                            onPressed: _togglePostStatus,
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  NewAppColor.primary600,
+                                              foregroundColor: Colors.white,
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 14.h),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12.r),
+                                              ),
+                                              elevation: 0,
+                                            ),
+                                            child: Text(
+                                              _getStatusButtonText(),
+                                              style: FigmaTextStyles()
+                                                  .button1
+                                                  .copyWith(
+                                                    color: Colors.white,
+                                                  ),
+                                            ),
+                                          ),
                                   ),
                                 // 작성자가 아닌 경우: 좋아요 + 전화/채팅 버튼
                                 if (!_isAuthor()) ...[
@@ -503,44 +519,45 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                     ),
                                   ),
                                   SizedBox(width: 8.w),
-                                  // 전화 버튼 (전화번호가 있을 때만)
-                                  if (_authorPhone != null) ...[
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        onPressed: _onPhoneButtonPressed,
-                                        style: OutlinedButton.styleFrom(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 14.h),
-                                          side: BorderSide(
-                                            color: NewAppColor.primary600,
-                                            width: 1.5,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.r),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '전화하기',
-                                          style: FigmaTextStyles()
-                                              .button1
-                                              .copyWith(
-                                                color: NewAppColor.primary600,
-                                              ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8.w),
-                                  ],
+                                  // 전화 버튼 (전화번호가 있을 때만) - 주석처리
+                                  // if (_authorPhone != null) ...[
+                                  //   Expanded(
+                                  //     child: OutlinedButton(
+                                  //       onPressed: _onPhoneButtonPressed,
+                                  //       style: OutlinedButton.styleFrom(
+                                  //         padding: EdgeInsets.symmetric(
+                                  //             vertical: 14.h),
+                                  //         side: BorderSide(
+                                  //           color: NewAppColor.primary600,
+                                  //           width: 1.5,
+                                  //         ),
+                                  //         shape: RoundedRectangleBorder(
+                                  //           borderRadius:
+                                  //               BorderRadius.circular(12.r),
+                                  //         ),
+                                  //       ),
+                                  //       child: Text(
+                                  //         '전화하기',
+                                  //         style: FigmaTextStyles()
+                                  //             .button1
+                                  //             .copyWith(
+                                  //               color: NewAppColor.primary600,
+                                  //             ),
+                                  //       ),
+                                  //     ),
+                                  //   ),
+                                  //   SizedBox(width: 8.w),
+                                  // ],
                                   // 채팅 버튼
                                   Expanded(
                                     child: ElevatedButton(
                                       onPressed: _onChatButtonPressed,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: NewAppColor.primary600,
+                                        backgroundColor:
+                                            NewAppColor.primary600,
                                         foregroundColor: Colors.white,
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 14.h),
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 14.h),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(12.r),
@@ -549,10 +566,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       ),
                                       child: Text(
                                         '채팅하기',
-                                        style:
-                                            FigmaTextStyles().button1.copyWith(
-                                                  color: Colors.white,
-                                                ),
+                                        style: FigmaTextStyles()
+                                            .button1
+                                            .copyWith(
+                                              color: Colors.white,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -561,9 +579,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
+      ),
     );
   }
 
@@ -758,7 +776,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           else ...[
             // 작성자 정보 카드
             Container(
-              color: Colors.white,
+              color: NewAppColor.neutral100,
               padding: EdgeInsets.all(16.r),
               child: Column(
                 children: [
@@ -815,7 +833,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             // 제목 및 본문
             Container(
-              color: Colors.white,
+              color: NewAppColor.neutral100,
               width: double.infinity,
               padding: EdgeInsets.all(16.r),
               child: Column(
@@ -1422,6 +1440,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   Future<void> _updateStatus(String newStatus) async {
     if (_post == null) return;
 
+    print('🔄 DETAIL: 상태 업데이트 시작 - $newStatus');
+
     // 상태 업데이트 API 호출
     final response = await _communityService.updatePostStatus(
       tableName: widget.tableName,
@@ -1429,13 +1449,21 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       newStatus: newStatus,
     );
 
+    print('✅ DETAIL: 상태 업데이트 응답 - success: ${response.success}');
+
     if (mounted) {
       if (response.success) {
+        // 상태 변경 플래그 설정
+        _hasChanges = true;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response.message)),
         );
+        print('🔄 DETAIL: _loadData() 호출');
         // 데이터 다시 로드
-        _loadData();
+        await _loadData();
+        print(
+            '✅ DETAIL: _loadData() 완료 - 현재 상태: ${(_post as CommunityBasePost?)?.status}');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response.message)),
@@ -1444,14 +1472,198 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     }
   }
 
+  /// 물품 판매/나눔 상태 드롭다운 버튼
+  Widget _buildSharingStatusDropdown() {
+    if (_post == null) return const SizedBox.shrink();
+
+    final currentStatus = (_post as CommunityBasePost).status;
+
+    // 현재 상태에 따른 스타일 정의
+    Color getStatusColor(String status) {
+      switch (status) {
+        case 'active':
+          return NewAppColor.primary600;
+        case 'ing':
+          return NewAppColor.warning600;
+        case 'completed':
+          return NewAppColor.success600;
+        default:
+          return NewAppColor.neutral600;
+      }
+    }
+
+    String getStatusText(String status) {
+      switch (status) {
+        case 'active':
+          return '판매중';
+        case 'ing':
+          return '예약중';
+        case 'completed':
+          return '판매완료';
+        default:
+          return '상태 없음';
+      }
+    }
+
+    IconData getStatusIcon(String status) {
+      switch (status) {
+        case 'active':
+          return Icons.shopping_bag_outlined;
+        case 'ing':
+          return Icons.schedule_outlined;
+        case 'completed':
+          return Icons.check_circle_outline;
+        default:
+          return Icons.help_outline;
+      }
+    }
+
+    return PopupMenuButton<String>(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      onSelected: (String newStatus) {
+        if (newStatus != currentStatus) {
+          _updateStatus(newStatus);
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        return [
+          PopupMenuItem<String>(
+            value: 'active',
+            enabled: currentStatus != 'active',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.shopping_bag_outlined,
+                  color: NewAppColor.primary600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '판매중',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'active'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'active') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.primary600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'ing',
+            enabled: currentStatus != 'ing',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.schedule_outlined,
+                  color: NewAppColor.warning600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '예약중',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'ing'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'ing') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.warning600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'completed',
+            enabled: currentStatus != 'completed',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  color: NewAppColor.success600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '판매완료',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'completed'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'completed') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.success600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ];
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: getStatusColor(currentStatus),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              getStatusIcon(currentStatus),
+              color: Colors.white,
+              size: 20.sp,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              getStatusText(currentStatus),
+              style: FigmaTextStyles().button1.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// 상태 버튼 텍스트 반환
   String _getStatusButtonText() {
     if (_post == null) return '상태 변경';
 
     final currentStatus = (_post as CommunityBasePost).status;
+
+    // 다른 타입들은 기존 로직 유지
     final isCompleted =
         currentStatus == 'completed' || currentStatus == 'closed';
-
     return isCompleted ? '진행중으로 변경' : '완료로 변경';
   }
 
@@ -1461,60 +1673,144 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         _post != null &&
         (_post as CommunityBasePost).authorId == _currentUser!.id;
 
-    if (!isAuthor) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('게시글 작성자만 수정할 수 있습니다')),
-      );
-      return;
-    }
-
-    // 현재 상태 확인
-    final currentStatus = (_post as CommunityBasePost).status;
-    final isCompleted =
-        currentStatus == 'completed' || currentStatus == 'closed';
-
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 상태 변경
-              ListTile(
-                leading: Icon(
-                  isCompleted ? Icons.restart_alt : Icons.check_circle_outline,
-                  color: isCompleted
-                      ? NewAppColor.primary600
-                      : NewAppColor.success600,
+        return Container(
+          decoration: BoxDecoration(
+            color: NewAppColor.neutral100,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 핸들
+                Container(
+                  margin: EdgeInsets.only(top: 12.h),
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: NewAppColor.neutral300,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
                 ),
-                title: Text(isCompleted ? '진행중으로 변경' : '완료로 변경'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _togglePostStatus();
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: const Text('수정'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _editPost();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('삭제', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _deletePost();
-                },
-              ),
-            ],
+
+                SizedBox(height: 20.h),
+
+                // 제목
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      isAuthor ? '게시글 관리' : '게시글 신고',
+                      style: FigmaTextStyles().subtitle1.copyWith(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: NewAppColor.neutral900,
+                          ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 16.h),
+
+                // 작성자인 경우: 수정/삭제 옵션 표시
+                if (isAuthor) ...[
+                  // 수정
+                  _buildMenuOption(
+                    icon: Icons.edit_outlined,
+                    iconColor: NewAppColor.neutral700,
+                    iconBgColor: NewAppColor.neutral100,
+                    title: '수정',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _editPost();
+                    },
+                  ),
+
+                  // 삭제
+                  _buildMenuOption(
+                    icon: LucideIcons.trash2,
+                    iconColor: NewAppColor.danger600,
+                    iconBgColor: NewAppColor.danger100,
+                    title: '삭제',
+                    titleColor: NewAppColor.danger600,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _deletePost();
+                    },
+                  ),
+                ],
+
+                // 작성자가 아닌 경우: 신고하기 옵션만 표시
+                if (!isAuthor) ...[
+                  _buildMenuOption(
+                    icon: Icons.report_outlined,
+                    iconColor: NewAppColor.danger600,
+                    iconBgColor: NewAppColor.danger100,
+                    title: '신고하기',
+                    titleColor: NewAppColor.danger600,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showReportDialog();
+                    },
+                  ),
+                ],
+
+                SizedBox(height: 8.h),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  /// 메뉴 옵션 위젯
+  Widget _buildMenuOption({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required String title,
+    Color? titleColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        child: Row(
+          children: [
+            // 아이콘
+            Container(
+              width: 40.w,
+              height: 40.w,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(
+                icon,
+                size: 20.sp,
+                color: iconColor,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            // 타이틀
+            Text(
+              title,
+              style: FigmaTextStyles().body1.copyWith(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w500,
+                    color: titleColor ?? NewAppColor.neutral900,
+                  ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1613,6 +1909,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     ).then((result) {
       // 수정 후 돌아오면 데이터 새로고침
       if (result == true) {
+        _hasChanges = true; // 변경사항 플래그 설정
         _loadData();
       }
     });
@@ -1660,6 +1957,286 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     }
   }
 
+  /// 신고하기 다이얼로그 표시
+  void _showReportDialog() {
+    ReportReason? selectedReason;
+    final TextEditingController descriptionController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: NewAppColor.neutral100,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 핸들
+                      Center(
+                        child: Container(
+                          margin: EdgeInsets.only(top: 12.h),
+                          width: 40.w,
+                          height: 4.h,
+                          decoration: BoxDecoration(
+                            color: NewAppColor.neutral300,
+                            borderRadius: BorderRadius.circular(2.r),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 20.h),
+
+                      // 제목
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Text(
+                          '게시글 신고',
+                          style: FigmaTextStyles().subtitle1.copyWith(
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.w600,
+                                color: NewAppColor.neutral900,
+                              ),
+                        ),
+                      ),
+
+                      SizedBox(height: 8.h),
+
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Text(
+                          '신고 사유를 선택해주세요',
+                          style: FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral600,
+                                fontSize: 14.sp,
+                              ),
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // 신고 사유 선택
+                      ...ReportReason.values.map((reason) {
+                        final isSelected = selectedReason == reason;
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedReason = reason;
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 24.w,
+                              vertical: 16.h,
+                            ),
+                            color: isSelected
+                                ? NewAppColor.primary100
+                                : Colors.white,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelected
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: isSelected
+                                      ? NewAppColor.primary600
+                                      : NewAppColor.neutral400,
+                                  size: 20.sp,
+                                ),
+                                SizedBox(width: 12.w),
+                                Text(
+                                  reason.label,
+                                  style: FigmaTextStyles().body1.copyWith(
+                                        fontSize: 15.sp,
+                                        color: isSelected
+                                            ? NewAppColor.primary600
+                                            : NewAppColor.neutral900,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+
+                      SizedBox(height: 16.h),
+
+                      // 상세 내용 입력
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '상세 내용 (선택)',
+                              style: FigmaTextStyles().body2.copyWith(
+                                    color: NewAppColor.neutral700,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            SizedBox(height: 8.h),
+                            TextField(
+                              controller: descriptionController,
+                              maxLines: 4,
+                              maxLength: 500,
+                              decoration: InputDecoration(
+                                hintText: '신고 사유를 자세히 작성해주세요',
+                                hintStyle: FigmaTextStyles().body2.copyWith(
+                                      color: NewAppColor.neutral400,
+                                    ),
+                                filled: true,
+                                fillColor: NewAppColor.neutral100,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: EdgeInsets.all(12.w),
+                              ),
+                              style: FigmaTextStyles().body2.copyWith(
+                                    color: NewAppColor.neutral900,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // 버튼
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                                  side: BorderSide(
+                                    color: NewAppColor.neutral300,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                ),
+                                child: Text(
+                                  '취소',
+                                  style: FigmaTextStyles().button1.copyWith(
+                                        color: NewAppColor.neutral700,
+                                      ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: selectedReason == null
+                                    ? null
+                                    : () {
+                                        Navigator.pop(context);
+                                        _submitReport(
+                                          selectedReason!,
+                                          descriptionController.text.trim(),
+                                        );
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: NewAppColor.danger600,
+                                  disabledBackgroundColor:
+                                      NewAppColor.neutral300,
+                                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  '신고하기',
+                                  style: FigmaTextStyles().button1.copyWith(
+                                        color: selectedReason == null
+                                            ? NewAppColor.neutral500
+                                            : Colors.white,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 신고 제출
+  Future<void> _submitReport(ReportReason reason, String description) async {
+    // 로딩 표시
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final response = await _reportService.createReport(
+        reportedType: ReportType.post,
+        reportedId: widget.postId,
+        reportedTable: widget.tableName,
+        reason: reason,
+        description: description.isEmpty ? null : description,
+      );
+
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      // 결과 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: response.success
+                ? NewAppColor.success600
+                : NewAppColor.danger600,
+          ),
+        );
+      }
+    } catch (e) {
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      // 에러 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('신고 접수 중 오류가 발생했습니다: $e'),
+            backgroundColor: NewAppColor.danger600,
+          ),
+        );
+      }
+    }
+  }
+
   /// 무료나눔/물품판매 전용 레이아웃
   Widget _buildSharingLayout(
     SharingItem item,
@@ -1673,9 +2250,58 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // === 1. 제목 + 가격 섹션 ===
+        // === 1. 프로필 정보 섹션 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
+          padding: EdgeInsets.all(20.r),
+          child: Row(
+            children: [
+              // 프로필 이미지
+              _buildProfileImage(authorProfilePhotoUrl),
+              SizedBox(width: 12.w),
+              // 사용자 정보
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 사용자 이름
+                    Text(
+                      authorName ?? '알 수 없음',
+                      style: FigmaTextStyles().body1.copyWith(
+                            color: NewAppColor.neutral900,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    SizedBox(height: 4.h),
+                    // 교회 정보 + 지역
+                    Text(
+                      [
+                        if (churchName != null && churchName.isNotEmpty)
+                          churchName
+                        else
+                          '커뮤니티 회원',
+                        if (churchLocation != null && churchLocation.isNotEmpty)
+                          churchLocation,
+                      ].join(' · '),
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral600,
+                            fontSize: 13.sp,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 1.h, color: NewAppColor.neutral200),
+
+        // === 2. 상품 기본 정보 (제목, 가격, 카테고리, 시간) ===
+        Container(
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -1686,57 +2312,32 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 item.title,
                 style: FigmaTextStyles().header1.copyWith(
                       color: NewAppColor.neutral900,
-                      fontSize: 22.sp,
+                      fontSize: 20.sp,
                       fontWeight: FontWeight.w700,
                       height: 1.3,
                     ),
               ),
               SizedBox(height: 12.h),
 
-              // 가격 + 상태 배지
-              Row(
-                children: [
-                  // 가격
-                  Text(
-                    item.formattedPrice,
-                    style: FigmaTextStyles().header2.copyWith(
-                          color: item.isFree
-                              ? NewAppColor.success600
-                              : NewAppColor.primary600,
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  SizedBox(width: 12.w),
-                  // 상태 배지
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(item.status),
-                      borderRadius: BorderRadius.circular(6.r),
+              // 가격
+              Text(
+                item.formattedPrice,
+                style: FigmaTextStyles().header2.copyWith(
+                      color: NewAppColor.black,
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w700,
                     ),
-                    child: Text(
-                      item.statusDisplayName,
-                      style: FigmaTextStyles().caption2.copyWith(
-                            color: Colors.white,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                ],
               ),
+              SizedBox(height: 12.h),
 
-              SizedBox(height: 8.h),
-
-              // 작성 시간 + 조회수
+              // 카테고리 + 올린시간
               Row(
                 children: [
+                  // 카테고리
                   Text(
-                    date,
+                    item.category,
                     style: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral500,
+                          color: NewAppColor.neutral600,
                           fontSize: 13.sp,
                         ),
                   ),
@@ -1746,11 +2347,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     style: TextStyle(color: NewAppColor.neutral400),
                   ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.visibility_outlined,
-                      size: 14.sp, color: NewAppColor.neutral500),
-                  SizedBox(width: 4.w),
+                  // 올린시간
                   Text(
-                    '${item.viewCount}',
+                    date,
                     style: FigmaTextStyles().body2.copyWith(
                           color: NewAppColor.neutral500,
                           fontSize: 13.sp,
@@ -1763,25 +2362,58 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.neutral100),
 
-        // === 2. 상품 정보 카드 ===
+        // === 3. 상품 설명 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Text(
+              //   '상품 설명',
+              //   style: FigmaTextStyles().body1.copyWith(
+              //         color: NewAppColor.neutral900,
+              //         fontSize: 16.sp,
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              // ),
+              // SizedBox(height: 12.h),
               Text(
-                '상품 정보',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
+                description ?? '상품 설명이 없습니다.',
+                style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral800,
+                      fontSize: 15.sp,
+                      height: 1.6,
                     ),
               ),
-              SizedBox(height: 16.h),
+              // SizedBox(height: 80.h),
+            ],
+          ),
+        ),
+
+        // 구분선
+        // Container(height: 8.h, color: NewAppColor.neutral100),
+
+        // === 2. 상품 정보 카드 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Text(
+              //   '상품 정보',
+              //   style: FigmaTextStyles().body1.copyWith(
+              //         color: NewAppColor.neutral900,
+              //         fontSize: 16.sp,
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              // ),
+              // SizedBox(height: 16.h),
 
               // 상품 정보 그리드
               Container(
@@ -1817,107 +2449,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
+        // Container(height: 8.h, color: NewAppColor.neutral100),
 
-        // === 3. 작성자 정보 ===
+        // === 4. 연락처 정보 ===
         Container(
-          color: Colors.white,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '판매자 정보',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  _buildProfileImage(authorProfilePhotoUrl),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          authorName ?? '알 수 없음',
-                          style: FigmaTextStyles().body1.copyWith(
-                                color: NewAppColor.neutral900,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          [
-                            if (churchName != null && churchName.isNotEmpty)
-                              churchName,
-                            if (churchLocation != null &&
-                                churchLocation.isNotEmpty)
-                              churchLocation,
-                          ].join(' · '),
-                          style: FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral600,
-                                fontSize: 13.sp,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              // 작성자인 경우 상태 변경 드롭다운
-              if (_isAuthor()) ...[
-                SizedBox(height: 16.h),
-                _buildStatusDropdown(),
-              ],
-            ],
-          ),
-        ),
-
-        // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
-
-        // === 4. 상품 설명 ===
-        Container(
-          color: Colors.white,
-          width: double.infinity,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '상품 설명',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                description ?? '상품 설명이 없습니다.',
-                style: FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral800,
-                      fontSize: 15.sp,
-                      height: 1.6,
-                    ),
-              ),
-              SizedBox(height: 80.h),
-            ],
-          ),
-        ),
-
-        // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
-
-        // === 5. 연락처 정보 ===
-        Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2047,9 +2583,58 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // === 1. 제목 + 우선순위 섹션 ===
+        // === 1. 프로필 정보 섹션 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
+          padding: EdgeInsets.all(20.r),
+          child: Row(
+            children: [
+              // 프로필 이미지
+              _buildProfileImage(authorProfilePhotoUrl),
+              SizedBox(width: 12.w),
+              // 사용자 정보
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 사용자 이름
+                    Text(
+                      authorName ?? '알 수 없음',
+                      style: FigmaTextStyles().body1.copyWith(
+                            color: NewAppColor.neutral900,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    SizedBox(height: 4.h),
+                    // 교회 정보 + 지역
+                    Text(
+                      [
+                        if (churchName != null && churchName.isNotEmpty)
+                          churchName
+                        else
+                          '커뮤니티 회원',
+                        if (churchLocation != null && churchLocation.isNotEmpty)
+                          churchLocation,
+                      ].join(' · '),
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral600,
+                            fontSize: 13.sp,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 1.h, color: NewAppColor.neutral200),
+
+        // === 2. 요청 기본 정보 (제목, 우선순위, 카테고리, 시간) ===
+        Container(
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2060,72 +2645,47 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 item.title,
                 style: FigmaTextStyles().header1.copyWith(
                       color: NewAppColor.neutral900,
-                      fontSize: 22.sp,
+                      fontSize: 20.sp,
                       fontWeight: FontWeight.w700,
                       height: 1.3,
                     ),
               ),
               SizedBox(height: 12.h),
 
-              // 우선순위 + 상태 배지
-              Row(
-                children: [
-                  // 우선순위
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: urgencyColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6.r),
-                      border: Border.all(color: urgencyColor, width: 1.5),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.priority_high,
-                            size: 16.sp, color: urgencyColor),
-                        SizedBox(width: 4.w),
-                        Text(
-                          urgencyLabel,
-                          style: FigmaTextStyles().caption2.copyWith(
-                                color: urgencyColor,
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  // 상태 배지
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(item.status),
-                      borderRadius: BorderRadius.circular(6.r),
-                    ),
-                    child: Text(
-                      item.statusDisplayName,
+              // 우선순위
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: urgencyColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6.r),
+                  border: Border.all(color: urgencyColor, width: 1.5),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.priority_high, size: 16.sp, color: urgencyColor),
+                    SizedBox(width: 4.w),
+                    Text(
+                      urgencyLabel,
                       style: FigmaTextStyles().caption2.copyWith(
-                            color: Colors.white,
-                            fontSize: 12.sp,
+                            color: urgencyColor,
+                            fontSize: 13.sp,
                             fontWeight: FontWeight.w600,
                           ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              SizedBox(height: 12.h),
 
-              SizedBox(height: 8.h),
-
-              // 작성 시간 + 조회수
+              // 카테고리 + 올린시간
               Row(
                 children: [
+                  // 카테고리
                   Text(
-                    date,
+                    item.category,
                     style: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral500,
+                          color: NewAppColor.neutral600,
                           fontSize: 13.sp,
                         ),
                   ),
@@ -2135,11 +2695,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     style: TextStyle(color: NewAppColor.neutral400),
                   ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.visibility_outlined,
-                      size: 14.sp, color: NewAppColor.neutral500),
-                  SizedBox(width: 4.w),
+                  // 올린시간
                   Text(
-                    '${item.viewCount}',
+                    date,
                     style: FigmaTextStyles().body2.copyWith(
                           color: NewAppColor.neutral500,
                           fontSize: 13.sp,
@@ -2156,7 +2714,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 2. 요청 정보 카드 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2219,72 +2777,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // 구분선
         Container(height: 8.h, color: NewAppColor.neutral100),
 
-        // === 3. 작성자 정보 ===
+        // === 3. 상세 설명 ===
         Container(
-          color: Colors.white,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '요청자 정보',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  _buildProfileImage(authorProfilePhotoUrl),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          authorName ?? '알 수 없음',
-                          style: FigmaTextStyles().body1.copyWith(
-                                color: NewAppColor.neutral900,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          [
-                            if (churchName != null && churchName.isNotEmpty)
-                              churchName,
-                            if (churchLocation != null &&
-                                churchLocation.isNotEmpty)
-                              churchLocation,
-                          ].join(' · '),
-                          style: FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral600,
-                                fontSize: 13.sp,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              // 작성자인 경우 상태 변경 드롭다운
-              if (_isAuthor()) ...[
-                SizedBox(height: 16.h),
-                _buildStatusDropdown(),
-              ],
-            ],
-          ),
-        ),
-
-        // 구분선
-        Container(height: 8.h, color: NewAppColor.neutral100),
-
-        // === 4. 상세 설명 ===
-        Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2315,9 +2810,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // 구분선
         Container(height: 8.h, color: NewAppColor.neutral100),
 
-        // === 5. 연락처 정보 ===
+        // === 4. 연락처 정보 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2392,7 +2887,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       children: [
         // === 1. 제목 + 상태 섹션 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2473,7 +2968,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 2. 기본 정보 카드 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2526,7 +3021,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // === 3. 경력 정보 ===
         if (item.experience.isNotEmpty) ...[
           Container(
-            color: Colors.white,
+            color: NewAppColor.neutral100,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -2557,7 +3052,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 4. 활동 조건 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2685,7 +3180,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if ((item.portfolio.isNotEmpty) ||
             (item.portfolioFile != null && item.portfolioFile!.isNotEmpty)) ...[
           Container(
-            color: Colors.white,
+            color: NewAppColor.neutral100,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -2849,7 +3344,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // === 6. 자기소개 ===
         if (item.introduction != null && item.introduction!.isNotEmpty) ...[
           Container(
-            color: Colors.white,
+            color: NewAppColor.neutral100,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -2880,7 +3375,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 7. 작성자 정보 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           padding: EdgeInsets.all(20.r),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2938,7 +3433,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 8. 연락처 정보 ===
         Container(
-          color: Colors.white,
+          color: NewAppColor.neutral100,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -2998,8 +3493,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       builder: (context) => SafeArea(
+        bottom: true,
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20.h),
+          padding: EdgeInsets.only(
+            top: 20.h,
+            bottom: 20.h + MediaQuery.of(context).padding.bottom,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

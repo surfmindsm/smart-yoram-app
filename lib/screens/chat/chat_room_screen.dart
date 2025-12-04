@@ -6,7 +6,10 @@ import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/chat_models.dart';
 import 'package:smart_yoram_app/services/chat_service.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
+import 'package:smart_yoram_app/services/report_service.dart';
+import 'package:smart_yoram_app/models/report_model.dart';
 import 'package:smart_yoram_app/widgets/chat/message_bubble.dart';
+import 'package:smart_yoram_app/screens/community/community_detail_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// 채팅방 화면
@@ -25,6 +28,7 @@ class ChatRoomScreen extends StatefulWidget {
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
+  final ReportService _reportService = ReportService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -203,71 +207,49 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         backgroundColor: NewAppColor.neutral100,
         elevation: 0,
         scrolledUnderElevation: 0,
+        centerTitle: false,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // 상대방 프로필 이미지
-            Container(
-              width: 36.w,
-              height: 36.w,
-              decoration: BoxDecoration(
-                color: NewAppColor.neutral200,
-                shape: BoxShape.circle,
-              ),
-              child: widget.chatRoom.otherUserPhotoUrl != null
-                  ? ClipOval(
-                      child: Image.network(
-                        widget.chatRoom.otherUserPhotoUrl!,
-                        width: 36.w,
-                        height: 36.w,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.person,
-                            color: NewAppColor.neutral500,
-                            size: 18.sp,
-                          );
-                        },
-                      ),
-                    )
-                  : Icon(
-                      Icons.person,
-                      color: NewAppColor.neutral500,
-                      size: 18.sp,
-                    ),
-            ),
-            SizedBox(width: 12.w),
-            // 상대방 이름 + 게시글 제목
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.chatRoom.otherUserName ?? '알 수 없음',
-                    style: FigmaTextStyles().body1.copyWith(
-                          color: NewAppColor.neutral900,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
+            // 상대방 이름
+            Text(
+              widget.chatRoom.otherUserName ?? '알 수 없음',
+              style: FigmaTextStyles().body1.copyWith(
+                    color: NewAppColor.neutral900,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
                   ),
-                  if (widget.chatRoom.postTitle != null)
-                    Text(
-                      widget.chatRoom.postTitle!,
-                      style: FigmaTextStyles().caption2.copyWith(
-                            color: NewAppColor.neutral600,
-                            fontSize: 12.sp,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
             ),
+            // 교회/지역 정보
+            if (widget.chatRoom.otherUserChurch != null ||
+                widget.chatRoom.otherUserLocation != null)
+              Text(
+                [
+                  widget.chatRoom.otherUserChurch,
+                  widget.chatRoom.otherUserLocation,
+                ].where((e) => e != null && e.isNotEmpty).join(' · '),
+                style: FigmaTextStyles().caption2.copyWith(
+                      color: NewAppColor.neutral600,
+                      fontSize: 12.sp,
+                    ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
           ],
         ),
+        actions: [
+          // 더보기 버튼
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.black),
+            onPressed: _showChatMenu,
+            padding: EdgeInsets.zero,
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
@@ -280,6 +262,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // 상품 정보 섹션 (있는 경우만)
+                if (widget.chatRoom.postTitle != null ||
+                    widget.chatRoom.postImageUrl != null)
+                  _buildProductInfoSection(),
+
                 // 메시지 목록
                 Expanded(
                   child: _messages.isEmpty
@@ -323,6 +310,310 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               ],
             ),
     );
+  }
+
+  /// 상품 정보 섹션
+  Widget _buildProductInfoSection() {
+    return GestureDetector(
+      onTap: _navigateToProductDetail,
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: NewAppColor.neutral100,
+          border: Border(
+            bottom: BorderSide(
+              color: NewAppColor.neutral200,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 상품 이미지
+            if (widget.chatRoom.postImageUrl != null)
+              Container(
+                width: 48.w,
+                height: 48.w,
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral200,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4.r),
+                  child: Image.network(
+                    widget.chatRoom.postImageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.image,
+                        color: NewAppColor.neutral400,
+                        size: 20.sp,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            if (widget.chatRoom.postImageUrl != null) SizedBox(width: 12.w),
+
+            // 상품 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 거래 상태
+                  if (widget.chatRoom.postStatus != null)
+                    GestureDetector(
+                      onTap: () {
+                        // 상태 변경 바텀시트 표시 (상품 상세 이동 방지)
+                        _showStatusChangeBottomSheet();
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 4.h),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _getStatusText(widget.chatRoom.postStatus!),
+                              style: FigmaTextStyles().caption2.copyWith(
+                                    color: NewAppColor.neutral700,
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            Icon(
+                              Icons.keyboard_arrow_down,
+                              size: 16.sp,
+                              color: NewAppColor.neutral700,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // 상품명
+                  Text(
+                    widget.chatRoom.postTitle ?? '',
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral900,
+                          fontSize: 13.sp,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  // 가격
+                  if (widget.chatRoom.postPrice != null)
+                    Padding(
+                      padding: EdgeInsets.only(top: 2.h),
+                      child: Text(
+                        '${_formatPrice(widget.chatRoom.postPrice!)}원',
+                        style: FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral900,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 거래 상태 텍스트
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'active':
+      case 'available':
+        return '판매중';
+      case 'reserved':
+        return '예약중';
+      case 'sold':
+      case 'completed':
+        return '판매완료';
+      default:
+        return '판매중'; // 기본값
+    }
+  }
+
+  /// 가격 포맷팅 (천 단위 쉼표)
+  String _formatPrice(int price) {
+    return price.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
+  }
+
+  /// 상품 상세페이지로 이동
+  void _navigateToProductDetail() {
+    if (widget.chatRoom.postId == null || widget.chatRoom.postTable == null) {
+      return;
+    }
+
+    // CommunityDetailScreen으로 직접 이동
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommunityDetailScreen(
+          postId: widget.chatRoom.postId!,
+          tableName: widget.chatRoom.postTable!,
+          categoryTitle: _getCategoryTitle(widget.chatRoom.postTable!),
+        ),
+      ),
+    );
+  }
+
+  /// postTable에서 카테고리 제목 변환
+  String _getCategoryTitle(String postTable) {
+    switch (postTable) {
+      case 'community_sharing':
+        return '무료나눔/물품판매';
+      case 'community_requests':
+        return '물품 요청';
+      case 'job_posts':
+        return '사역자 모집';
+      case 'community_music_teams':
+        return '행사팀 모집';
+      case 'music_team_seekers':
+        return '행사팀 지원';
+      case 'church_news':
+        return '교회 소식';
+      default:
+        return '게시글';
+    }
+  }
+
+  /// 상태 변경 바텀시트 표시
+  void _showStatusChangeBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 핸들
+                Container(
+                  margin: EdgeInsets.only(top: 12.h),
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: NewAppColor.neutral300,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
+
+                // 제목
+                Text(
+                  '거래 상태 변경',
+                  style: FigmaTextStyles().subtitle1.copyWith(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+
+                SizedBox(height: 20.h),
+
+                // 상태 목록
+                _buildStatusOption('판매중', 'active'),
+                _buildStatusOption('예약중', 'reserved'),
+                _buildStatusOption('판매완료', 'completed'),
+
+                SizedBox(height: 20.h),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 상태 옵션 버튼
+  Widget _buildStatusOption(String label, String status) {
+    final isSelected = widget.chatRoom.postStatus == status;
+
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        _updateProductStatus(status);
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+        color: isSelected ? NewAppColor.primary100 : Colors.white,
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: FigmaTextStyles().body1.copyWith(
+                    fontSize: 16.sp,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected
+                        ? NewAppColor.primary600
+                        : NewAppColor.neutral900,
+                  ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              Icon(
+                Icons.check,
+                color: NewAppColor.primary600,
+                size: 20.sp,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 상품 상태 업데이트
+  Future<void> _updateProductStatus(String newStatus) async {
+    if (widget.chatRoom.postId == null || widget.chatRoom.postTable == null) {
+      return;
+    }
+
+    try {
+      // Supabase 업데이트
+      await Supabase.instance.client
+          .from(widget.chatRoom.postTable!)
+          .update({'status': newStatus}).eq('id', widget.chatRoom.postId!);
+
+      // 성공 메시지
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('거래 상태가 ${_getStatusText(newStatus)}(으)로 변경되었습니다'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // 화면 새로고침
+      setState(() {
+        // chatRoom 객체 업데이트는 필요 없음 (다음 번 진입 시 자동으로 반영됨)
+      });
+    } catch (e) {
+      print('❌ CHAT_ROOM_SCREEN: 상태 업데이트 실패 - $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('상태 변경에 실패했습니다'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   /// 빈 상태 (메시지 없음)
@@ -440,5 +731,384 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         ),
       ),
     );
+  }
+
+  /// 채팅 메뉴 표시
+  void _showChatMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 핸들
+                Container(
+                  margin: EdgeInsets.only(top: 12.h),
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: NewAppColor.neutral300,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
+
+                // 제목
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '채팅방 신고',
+                      style: FigmaTextStyles().subtitle1.copyWith(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: NewAppColor.neutral900,
+                          ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 16.h),
+
+                // 신고하기
+                InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showReportDialog();
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 16.h,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40.w,
+                          height: 40.w,
+                          decoration: BoxDecoration(
+                            color: NewAppColor.danger100,
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.report_outlined,
+                              color: NewAppColor.danger600,
+                              size: 20.sp,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Text(
+                            '신고하기',
+                            style: FigmaTextStyles().body1.copyWith(
+                                  fontSize: 15.sp,
+                                  color: NewAppColor.danger600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 8.h),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 신고하기 다이얼로그 표시
+  void _showReportDialog() {
+    ReportReason? selectedReason;
+    final TextEditingController descriptionController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 핸들
+                      Center(
+                        child: Container(
+                          margin: EdgeInsets.only(top: 12.h),
+                          width: 40.w,
+                          height: 4.h,
+                          decoration: BoxDecoration(
+                            color: NewAppColor.neutral300,
+                            borderRadius: BorderRadius.circular(2.r),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 20.h),
+
+                      // 제목
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Text(
+                          '채팅방 신고',
+                          style: FigmaTextStyles().subtitle1.copyWith(
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.w600,
+                                color: NewAppColor.neutral900,
+                              ),
+                        ),
+                      ),
+
+                      SizedBox(height: 8.h),
+
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Text(
+                          '신고 사유를 선택해주세요',
+                          style: FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral600,
+                                fontSize: 14.sp,
+                              ),
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // 신고 사유 선택
+                      ...ReportReason.values.map((reason) {
+                        final isSelected = selectedReason == reason;
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedReason = reason;
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 24.w,
+                              vertical: 16.h,
+                            ),
+                            color: isSelected
+                                ? NewAppColor.primary100
+                                : Colors.white,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelected
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: isSelected
+                                      ? NewAppColor.primary600
+                                      : NewAppColor.neutral400,
+                                  size: 20.sp,
+                                ),
+                                SizedBox(width: 12.w),
+                                Text(
+                                  reason.label,
+                                  style: FigmaTextStyles().body1.copyWith(
+                                        fontSize: 15.sp,
+                                        color: isSelected
+                                            ? NewAppColor.primary600
+                                            : NewAppColor.neutral900,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+
+                      SizedBox(height: 16.h),
+
+                      // 상세 내용 입력
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '상세 내용 (선택)',
+                              style: FigmaTextStyles().body2.copyWith(
+                                    color: NewAppColor.neutral700,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            SizedBox(height: 8.h),
+                            TextField(
+                              controller: descriptionController,
+                              maxLines: 4,
+                              maxLength: 500,
+                              decoration: InputDecoration(
+                                hintText: '신고 사유를 자세히 작성해주세요',
+                                hintStyle: FigmaTextStyles().body2.copyWith(
+                                      color: NewAppColor.neutral400,
+                                    ),
+                                filled: true,
+                                fillColor: NewAppColor.neutral100,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: EdgeInsets.all(12.w),
+                              ),
+                              style: FigmaTextStyles().body2.copyWith(
+                                    color: NewAppColor.neutral900,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // 버튼
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                                  side: BorderSide(
+                                    color: NewAppColor.neutral300,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                ),
+                                child: Text(
+                                  '취소',
+                                  style: FigmaTextStyles().button1.copyWith(
+                                        color: NewAppColor.neutral700,
+                                      ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: selectedReason == null
+                                    ? null
+                                    : () {
+                                        Navigator.pop(context);
+                                        _submitReport(
+                                          selectedReason!,
+                                          descriptionController.text.trim(),
+                                        );
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: NewAppColor.danger600,
+                                  disabledBackgroundColor:
+                                      NewAppColor.neutral300,
+                                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  '신고하기',
+                                  style: FigmaTextStyles().button1.copyWith(
+                                        color: selectedReason == null
+                                            ? NewAppColor.neutral500
+                                            : Colors.white,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 신고 제출
+  Future<void> _submitReport(ReportReason reason, String description) async {
+    // 로딩 표시
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final response = await _reportService.createReport(
+        reportedType: ReportType.chat,
+        reportedId: widget.chatRoom.id,
+        reportedTable: 'chat_rooms',
+        reason: reason,
+        description: description.isEmpty ? null : description,
+      );
+
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      // 결과 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: response.success
+                ? NewAppColor.success600
+                : NewAppColor.danger600,
+          ),
+        );
+      }
+    } catch (e) {
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      // 에러 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('신고 접수 중 오류가 발생했습니다: $e'),
+            backgroundColor: NewAppColor.danger600,
+          ),
+        );
+      }
+    }
   }
 }
