@@ -63,8 +63,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
   // 물품요청 전용
   String _selectedUrgency = 'normal'; // low, normal, high
-  String? _rewardType; // none, exchange, payment
+  String? _rewardType; // free, exchange, payment
   final TextEditingController _rewardAmountController = TextEditingController();
+  final TextEditingController _exchangeItemController = TextEditingController();
 
   // 사역자모집 전용
   final TextEditingController _companyController = TextEditingController();
@@ -90,7 +91,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   final TextEditingController _rehearsalTimeController =
       TextEditingController();
   final TextEditingController _worshipTypeController = TextEditingController();
-  List<String> _selectedInstruments = []; // 필요 악기/파트
   final TextEditingController _scheduleController = TextEditingController();
   final TextEditingController _requirementsController = TextEditingController();
   final TextEditingController _compensationController = TextEditingController();
@@ -154,6 +154,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     _priceController.dispose();
     _purchaseDateController.dispose();
     _rewardAmountController.dispose();
+    _exchangeItemController.dispose();
     _companyController.dispose();
     _churchIntroController.dispose();
     _positionController.dispose();
@@ -231,8 +232,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             post['contact_info'] ?? post['contact_phone'] ?? '';
         _emailController.text = post['contact_email'] ?? '';
       } else if (tableName == 'community_requests') {
-        _rewardType = post['reward_type'];
+        // 'none'을 'free'로 변환
+        final rawRewardType = post['reward_type'];
+        _rewardType = rawRewardType == 'none' ? 'free' : rawRewardType;
         _rewardAmountController.text = post['reward_amount']?.toString() ?? '';
+        _exchangeItemController.text = post['exchange_item'] ?? '';
         _selectedUrgency = post['urgency'] ?? 'normal';
         _contactController.text =
             post['contact_info'] ?? post['contact_phone'] ?? '';
@@ -313,8 +317,12 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
       _locationController.text = post.location ?? '';
-      _rewardType = post.rewardType;
+      // 'none'을 'free'로 변환
+      final rawRewardType = post.rewardType;
+      _rewardType = rawRewardType == 'none' ? 'free' : rawRewardType;
       _rewardAmountController.text = post.rewardAmount?.toString() ?? '';
+      // exchangeItem 필드가 모델에 있다면 로드
+      // _exchangeItemController.text = post.exchangeItem ?? '';
       _selectedUrgency = post.urgency ?? 'normal';
       _contactController.text = post.contactPhone;
       _emailController.text = post.contactEmail ?? '';
@@ -361,7 +369,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _scheduleController.text = post.schedule ?? '';
       _requirementsController.text = post.requirements ?? '';
       _compensationController.text = post.benefits ?? '';
-      _contactController.text = post.contactPhone;
+      _contactController.text = post.contactPhone ?? '';
       _emailController.text = post.contactEmail ?? '';
     } else if (post is MusicTeamSeeker) {
       _titleController.text = post.title;
@@ -428,20 +436,38 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     switch (actualType) {
       case CommunityListType.freeSharing:
       case CommunityListType.itemSale:
-        // 필수: 제목, 설명, 카테고리, 상태, 위치, 연락처
-        return _titleController.text.trim().isNotEmpty &&
+        // 필수: 제목, 설명, 카테고리, 상태, 위치 정보
+        // 위치 정보: 지역 선택 OR 택배 가능 체크 중 하나 이상 필수
+        // 판매인 경우(무료나눔 아닌 경우) 가격도 필수
+        final basicValid = _titleController.text.trim().isNotEmpty &&
             _descriptionController.text.trim().isNotEmpty &&
             _selectedCategory != null &&
             _selectedCondition != null &&
-            (_selectedProvince != null ||
-                _locationController.text.trim().isNotEmpty) &&
-            _contactController.text.trim().isNotEmpty;
+            (_selectedProvince != null || _deliveryAvailable);
+
+        // 무료나눔이 아니면 가격도 필수
+        if (!_isFreeSharing) {
+          return basicValid && _priceController.text.trim().isNotEmpty;
+        }
+
+        return basicValid;
 
       case CommunityListType.itemRequest:
-        // 필수: 제목, 설명, 연락처
-        return _titleController.text.trim().isNotEmpty &&
-            _descriptionController.text.trim().isNotEmpty &&
-            _contactController.text.trim().isNotEmpty;
+        // 필수: 제목, 카테고리, 거래 지역 (지역 OR 택배), 보상 정보, 상세 설명
+        final titleValid = _titleController.text.trim().isNotEmpty;
+        final categoryValid = _selectedCategory != null;
+        final locationValid = (_selectedProvince != null || _deliveryAvailable);
+        final rewardValid = _rewardType != null;
+        final descriptionValid = _descriptionController.text.trim().isNotEmpty;
+
+        print('🔍 물품요청 등록 조건 체크:');
+        print('  제목: $titleValid (${_titleController.text})');
+        print('  카테고리: $categoryValid ($_selectedCategory)');
+        print('  거래지역: $locationValid (도/시: $_selectedProvince, 택배: $_deliveryAvailable)');
+        print('  보상정보: $rewardValid ($_rewardType)');
+        print('  상세설명: $descriptionValid (${_descriptionController.text.length}자)');
+
+        return titleValid && categoryValid && locationValid && rewardValid && descriptionValid;
 
       case CommunityListType.jobPosting:
         // 필수: 제목, 설명, 교회/기관명, 직책, 고용형태, 급여(또는 협의), 마감일
@@ -455,28 +481,35 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             _deadlineController.text.trim().isNotEmpty;
 
       case CommunityListType.musicTeamRecruit:
-        // 필수: 제목, 설명, 행사일, 리허설 시간, 필요 악기/파트, 연락처
-        return _titleController.text.trim().isNotEmpty &&
-            _descriptionController.text.trim().isNotEmpty &&
-            _eventDateController.text.trim().isNotEmpty &&
-            _rehearsalTimeController.text.trim().isNotEmpty &&
-            _selectedInstruments.isNotEmpty &&
-            _contactController.text.trim().isNotEmpty;
+        // 필수: 제목, 설명, 행사 유형, 팀 형태, 지역
+        final titleValid = _titleController.text.trim().isNotEmpty;
+        final descValid = _descriptionController.text.trim().isNotEmpty;
+        final eventTypeValid = _selectedEventType != null;
+        final teamTypeValid = _selectedTeamType != null;
+        final locationValid = _locationController.text.trim().isNotEmpty;
+
+        print('🔍 행사팀 모집 필수 필드 검증:');
+        print('  제목: $titleValid (${_titleController.text.trim()})');
+        print('  설명: $descValid (길이: ${_descriptionController.text.trim().length})');
+        print('  행사유형: $eventTypeValid ($_selectedEventType)');
+        print('  팀형태: $teamTypeValid ($_selectedTeamType)');
+        print('  위치: $locationValid (${_locationController.text.trim()})');
+        print('  → 전체 유효성: ${titleValid && descValid && eventTypeValid && teamTypeValid && locationValid}');
+
+        return titleValid && descValid && eventTypeValid && teamTypeValid && locationValid;
 
       case CommunityListType.musicTeamSeeking:
-        // 필수: 제목, 이름, 전공 파트, 경력, 연락처
+        // 필수: 제목, 이름, 전공 파트, 경력
         return _titleController.text.trim().isNotEmpty &&
             _nameController.text.trim().isNotEmpty &&
             _selectedInstrument != null &&
-            _experienceController.text.trim().isNotEmpty &&
-            _contactController.text.trim().isNotEmpty;
+            _experienceController.text.trim().isNotEmpty;
 
       case CommunityListType.churchNews:
-        // 필수: 제목, 설명, 행사일, 연락처
+        // 필수: 제목, 설명, 행사일
         return _titleController.text.trim().isNotEmpty &&
             _descriptionController.text.trim().isNotEmpty &&
-            _newsEventDateController.text.trim().isNotEmpty &&
-            _contactController.text.trim().isNotEmpty;
+            _newsEventDateController.text.trim().isNotEmpty;
 
       default:
         return true;
@@ -751,9 +784,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         title = '물품 요청 작성 가이드';
         tips = [
           '✓ 필요한 물품을 구체적으로 설명해주세요',
-          '✓ 긴급도를 적절히 선택해주세요',
-          '✓ 보상 방식이 있다면 명확히 입력해주세요',
-          '✓ 연락 가능한 시간대를 적어주면 좋습니다',
+          '✓ 거래 지역을 선택하거나 택배 가능 여부를 선택해주세요',
+          '✓ 보상 방식을 명확히 선택해주세요',
+          '✓ 상세 설명에 원하는 물품의 조건을 구체적으로 적어주세요',
         ];
         break;
       case CommunityListType.jobPosting:
@@ -1346,28 +1379,28 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 8 (무료나눔의 경우 6). 연락처 *
-          _buildRequiredLabel('연락처'),
+          // 8 (무료나눔의 경우 6). 연락처 (선택)
+          Text(
+            '연락처 (선택)',
+            style: FigmaTextStyles().body2.copyWith(
+                  color: NewAppColor.neutral900,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _contactController,
             decoration: _buildInputDecoration(
-              hintText: '연락 가능한 전화번호를 입력해주세요',
+              hintText: '연락 가능한 전화번호를 입력해주세요 (선택사항)',
             ),
             style: FigmaTextStyles().body2,
             keyboardType: TextInputType.phone,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '연락처를 입력해주세요';
-              }
-              return null;
-            },
           ),
           SizedBox(height: 24.h),
 
           // 9 (무료나눔의 경우 7). 이메일 (선택)
           Text(
-            '이메일',
+            '이메일 (선택)',
             style: FigmaTextStyles().body2.copyWith(
                   color: NewAppColor.neutral900,
                   fontWeight: FontWeight.w500,
@@ -1638,6 +1671,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               hintText: '요청할 물품의 제목을 입력하세요',
             ),
             style: FigmaTextStyles().body2,
+            onChanged: (value) {
+              setState(() {}); // 입력 시 UI 업데이트 (등록 버튼 활성화 체크)
+            },
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return '제목을 입력해주세요';
@@ -1647,74 +1683,32 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 2. 카테고리 * | 우선순위 * (Row)
-          Row(
-            children: [
-              Expanded(
-                child: CustomDropdownField<String>(
-                  label: '카테고리',
-                  hintText: '카테고리 선택',
-                  value: _selectedCategory,
-                  required: true,
-                  items: buildSimpleDropdownItems(
-                    items: const [
-                      '가구',
-                      '전자제품',
-                      '도서',
-                      '의류',
-                      '장난감',
-                      '생활용품',
-                      '기타'
-                    ],
-                    currentValue: _selectedCategory,
-                  ),
-                  onChanged: (value) =>
-                      setState(() => _selectedCategory = value),
-                  validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: CustomDropdownField<String>(
-                  label: '우선순위',
-                  hintText: '우선순위 선택',
-                  value: _selectedUrgency,
-                  required: true,
-                  items: [
-                    buildDropdownItem<String>(
-                        value: 'low',
-                        text: '낮음',
-                        currentValue: _selectedUrgency),
-                    buildDropdownItem<String>(
-                        value: 'normal',
-                        text: '보통',
-                        currentValue: _selectedUrgency),
-                    buildDropdownItem<String>(
-                        value: 'medium',
-                        text: '중간',
-                        currentValue: _selectedUrgency),
-                    buildDropdownItem<String>(
-                        value: 'high',
-                        text: '높음',
-                        currentValue: _selectedUrgency),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => _selectedUrgency = value!),
-                  validator: (value) => value == null ? '우선순위를 선택해주세요' : null,
-                ),
-              ),
-            ],
+          // 2. 카테고리 *
+          CustomDropdownField<String>(
+            label: '카테고리',
+            hintText: '카테고리 선택',
+            value: _selectedCategory,
+            required: true,
+            items: buildSimpleDropdownItems(
+              items: const [
+                '가구',
+                '전자제품',
+                '도서',
+                '의류',
+                '장난감',
+                '생활용품',
+                '기타'
+              ],
+              currentValue: _selectedCategory,
+            ),
+            onChanged: (value) =>
+                setState(() => _selectedCategory = value),
+            validator: (value) => value == null ? '카테고리를 선택해주세요' : null,
           ),
           SizedBox(height: 24.h),
 
-          // 5. 거래 지역
-          Text(
-            '거래 지역',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          // 3. 거래 지역 * (지역 선택 OR 택배 가능 중 하나 필수)
+          _buildRequiredLabel('거래 지역'),
           SizedBox(height: 8.h),
           Row(
             children: [
@@ -1804,14 +1798,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 6. 보상 정보
-          Text(
-            '보상 정보',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          // 4. 보상 정보 *
+          _buildRequiredLabel('보상 정보'),
           SizedBox(height: 8.h),
           Row(
             children: [
@@ -1819,9 +1807,10 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: CustomDropdownField<String>(
                   hintText: '보상 유형 선택',
                   value: _rewardType,
+                  required: true,
                   items: [
                     buildDropdownItem<String>(
-                        value: 'none', text: '없음', currentValue: _rewardType),
+                        value: 'free', text: '무료나눔', currentValue: _rewardType),
                     buildDropdownItem<String>(
                         value: 'exchange',
                         text: '교환',
@@ -1831,7 +1820,21 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         text: '금액',
                         currentValue: _rewardType),
                   ],
-                  onChanged: (value) => setState(() => _rewardType = value),
+                  onChanged: (value) {
+                    setState(() {
+                      _rewardType = value;
+                      // 유형 변경 시 입력값 초기화
+                      if (value == 'free') {
+                        _rewardAmountController.clear();
+                        _exchangeItemController.clear();
+                      } else if (value == 'exchange') {
+                        _rewardAmountController.clear();
+                      } else if (value == 'payment') {
+                        _exchangeItemController.clear();
+                      }
+                    });
+                  },
+                  validator: (value) => value == null ? '보상 유형을 선택해주세요' : null,
                 ),
               ),
               SizedBox(width: 16.w),
@@ -1839,15 +1842,33 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextFormField(
-                      controller: _rewardAmountController,
-                      decoration: _buildInputDecoration(
-                        hintText: '보상 금액 (원)',
+                    if (_rewardType == 'exchange')
+                      TextFormField(
+                        controller: _exchangeItemController,
+                        decoration: _buildInputDecoration(
+                          hintText: '교환할 물건',
+                        ),
+                        style: FigmaTextStyles().body2,
+                      )
+                    else if (_rewardType == 'payment')
+                      TextFormField(
+                        controller: _rewardAmountController,
+                        decoration: _buildInputDecoration(
+                          hintText: '보상 금액 (원)',
+                        ),
+                        style: FigmaTextStyles().body2,
+                        keyboardType: TextInputType.number,
+                      )
+                    else
+                      TextFormField(
+                        decoration: _buildInputDecoration(
+                          hintText: '해당 없음',
+                        ),
+                        style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral400,
+                        ),
+                        enabled: false,
                       ),
-                      style: FigmaTextStyles().body2,
-                      keyboardType: TextInputType.number,
-                      enabled: _rewardType == 'payment',
-                    ),
                   ],
                 ),
               ),
@@ -1855,14 +1876,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 7. 상세 설명
-          Text(
-            '상세 설명',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          // 5. 상세 설명 *
+          _buildRequiredLabel('상세 설명'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
@@ -1872,17 +1887,32 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             ),
             style: FigmaTextStyles().body2,
             maxLines: 4,
+            onChanged: (value) {
+              setState(() {}); // 입력 시 UI 업데이트 (등록 버튼 활성화 체크)
+            },
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '상세 설명을 입력해주세요';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 24.h),
 
-          // 8. 연락처 * | 이메일 (Row)
+          // 8. 연락처 (선택) | 이메일 (Row)
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildRequiredLabel('연락처'),
+                    Text(
+                      '연락처 (선택)',
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral900,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
@@ -1891,12 +1921,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       ),
                       style: FigmaTextStyles().body2,
                       keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return '연락처를 입력해주세요';
-                        }
-                        return null;
-                      },
                     ),
                   ],
                 ),
@@ -2570,20 +2594,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 16.h),
 
-          // 상세 주소
-          Text(
-            '상세 주소',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-          SizedBox(height: 8.h),
+          // 위치 상세 정보
           TextFormField(
             controller: _locationController,
             decoration: _buildInputDecoration(
-              hintText: '예: ○○교회, ○○센터 2층',
-              prefixIcon: const Icon(Icons.location_on),
+              hintText: '상세정보를 입력해주세요',
             ),
           ),
           SizedBox(height: 32.h),
@@ -2598,56 +2613,29 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 1. 상세 설명
-          Text(
-            '상세 설명',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
+          // 통합 상세 설명
+          _buildRequiredLabel('상세 설명'),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _descriptionController,
             decoration: _buildInputDecoration(
-              hintText: '행사 내용, 분위기, 특별한 요구사항 등을 자세히 설명해주세요',
-            ),
-            maxLines: 5,
-          ),
-          SizedBox(height: 24.h),
+              hintText: '''다음 내용을 포함하여 자세히 작성해주세요:
 
-          // 2. 자격 요건
-          Text(
-            '자격 요건',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _requirementsController,
-            decoration: _buildInputDecoration(
-              hintText: '예: 3년 이상 연주 경험, 악보 시창 가능',
-            ),
-            maxLines: 3,
-          ),
-          SizedBox(height: 24.h),
+• 행사 내용 및 분위기
+  예: 주일 1부 예배, 현대적인 워십 스타일
 
-          // 3. 보상/사례비
-          Text(
-            '보상/사례비',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _compensationController,
-            decoration: _buildInputDecoration(
-              hintText: '예: 회당 5만원, 봉사, 협의',
+• 자격 요건 및 경력
+  예: 3년 이상 연주 경험, 악보 시창 가능
+
+• 보상 및 사례비
+  예: 회당 5만원 / 봉사 / 협의 등''',
+              counterText: '${_descriptionController.text.length}/1000',
             ),
+            maxLines: 10,
+            maxLength: 1000,
+            onChanged: (value) => setState(() {}),
+            validator: (value) =>
+                value?.trim().isEmpty ?? true ? '상세 설명을 입력해주세요' : null,
           ),
           SizedBox(height: 32.h),
 
@@ -2661,14 +2649,20 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 담당자 연락처 * | 이메일 (선택) (2 columns)
+          // 담당자 연락처 (선택) | 이메일 (선택) (2 columns)
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildRequiredLabel('담당자 연락처'),
+                    Text(
+                      '담당자 연락처 (선택)',
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral900,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
@@ -2676,8 +2670,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         hintText: '010-1234-5678',
                       ),
                       keyboardType: TextInputType.phone,
-                      validator: (value) =>
-                          value?.trim().isEmpty ?? true ? '연락처를 입력해주세요' : null,
                     ),
                   ],
                 ),
@@ -3197,7 +3189,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 16.h),
 
-          // 연락처 * | 이메일 (선택) - 2 columns
+          // 연락처 (선택) | 이메일 (선택) - 2 columns
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -3205,7 +3197,13 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildRequiredLabel('연락처'),
+                    Text(
+                      '연락처 (선택)',
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral900,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
                     SizedBox(height: 8.h),
                     TextFormField(
                       controller: _contactController,
@@ -3213,12 +3211,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         hintText: '010-1234-5678',
                       ),
                       keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return '연락처를 입력해주세요';
-                        }
-                        return null;
-                      },
                     ),
                   ],
                 ),
@@ -3656,7 +3648,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
           // 이메일
           Text(
-            '이메일',
+            '이메일 (선택)',
             style: FigmaTextStyles().body2.copyWith(
                   color: NewAppColor.neutral900,
                   fontWeight: FontWeight.w500,
@@ -4115,6 +4107,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       rewardAmount: _rewardType == 'payment'
           ? double.tryParse(_rewardAmountController.text.trim())
           : null,
+      exchangeItem: _rewardType == 'exchange'
+          ? _exchangeItemController.text.trim()
+          : null,
     );
 
     return response.success;
@@ -4122,58 +4117,110 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
   /// 사역자모집 제출
   Future<bool> _submitJobPosting() async {
-    final response = await _communityService.createJobPost(
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      company: _companyController.text.trim(),
-      churchIntro: '', // 상세 내용에 통합됨
-      position: _selectedCategory ?? 'other', // UI의 직책 dropdown
-      jobType: '', // 사용하지 않음
-      employmentType: _selectedEmploymentType ?? 'full-time',
-      salary: _salaryController.text.trim(),
-      qualifications: '', // 상세 내용에 통합됨
-      province: _selectedProvince,
-      district: _selectedDistrict,
-      deliveryAvailable: _deliveryAvailable,
-      deadline: _deadlineController.text.trim().isEmpty
-          ? null
-          : _deadlineController.text.trim(),
-      contactPhone: _contactController.text.trim().isEmpty
-          ? null
-          : _contactController.text.trim(),
-      contactEmail: _emailController.text.trim().isEmpty
-          ? null
-          : _emailController.text.trim(),
-    );
+    // 수정 모드인지 확인
+    final isEditMode = widget.existingPost != null;
+
+    final response = isEditMode
+        ? await _communityService.updateJobPost(
+            id: widget.existingPost is Map
+                ? (widget.existingPost as Map<String, dynamic>)['id'] as int
+                : (widget.existingPost as JobPost).id,
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim(),
+            company: _companyController.text.trim(),
+            churchIntro: '', // 상세 내용에 통합됨
+            position: _selectedCategory ?? 'other', // UI의 직책 dropdown
+            jobType: '', // 사용하지 않음
+            employmentType: _selectedEmploymentType ?? 'full-time',
+            salary: _salaryController.text.trim(),
+            qualifications: '', // 상세 내용에 통합됨
+            province: _selectedProvince,
+            district: _selectedDistrict,
+            deliveryAvailable: _deliveryAvailable,
+            deadline: _deadlineController.text.trim().isEmpty
+                ? null
+                : _deadlineController.text.trim(),
+            contactPhone: _contactController.text.trim().isEmpty
+                ? null
+                : _contactController.text.trim(),
+            contactEmail: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
+          )
+        : await _communityService.createJobPost(
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim(),
+            company: _companyController.text.trim(),
+            churchIntro: '', // 상세 내용에 통합됨
+            position: _selectedCategory ?? 'other', // UI의 직책 dropdown
+            jobType: '', // 사용하지 않음
+            employmentType: _selectedEmploymentType ?? 'full-time',
+            salary: _salaryController.text.trim(),
+            qualifications: '', // 상세 내용에 통합됨
+            province: _selectedProvince,
+            district: _selectedDistrict,
+            deliveryAvailable: _deliveryAvailable,
+            deadline: _deadlineController.text.trim().isEmpty
+                ? null
+                : _deadlineController.text.trim(),
+            contactPhone: _contactController.text.trim().isEmpty
+                ? null
+                : _contactController.text.trim(),
+            contactEmail: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
+          );
 
     return response.success;
   }
 
   /// 행사팀모집 제출
   Future<bool> _submitMusicTeamRecruit() async {
-    final response = await _communityService.createMusicTeamRecruitment(
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      eventType: _selectedEventType ?? 'other',
-      teamType: _selectedTeamType ?? 'other',
-      eventDate: _eventDateController.text.trim().isEmpty
-          ? null
-          : _eventDateController.text.trim(),
-      rehearsalSchedule: _rehearsalTimeController.text.trim().isEmpty
-          ? null
-          : _rehearsalTimeController.text.trim(),
-      location: _locationController.text.trim(),
-      requirements: _requirementsController.text.trim().isEmpty
-          ? null
-          : _requirementsController.text.trim(),
-      compensation: _compensationController.text.trim().isEmpty
-          ? null
-          : _compensationController.text.trim(),
-      contactPhone: _contactController.text.trim(),
-      contactEmail: _emailController.text.trim().isEmpty
-          ? null
-          : _emailController.text.trim(),
-    );
+    // 수정 모드인지 확인
+    final isEditMode = widget.existingPost != null;
+
+    final response = isEditMode
+        ? await _communityService.updateMusicTeamRecruitment(
+            id: widget.existingPost is Map
+                ? (widget.existingPost as Map<String, dynamic>)['id'] as int
+                : (widget.existingPost as MusicTeamRecruitment).id,
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim(),
+            eventType: _selectedEventType ?? 'other',
+            teamType: _selectedTeamType ?? 'other',
+            eventDate: _eventDateController.text.trim().isEmpty
+                ? null
+                : _eventDateController.text.trim(),
+            rehearsalSchedule: _rehearsalTimeController.text.trim().isEmpty
+                ? null
+                : _rehearsalTimeController.text.trim(),
+            location: _locationController.text.trim(),
+            contactPhone: _contactController.text.trim().isEmpty
+                ? null
+                : _contactController.text.trim(),
+            contactEmail: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
+          )
+        : await _communityService.createMusicTeamRecruitment(
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim(),
+            eventType: _selectedEventType ?? 'other',
+            teamType: _selectedTeamType ?? 'other',
+            eventDate: _eventDateController.text.trim().isEmpty
+                ? null
+                : _eventDateController.text.trim(),
+            rehearsalSchedule: _rehearsalTimeController.text.trim().isEmpty
+                ? null
+                : _rehearsalTimeController.text.trim(),
+            location: _locationController.text.trim(),
+            contactPhone: _contactController.text.trim().isEmpty
+                ? null
+                : _contactController.text.trim(),
+            contactEmail: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
+          );
 
     return response.success;
   }

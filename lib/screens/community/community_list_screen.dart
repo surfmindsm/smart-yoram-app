@@ -586,11 +586,19 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       likes = item.likes;
       authorId = item.authorId;
       authorName = item.authorName;
-      authorProfilePhotoUrl = item.authorProfilePhotoUrl;
+      authorProfilePhotoUrl = null; // 프로필 이미지 제거
       churchName = item.churchName;
       churchLocation = item.displayLocation;
       status = item.status;
       statusLabel = item.statusDisplayName;
+      // 보상 정보 표시
+      if (item.rewardType == 'free') {
+        priceText = '무료나눔';
+      } else if (item.rewardType == 'exchange') {
+        priceText = '교환';
+      } else if (item.rewardType == 'payment' && item.rewardAmount != null) {
+        priceText = '${item.rewardAmount!.toStringAsFixed(0)}원';
+      }
     } else if (item is JobPost) {
       title = item.title;
       date = item.formattedDate;

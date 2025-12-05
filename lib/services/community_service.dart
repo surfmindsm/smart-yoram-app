@@ -513,6 +513,7 @@ class CommunityService {
     String? contactEmail,
     String? rewardType,
     double? rewardAmount,
+    String? exchangeItem,
   }) async {
     try {
       final userResponse = await _authService.getCurrentUser();
@@ -541,6 +542,7 @@ class CommunityService {
         'contact_email': contactEmail,
         'reward_type': rewardType,
         'reward_amount': rewardAmount,
+        'exchange_item': exchangeItem,
         'church_id': currentUser.churchId,
         'author_id': currentUser.id,
         'status': 'active',
@@ -1156,6 +1158,12 @@ class CommunityService {
         location = province;
       }
 
+      // contact_info 생성 (전화번호 / 이메일)
+      String contactInfo = contactPhone ?? '';
+      if (contactEmail != null && contactEmail.isNotEmpty) {
+        contactInfo = '$contactInfo / $contactEmail';
+      }
+
       final data = {
         'title': title,
         'description': description,
@@ -1166,8 +1174,7 @@ class CommunityService {
         'requirements': qualifications,
         'location': location,
         'application_deadline': deadline,
-        'contact_phone': contactPhone,
-        'contact_email': contactEmail,
+        'contact_info': contactInfo, // contact_phone, contact_email 대신 contact_info 사용
         'church_id': currentUser.churchId,
         'author_id': currentUser.id,
         'status': 'open', // 'active' 대신 'open' 사용
@@ -1197,6 +1204,106 @@ class CommunityService {
     }
   }
 
+  /// 사역자 모집 글 수정
+  Future<ApiResponse<JobPost>> updateJobPost({
+    required int id,
+    required String title,
+    required String description,
+    required String company,
+    required String churchIntro,
+    required String position,
+    required String jobType,
+    required String employmentType,
+    required String salary,
+    required String qualifications,
+    String? province,
+    String? district,
+    bool? deliveryAvailable,
+    String? deadline,
+    String? contactPhone,
+    String? contactEmail,
+  }) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      print('📝 COMMUNITY_SERVICE: 사역자 모집 수정 - $id / $title');
+
+      // 게시글 소유자 확인
+      final post = await _supabaseService.client
+          .from('job_posts')
+          .select('author_id')
+          .eq('id', id)
+          .single();
+
+      if (post['author_id'] != currentUser.id) {
+        return ApiResponse(
+          success: false,
+          message: '권한이 없습니다',
+          data: null,
+        );
+      }
+
+      // province + district를 합쳐서 location 생성
+      String? location;
+      if (province != null && district != null) {
+        location = '$province $district';
+      } else if (province != null) {
+        location = province;
+      }
+
+      // contact_info 생성 (전화번호 / 이메일)
+      String contactInfo = contactPhone ?? '';
+      if (contactEmail != null && contactEmail.isNotEmpty) {
+        contactInfo = '$contactInfo / $contactEmail';
+      }
+
+      final data = {
+        'title': title,
+        'description': description,
+        'company_name': company,
+        'job_type': position.isNotEmpty ? position : jobType,
+        'employment_type': employmentType,
+        'salary_range': salary,
+        'requirements': qualifications,
+        'location': location,
+        'application_deadline': deadline,
+        'contact_info': contactInfo,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      };
+
+      final response = await _supabaseService.client
+          .from('job_posts')
+          .update(data)
+          .eq('id', id)
+          .select()
+          .single();
+
+      print('✅ COMMUNITY_SERVICE: 사역자 모집 수정 성공');
+
+      return ApiResponse(
+        success: true,
+        message: '수정되었습니다',
+        data: JobPost.fromJson(response),
+      );
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 사역자 모집 수정 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '수정에 실패했습니다: $e',
+        data: null,
+      );
+    }
+  }
+
   /// 행사팀 모집 글 작성
   Future<ApiResponse<MusicTeamRecruitment>> createMusicTeamRecruitment({
     required String title,
@@ -1206,9 +1313,7 @@ class CommunityService {
     String? eventDate,
     String? rehearsalSchedule,
     required String location,
-    String? requirements,
-    String? compensation, // UI에서는 compensation으로 받지만 DB에는 benefits로 저장
-    required String contactPhone,
+    String? contactPhone,
     String? contactEmail,
   }) async {
     try {
@@ -1225,13 +1330,20 @@ class CommunityService {
 
       print('📝 COMMUNITY_SERVICE: 행사팀 모집 작성 - $title');
 
-      // contact_method 결정 (email이 있으면 email, 없으면 phone)
-      final contactMethod = (contactEmail != null && contactEmail.isNotEmpty) ? 'email' : 'phone';
+      // contact_method 결정 (email이 있으면 email, phone이 있으면 phone, 둘 다 없으면 'none')
+      String contactMethod = 'none';
+      String contactInfo = ''; // 기본값: 빈 문자열 (NOT NULL 제약 대응)
 
-      // contact_info 생성
-      String contactInfo = contactPhone;
-      if (contactEmail != null && contactEmail.isNotEmpty) {
-        contactInfo = '$contactPhone / $contactEmail';
+      if (contactPhone != null && contactPhone.isNotEmpty) {
+        contactMethod = 'phone';
+        contactInfo = contactPhone;
+        if (contactEmail != null && contactEmail.isNotEmpty) {
+          contactInfo = '$contactPhone / $contactEmail';
+          contactMethod = 'email';
+        }
+      } else if (contactEmail != null && contactEmail.isNotEmpty) {
+        contactMethod = 'email';
+        contactInfo = contactEmail;
       }
 
       final data = {
@@ -1245,11 +1357,11 @@ class CommunityService {
         'practice_location': location, // 필수: 연습 장소
         'practice_schedule': rehearsalSchedule ?? '협의', // 필수: 연습 일정
         'commitment': null,
-        'description': description,
-        'requirements': requirements,
-        'benefits': compensation, // ⭐ compensation → benefits로 변경
-        'contact_method': contactMethod, // 필수: 연락 방법
-        'contact_info': contactInfo, // 필수: 연락처 정보
+        'description': description, // 통합된 상세 설명
+        'requirements': null,
+        'benefits': null,
+        'contact_method': contactMethod, // 필수: 연락 방법 (기본값: 'none')
+        'contact_info': contactInfo, // 선택: 연락처 정보
         'current_members': null,
         'target_members': null,
         'church_id': currentUser.churchId,
@@ -1276,6 +1388,103 @@ class CommunityService {
       return ApiResponse(
         success: false,
         message: '등록에 실패했습니다: $e',
+        data: null,
+      );
+    }
+  }
+
+  /// 행사팀 모집 글 수정
+  Future<ApiResponse<MusicTeamRecruitment>> updateMusicTeamRecruitment({
+    required int id,
+    required String title,
+    required String description,
+    required String eventType,
+    required String teamType,
+    String? eventDate,
+    String? rehearsalSchedule,
+    required String location,
+    String? contactPhone,
+    String? contactEmail,
+  }) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      print('📝 COMMUNITY_SERVICE: 행사팀 모집 수정 - $id / $title');
+
+      // 게시글 소유자 확인
+      final post = await _supabaseService.client
+          .from('community_music_teams')
+          .select('author_id')
+          .eq('id', id)
+          .single();
+
+      if (post['author_id'] != currentUser.id) {
+        return ApiResponse(
+          success: false,
+          message: '권한이 없습니다',
+          data: null,
+        );
+      }
+
+      // contact_method 결정 (email이 있으면 email, phone이 있으면 phone, 둘 다 없으면 'none')
+      String contactMethod = 'none';
+      String contactInfo = ''; // 기본값: 빈 문자열 (NOT NULL 제약 대응)
+
+      if (contactPhone != null && contactPhone.isNotEmpty) {
+        contactMethod = 'phone';
+        contactInfo = contactPhone;
+        if (contactEmail != null && contactEmail.isNotEmpty) {
+          contactInfo = '$contactPhone / $contactEmail';
+          contactMethod = 'email';
+        }
+      } else if (contactEmail != null && contactEmail.isNotEmpty) {
+        contactMethod = 'email';
+        contactInfo = contactEmail;
+      }
+
+      final data = {
+        'title': title,
+        'team_name': title,
+        'worship_type': eventType,
+        'team_types': [teamType],
+        'practice_location': location,
+        'practice_schedule': rehearsalSchedule ?? '협의',
+        'description': description, // 통합된 상세 설명
+        'requirements': null,
+        'benefits': null,
+        'contact_method': contactMethod, // 필수: 연락 방법 (기본값: 'none')
+        'contact_info': contactInfo, // 선택: 연락처 정보
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      };
+
+      final response = await _supabaseService.client
+          .from('community_music_teams')
+          .update(data)
+          .eq('id', id)
+          .select()
+          .single();
+
+      print('✅ COMMUNITY_SERVICE: 행사팀 모집 수정 성공');
+
+      return ApiResponse(
+        success: true,
+        message: '수정되었습니다',
+        data: MusicTeamRecruitment.fromJson(response),
+      );
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 행사팀 모집 수정 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '수정에 실패했습니다: $e',
         data: null,
       );
     }

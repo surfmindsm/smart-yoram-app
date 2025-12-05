@@ -103,18 +103,17 @@ abstract class CommunityBasePost {
 
   /// 날짜 포맷 (상대 시간)
   String get formattedDate {
-    // UTC 기준으로 계산 (시간대 혼동 방지)
-    final nowUtc = DateTime.now().toUtc();
-    final createdAtUtc = createdAt.toUtc();
-    final difference = nowUtc.difference(createdAtUtc);
+    // 로컬 시간으로 변환하여 계산
+    final now = DateTime.now();
+    final localCreatedAt = createdAt.toLocal();
+    final difference = now.difference(localCreatedAt);
 
     if (difference.inMinutes < 1) return '방금 전';
     if (difference.inHours < 1) return '${difference.inMinutes}분 전';
     if (difference.inDays < 1) return '${difference.inHours}시간 전';
     if (difference.inDays < 7) return '${difference.inDays}일 전';
 
-    // 날짜 표시는 로컬 시간으로
-    final localCreatedAt = createdAt.toLocal();
+    // 날짜 표시
     return '${localCreatedAt.year}.${localCreatedAt.month.toString().padLeft(2, '0')}.${localCreatedAt.day.toString().padLeft(2, '0')}';
   }
 }
@@ -338,6 +337,7 @@ class RequestItem extends CommunityBasePost {
   final List<String>? images; // 참고 이미지
   final String? rewardType; // none, exchange, payment 등
   final double? rewardAmount; // 보상 금액
+  final String? exchangeItem; // 교환 희망 물품
 
   RequestItem({
     required super.id,
@@ -365,6 +365,7 @@ class RequestItem extends CommunityBasePost {
     this.images,
     this.rewardType,
     this.rewardAmount,
+    this.exchangeItem,
   });
 
   factory RequestItem.fromJson(Map<String, dynamic> json) {
@@ -437,6 +438,7 @@ class RequestItem extends CommunityBasePost {
               ? (json['reward_amount'] as num).toDouble()
               : double.tryParse(json['reward_amount'].toString()))
           : null,
+      exchangeItem: json['exchange_item'],
     );
   }
 
@@ -455,6 +457,7 @@ class RequestItem extends CommunityBasePost {
       'images': images,
       'reward_type': rewardType,
       'reward_amount': rewardAmount,
+      'exchange_item': exchangeItem,
     };
   }
 
@@ -621,7 +624,7 @@ class MusicTeamRecruitment extends CommunityBasePost {
   final String location;
   final String? requirements; // 지원 자격
   final String? benefits; // 보상/사례 (스키마: benefits)
-  final String contactPhone;
+  final String? contactPhone;
   final String? contactEmail;
   final int? applications;
 
@@ -647,12 +650,29 @@ class MusicTeamRecruitment extends CommunityBasePost {
     required this.location,
     this.requirements,
     this.benefits, // compensation → benefits로 변경
-    required this.contactPhone,
+    this.contactPhone,
     this.contactEmail,
     this.applications,
   });
 
   factory MusicTeamRecruitment.fromJson(Map<String, dynamic> json) {
+    // contact_info가 있으면 파싱 (기존 데이터 지원)
+    String? contactPhone = json['contactPhone'] ?? json['contact_phone'];
+    String? contactEmail = json['contactEmail'] ?? json['contact_email'];
+
+    if ((contactPhone == null || contactPhone.isEmpty) && json['contact_info'] != null) {
+      final contactInfo = json['contact_info'] as String;
+      if (contactInfo.contains('/')) {
+        final parts = contactInfo.split('/');
+        contactPhone = parts[0].trim();
+        if (parts.length > 1) {
+          contactEmail = parts[1].trim();
+        }
+      } else {
+        contactPhone = contactInfo;
+      }
+    }
+
     return MusicTeamRecruitment(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
@@ -665,11 +685,11 @@ class MusicTeamRecruitment extends CommunityBasePost {
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at']).toUtc()
+      createdAt: json['createdAt'] != null || json['created_at'] != null
+          ? DateTime.parse((json['createdAt'] ?? json['created_at']) + 'Z')
           : DateTime.now().toUtc(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at']).toUtc()
+      updatedAt: json['updatedAt'] != null || json['updated_at'] != null
+          ? DateTime.parse((json['updatedAt'] ?? json['updated_at']) + 'Z')
           : null,
       recruitmentType: json['recruitment_type'] ?? '',
       worshipType: json['worship_type'],
@@ -679,8 +699,8 @@ class MusicTeamRecruitment extends CommunityBasePost {
       location: json['practice_location'] ?? json['location'] ?? '', // practice_location 우선
       requirements: json['requirements'],
       benefits: json['benefits'], // ⭐ compensation → benefits로 변경
-      contactPhone: json['contact_info'] ?? json['contact_phone'] ?? '', // contact_info 우선
-      contactEmail: json['contact_email'],
+      contactPhone: contactPhone,
+      contactEmail: contactEmail,
       applications: json['applicants_count'] ?? json['applications'], // applicants_count 우선
     );
   }
@@ -750,11 +770,11 @@ class MusicTeamSeeker extends CommunityBasePost {
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at']).toUtc()
+      createdAt: json['createdAt'] != null || json['created_at'] != null
+          ? DateTime.parse((json['createdAt'] ?? json['created_at']) + 'Z')
           : DateTime.now().toUtc(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at']).toUtc()
+      updatedAt: json['updatedAt'] != null || json['updated_at'] != null
+          ? DateTime.parse((json['updatedAt'] ?? json['updated_at']) + 'Z')
           : null,
       name: json['name'] ?? '',
       teamName: json['team_name'],

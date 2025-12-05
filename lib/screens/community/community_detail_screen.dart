@@ -470,29 +470,40 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                         ? _buildSharingStatusDropdown()
                                         : widget.tableName == 'job_posts'
                                             ? _buildJobPostingStatusDropdown()
-                                            : ElevatedButton(
-                                                onPressed: _togglePostStatus,
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      NewAppColor.primary600,
-                                                  foregroundColor: Colors.white,
-                                                  padding: EdgeInsets.symmetric(
-                                                      vertical: 14.h),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(12.r),
-                                                  ),
-                                                  elevation: 0,
-                                                ),
-                                                child: Text(
-                                                  _getStatusButtonText(),
-                                                  style: FigmaTextStyles()
-                                                      .button1
-                                                      .copyWith(
-                                                        color: Colors.white,
+                                            : widget.tableName ==
+                                                    'community_requests'
+                                                ? _buildRequestStatusDropdown()
+                                                : widget.tableName ==
+                                                        'community_music_teams'
+                                                    ? _buildMusicTeamRecruitStatusDropdown()
+                                                    : ElevatedButton(
+                                                    onPressed: _togglePostStatus,
+                                                    style:
+                                                        ElevatedButton.styleFrom(
+                                                      backgroundColor:
+                                                          NewAppColor.primary600,
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                              vertical: 14.h),
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                12.r),
                                                       ),
-                                                ),
-                                              ),
+                                                      elevation: 0,
+                                                    ),
+                                                    child: Text(
+                                                      _getStatusButtonText(),
+                                                      style: FigmaTextStyles()
+                                                          .button1
+                                                          .copyWith(
+                                                            color: Colors.white,
+                                                          ),
+                                                    ),
+                                                  ),
                                   ),
                                 // 작성자가 아닌 경우: 좋아요 + 전화/채팅 버튼
                                 if (!_isAuthor()) ...[
@@ -771,6 +782,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           else if (_post is JobPost) ...[
             _buildJobPostingLayout(_post as JobPost, date, authorName,
                 authorProfilePhotoUrl, churchName, churchLocation, description),
+          ]
+          // === 행사팀 모집 전용 레이아웃 ===
+          else if (_post is MusicTeamRecruitment) ...[
+            _buildMusicTeamRecruitLayout(_post as MusicTeamRecruitment, date,
+                authorName, authorProfilePhotoUrl, churchName, churchLocation, description),
           ]
           // === 행사팀 지원 전용 레이아웃 ===
           else if (_post is MusicTeamSeeker) ...[
@@ -1628,6 +1644,153 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     );
   }
 
+  /// 행사팀 모집 상태 드롭다운 버튼
+  Widget _buildMusicTeamRecruitStatusDropdown() {
+    if (_post == null) return const SizedBox.shrink();
+
+    final currentStatus = (_post as CommunityBasePost).status;
+
+    // 현재 상태에 따른 스타일 정의
+    Color getStatusColor(String status) {
+      switch (status) {
+        case 'active':
+          return NewAppColor.primary600;
+        case 'closed':
+          return NewAppColor.neutral600;
+        default:
+          return NewAppColor.neutral600;
+      }
+    }
+
+    String getStatusText(String status) {
+      switch (status) {
+        case 'active':
+          return '모집중';
+        case 'closed':
+          return '마감';
+        default:
+          return '상태 없음';
+      }
+    }
+
+    IconData getStatusIcon(String status) {
+      switch (status) {
+        case 'active':
+          return Icons.music_note;
+        case 'closed':
+          return Icons.music_off;
+        default:
+          return Icons.help_outline;
+      }
+    }
+
+    return PopupMenuButton<String>(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      onSelected: (String newStatus) {
+        if (newStatus != currentStatus) {
+          _updateStatus(newStatus);
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        return [
+          PopupMenuItem<String>(
+            value: 'active',
+            enabled: currentStatus != 'active',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.music_note,
+                  color: NewAppColor.primary600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '모집중',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'active'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'active') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.primary600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'closed',
+            enabled: currentStatus != 'closed',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.music_off,
+                  color: NewAppColor.neutral600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '마감',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'closed'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'closed') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.neutral600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ];
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: getStatusColor(currentStatus),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              getStatusIcon(currentStatus),
+              color: Colors.white,
+              size: 20.sp,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              getStatusText(currentStatus),
+              style: FigmaTextStyles().button1.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// 물품 판매/나눔 상태 드롭다운 버튼
   Widget _buildSharingStatusDropdown() {
     if (_post == null) return const SizedBox.shrink();
@@ -1759,6 +1922,189 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 SizedBox(width: 12.w),
                 Text(
                   '판매완료',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'completed'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'completed') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.success600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ];
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: getStatusColor(currentStatus),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              getStatusIcon(currentStatus),
+              color: Colors.white,
+              size: 20.sp,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              getStatusText(currentStatus),
+              style: FigmaTextStyles().button1.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 물품 요청 상태 드롭다운 버튼
+  Widget _buildRequestStatusDropdown() {
+    if (_post == null) return const SizedBox.shrink();
+
+    final currentStatus = (_post as CommunityBasePost).status;
+
+    // 현재 상태에 따른 스타일 정의
+    Color getStatusColor(String status) {
+      switch (status) {
+        case 'active':
+          return NewAppColor.primary600;
+        case 'ing':
+          return NewAppColor.warning600;
+        case 'completed':
+          return NewAppColor.success600;
+        default:
+          return NewAppColor.neutral600;
+      }
+    }
+
+    String getStatusText(String status) {
+      switch (status) {
+        case 'active':
+          return '요청중';
+        case 'ing':
+          return '진행중';
+        case 'completed':
+          return '완료';
+        default:
+          return '상태 없음';
+      }
+    }
+
+    IconData getStatusIcon(String status) {
+      switch (status) {
+        case 'active':
+          return Icons.search_outlined;
+        case 'ing':
+          return Icons.sync_outlined;
+        case 'completed':
+          return Icons.check_circle_outline;
+        default:
+          return Icons.help_outline;
+      }
+    }
+
+    return PopupMenuButton<String>(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      onSelected: (String newStatus) {
+        if (newStatus != currentStatus) {
+          _updateStatus(newStatus);
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        return [
+          PopupMenuItem<String>(
+            value: 'active',
+            enabled: currentStatus != 'active',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search_outlined,
+                  color: NewAppColor.primary600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '요청중',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'active'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'active') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.primary600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'ing',
+            enabled: currentStatus != 'ing',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.sync_outlined,
+                  color: NewAppColor.warning600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '진행중',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'ing'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'ing') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.warning600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'completed',
+            enabled: currentStatus != 'completed',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  color: NewAppColor.success600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '완료',
                   style: FigmaTextStyles().button1.copyWith(
                         color: currentStatus == 'completed'
                             ? NewAppColor.neutral400
@@ -2949,32 +3295,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? churchLocation,
     String? description,
   ) {
-    // 우선순위 표시 텍스트
-    String urgencyLabel = '보통';
-    Color urgencyColor = NewAppColor.neutral600;
-    switch (item.urgency.toLowerCase()) {
-      case 'low':
-        urgencyLabel = '낮음';
-        urgencyColor = NewAppColor.neutral600;
-        break;
-      case 'normal':
-        urgencyLabel = '보통';
-        urgencyColor = NewAppColor.primary600;
-        break;
-      case 'medium':
-        urgencyLabel = '중간';
-        urgencyColor = NewAppColor.warning600;
-        break;
-      case 'high':
-        urgencyLabel = '높음';
-        urgencyColor = NewAppColor.danger600;
-        break;
-    }
-
     // 보상 정보 포맷팅
-    String rewardText = '없음';
-    if (item.rewardType == 'exchange') {
-      rewardText = '교환 가능';
+    String rewardText = '무료나눔';
+    if (item.rewardType == 'free') {
+      rewardText = '무료나눔';
+    } else if (item.rewardType == 'exchange') {
+      rewardText = '교환';
     } else if (item.rewardType == 'payment' && item.rewardAmount != null) {
       rewardText = '${item.rewardAmount!.toStringAsFixed(0)}원';
     }
@@ -2986,43 +3312,48 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         Container(
           color: NewAppColor.neutral100,
           padding: EdgeInsets.all(20.r),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 프로필 이미지
-              _buildProfileImage(authorProfilePhotoUrl),
-              SizedBox(width: 12.w),
-              // 사용자 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 사용자 이름
-                    Text(
-                      authorName ?? '알 수 없음',
-                      style: FigmaTextStyles().body1.copyWith(
-                            color: NewAppColor.neutral900,
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
+              Row(
+                children: [
+                  // 프로필 이미지
+                  _buildProfileImage(authorProfilePhotoUrl),
+                  SizedBox(width: 12.w),
+                  // 사용자 정보
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 사용자 이름
+                        Text(
+                          authorName ?? '알 수 없음',
+                          style: FigmaTextStyles().body1.copyWith(
+                                color: NewAppColor.neutral900,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        SizedBox(height: 4.h),
+                        // 교회 정보 + 지역
+                        Text(
+                          [
+                            if (churchName != null && churchName.isNotEmpty)
+                              churchName
+                            else
+                              '커뮤니티 회원',
+                            if (churchLocation != null && churchLocation.isNotEmpty)
+                              churchLocation,
+                          ].join(' · '),
+                          style: FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral600,
+                                fontSize: 13.sp,
+                              ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4.h),
-                    // 교회 정보 + 지역
-                    Text(
-                      [
-                        if (churchName != null && churchName.isNotEmpty)
-                          churchName
-                        else
-                          '커뮤니티 회원',
-                        if (churchLocation != null && churchLocation.isNotEmpty)
-                          churchLocation,
-                      ].join(' · '),
-                      style: FigmaTextStyles().body2.copyWith(
-                            color: NewAppColor.neutral600,
-                            fontSize: 13.sp,
-                          ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -3051,31 +3382,16 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ),
               SizedBox(height: 12.h),
 
-              // // 우선순위
-              // Container(
-              //   padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-              //   decoration: BoxDecoration(
-              //     color: urgencyColor.withOpacity(0.1),
-              //     borderRadius: BorderRadius.circular(6.r),
-              //     border: Border.all(color: urgencyColor, width: 1.5),
-              //   ),
-              //   child: Row(
-              //     mainAxisSize: MainAxisSize.min,
-              //     children: [
-              //       Icon(Icons.priority_high, size: 16.sp, color: urgencyColor),
-              //       SizedBox(width: 4.w),
-              //       Text(
-              //         urgencyLabel,
-              //         style: FigmaTextStyles().caption2.copyWith(
-              //               color: urgencyColor,
-              //               fontSize: 13.sp,
-              //               fontWeight: FontWeight.w600,
-              //             ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-              // SizedBox(height: 12.h),
+              // 보상 정보
+              Text(
+                rewardText,
+                style: FigmaTextStyles().header2.copyWith(
+                      color: NewAppColor.black,
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              SizedBox(height: 12.h),
 
               // 카테고리 + 올린시간
               Row(
@@ -3171,13 +3487,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   children: [
                     _buildInfoRow(label: '카테고리', value: item.category),
                     SizedBox(height: 12.h),
-                    _buildInfoRow(
-                      label: '우선순위',
-                      value: urgencyLabel,
-                      valueColor: urgencyColor,
-                      valueWeight: FontWeight.w600,
-                    ),
-                    SizedBox(height: 12.h),
                     _buildInfoRow(label: '지역', value: item.displayLocation),
                     SizedBox(height: 12.h),
                     _buildInfoRow(
@@ -3197,6 +3506,18 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                           : NewAppColor.neutral600,
                       valueWeight: FontWeight.w600,
                     ),
+                    // 교환 희망 물품 표시 (교환일 경우만)
+                    if (item.rewardType == 'exchange' &&
+                        item.exchangeItem != null &&
+                        item.exchangeItem!.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _buildInfoRow(
+                        label: '교환 희망 물품',
+                        value: item.exchangeItem!,
+                        valueColor: NewAppColor.neutral800,
+                        valueWeight: FontWeight.w500,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -3816,11 +4137,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   ),
                 ],
               ),
-              // 작성자인 경우 상태 변경 드롭다운
-              if (_isAuthor()) ...[
-                SizedBox(height: 16.h),
-                _buildStatusDropdown(),
-              ],
             ],
           ),
         ),
@@ -3870,6 +4186,263 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  /// 행사팀 모집 전용 레이아웃
+  Widget _buildMusicTeamRecruitLayout(
+    MusicTeamRecruitment item,
+    String date,
+    String? authorName,
+    String? authorProfilePhotoUrl,
+    String? churchName,
+    String? churchLocation,
+    String? description,
+  ) {
+    // 행사 유형 표시명 변환
+    String getEventTypeDisplayName(String? eventType) {
+      if (eventType == null) return '미지정';
+      switch (eventType) {
+        case 'sunday-service':
+          return '주일예배';
+        case 'wednesday-service':
+          return '수요예배';
+        case 'dawn-service':
+          return '새벽예배';
+        case 'special-service':
+          return '특별예배';
+        case 'revival':
+          return '부흥회';
+        case 'praise-meeting':
+          return '찬양집회';
+        case 'wedding':
+          return '결혼식';
+        case 'funeral':
+          return '장례식';
+        case 'retreat':
+          return '수련회';
+        case 'concert':
+          return '콘서트';
+        case 'other':
+          return '기타';
+        default:
+          return eventType;
+      }
+    }
+
+    // 팀 형태 표시명 변환
+    String getTeamTypeDisplayName(String teamType) {
+      switch (teamType) {
+        case 'solo':
+          return '현재 솔로 활동';
+        case 'praise-team':
+          return '찬양팀';
+        case 'worship-team':
+          return '워십팀';
+        case 'acoustic-team':
+          return '어쿠스틱 팀';
+        case 'band':
+          return '밴드';
+        case 'orchestra':
+          return '오케스트라';
+        case 'choir':
+          return '합창단';
+        case 'dance-team':
+          return '무용팀';
+        case 'other':
+          return '기타';
+        default:
+          return teamType;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // === 1. 프로필 정보 섹션 ===
+        Container(
+          color: NewAppColor.neutral100,
+          padding: EdgeInsets.all(20.r),
+          child: Row(
+            children: [
+              // 프로필 이미지
+              _buildProfileImage(authorProfilePhotoUrl),
+              SizedBox(width: 12.w),
+              // 사용자 정보
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 사용자 이름
+                    Text(
+                      authorName ?? '알 수 없음',
+                      style: FigmaTextStyles().body1.copyWith(
+                            color: NewAppColor.neutral900,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    SizedBox(height: 4.h),
+                    // 교회 정보 + 지역
+                    Text(
+                      [
+                        if (churchName != null && churchName.isNotEmpty)
+                          churchName
+                        else
+                          '커뮤니티 회원',
+                        if (churchLocation != null && churchLocation.isNotEmpty)
+                          churchLocation,
+                      ].join(' · '),
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.neutral600,
+                            fontSize: 13.sp,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 구분선
+        Container(height: 1.h, color: NewAppColor.neutral200),
+
+        // === 2. 모집 기본 정보 (제목, 시간) ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 제목
+              Text(
+                item.title,
+                style: FigmaTextStyles().header1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+              ),
+              SizedBox(height: 8.h),
+              // 올린시간
+              Text(
+                date,
+                style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral600,
+                      fontSize: 13.sp,
+                    ),
+              ),
+            ],
+          ),
+        ),
+
+        // === 3. 상세 내용 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                description ?? '상세 내용이 없습니다.',
+                style: FigmaTextStyles().body2.copyWith(
+                      color: NewAppColor.neutral800,
+                      fontSize: 15.sp,
+                      height: 1.6,
+                    ),
+              ),
+            ],
+          ),
+        ),
+
+        // === 4. 모집 정보 카드 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral100,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(
+                        label: '행사 유형',
+                        value: getEventTypeDisplayName(item.worshipType)),
+                    SizedBox(height: 12.h),
+                    _buildInfoRow(
+                        label: '팀 형태',
+                        value: item.teamTypes.isNotEmpty
+                            ? item.teamTypes
+                                .map((e) => getTeamTypeDisplayName(e))
+                                .join(', ')
+                            : '미지정'),
+                    SizedBox(height: 12.h),
+                    _buildInfoRow(
+                        label: '연습 일정', value: item.schedule ?? '협의'),
+                    SizedBox(height: 12.h),
+                    _buildInfoRow(label: '위치', value: item.location),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // === 5. 연락처 정보 ===
+        if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
+            (item.contactEmail != null && item.contactEmail!.isNotEmpty))
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '연락처 정보',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(height: 16.h),
+                // 전화번호
+                if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                  _buildContactItem(
+                    icon: Icons.phone_outlined,
+                    label: '전화번호',
+                    value: item.contactPhone!,
+                    onTap: () => _showContactDialog(item.contactPhone!),
+                  ),
+                // 이메일
+                if (item.contactEmail != null &&
+                    item.contactEmail!.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  _buildContactItem(
+                    icon: Icons.email_outlined,
+                    label: '이메일',
+                    value: item.contactEmail!,
+                    onTap: () {
+                      // TODO: 이메일 보내기 기능
+                    },
+                  ),
+                ],
+                SizedBox(height: 20.h),
+              ],
+            ),
+          ),
       ],
     );
   }
