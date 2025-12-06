@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
@@ -21,6 +22,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 /// 커뮤니티 게시글 상세 화면 (공통)
 /// 모든 카테고리의 게시글을 표시할 수 있는 공통 화면
@@ -476,34 +478,47 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                                 : widget.tableName ==
                                                         'community_music_teams'
                                                     ? _buildMusicTeamRecruitStatusDropdown()
-                                                    : ElevatedButton(
-                                                    onPressed: _togglePostStatus,
-                                                    style:
-                                                        ElevatedButton.styleFrom(
-                                                      backgroundColor:
-                                                          NewAppColor.primary600,
-                                                      foregroundColor:
-                                                          Colors.white,
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              vertical: 14.h),
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                12.r),
-                                                      ),
-                                                      elevation: 0,
-                                                    ),
-                                                    child: Text(
-                                                      _getStatusButtonText(),
-                                                      style: FigmaTextStyles()
-                                                          .button1
-                                                          .copyWith(
-                                                            color: Colors.white,
+                                                    : widget.tableName ==
+                                                            'music_team_seekers'
+                                                        ? _buildMusicTeamSeekerStatusDropdown()
+                                                        : widget.tableName ==
+                                                                'church_news'
+                                                            ? _buildChurchNewsStatusDropdown()
+                                                            : ElevatedButton(
+                                                                onPressed:
+                                                                    _togglePostStatus,
+                                                                style:
+                                                                    ElevatedButton
+                                                                        .styleFrom(
+                                                                  backgroundColor:
+                                                                      NewAppColor
+                                                                          .primary600,
+                                                                  foregroundColor:
+                                                                      Colors.white,
+                                                                  padding: EdgeInsets
+                                                                      .symmetric(
+                                                                          vertical:
+                                                                              14.h),
+                                                                  shape:
+                                                                  RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            12.r),
+                                                              ),
+                                                              elevation: 0,
+                                                            ),
+                                                            child: Text(
+                                                              _getStatusButtonText(),
+                                                              style:
+                                                                  FigmaTextStyles()
+                                                                      .button1
+                                                                      .copyWith(
+                                                                        color: Colors
+                                                                            .white,
+                                                                      ),
+                                                            ),
                                                           ),
-                                                    ),
-                                                  ),
                                   ),
                                 // 작성자가 아닌 경우: 좋아요 + 전화/채팅 버튼
                                 if (!_isAuthor()) ...[
@@ -564,10 +579,15 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                   // 채팅 버튼
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: _onChatButtonPressed,
+                                      onPressed:
+                                          _canChat() ? _onChatButtonPressed : null,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: NewAppColor.primary600,
                                         foregroundColor: Colors.white,
+                                        disabledBackgroundColor:
+                                            NewAppColor.neutral300,
+                                        disabledForegroundColor:
+                                            NewAppColor.neutral500,
                                         padding: EdgeInsets.symmetric(
                                             vertical: 14.h),
                                         shape: RoundedRectangleBorder(
@@ -580,7 +600,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                         '채팅하기',
                                         style:
                                             FigmaTextStyles().button1.copyWith(
-                                                  color: Colors.white,
+                                                  color: _canChat()
+                                                      ? Colors.white
+                                                      : NewAppColor.neutral500,
                                                 ),
                                       ),
                                     ),
@@ -666,6 +688,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       date = post.formattedDate;
       viewCount = post.viewCount;
       authorName = post.authorName;
+      authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
       churchLocation = post.location;
     } else if (_post is MusicTeamRecruitment) {
@@ -675,8 +698,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       date = post.formattedDate;
       viewCount = post.viewCount;
       authorName = post.authorName;
+      authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
-      churchLocation = post.location;
+      // 프로필에는 province + district만 표시 (상세주소 제외)
+      churchLocation = [post.province, post.district]
+          .where((e) => e != null && e.isNotEmpty)
+          .join(' ');
     } else if (_post is MusicTeamSeeker) {
       final post = _post as MusicTeamSeeker;
       title = post.title;
@@ -684,6 +711,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       date = post.formattedDate;
       viewCount = post.viewCount;
       authorName = post.authorName;
+      authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
     } else if (_post is ChurchNews) {
       final post = _post as ChurchNews;
@@ -693,6 +721,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       date = post.formattedDate;
       viewCount = post.viewCount;
       authorName = post.authorName;
+      authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
       churchLocation = post.location;
     }
@@ -785,12 +814,23 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ]
           // === 행사팀 모집 전용 레이아웃 ===
           else if (_post is MusicTeamRecruitment) ...[
-            _buildMusicTeamRecruitLayout(_post as MusicTeamRecruitment, date,
-                authorName, authorProfilePhotoUrl, churchName, churchLocation, description),
+            _buildMusicTeamRecruitLayout(
+                _post as MusicTeamRecruitment,
+                date,
+                authorName,
+                authorProfilePhotoUrl,
+                churchName,
+                churchLocation,
+                description),
           ]
           // === 행사팀 지원 전용 레이아웃 ===
           else if (_post is MusicTeamSeeker) ...[
             _buildMusicTeamSeekerLayout(_post as MusicTeamSeeker, date,
+                authorName, authorProfilePhotoUrl, churchName),
+          ]
+          // === 행사 소식 전용 레이아웃 ===
+          else if (_post is ChurchNews) ...[
+            _buildChurchNewsLayout(_post as ChurchNews, date,
                 authorName, authorProfilePhotoUrl, churchName),
           ]
           // === 기타 게시글 기본 레이아웃 ===
@@ -1316,6 +1356,53 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     return false;
   }
 
+  /// 채팅 가능 여부 확인 (예약중, 마감 상태에서는 불가)
+  bool _canChat() {
+    if (_post == null) return false;
+    if (_post is CommunityBasePost) {
+      final status = (_post as CommunityBasePost).status.toLowerCase();
+      // 예약중, 완료, 마감 상태에서는 채팅 불가
+      return status != 'ing' &&
+          status != 'reserved' &&
+          status != 'completed' &&
+          status != 'closed' &&
+          status != 'sold';
+    }
+    return true;
+  }
+
+  /// YouTube 비디오 ID 추출
+  String? _getYouTubeVideoId(String url) {
+    try {
+      final uri = Uri.parse(url);
+      String? videoId;
+
+      // youtube.com/watch?v=VIDEO_ID 형식
+      if (uri.host.contains('youtube.com') &&
+          uri.queryParameters.containsKey('v')) {
+        videoId = uri.queryParameters['v'];
+      }
+      // youtu.be/VIDEO_ID 형식
+      else if (uri.host.contains('youtu.be')) {
+        videoId = uri.pathSegments.isNotEmpty ? uri.pathSegments[0] : null;
+      }
+
+      return videoId;
+    } catch (e) {
+      print('⚠️ YouTube 비디오 ID 추출 실패: $e');
+    }
+    return null;
+  }
+
+  /// YouTube 썸네일 URL 생성
+  String? _getYouTubeThumbnail(String url) {
+    final videoId = _getYouTubeVideoId(url);
+    if (videoId != null && videoId.isNotEmpty) {
+      return 'https://img.youtube.com/vi/$videoId/mqdefault.jpg';
+    }
+    return null;
+  }
+
   /// 타입별 상태 옵션 가져오기
   List<Map<String, String>> _getStatusOptions() {
     if (_post is SharingItem) {
@@ -1746,6 +1833,306 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       ),
                 ),
                 if (currentStatus == 'closed') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.neutral600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ];
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: getStatusColor(currentStatus),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              getStatusIcon(currentStatus),
+              color: Colors.white,
+              size: 20.sp,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              getStatusText(currentStatus),
+              style: FigmaTextStyles().button1.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 행사팀 지원 상태 드롭다운 버튼
+  Widget _buildMusicTeamSeekerStatusDropdown() {
+    if (_post == null) return const SizedBox.shrink();
+
+    final currentStatus = (_post as CommunityBasePost).status;
+
+    // 현재 상태에 따른 스타일 정의
+    Color getStatusColor(String status) {
+      switch (status) {
+        case 'available':
+        case 'active': // active도 지원가능으로 처리
+          return NewAppColor.primary600;
+        case 'completed':
+        case 'closed':
+          return NewAppColor.neutral600;
+        default:
+          return NewAppColor.primary600; // 기본값은 지원가능 색상
+      }
+    }
+
+    String getStatusText(String status) {
+      switch (status) {
+        case 'available':
+        case 'active': // active도 지원가능으로 처리
+          return '지원가능';
+        case 'completed':
+        case 'closed':
+          return '완료';
+        default:
+          return '지원가능'; // 기본값은 지원가능
+      }
+    }
+
+    IconData getStatusIcon(String status) {
+      switch (status) {
+        case 'available':
+        case 'active': // active도 지원가능으로 처리
+          return Icons.person_search;
+        case 'completed':
+        case 'closed':
+          return Icons.check_circle;
+        default:
+          return Icons.person_search; // 기본값은 지원가능 아이콘
+      }
+    }
+
+    return PopupMenuButton<String>(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      onSelected: (String newStatus) {
+        if (newStatus != currentStatus) {
+          _updateStatus(newStatus);
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        return [
+          PopupMenuItem<String>(
+            value: 'available',
+            enabled: currentStatus != 'available',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person_search,
+                  color: NewAppColor.primary600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '지원가능',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'available'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'available') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.primary600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'completed',
+            enabled: currentStatus != 'completed',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: NewAppColor.neutral600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '완료',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'completed'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'completed') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.neutral600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ];
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: getStatusColor(currentStatus),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              getStatusIcon(currentStatus),
+              color: Colors.white,
+              size: 20.sp,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              getStatusText(currentStatus),
+              style: FigmaTextStyles().button1.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 행사 소식 상태 드롭다운 버튼
+  Widget _buildChurchNewsStatusDropdown() {
+    if (_post == null) return const SizedBox.shrink();
+
+    final currentStatus = (_post as CommunityBasePost).status;
+
+    // 현재 상태에 따른 스타일 정의
+    Color getStatusColor(String status) {
+      switch (status) {
+        case 'active':
+          return NewAppColor.primary600;
+        case 'completed':
+          return NewAppColor.neutral600;
+        default:
+          return NewAppColor.primary600; // 기본값은 진행중 색상
+      }
+    }
+
+    String getStatusText(String status) {
+      switch (status) {
+        case 'active':
+          return '진행중';
+        case 'completed':
+          return '완료';
+        default:
+          return '진행중'; // 기본값은 진행중
+      }
+    }
+
+    IconData getStatusIcon(String status) {
+      switch (status) {
+        case 'active':
+          return Icons.event_available;
+        case 'completed':
+          return Icons.check_circle;
+        default:
+          return Icons.event_available; // 기본값은 진행중 아이콘
+      }
+    }
+
+    return PopupMenuButton<String>(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      onSelected: (String newStatus) {
+        if (newStatus != currentStatus) {
+          _updateStatus(newStatus);
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        return [
+          PopupMenuItem<String>(
+            value: 'active',
+            enabled: currentStatus != 'active',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.event_available,
+                  color: NewAppColor.primary600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '진행중',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'active'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'active') ...[
+                  const Spacer(),
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.primary600,
+                    size: 20.sp,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'completed',
+            enabled: currentStatus != 'completed',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: NewAppColor.neutral600,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Text(
+                  '완료',
+                  style: FigmaTextStyles().button1.copyWith(
+                        color: currentStatus == 'completed'
+                            ? NewAppColor.neutral400
+                            : NewAppColor.neutral900,
+                      ),
+                ),
+                if (currentStatus == 'completed') ...[
                   const Spacer(),
                   Icon(
                     Icons.check,
@@ -3212,14 +3599,17 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       SizedBox(height: 12.h),
                     ],
                     _buildInfoRow(
-                        label: '직책', value: getPositionDisplayName(item.position)),
+                        label: '직책',
+                        value: getPositionDisplayName(item.position)),
                     SizedBox(height: 12.h),
                     _buildInfoRow(
                         label: '고용형태',
-                        value: getEmploymentTypeDisplayName(item.employmentType)),
+                        value:
+                            getEmploymentTypeDisplayName(item.employmentType)),
                     SizedBox(height: 12.h),
                     _buildInfoRow(label: '급여', value: item.salary),
-                    if (churchLocation != null && churchLocation.isNotEmpty) ...[
+                    if (churchLocation != null &&
+                        churchLocation.isNotEmpty) ...[
                       SizedBox(height: 12.h),
                       _buildInfoRow(label: '근무 지역', value: churchLocation),
                     ],
@@ -3342,7 +3732,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               churchName
                             else
                               '커뮤니티 회원',
-                            if (churchLocation != null && churchLocation.isNotEmpty)
+                            if (churchLocation != null &&
+                                churchLocation.isNotEmpty)
                               churchLocation,
                           ].join(' · '),
                           style: FigmaTextStyles().body2.copyWith(
@@ -3603,7 +3994,59 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // === 1. 제목 + 상태 섹션 ===
+        // === 1. 프로필 (지원자 정보) ===
+        Container(
+          color: NewAppColor.neutral100,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Text(
+              //   '지원자 정보',
+              //   style: FigmaTextStyles().body1.copyWith(
+              //         color: NewAppColor.neutral900,
+              //         fontSize: 16.sp,
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              // ),
+              // SizedBox(height: 16.h),
+              Row(
+                children: [
+                  _buildProfileImage(authorProfilePhotoUrl),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          authorName ?? '알 수 없음',
+                          style: FigmaTextStyles().body1.copyWith(
+                                color: NewAppColor.neutral900,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        SizedBox(height: 4.h),
+                        if (churchName != null && churchName.isNotEmpty)
+                          Text(
+                            churchName,
+                            style: FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral600,
+                                  fontSize: 13.sp,
+                                ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Container(height: 8.h, color: NewAppColor.white),
+
+        // === 2. 제목 + 상태 섹션 ===
         Container(
           color: NewAppColor.neutral100,
           width: double.infinity,
@@ -3622,32 +4065,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     ),
               ),
               SizedBox(height: 12.h),
-
-              // 상태 배지
-              Row(
-                children: [
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: item.status == 'available'
-                          ? NewAppColor.success600
-                          : NewAppColor.neutral500,
-                      borderRadius: BorderRadius.circular(6.r),
-                    ),
-                    child: Text(
-                      item.status == 'available' ? '지원가능' : '완료',
-                      style: FigmaTextStyles().caption2.copyWith(
-                            color: Colors.white,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 8.h),
 
               // 작성 시간 + 조회수
               Row(
@@ -3681,10 +4098,41 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
 
-        // 구분선
         // Container(height: 8.h, color: NewAppColor.white),
 
-        // === 2. 기본 정보 카드 ===
+        // === 3. 상세 설명 (자기소개) ===
+        if (item.introduction != null && item.introduction!.isNotEmpty) ...[
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '자기소개',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  item.introduction!,
+                  style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral800,
+                        fontSize: 15.sp,
+                        height: 1.6,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          // Container(height: 8.h, color: NewAppColor.white),
+        ],
+
+        // === 4. 기본 정보 카드 ===
         Container(
           color: NewAppColor.neutral100,
           width: double.infinity,
@@ -3717,15 +4165,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       _buildInfoRow(label: '현재 활동 팀명', value: item.teamName!),
                       SizedBox(height: 12.h),
                     ],
-                    _buildInfoRow(label: '전공 파트', value: teamTypeDisplay),
-                    if (item.instruments != null &&
-                        item.instruments!.isNotEmpty) ...[
-                      SizedBox(height: 12.h),
-                      _buildInfoRow(
-                        label: '호환 악기',
-                        value: item.instruments!.join(', '),
-                      ),
-                    ],
+                    _buildInfoRow(label: '팀 형태', value: teamTypeDisplay),
                   ],
                 ),
               ),
@@ -3733,42 +4173,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
 
-        // 구분선
         // Container(height: 8.h, color: NewAppColor.white),
 
-        // === 3. 경력 정보 ===
-        if (item.experience.isNotEmpty) ...[
-          Container(
-            color: NewAppColor.neutral100,
-            width: double.infinity,
-            padding: EdgeInsets.all(20.r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '연주 경력',
-                  style: FigmaTextStyles().body1.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  item.experience,
-                  style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral800,
-                        fontSize: 15.sp,
-                        height: 1.6,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          Container(height: 8.h, color: NewAppColor.white),
-        ],
-
-        // === 4. 활동 조건 ===
+        // === 5. 활동 조건 ===
         Container(
           color: NewAppColor.neutral100,
           width: double.infinity,
@@ -3891,10 +4298,41 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
 
-        // 구분선
         // Container(height: 8.h, color: NewAppColor.white),
 
-        // === 5. 포트폴리오 ===
+        // === 6. 팀 소개 ===
+        if (item.experience.isNotEmpty) ...[
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '팀 소개',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  item.experience,
+                  style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral800,
+                        fontSize: 15.sp,
+                        height: 1.6,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          // Container(height: 8.h, color: NewAppColor.white),
+        ],
+
+        // === 7. 포트폴리오 ===
         if ((item.portfolio.isNotEmpty) ||
             (item.portfolioFile != null && item.portfolioFile!.isNotEmpty)) ...[
           Container(
@@ -3917,68 +4355,146 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // YouTube 링크
                 if (item.portfolio.isNotEmpty) ...[
                   InkWell(
-                    onTap: () async {
-                      final uri = Uri.parse(item.portfolio);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri,
-                            mode: LaunchMode.externalApplication);
+                    onTap: () {
+                      final videoId = _getYouTubeVideoId(item.portfolio);
+                      if (videoId != null) {
+                        // 유튜브 플레이어 화면으로 이동
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CommunityYouTubePlayerScreen(
+                              videoId: videoId,
+                              title: item.title ?? '포트폴리오 영상',
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('유효하지 않은 YouTube 링크입니다'),
+                          ),
+                        );
                       }
                     },
                     child: Container(
-                      padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
-                        color: NewAppColor.neutral100,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
                           color: NewAppColor.neutral200,
                           width: 1,
                         ),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 40.w,
-                            height: 40.w,
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade100,
-                              shape: BoxShape.circle,
+                          // YouTube 썸네일
+                          if (_getYouTubeThumbnail(item.portfolio) != null) ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(12.r),
+                                topRight: Radius.circular(12.r),
+                              ),
+                              child: Stack(
+                                children: [
+                                  Image.network(
+                                    _getYouTubeThumbnail(item.portfolio)!,
+                                    width: double.infinity,
+                                    height: 180.h,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: 180.h,
+                                        color: NewAppColor.neutral100,
+                                        child: Icon(
+                                          Icons.video_library,
+                                          size: 48.sp,
+                                          color: NewAppColor.neutral400,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  // 재생 버튼 오버레이
+                                  Positioned.fill(
+                                    child: Container(
+                                      color: Colors.black.withOpacity(0.3),
+                                      child: Center(
+                                        child: Container(
+                                          width: 64.w,
+                                          height: 64.w,
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.play_arrow,
+                                            color: Colors.white,
+                                            size: 40.sp,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            child: Icon(
-                              Icons.play_arrow,
-                              color: Colors.red,
-                              size: 24.sp,
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          ],
+                          // 링크 정보
+                          Padding(
+                            padding: EdgeInsets.all(16.r),
+                            child: Row(
                               children: [
-                                Text(
-                                  'YouTube 영상',
-                                  style: FigmaTextStyles().body2.copyWith(
-                                        color: NewAppColor.neutral600,
-                                        fontSize: 12.sp,
+                                if (_getYouTubeThumbnail(item.portfolio) ==
+                                    null) ...[
+                                  Container(
+                                    width: 40.w,
+                                    height: 40.w,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade100,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.play_arrow,
+                                      color: Colors.red,
+                                      size: 24.sp,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                ],
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'YouTube 영상',
+                                        style: FigmaTextStyles().body2.copyWith(
+                                              color: NewAppColor.neutral600,
+                                              fontSize: 12.sp,
+                                            ),
                                       ),
+                                      SizedBox(height: 4.h),
+                                      Text(
+                                        item.portfolio,
+                                        style: FigmaTextStyles().body2.copyWith(
+                                              color: NewAppColor.neutral900,
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  item.portfolio,
-                                  style: FigmaTextStyles().body2.copyWith(
-                                        color: NewAppColor.neutral900,
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                Icon(
+                                  Icons.open_in_new,
+                                  color: NewAppColor.neutral400,
+                                  size: 20.sp,
                                 ),
                               ],
                             ),
-                          ),
-                          Icon(
-                            Icons.open_in_new,
-                            color: NewAppColor.neutral400,
-                            size: 20.sp,
                           ),
                         ],
                       ),
@@ -4056,93 +4572,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ],
             ),
           ),
-          Container(height: 8.h, color: NewAppColor.white),
+          // Container(height: 8.h, color: NewAppColor.white),
         ],
-
-        // === 6. 자기소개 ===
-        if (item.introduction != null && item.introduction!.isNotEmpty) ...[
-          Container(
-            color: NewAppColor.neutral100,
-            width: double.infinity,
-            padding: EdgeInsets.all(20.r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '자기소개',
-                  style: FigmaTextStyles().body1.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  item.introduction!,
-                  style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral800,
-                        fontSize: 15.sp,
-                        height: 1.6,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          Container(height: 8.h, color: NewAppColor.white),
-        ],
-
-        // === 7. 작성자 정보 ===
-        Container(
-          color: NewAppColor.neutral100,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '지원자 정보',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  _buildProfileImage(authorProfilePhotoUrl),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          authorName ?? '알 수 없음',
-                          style: FigmaTextStyles().body1.copyWith(
-                                color: NewAppColor.neutral900,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        SizedBox(height: 4.h),
-                        if (churchName != null && churchName.isNotEmpty)
-                          Text(
-                            churchName,
-                            style: FigmaTextStyles().body2.copyWith(
-                                  color: NewAppColor.neutral600,
-                                  fontSize: 13.sp,
-                                ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // 구분선
-        // Container(height: 8.h, color: NewAppColor.white),
 
         // === 8. 연락처 정보 ===
         Container(
@@ -4388,10 +4819,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                 .join(', ')
                             : '미지정'),
                     SizedBox(height: 12.h),
-                    _buildInfoRow(
-                        label: '연습 일정', value: item.schedule ?? '협의'),
+                    _buildInfoRow(label: '연습 일정', value: item.schedule ?? '협의'),
                     SizedBox(height: 12.h),
-                    _buildInfoRow(label: '위치', value: item.location),
+                    _buildInfoRow(label: '위치', value: item.displayLocation),
                   ],
                 ),
               ),
@@ -4617,5 +5047,367 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         );
       }
     }
+  }
+
+  /// 행사 소식 전용 레이아웃
+  Widget _buildChurchNewsLayout(
+    ChurchNews item,
+    String date,
+    String? authorName,
+    String? authorProfilePhotoUrl,
+    String? churchName,
+  ) {
+    // 카테고리 표시 텍스트 변환
+    final categoryLabels = {
+      'worship': '특별예배/연합예배',
+      'event': '행사',
+      'retreat': '수련회',
+      'mission': '선교',
+      'education': '교육',
+      'volunteer': '봉사',
+      'other': '기타',
+    };
+
+    String categoryDisplay = categoryLabels[item.category] ?? item.category;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // === 1. 프로필 (작성자 정보) ===
+        Container(
+          color: NewAppColor.neutral100,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _buildProfileImage(authorProfilePhotoUrl),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          authorName ?? '알 수 없음',
+                          style: FigmaTextStyles().body1.copyWith(
+                                color: NewAppColor.neutral900,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        SizedBox(height: 4.h),
+                        if (churchName != null && churchName.isNotEmpty)
+                          Text(
+                            churchName,
+                            style: FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral600,
+                                  fontSize: 13.sp,
+                                ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // === 2. 제목 섹션 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 제목
+              Text(
+                item.title,
+                style: FigmaTextStyles().header1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+              ),
+              SizedBox(height: 12.h),
+
+              // 작성 시간 + 조회수
+              Row(
+                children: [
+                  Text(
+                    date,
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral500,
+                          fontSize: 13.sp,
+                        ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '·',
+                    style: TextStyle(color: NewAppColor.neutral400),
+                  ),
+                  SizedBox(width: 8.w),
+                  Icon(Icons.visibility_outlined,
+                      size: 14.sp, color: NewAppColor.neutral500),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '${item.viewCount}',
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral500,
+                          fontSize: 13.sp,
+                        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // === 3. 행사 내용 ===
+        if (item.content != null && item.content!.isNotEmpty) ...[
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '행사 내용',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  item.content!,
+                  style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral800,
+                        fontSize: 15.sp,
+                        height: 1.6,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        // === 4. 행사 정보 카드 ===
+        Container(
+          color: NewAppColor.neutral100,
+          width: double.infinity,
+          padding: EdgeInsets.all(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '행사 정보',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+
+              // 행사 정보 그리드
+              Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral100,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(label: '카테고리', value: categoryDisplay),
+
+                    if (item.eventDate != null && item.eventDate!.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _buildInfoRow(label: '행사일', value: item.eventDate!),
+                    ],
+
+                    if (item.eventTime != null && item.eventTime!.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _buildInfoRow(label: '행사 시간', value: item.eventTime!),
+                    ],
+
+                    if (item.location != null && item.location!.isNotEmpty) ...[
+                      SizedBox(height: 12.h),
+                      _buildInfoRow(label: '장소', value: item.location!),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // === 5. 연락처 정보 ===
+        if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
+            (item.contactEmail != null && item.contactEmail!.isNotEmpty)) ...[
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '연락처',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(height: 16.h),
+
+                // 전화번호
+                if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                  _buildContactItem(
+                    icon: Icons.phone_outlined,
+                    label: '전화번호',
+                    value: item.contactPhone!,
+                    onTap: () => _showContactDialog(item.contactPhone!),
+                  ),
+                // 이메일
+                if (item.contactEmail != null && item.contactEmail!.isNotEmpty) ...[
+                  if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                    SizedBox(height: 12.h),
+                  _buildContactItem(
+                    icon: Icons.email_outlined,
+                    label: '이메일',
+                    value: item.contactEmail!,
+                    onTap: () {
+                      // TODO: 이메일 보내기 기능
+                    },
+                  ),
+                ],
+                SizedBox(height: 20.h),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 커뮤니티 YouTube 플레이어 화면
+class CommunityYouTubePlayerScreen extends StatefulWidget {
+  final String videoId;
+  final String title;
+
+  const CommunityYouTubePlayerScreen({
+    super.key,
+    required this.videoId,
+    required this.title,
+  });
+
+  @override
+  State<CommunityYouTubePlayerScreen> createState() =>
+      _CommunityYouTubePlayerScreenState();
+}
+
+class _CommunityYouTubePlayerScreenState
+    extends State<CommunityYouTubePlayerScreen> {
+  late YoutubePlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // YouTube 플레이어 화면에서 모든 방향 허용
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    _initializePlayer();
+  }
+
+  void _initializePlayer() {
+    _controller = YoutubePlayerController(
+      initialVideoId: widget.videoId,
+      flags: const YoutubePlayerFlags(
+        autoPlay: true,
+        mute: false,
+        enableCaption: true,
+        controlsVisibleAtStart: true,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    // 화면을 벗어날 때 다시 세로 모드로 고정
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return YoutubePlayerBuilder(
+      player: YoutubePlayer(
+        controller: _controller,
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: NewAppColor.primary600,
+        progressColors: ProgressBarColors(
+          playedColor: NewAppColor.primary600,
+          handleColor: NewAppColor.primary700,
+        ),
+      ),
+      builder: (context, player) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(
+                LucideIcons.chevronLeft,
+                color: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              widget.title,
+              style: FigmaTextStyles().subtitle2.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+          ),
+          body: Column(
+            children: [
+              // 유튜브 플레이어
+              player,
+              // 나머지 공간은 검은 배경으로
+              Expanded(
+                child: Container(
+                  color: Colors.black,
+                  child: Center(
+                    child: Text(
+                      '포트폴리오 영상',
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: Colors.white60,
+                          ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

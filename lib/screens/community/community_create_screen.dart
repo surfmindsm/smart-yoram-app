@@ -98,8 +98,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   // 행사팀지원 전용
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _teamNameController = TextEditingController();
-  String? _selectedInstrument; // 전공 파트
-  List<String> _compatibleInstruments = []; // 호환 악기
   final TextEditingController _experienceController = TextEditingController();
   final TextEditingController _portfolioController = TextEditingController();
   String? _portfolioFileUrl; // 포트폴리오 파일 URL
@@ -268,7 +266,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       } else if (tableName == 'music_team_seekers') {
         _nameController.text = post['name'] ?? '';
         _teamNameController.text = post['team_name'] ?? '';
-        _selectedInstrument = post['instrument'];
         _experienceController.text = post['experience'] ?? '';
         _portfolioController.text = post['portfolio'] ?? '';
         _availableDays = post['available_days'] != null
@@ -363,7 +360,12 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     } else if (post is MusicTeamRecruitment) {
       _titleController.text = post.title;
       _descriptionController.text = post.description ?? '';
-      _locationController.text = post.location ?? '';
+
+      // 위치 정보 로드
+      _selectedProvince = post.province;
+      _selectedDistrict = post.district;
+      _locationController.text = post.location;
+
       _selectedRecruitmentType = post.recruitmentType;
       _worshipTypeController.text = post.worshipType ?? '';
       _scheduleController.text = post.schedule ?? '';
@@ -376,7 +378,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       _descriptionController.text = post.description ?? '';
       _nameController.text = post.name ?? '';
       _teamNameController.text = post.teamName ?? '';
-      _selectedInstrument = post.instrument;
       _experienceController.text = post.experience ?? '';
       _portfolioController.text = post.portfolio ?? '';
       _availableDays = post.availableDays ?? [];
@@ -499,11 +500,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         return titleValid && descValid && eventTypeValid && teamTypeValid && locationValid;
 
       case CommunityListType.musicTeamSeeking:
-        // 필수: 제목, 이름, 전공 파트, 경력
+        // 필수: 제목, 팀 형태
         return _titleController.text.trim().isNotEmpty &&
-            _nameController.text.trim().isNotEmpty &&
-            _selectedInstrument != null &&
-            _experienceController.text.trim().isNotEmpty;
+            _selectedTeamType != null;
 
       case CommunityListType.churchNews:
         // 필수: 제목, 설명, 행사일
@@ -812,11 +811,11 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
       case CommunityListType.musicTeamSeeking:
         title = '행사팀 지원 작성 가이드';
         tips = [
-          '✓ 전공 파트와 호환 가능한 악기를 선택해주세요',
-          '✓ 경력과 경험을 구체적으로 작성해주세요',
+          '✓ 지원서 제목을 명확하게 작성해주세요 (필수)',
+          '✓ 원하는 팀 형태를 선택해주세요 (필수)',
+          '✓ 경력과 경험을 작성하면 신뢰도가 높아집니다',
           '✓ 포트폴리오 파일이나 링크를 첨부해주세요',
           '✓ 가능한 지역과 요일을 명확히 선택해주세요',
-          '✓ 연락 가능한 시간대를 적어주세요',
         ];
         break;
       case CommunityListType.churchNews:
@@ -2820,9 +2819,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 16.h),
 
-          // 3. 연주 경력
+          // 3. 팀 소개
           Text(
-            '연주 경력',
+            '팀 소개',
             style: FigmaTextStyles().body2.copyWith(
                   color: NewAppColor.neutral900,
                   fontWeight: FontWeight.w500,
@@ -2832,7 +2831,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           TextFormField(
             controller: _experienceController,
             decoration: _buildInputDecoration(
-              hintText: '찬양팀, 워십팀, 밴드 등 경력을 쓰면 좋은 결과 생길 수 있습니다.',
+              hintText: '찬양팀, 워십팀, 밴드 등 팀을 소개하면 좋은 결과 생길 수 있습니다.',
             ),
             maxLines: 5,
           ),
@@ -2992,6 +2991,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                           selectedColor: NewAppColor.primary500,
                           backgroundColor: NewAppColor.neutral100,
                           padding: EdgeInsets.symmetric(vertical: 8.h),
+                          showCheckmark: false, // 체크 표시 제거
+                          side: BorderSide.none, // 보더라인 제거
                         ),
                       ),
                     ))
@@ -3336,7 +3337,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           TextFormField(
             controller: _descriptionController,
             decoration: InputDecoration(
-              hintText: '행사 소식의 상세 내용을 입력하세요',
+              hintText: '행사 소식의 상세 내용을 입력하세요\n\n예시:\n- 주최자/부서: 청년부\n- 대상: 청년부 전체\n- 참가비: 무료\n- 담당자: 홍길동',
               hintStyle: FigmaTextStyles().body2.copyWith(
                     color: NewAppColor.neutral400,
                   ),
@@ -3347,7 +3348,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               contentPadding:
                   EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             ),
-            maxLines: 6,
+            maxLines: 8,
             maxLength: 1000,
             onChanged: (value) => setState(() {}),
             validator: (value) {
@@ -3356,26 +3357,6 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               }
               return null;
             },
-          ),
-          SizedBox(height: 24.h),
-
-          // 우선순위 *
-          CustomDropdownField<String>(
-            label: '우선순위',
-            hintText: '일반',
-            value: _selectedPriority,
-            required: true,
-            items: [
-              buildDropdownItem<String>(
-                  value: 'urgent', text: '긴급', currentValue: _selectedPriority),
-              buildDropdownItem<String>(
-                  value: 'important',
-                  text: '중요',
-                  currentValue: _selectedPriority),
-              buildDropdownItem<String>(
-                  value: 'normal', text: '일반', currentValue: _selectedPriority),
-            ],
-            onChanged: (value) => setState(() => _selectedPriority = value!),
           ),
           SizedBox(height: 24.h),
 
@@ -3393,6 +3374,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             readOnly: true,
             decoration: InputDecoration(
               hintText: '날짜를 선택해주세요',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
               prefixIcon: Icon(Icons.calendar_today,
                   size: 20.r, color: NewAppColor.neutral600),
               filled: true,
@@ -3430,6 +3414,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             controller: _newsEventTimeController,
             decoration: InputDecoration(
               hintText: '-- --:--',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
               suffixIcon: Icon(Icons.access_time,
                   size: 20.r, color: NewAppColor.neutral600),
               filled: true,
@@ -3496,21 +3483,14 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               ),
             ],
           ),
-          SizedBox(height: 24.h),
-
-          // 상세 주소
-          Text(
-            '상세 주소',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
           SizedBox(height: 8.h),
           TextFormField(
             controller: _locationController,
             decoration: InputDecoration(
-              hintText: '예: ○○교회, ○○센터 2층',
+              hintText: '상세 주소를 입력하세요 (예: ○○교회, ○○센터 2층)',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
               counterText: '${_locationController.text.length}/100',
               filled: true,
               fillColor: NewAppColor.neutral100,
@@ -3523,109 +3503,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
           ),
           SizedBox(height: 24.h),
 
-          // 주최자/부서 *
-          _buildRequiredLabel('주최자/부서'),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _organizerController,
-            decoration: InputDecoration(
-              hintText: '행사를 주최하는 부서나 담당자',
-              counterText: '${_organizerController.text.length}/50',
-              filled: true,
-              fillColor: NewAppColor.neutral100,
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            ),
-            maxLength: 50,
-            onChanged: (value) => setState(() {}),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '주최자/부서를 입력해주세요';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 24.h),
-
-          // 대상
+          // 연락처(선택)
           Text(
-            '대상',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _targetAudienceController,
-            decoration: InputDecoration(
-              hintText: '예: 전체, 청년부, 장년부 등',
-              counterText: '${_targetAudienceController.text.length}/50',
-              filled: true,
-              fillColor: NewAppColor.neutral100,
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            ),
-            maxLength: 50,
-            onChanged: (value) => setState(() {}),
-          ),
-          SizedBox(height: 24.h),
-
-          // 참가비
-          Text(
-            '참가비',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _participationFeeController,
-            decoration: InputDecoration(
-              hintText: '예: 무료, 10,000원 등',
-              counterText: '${_participationFeeController.text.length}/50',
-              filled: true,
-              fillColor: NewAppColor.neutral100,
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            ),
-            maxLength: 50,
-            onChanged: (value) => setState(() {}),
-          ),
-          SizedBox(height: 24.h),
-
-          // 담당자
-          Text(
-            '담당자',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-          SizedBox(height: 8.h),
-          TextFormField(
-            controller: _contactPersonController,
-            decoration: InputDecoration(
-              hintText: '문의 담당자 이름',
-              counterText: '${_contactPersonController.text.length}/50',
-              filled: true,
-              fillColor: NewAppColor.neutral100,
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            ),
-            maxLength: 50,
-            onChanged: (value) => setState(() {}),
-          ),
-          SizedBox(height: 24.h),
-
-          // 연락처
-          Text(
-            '연락처',
+            '연락처(선택)',
             style: FigmaTextStyles().body2.copyWith(
                   color: NewAppColor.neutral900,
                   fontWeight: FontWeight.w500,
@@ -3636,6 +3516,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             controller: _contactController,
             decoration: InputDecoration(
               hintText: '010-0000-0000',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
@@ -3659,6 +3542,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             controller: _emailController,
             decoration: InputDecoration(
               hintText: 'contact@church.com',
+              hintStyle: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral400,
+                  ),
               filled: true,
               fillColor: NewAppColor.neutral100,
               border: InputBorder.none,
@@ -4063,6 +3949,71 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     }
   }
 
+  /// 도/시, 시/군/구, 상세주소를 합쳐서 전체 위치 문자열 생성
+  String _buildFullLocation() {
+    final parts = <String>[];
+
+    if (_selectedProvince != null && _selectedProvince!.isNotEmpty) {
+      parts.add(_selectedProvince!);
+    }
+
+    if (_selectedDistrict != null && _selectedDistrict!.isNotEmpty) {
+      parts.add(_selectedDistrict!);
+    }
+
+    final detailLocation = _locationController.text.trim();
+    if (detailLocation.isNotEmpty) {
+      parts.add(detailLocation);
+    }
+
+    return parts.join(' ');
+  }
+
+  /// 위치 문자열을 파싱하여 도/시, 시/군/구, 상세주소로 분리
+  void _parseLocationString(String location) {
+    if (location.isEmpty) {
+      _selectedProvince = null;
+      _selectedDistrict = null;
+      _locationController.text = '';
+      return;
+    }
+
+    final parts = location.split(' ');
+    final cities = LocationData.getCities();
+
+    // 첫 번째 파트가 도/시 목록에 있는지 확인
+    if (parts.isNotEmpty && cities.contains(parts[0])) {
+      _selectedProvince = parts[0];
+
+      // 두 번째 파트가 시/군/구 목록에 있는지 확인
+      if (parts.length > 1) {
+        final districts = LocationData.getDistricts(_selectedProvince!);
+        if (districts.contains(parts[1])) {
+          _selectedDistrict = parts[1];
+
+          // 나머지는 상세주소
+          if (parts.length > 2) {
+            _locationController.text = parts.sublist(2).join(' ');
+          } else {
+            _locationController.text = '';
+          }
+        } else {
+          // 두 번째 파트가 시/군/구가 아니면 전체를 상세주소로
+          _selectedDistrict = null;
+          _locationController.text = parts.sublist(1).join(' ');
+        }
+      } else {
+        _selectedDistrict = null;
+        _locationController.text = '';
+      }
+    } else {
+      // 도/시가 없으면 전체를 상세주소로
+      _selectedProvince = null;
+      _selectedDistrict = null;
+      _locationController.text = location;
+    }
+  }
+
   /// 무료나눔/물품판매 제출
   Future<bool> _submitSharing(List<String> imageUrls) async {
     final response = await _communityService.createSharingItem(
@@ -4194,6 +4145,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             rehearsalSchedule: _rehearsalTimeController.text.trim().isEmpty
                 ? null
                 : _rehearsalTimeController.text.trim(),
+            province: _selectedProvince,
+            district: _selectedDistrict,
             location: _locationController.text.trim(),
             contactPhone: _contactController.text.trim().isEmpty
                 ? null
@@ -4213,6 +4166,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             rehearsalSchedule: _rehearsalTimeController.text.trim().isEmpty
                 ? null
                 : _rehearsalTimeController.text.trim(),
+            province: _selectedProvince,
+            district: _selectedDistrict,
             location: _locationController.text.trim(),
             contactPhone: _contactController.text.trim().isEmpty
                 ? null
@@ -4227,45 +4182,76 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
 
   /// 행사팀지원 제출
   Future<bool> _submitMusicTeamSeeking() async {
-    final response = await _communityService.createMusicTeamSeeker(
-      title: _titleController.text.trim(),
-      teamName: _teamNameController.text.trim().isEmpty
-          ? '없음'
-          : _teamNameController.text.trim(),
-      instrument: _selectedInstrument ?? 'other', // 미선택 시 기본값 'other'
-      experience: _experienceController.text.trim(),
-      portfolio: _youtubeController.text.trim(), // YouTube 링크를 portfolio로 사용
-      portfolioFile: _portfolioFileUrl,
-      preferredLocation: _preferredLocations,
-      availableDays: _availableDays,
-      availableTime: _availableTimeController.text.trim(),
-      contactPhone: _contactController.text.trim(),
-      contactEmail: _emailController.text.trim().isEmpty
-          ? null
-          : _emailController.text.trim(),
-    );
+    final response = widget.existingPost != null
+        ? await _communityService.updateMusicTeamSeeker(
+            id: widget.existingPost is Map
+                ? (widget.existingPost as Map<String, dynamic>)['id'] as int
+                : (widget.existingPost as MusicTeamSeeker).id,
+            title: _titleController.text.trim(),
+            teamName: _teamNameController.text.trim().isEmpty
+                ? '없음'
+                : _teamNameController.text.trim(),
+            instrument: _selectedTeamType ?? 'none', // 팀 형태를 instrument에 저장
+            experience: _experienceController.text.trim(),
+            portfolio: _youtubeController.text.trim(), // YouTube 링크를 portfolio로 사용
+            portfolioFile: _portfolioFileUrl,
+            preferredLocation: _preferredLocations,
+            availableDays: _availableDays,
+            availableTime: _availableTimeController.text.trim(),
+            contactPhone: _contactController.text.trim(),
+            contactEmail: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
+          )
+        : await _communityService.createMusicTeamSeeker(
+            title: _titleController.text.trim(),
+            teamName: _teamNameController.text.trim().isEmpty
+                ? '없음'
+                : _teamNameController.text.trim(),
+            instrument: _selectedTeamType ?? 'none', // 팀 형태를 instrument에 저장
+            experience: _experienceController.text.trim(),
+            portfolio: _youtubeController.text.trim(), // YouTube 링크를 portfolio로 사용
+            portfolioFile: _portfolioFileUrl,
+            preferredLocation: _preferredLocations,
+            availableDays: _availableDays,
+            availableTime: _availableTimeController.text.trim(),
+            contactPhone: _contactController.text.trim(),
+            contactEmail: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
+          );
 
     return response.success;
   }
 
   /// 교회소식 제출
   Future<bool> _submitChurchNews(List<String> imageUrls) async {
+    // 지역 정보 통합
+    String fullLocation = _locationController.text.trim();
+    if (_selectedProvince != null || _selectedDistrict != null) {
+      final locationParts = <String>[];
+      if (_selectedProvince != null) locationParts.add(_selectedProvince!);
+      if (_selectedDistrict != null) locationParts.add(_selectedDistrict!);
+      if (fullLocation.isNotEmpty) locationParts.add(fullLocation);
+      fullLocation = locationParts.join(' ');
+    }
+
     final response = await _communityService.createChurchNews(
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       category: _selectedNewsCategory!,
-      priority: _selectedPriority,
+      priority: 'normal', // 기본값 사용
       eventDate: _newsEventDateController.text.trim().isEmpty
           ? null
           : _newsEventDateController.text.trim(),
       eventTime: _newsEventTimeController.text.trim().isEmpty
           ? null
           : _newsEventTimeController.text.trim(),
-      location: _locationController.text.trim(),
-      organizer: _organizerController.text.trim(),
-      targetAudience: _targetAudienceController.text.trim(),
-      participationFee: _participationFeeController.text.trim(),
-      contactPerson: _contactPersonController.text.trim(),
+      location: fullLocation,
+      organizer: '', // 빈 값으로 전송
+      targetAudience: '', // 빈 값으로 전송
+      participationFee: '', // 빈 값으로 전송
+      contactPerson: '', // 빈 값으로 전송
       images: imageUrls,
     );
 

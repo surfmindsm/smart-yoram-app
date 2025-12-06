@@ -908,15 +908,31 @@ class CommunityService {
 
       final itemMap = response as Map<String, dynamic>;
 
-      // author 정보 가져오기
+      // author 정보 가져오기 (users와 members 조인)
       if (itemMap['author_id'] != null) {
         try {
-          final authorResponse = await _supabaseService.client
+          // users 테이블에서 기본 정보 조회
+          final userResponse = await _supabaseService.client
               .from('users')
-              .select('full_name')
+              .select('full_name, id')
               .eq('id', itemMap['author_id'])
               .single();
-          itemMap['author_name'] = authorResponse['full_name'];
+          itemMap['author_name'] = userResponse['full_name'];
+
+          // members 테이블에서 프로필 이미지 조회
+          try {
+            final memberResponse = await _supabaseService.client
+                .from('members')
+                .select('profile_photo_url')
+                .eq('user_id', itemMap['author_id'])
+                .maybeSingle();
+
+            if (memberResponse != null) {
+              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+            }
+          } catch (e) {
+            print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
+          }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
         }
@@ -965,15 +981,31 @@ class CommunityService {
 
       final itemMap = response as Map<String, dynamic>;
 
-      // author 정보 가져오기
+      // author 정보 가져오기 (users와 members 조인)
       if (itemMap['author_id'] != null) {
         try {
-          final authorResponse = await _supabaseService.client
+          // users 테이블에서 기본 정보 조회
+          final userResponse = await _supabaseService.client
               .from('users')
-              .select('full_name')
+              .select('full_name, id')
               .eq('id', itemMap['author_id'])
               .single();
-          itemMap['author_name'] = authorResponse['full_name'];
+          itemMap['author_name'] = userResponse['full_name'];
+
+          // members 테이블에서 프로필 이미지 조회
+          try {
+            final memberResponse = await _supabaseService.client
+                .from('members')
+                .select('profile_photo_url')
+                .eq('user_id', itemMap['author_id'])
+                .maybeSingle();
+
+            if (memberResponse != null) {
+              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+            }
+          } catch (e) {
+            print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
+          }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
         }
@@ -1022,15 +1054,31 @@ class CommunityService {
 
       final itemMap = response as Map<String, dynamic>;
 
-      // author 정보 가져오기
+      // author 정보 가져오기 (users와 members 조인)
       if (itemMap['author_id'] != null) {
         try {
-          final authorResponse = await _supabaseService.client
+          // users 테이블에서 기본 정보 조회
+          final userResponse = await _supabaseService.client
               .from('users')
-              .select('full_name')
+              .select('full_name, id')
               .eq('id', itemMap['author_id'])
               .single();
-          itemMap['author_name'] = authorResponse['full_name'];
+          itemMap['author_name'] = userResponse['full_name'];
+
+          // members 테이블에서 프로필 이미지 조회
+          try {
+            final memberResponse = await _supabaseService.client
+                .from('members')
+                .select('profile_photo_url')
+                .eq('user_id', itemMap['author_id'])
+                .maybeSingle();
+
+            if (memberResponse != null) {
+              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+            }
+          } catch (e) {
+            print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
+          }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
         }
@@ -1071,15 +1119,31 @@ class CommunityService {
 
       final itemMap = response as Map<String, dynamic>;
 
-      // author 정보 가져오기
+      // author 정보 가져오기 (users와 members 조인)
       if (itemMap['author_id'] != null) {
         try {
-          final authorResponse = await _supabaseService.client
+          // users 테이블에서 기본 정보 조회
+          final userResponse = await _supabaseService.client
               .from('users')
-              .select('full_name')
+              .select('full_name, id')
               .eq('id', itemMap['author_id'])
               .single();
-          itemMap['author_name'] = authorResponse['full_name'];
+          itemMap['author_name'] = userResponse['full_name'];
+
+          // members 테이블에서 프로필 이미지 조회
+          try {
+            final memberResponse = await _supabaseService.client
+                .from('members')
+                .select('profile_photo_url')
+                .eq('user_id', itemMap['author_id'])
+                .maybeSingle();
+
+            if (memberResponse != null) {
+              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+            }
+          } catch (e) {
+            print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
+          }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: author 조회 실패 - $e');
         }
@@ -1312,6 +1376,8 @@ class CommunityService {
     required String teamType,
     String? eventDate,
     String? rehearsalSchedule,
+    String? province,
+    String? district,
     required String location,
     String? contactPhone,
     String? contactEmail,
@@ -1354,7 +1420,9 @@ class CommunityService {
         'instruments_needed': null, // JSON - 현재는 null
         'positions_needed': null, // 현재는 null
         'experience_required': '무관', // 필수: 기본값 '무관'
-        'practice_location': location, // 필수: 연습 장소
+        'province': province, // 도/시
+        'district': district, // 시/군/구
+        'practice_location': location, // 필수: 상세주소
         'practice_schedule': rehearsalSchedule ?? '협의', // 필수: 연습 일정
         'commitment': null,
         'description': description, // 통합된 상세 설명
@@ -1402,10 +1470,12 @@ class CommunityService {
     required String teamType,
     String? eventDate,
     String? rehearsalSchedule,
+    String? province,
+    String? district,
     required String location,
     String? contactPhone,
     String? contactEmail,
-  }) async {
+  }) async{
     try {
       final userResponse = await _authService.getCurrentUser();
       final currentUser = userResponse.data;
@@ -1456,6 +1526,8 @@ class CommunityService {
         'team_name': title,
         'worship_type': eventType,
         'team_types': [teamType],
+        'province': province, // 도/시
+        'district': district, // 시/군/구
         'practice_location': location,
         'practice_schedule': rehearsalSchedule ?? '협의',
         'description': description, // 통합된 상세 설명
@@ -1494,7 +1566,7 @@ class CommunityService {
   Future<ApiResponse<MusicTeamSeeker>> createMusicTeamSeeker({
     required String title,
     required String teamName,
-    required String instrument,
+    String instrument = 'none', // 선택사항 - 기본값 'none'
     required String experience,
     required String portfolio,
     String? portfolioFile,
@@ -1553,7 +1625,7 @@ class CommunityService {
         'church_id': currentUser.churchId,
         'church_name': churchName,
         'status': 'active',
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       final response = await _supabaseService.client
@@ -1574,6 +1646,89 @@ class CommunityService {
       return ApiResponse(
         success: false,
         message: '등록에 실패했습니다: $e',
+        data: null,
+      );
+    }
+  }
+
+  /// 행사팀 지원 글 수정
+  Future<ApiResponse<MusicTeamSeeker>> updateMusicTeamSeeker({
+    required int id,
+    required String title,
+    required String teamName,
+    String instrument = 'none',
+    required String experience,
+    required String portfolio,
+    String? portfolioFile,
+    required List<String> preferredLocation,
+    required List<String> availableDays,
+    required String availableTime,
+    required String contactPhone,
+    String? contactEmail,
+  }) async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+
+      if (currentUser == null) {
+        return ApiResponse(
+          success: false,
+          message: '로그인이 필요합니다',
+          data: null,
+        );
+      }
+
+      print('📝 COMMUNITY_SERVICE: 행사팀 지원 수정 - $id / $title');
+
+      // 게시글 소유자 확인
+      final post = await _supabaseService.client
+          .from('music_team_seekers')
+          .select('author_id')
+          .eq('id', id)
+          .single();
+
+      if (post['author_id'] != currentUser.id) {
+        return ApiResponse(
+          success: false,
+          message: '권한이 없습니다',
+          data: null,
+        );
+      }
+
+      final data = {
+        'title': title,
+        'team_name': teamName,
+        'instrument': instrument,
+        'experience': experience.isNotEmpty ? experience : null,
+        'portfolio': portfolio.isNotEmpty ? portfolio : null,
+        'portfolio_file': portfolioFile,
+        'preferred_location': preferredLocation.isNotEmpty ? preferredLocation : null,
+        'available_days': availableDays.isNotEmpty ? availableDays : null,
+        'available_time': availableTime.isNotEmpty ? availableTime : null,
+        'contact_phone': contactPhone,
+        'contact_email': contactEmail,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      };
+
+      final response = await _supabaseService.client
+          .from('music_team_seekers')
+          .update(data)
+          .eq('id', id)
+          .select()
+          .single();
+
+      print('✅ COMMUNITY_SERVICE: 행사팀 지원 수정 성공');
+
+      return ApiResponse(
+        success: true,
+        message: '수정되었습니다',
+        data: MusicTeamSeeker.fromJson(response),
+      );
+    } catch (e) {
+      print('❌ COMMUNITY_SERVICE: 행사팀 지원 수정 실패 - $e');
+      return ApiResponse(
+        success: false,
+        message: '수정에 실패했습니다: $e',
         data: null,
       );
     }
@@ -1631,7 +1786,7 @@ class CommunityService {
         'church_id': currentUser.churchId,
         'author_id': currentUser.id,
         'status': 'active',
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       final response = await _supabaseService.client

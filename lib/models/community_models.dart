@@ -527,6 +527,7 @@ class JobPost extends CommunityBasePost {
     required super.status,
     required super.authorId,
     super.authorName,
+    super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
     super.viewCount,
@@ -578,6 +579,7 @@ class JobPost extends CommunityBasePost {
       status: json['status'] ?? 'open',
       authorId: json['author_id'] ?? 0,
       authorName: json['userName'] ?? json['author_name'],
+      authorProfilePhotoUrl: json['author_profile_photo_url'],
       churchId: json['church_id'],
       churchName: json['churchName'] ?? json['church_name'],
       viewCount: json['view_count'] ?? 0,
@@ -621,7 +623,9 @@ class MusicTeamRecruitment extends CommunityBasePost {
   final List<String> teamTypes; // 팀 형태
   final List<String> instrumentsNeeded; // 필요 악기/파트
   final String? schedule; // 연습 일정
-  final String location;
+  final String? province; // 도/시
+  final String? district; // 시/군/구
+  final String location; // 상세주소
   final String? requirements; // 지원 자격
   final String? benefits; // 보상/사례 (스키마: benefits)
   final String? contactPhone;
@@ -635,6 +639,7 @@ class MusicTeamRecruitment extends CommunityBasePost {
     required super.status,
     required super.authorId,
     super.authorName,
+    super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
     super.viewCount,
@@ -647,6 +652,8 @@ class MusicTeamRecruitment extends CommunityBasePost {
     this.teamTypes = const [],
     this.instrumentsNeeded = const [],
     this.schedule,
+    this.province,
+    this.district,
     required this.location,
     this.requirements,
     this.benefits, // compensation → benefits로 변경
@@ -680,22 +687,25 @@ class MusicTeamRecruitment extends CommunityBasePost {
       status: json['status'] ?? 'open',
       authorId: json['author_id'] ?? 0,
       authorName: json['author_name'],
+      authorProfilePhotoUrl: json['author_profile_photo_url'],
       churchId: json['church_id'],
       churchName: json['church_name'],
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
       createdAt: json['createdAt'] != null || json['created_at'] != null
-          ? DateTime.parse((json['createdAt'] ?? json['created_at']) + 'Z')
+          ? DateTime.parse(json['createdAt'] ?? json['created_at']).toUtc()
           : DateTime.now().toUtc(),
       updatedAt: json['updatedAt'] != null || json['updated_at'] != null
-          ? DateTime.parse((json['updatedAt'] ?? json['updated_at']) + 'Z')
+          ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,
       recruitmentType: json['recruitment_type'] ?? '',
       worshipType: json['worship_type'],
       teamTypes: json['team_types'] != null ? List<String>.from(json['team_types']) : [],
       instrumentsNeeded: json['instruments_needed'] != null ? List<String>.from(json['instruments_needed']) : [],
       schedule: json['practice_schedule'] ?? json['schedule'], // practice_schedule 우선
+      province: json['province'],
+      district: json['district'],
       location: json['practice_location'] ?? json['location'] ?? '', // practice_location 우선
       requirements: json['requirements'],
       benefits: json['benefits'], // ⭐ compensation → benefits로 변경
@@ -703,6 +713,25 @@ class MusicTeamRecruitment extends CommunityBasePost {
       contactEmail: contactEmail,
       applications: json['applicants_count'] ?? json['applications'], // applicants_count 우선
     );
+  }
+
+  /// 주소 표시 (province + district + location)
+  String get displayLocation {
+    final parts = <String>[];
+
+    if (province != null && province!.isNotEmpty) {
+      parts.add(province!);
+    }
+
+    if (district != null && district!.isNotEmpty) {
+      parts.add(district!);
+    }
+
+    if (location.isNotEmpty) {
+      parts.add(location);
+    }
+
+    return parts.isNotEmpty ? parts.join(' ') : '정보 없음';
   }
 }
 
@@ -714,9 +743,9 @@ class MusicTeamRecruitment extends CommunityBasePost {
 class MusicTeamSeeker extends CommunityBasePost {
   final String name;
   final String? teamName;
-  final String instrument; // 전공 파트
-  final List<String>? instruments; // 호환성
-  final String experience; // 경력
+  final String instrument; // 팀 형태 (solo, praise-team, worship-team, band 등)
+  final List<String>? instruments; // 사용되지 않음 (하위 호환성)
+  final String experience; // 팀 소개
   final String portfolio; // 포트폴리오
   final String? portfolioFile;
   final List<String> preferredLocation;
@@ -734,6 +763,7 @@ class MusicTeamSeeker extends CommunityBasePost {
     required super.status,
     required super.authorId,
     super.authorName,
+    super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
     super.viewCount,
@@ -765,16 +795,17 @@ class MusicTeamSeeker extends CommunityBasePost {
       status: json['status'] ?? 'available',
       authorId: json['author_id'] ?? 0,
       authorName: json['author_name'],
+      authorProfilePhotoUrl: json['author_profile_photo_url'],
       churchId: json['church_id'],
       churchName: json['church_name'],
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
       createdAt: json['createdAt'] != null || json['created_at'] != null
-          ? DateTime.parse((json['createdAt'] ?? json['created_at']) + 'Z')
+          ? DateTime.parse(json['createdAt'] ?? json['created_at']).toUtc()
           : DateTime.now().toUtc(),
       updatedAt: json['updatedAt'] != null || json['updated_at'] != null
-          ? DateTime.parse((json['updatedAt'] ?? json['updated_at']) + 'Z')
+          ? DateTime.parse(json['updatedAt'] ?? json['updated_at']).toUtc()
           : null,
       name: json['name'] ?? '',
       teamName: json['team_name'],
@@ -823,6 +854,7 @@ class ChurchNews extends CommunityBasePost {
     required super.status,
     required super.authorId,
     super.authorName,
+    super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
     super.viewCount,
@@ -855,6 +887,7 @@ class ChurchNews extends CommunityBasePost {
       status: json['status'] ?? 'active',
       authorId: json['authorId'] ?? json['author_id'] ?? 0,
       authorName: json['authorName'] ?? json['author_name'],
+      authorProfilePhotoUrl: json['author_profile_photo_url'],
       churchId: json['churchId'] ?? json['church_id'],
       churchName: json['churchName'] ?? json['church_name'],
       viewCount: json['view_count'] ?? 0,

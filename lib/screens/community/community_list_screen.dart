@@ -276,12 +276,13 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         } else if (item is JobPost) {
           location = item.location;
         } else if (item is MusicTeamRecruitment) {
+          province = item.province;
           location = item.location;
         } else if (item is ChurchNews) {
           location = item.location;
         }
 
-        // SharingItem은 province 우선, 없으면 location
+        // SharingItem과 MusicTeamRecruitment는 province 우선, 없으면 location
         if (province != null && province.isNotEmpty) {
           return province == _selectedCity;
         } else if (location != null && location.isNotEmpty) {
@@ -304,12 +305,13 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         } else if (item is JobPost) {
           location = item.location;
         } else if (item is MusicTeamRecruitment) {
+          district = item.district;
           location = item.location;
         } else if (item is ChurchNews) {
           location = item.location;
         }
 
-        // SharingItem은 district 우선, 없으면 location
+        // SharingItem과 MusicTeamRecruitment는 district 우선, 없으면 location
         if (district != null && district.isNotEmpty) {
           return district == _selectedDistrict;
         } else if (location != null && location.isNotEmpty) {
@@ -618,7 +620,10 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorId = item.authorId;
       authorName = item.authorName;
       churchName = item.churchName;
-      churchLocation = item.location;
+      // 리스트에는 province + district만 표시 (상세주소 제외)
+      churchLocation = [item.province, item.district]
+          .where((e) => e != null && e.isNotEmpty)
+          .join(' ');
       status = item.status;
       statusLabel = item.statusDisplayName;
     } else if (item is MusicTeamSeeker) {
@@ -728,22 +733,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                       ),
                     ),
                   ),
-                  // 상태 칩 (예약중, 완료만 표시)
-                  if (status != null &&
-                      statusLabel != null &&
-                      _shouldShowStatus(status))
-                    Positioned(
-                      top: 8.h,
-                      left: 8.w,
-                      child: Container(
-                        padding: EdgeInsets.all(6.w),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(status),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: _getStatusIcon(status),
-                      ),
-                    ),
                   // 택배가능 배지 (우측 상단)
                   if (deliveryAvailable)
                     Positioned(
@@ -771,22 +760,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 상태 칩 (이미지가 없고, 예약중/완료인 경우만)
-                  if (statusLabel != null &&
-                      status != null &&
-                      _shouldShowStatus(status) &&
-                      !hasImage) ...[
-                    Container(
-                      padding: EdgeInsets.all(6.w),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: _getStatusIcon(status,
-                          useColor: _getStatusColor(status)),
-                    ),
-                    SizedBox(height: 6.h),
-                  ],
                   // 제목
                   Text(
                     title,
@@ -876,24 +849,54 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                       ),
                     ),
                   ],
-                  // 조회수
+                  // 상태 칩 + 조회수
                   SizedBox(height: 8.h),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        LucideIcons.eye,
-                        size: 14.sp,
-                        color: NewAppColor.neutral600,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '$viewCount',
-                        style: TextStyle(
-                          color: NewAppColor.neutral600,
-                          fontSize: 12.sp,
-                          fontFamily: 'Pretendard Variable',
-                        ),
+                      // 상태 칩 (예약중, 완료만 표시)
+                      if (statusLabel != null &&
+                          status != null &&
+                          _shouldShowStatus(status))
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(status),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            statusLabel,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Pretendard Variable',
+                            ),
+                          ),
+                        )
+                      else
+                        SizedBox.shrink(),
+                      // 조회수
+                      Row(
+                        children: [
+                          Icon(
+                            LucideIcons.eye,
+                            size: 14.sp,
+                            color: NewAppColor.neutral600,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '$viewCount',
+                            style: TextStyle(
+                              color: NewAppColor.neutral600,
+                              fontSize: 12.sp,
+                              fontFamily: 'Pretendard Variable',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -931,7 +934,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
   Widget _getStatusIcon(String? status, {Color? useColor}) {
     if (status == null) {
-      return Icon(LucideIcons.info, size: 16.sp, color: useColor ?? Colors.white);
+      return Icon(LucideIcons.info,
+          size: 16.sp, color: useColor ?? Colors.white);
     }
 
     final iconColor = useColor ?? Colors.white;
