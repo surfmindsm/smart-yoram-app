@@ -13,6 +13,7 @@ class Member {
   final String? organizationId; // 조직 ID (UUID)
   final int churchId;
   final String? profilePhotoUrl;
+  final String? mobileProfileImageUrl; // 커뮤니티용 프로필 이미지
   final String memberStatus;
   final DateTime? registrationDate;
   final DateTime? createdAt;
@@ -38,6 +39,7 @@ class Member {
     this.organizationId,
     required this.churchId,
     this.profilePhotoUrl,
+    this.mobileProfileImageUrl,
     required this.memberStatus,
     this.registrationDate,
     this.createdAt,
@@ -67,6 +69,7 @@ class Member {
       organizationId: json['organization_id'],
       churchId: json['church_id'] ?? 0,
       profilePhotoUrl: json['profile_photo_url'],
+      mobileProfileImageUrl: json['mobile_profile_image_url'],
       memberStatus: json['member_status'] ?? 'active',
       registrationDate: json['registration_date'] != null
           ? DateTime.parse(json['registration_date'])
@@ -103,6 +106,7 @@ class Member {
       'organization_id': organizationId,
       'church_id': churchId,
       'profile_photo_url': profilePhotoUrl,
+      'mobile_profile_image_url': mobileProfileImageUrl,
       'member_status': memberStatus,
       'registration_date': registrationDate?.toIso8601String().split('T')[0],
       'created_at': createdAt?.toIso8601String(),
@@ -187,6 +191,28 @@ class Member {
 
   // 프로필 사진 별칭 (기존 코드 호환성을 위해)
   String? get photo => fullProfilePhotoUrl;
+
+  // 커뮤니티용 모바일 프로필 이미지 전체 URL
+  String? get fullMobileProfileImageUrl {
+    // 모바일 프로필 이미지가 설정되어 있으면 우선 사용
+    final imageUrl = mobileProfileImageUrl ?? profilePhotoUrl;
+    if (imageUrl == null || imageUrl.isEmpty) return null;
+
+    // 이미 전체 URL이면 그대로 반환
+    if (imageUrl.startsWith('http')) return imageUrl;
+
+    // Supabase Storage public URL 생성
+    const supabaseUrl = 'https://adzhdsajdamrflvybhxq.supabase.co';
+
+    // imageUrl이 상대경로일 경우 (/uploads/... 또는 uploads/...)
+    final cleanPath = imageUrl.startsWith('/')
+        ? imageUrl.substring(1)
+        : imageUrl;
+
+    // Supabase Storage public URL 형식
+    // 모바일 프로필과 기존 프로필 모두 member-photos 버킷 사용
+    return '$supabaseUrl/storage/v1/object/public/member-photos/$cleanPath';
+  }
 
   @override
   String toString() {

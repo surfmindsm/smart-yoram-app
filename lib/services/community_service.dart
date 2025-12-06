@@ -179,14 +179,14 @@ class CommunityService {
               .single();
           itemMap['author_name'] = userResponse['full_name'];
 
-          // members 테이블에서 프로필 이미지 조회
+          // members 테이블에서 프로필 이미지 조회 (모바일 프로필 우선)
           try {
             final memberResponse = await _supabaseService.client
                 .from('members')
-                .select('profile_photo_url')
+                .select('profile_photo_url, mobile_profile_image_url')
                 .eq('user_id', itemMap['author_id'])
                 .single();
-            itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+            itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
           }
@@ -367,14 +367,14 @@ class CommunityService {
             authorNames[author['id'] as int] = author['full_name'] as String;
           }
 
-          // members 테이블에서 profile_photo_url 일괄 조회
+          // members 테이블에서 profile_photo_url 일괄 조회 (모바일 프로필 우선)
           final membersResponse = await _supabaseService.client
               .from('members')
-              .select('user_id, profile_photo_url')
+              .select('user_id, profile_photo_url, mobile_profile_image_url')
               .inFilter('user_id', authorIds);
 
           for (var member in membersResponse as List) {
-            authorPhotos[member['user_id'] as int] = member['profile_photo_url'] as String?;
+            authorPhotos[member['user_id'] as int] = member['mobile_profile_image_url'] ?? member['profile_photo_url'] as String?;
           }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: authors 조회 실패 - $e');
@@ -451,16 +451,16 @@ class CommunityService {
               .single();
           itemMap['author_name'] = authorResponse['full_name'];
 
-          // members 테이블에서 profile_photo_url 조회
+          // members 테이블에서 profile_photo_url 조회 (모바일 프로필 우선)
           try {
             final memberResponse = await _supabaseService.client
                 .from('members')
-                .select('profile_photo_url')
+                .select('profile_photo_url, mobile_profile_image_url')
                 .eq('user_id', itemMap['author_id'])
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -919,16 +919,16 @@ class CommunityService {
               .single();
           itemMap['author_name'] = userResponse['full_name'];
 
-          // members 테이블에서 프로필 이미지 조회
+          // members 테이블에서 프로필 이미지 조회 (모바일 프로필 우선)
           try {
             final memberResponse = await _supabaseService.client
                 .from('members')
-                .select('profile_photo_url')
+                .select('profile_photo_url, mobile_profile_image_url')
                 .eq('user_id', itemMap['author_id'])
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -992,16 +992,16 @@ class CommunityService {
               .single();
           itemMap['author_name'] = userResponse['full_name'];
 
-          // members 테이블에서 프로필 이미지 조회
+          // members 테이블에서 프로필 이미지 조회 (모바일 프로필 우선)
           try {
             final memberResponse = await _supabaseService.client
                 .from('members')
-                .select('profile_photo_url')
+                .select('profile_photo_url, mobile_profile_image_url')
                 .eq('user_id', itemMap['author_id'])
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -1065,16 +1065,16 @@ class CommunityService {
               .single();
           itemMap['author_name'] = userResponse['full_name'];
 
-          // members 테이블에서 프로필 이미지 조회
+          // members 테이블에서 프로필 이미지 조회 (모바일 프로필 우선)
           try {
             final memberResponse = await _supabaseService.client
                 .from('members')
-                .select('profile_photo_url')
+                .select('profile_photo_url, mobile_profile_image_url')
                 .eq('user_id', itemMap['author_id'])
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -1130,16 +1130,16 @@ class CommunityService {
               .single();
           itemMap['author_name'] = userResponse['full_name'];
 
-          // members 테이블에서 프로필 이미지 조회
+          // members 테이블에서 프로필 이미지 조회 (모바일 프로필 우선)
           try {
             final memberResponse = await _supabaseService.client
                 .from('members')
-                .select('profile_photo_url')
+                .select('profile_photo_url, mobile_profile_image_url')
                 .eq('user_id', itemMap['author_id'])
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');

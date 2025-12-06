@@ -6,10 +6,12 @@ import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/fcm_service.dart';
+import '../services/member_service.dart';
 import '../models/user.dart';
 import '../models/api_response.dart';
 import '../services/user_service.dart';
 import '../components/login_type_toggle.dart';
+import '../screens/settings/profile_image_setup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +22,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
+  final MemberService _memberService = MemberService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -534,6 +537,64 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// 프로필 이미지 설정 확인 및 네비게이션
+  Future<void> _checkAndNavigateToProfileSetup() async {
+    try {
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        // 사용자 정보를 가져올 수 없으면 홈으로 이동
+        Navigator.pushReplacementNamed(context, '/home');
+        return;
+      }
+
+      final currentUser = userResponse.data!;
+
+      // Member 정보 가져오기
+      final memberResponse = await _memberService.getMemberByUserId(currentUser.id);
+
+      if (memberResponse.success && memberResponse.data != null) {
+        final member = memberResponse.data!;
+
+        // mobile_profile_image_url이 null이거나 빈 문자열이면 프로필 이미지 설정 화면으로 이동
+        if (member.mobileProfileImageUrl == null || member.mobileProfileImageUrl!.isEmpty) {
+          print('🖼️ LOGIN: 모바일 프로필 이미지 미설정 - 설정 화면으로 이동');
+
+          if (mounted) {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfileImageSetupScreen(
+                  member: member,
+                  isFirstSetup: true,
+                ),
+              ),
+            );
+
+            // 프로필 이미지 설정 후 홈으로 이동
+            if (mounted) {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          }
+        } else {
+          // 이미 프로필 이미지가 설정되어 있으면 바로 홈으로 이동
+          print('🖼️ LOGIN: 모바일 프로필 이미지 이미 설정됨 - 홈으로 이동');
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } else {
+        // Member 정보를 가져올 수 없으면 홈으로 이동
+        print('⚠️ LOGIN: Member 정보 조회 실패 - 홈으로 이동');
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      print('❌ LOGIN: 프로필 이미지 체크 중 오류 발생 - $e');
+      // 오류 발생 시에도 홈으로 이동
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    }
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -606,8 +667,8 @@ class _LoginScreenState extends State<LoginScreen> {
             print('🔑 LOGIN: 첫 로그인 사용자 - 비밀번호 변경 다이얼로그 표시');
             _showPasswordChangeDialog();
           } else {
-            print('🔑 LOGIN: 기존 사용자 - 홈 화면으로 이동');
-            Navigator.pushReplacementNamed(context, '/home');
+            print('🔑 LOGIN: 기존 사용자 - 프로필 이미지 확인 후 이동');
+            await _checkAndNavigateToProfileSetup();
           }
         } else {
           print('🔑 LOGIN: 사용자 정보 가져오기 실패, 홈으로 이동');
@@ -818,13 +879,19 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       barrierDismissible: false, // 다이얼로그 밖 클릭으로 닫기 방지
-      builder: (context) => _PasswordChangeDialog(),
+      builder: (context) => _PasswordChangeDialog(
+        onComplete: _checkAndNavigateToProfileSetup,
+      ),
     );
   }
 }
 
 // 비밀번호 변경 다이얼로그 위젯
 class _PasswordChangeDialog extends StatefulWidget {
+  final Future<void> Function() onComplete;
+
+  const _PasswordChangeDialog({required this.onComplete});
+
   @override
   _PasswordChangeDialogState createState() => _PasswordChangeDialogState();
 }
@@ -952,10 +1019,10 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
         TextButton(
           onPressed: _isLoading
               ? null
-              : () {
-                  // 나중에 변경하기 - 홈으로 이동
+              : () async {
+                  // 나중에 변경하기 - 프로필 이미지 확인 후 이동
                   Navigator.pop(context);
-                  Navigator.pushReplacementNamed(context, '/home');
+                  await widget.onComplete();
                 },
           child: const Text('나중에'),
         ),
@@ -1026,9 +1093,9 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
             ),
           );
 
-          // 비밀번호 변경 성공 후 홈으로 이동
+          // 비밀번호 변경 성공 후 프로필 이미지 확인 후 이동
           Navigator.pop(context);
-          Navigator.pushReplacementNamed(context, '/home');
+          await widget.onComplete();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

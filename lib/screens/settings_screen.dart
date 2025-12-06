@@ -10,12 +10,15 @@ import '../services/fcm_service.dart';
 import '../services/font_settings_service.dart';
 import '../services/church_service.dart';
 import '../services/bug_report_service.dart';
+import '../services/member_service.dart';
 import '../models/church.dart';
 import '../models/user.dart';
+import '../models/member.dart';
 import '../utils/admin_permission_utils.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
 import 'profile_edit_screen.dart';
+import 'settings/profile_image_setup_screen.dart';
 
 class _GroupedSettingItem {
   final IconData icon;
@@ -44,6 +47,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
   final ChurchService _churchService = ChurchService();
   final BugReportService _bugReportService = BugReportService();
+  final MemberService _memberService = MemberService();
 
   // 설정 값들
   bool _pushNotifications = true;
@@ -51,6 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // 현재 사용자
   User? _currentUser;
+  Member? _currentMember;
 
   @override
   void initState() {
@@ -67,6 +72,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() {
         _currentUser = userResponse.data;
       });
+
+      // member 정보도 가져오기
+      if (_currentUser?.id != null) {
+        final memberResponse = await _memberService.getMemberByUserId(_currentUser!.id);
+        if (memberResponse.success && memberResponse.data != null) {
+          setState(() {
+            _currentMember = memberResponse.data;
+          });
+        }
+      }
     }
   }
 
@@ -114,6 +129,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           builder: (context) => const ProfileEditScreen(),
                         ),
                       ),
+                    ),
+                    _GroupedSettingItem(
+                      icon: Icons.photo_camera_outlined,
+                      title: '프로필 이미지',
+                      subtitle: '커뮤니티용 프로필 이미지 설정',
+                      onTap: _showProfileImageSetup,
                     ),
                     _GroupedSettingItem(
                       icon: Icons.lock_outline,
@@ -997,6 +1018,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
         builder: (context) => const TermsOfServiceScreen(),
       ),
     );
+  }
+
+  void _showProfileImageSetup() async {
+    if (_currentMember == null) {
+      AppToast.show(
+        context,
+        '사용자 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.',
+        type: ToastType.error,
+      );
+      return;
+    }
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileImageSetupScreen(
+          member: _currentMember!,
+          isFirstSetup: false,
+        ),
+      ),
+    );
+
+    // 프로필 이미지가 변경되었으면 다시 로드
+    if (result == true) {
+      _loadCurrentUser();
+    }
   }
 
   void _logout() {

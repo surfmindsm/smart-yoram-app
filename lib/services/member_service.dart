@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../config/api_config.dart';
 import '../models/api_response.dart';
 import '../models/member.dart';
@@ -306,6 +307,110 @@ class MemberService {
       return ApiResponse<Map<String, dynamic>>(
         success: false,
         message: '교인 초대 실패: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  /// 모바일 프로필 이미지 업로드 (Supabase Storage 사용)
+  Future<ApiResponse<Member>> uploadMobileProfileImage({
+    required int memberId,
+    required File imageFile,
+  }) async {
+    try {
+      print('📸 MEMBER_SERVICE: 모바일 프로필 이미지 업로드 시작 - memberId: $memberId');
+
+      // 파일 확장자 추출
+      final extension = imageFile.path.split('.').last;
+      final fileName = 'mobile-profiles/$memberId/${DateTime.now().millisecondsSinceEpoch}.$extension';
+
+      // Supabase Storage에 이미지 업로드 (member-photos 버킷의 mobile-profiles 폴더에 저장)
+      final uploadPath = await _supabaseService.client.storage
+          .from('member-photos')
+          .upload(fileName, imageFile);
+
+      print('✅ MEMBER_SERVICE: 이미지 업로드 성공 - 경로: $uploadPath');
+
+      // Public URL 생성
+      final publicUrl = _supabaseService.client.storage
+          .from('member-photos')
+          .getPublicUrl(fileName);
+
+      print('🔗 MEMBER_SERVICE: Public URL 생성 - $publicUrl');
+
+      // Member 테이블의 mobile_profile_image_url 업데이트
+      final response = await _supabaseService.client
+          .from('members')
+          .update({'mobile_profile_image_url': fileName})
+          .eq('id', memberId)
+          .select()
+          .single();
+
+      final member = Member.fromJson(response);
+
+      print('✅ MEMBER_SERVICE: 모바일 프로필 이미지 업데이트 성공');
+
+      return ApiResponse<Member>(
+        success: true,
+        message: '프로필 이미지가 업데이트되었습니다',
+        data: member,
+      );
+    } catch (e) {
+      print('❌ MEMBER_SERVICE: 모바일 프로필 이미지 업로드 실패 - $e');
+      return ApiResponse<Member>(
+        success: false,
+        message: '프로필 이미지 업로드 실패: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  /// 기존 프로필 이미지를 모바일 프로필 이미지로 설정
+  Future<ApiResponse<Member>> setMobileProfileImageToExisting(int memberId) async {
+    try {
+      print('🔄 MEMBER_SERVICE: 기존 프로필 이미지를 모바일 프로필로 설정 - memberId: $memberId');
+
+      // 기존 프로필 이미지 URL을 가져오기
+      final memberResponse = await getMember(memberId);
+      if (!memberResponse.success || memberResponse.data == null) {
+        return ApiResponse<Member>(
+          success: false,
+          message: '교인 정보를 찾을 수 없습니다',
+          data: null,
+        );
+      }
+
+      final member = memberResponse.data!;
+      if (member.profilePhotoUrl == null || member.profilePhotoUrl!.isEmpty) {
+        return ApiResponse<Member>(
+          success: false,
+          message: '기존 프로필 이미지가 없습니다',
+          data: null,
+        );
+      }
+
+      // mobile_profile_image_url을 null로 설정 (기존 이미지 사용을 의미)
+      final response = await _supabaseService.client
+          .from('members')
+          .update({'mobile_profile_image_url': null})
+          .eq('id', memberId)
+          .select()
+          .single();
+
+      final updatedMember = Member.fromJson(response);
+
+      print('✅ MEMBER_SERVICE: 기존 프로필 이미지로 설정 완료');
+
+      return ApiResponse<Member>(
+        success: true,
+        message: '기존 프로필 이미지를 사용합니다',
+        data: updatedMember,
+      );
+    } catch (e) {
+      print('❌ MEMBER_SERVICE: 기존 프로필 이미지 설정 실패 - $e');
+      return ApiResponse<Member>(
+        success: false,
+        message: '프로필 이미지 설정 실패: ${e.toString()}',
         data: null,
       );
     }
