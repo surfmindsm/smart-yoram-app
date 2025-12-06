@@ -94,13 +94,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => Navigator.pop(context),
-            child: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral900),
-          ),
-        ),
+        // 커뮤니티 회원은 탭바 메뉴이므로 뒤로 가기 버튼 숨김
+        automaticallyImplyLeading: _currentUser?.isCommunityAdmin != true,
+        leading: _currentUser?.isCommunityAdmin == true
+            ? null
+            : Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.pop(context),
+                  child: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral900),
+                ),
+              ),
         title: Text(
           '설정',
           style: const FigmaTextStyles().headline4.copyWith(

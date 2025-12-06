@@ -11,6 +11,9 @@ import '../models/user.dart';
 import '../models/api_response.dart';
 import '../services/user_service.dart';
 import '../components/login_type_toggle.dart';
+import '../components/app_dialog.dart';
+import '../components/app_input.dart';
+import '../components/app_button.dart' hide IconButton;
 import '../screens/settings/profile_image_setup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -898,7 +901,6 @@ class _PasswordChangeDialog extends StatefulWidget {
 
 class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
   final AuthService _authService = AuthService();
-  final _formKey = GlobalKey<FormState>();
   final TextEditingController _currentPasswordController =
       TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
@@ -906,9 +908,6 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
       TextEditingController();
 
   bool _isLoading = false;
-  bool _obscureCurrentPassword = true;
-  bool _obscureNewPassword = true;
-  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -920,103 +919,42 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Column(
+    return AppDialog(
+      title: '비밀번호 변경',
+      description: '보안상 첫 로그인 시 비밀번호를 변경해주세요.',
+      dismissible: false,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lock, size: 40, color: Colors.orange),
-          SizedBox(height: 8),
-          Text('첫 로그인 - 비밀번호 변경'),
+          // 현재 비밀번호
+          AppPasswordInput(
+            label: '현재 비밀번호',
+            placeholder: '현재 비밀번호를 입력하세요',
+            controller: _currentPasswordController,
+            required: true,
+          ),
+          const SizedBox(height: 16),
+          // 새 비밀번호
+          AppPasswordInput(
+            label: '새 비밀번호',
+            placeholder: '새 비밀번호를 입력하세요 (최소 6자)',
+            controller: _newPasswordController,
+            required: true,
+          ),
+          const SizedBox(height: 16),
+          // 비밀번호 확인
+          AppPasswordInput(
+            label: '비밀번호 확인',
+            placeholder: '새 비밀번호를 다시 입력하세요',
+            controller: _confirmPasswordController,
+            required: true,
+          ),
         ],
       ),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '보안상 첫 로그인 시 비밀번호를 변경해주세요.',
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            // 현재 비밀번호
-            TextFormField(
-              controller: _currentPasswordController,
-              obscureText: _obscureCurrentPassword,
-              decoration: InputDecoration(
-                labelText: '현재 비밀번호',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscureCurrentPassword
-                      ? Icons.visibility
-                      : Icons.visibility_off),
-                  onPressed: () => setState(
-                      () => _obscureCurrentPassword = !_obscureCurrentPassword),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '현재 비밀번호를 입력해주세요';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            // 새 비밀번호
-            TextFormField(
-              controller: _newPasswordController,
-              obscureText: _obscureNewPassword,
-              decoration: InputDecoration(
-                labelText: '새 비밀번호',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscureNewPassword
-                      ? Icons.visibility
-                      : Icons.visibility_off),
-                  onPressed: () => setState(
-                      () => _obscureNewPassword = !_obscureNewPassword),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '새 비밀번호를 입력해주세요';
-                }
-                if (value.length < 6) {
-                  return '비밀번호는 최소 6자 이상이어야 합니다';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            // 비밀번호 확인
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: _obscureConfirmPassword,
-              decoration: InputDecoration(
-                labelText: '비밀번호 확인',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscureConfirmPassword
-                      ? Icons.visibility
-                      : Icons.visibility_off),
-                  onPressed: () => setState(
-                      () => _obscureConfirmPassword = !_obscureConfirmPassword),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '비밀번호 확인을 입력해주세요';
-                }
-                if (value != _newPasswordController.text) {
-                  return '비밀번호가 일치하지 않습니다';
-                }
-                return null;
-              },
-            ),
-          ],
-        ),
-      ),
       actions: [
-        TextButton(
+        AppButton(
+          text: '나중에',
+          variant: ButtonVariant.ghost,
           onPressed: _isLoading
               ? null
               : () async {
@@ -1024,29 +962,70 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                   Navigator.pop(context);
                   await widget.onComplete();
                 },
-          child: const Text('나중에'),
         ),
-        ElevatedButton(
+        AppButton(
+          text: '변경하기',
+          variant: ButtonVariant.primary,
           onPressed: _isLoading ? null : _changePassword,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade700,
-            foregroundColor: Colors.white,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
-                )
-              : const Text('변경하기'),
+          isLoading: _isLoading,
         ),
       ],
     );
   }
 
   Future<void> _changePassword() async {
-    if (!_formKey.currentState!.validate()) {
+    // 수동 검증
+    final currentPassword = _currentPasswordController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (currentPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('현재 비밀번호를 입력해주세요'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('새 비밀번호를 입력해주세요'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('비밀번호는 최소 6자 이상이어야 합니다'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('비밀번호 확인을 입력해주세요'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('비밀번호가 일치하지 않습니다'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -1056,8 +1035,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
 
     try {
       final result = await _authService.changePassword(
-        currentPassword: _currentPasswordController.text,
-        newPassword: _newPasswordController.text,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
       );
 
       if (mounted) {

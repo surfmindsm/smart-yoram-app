@@ -365,8 +365,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   if (widget.chatRoom.postStatus != null)
                     GestureDetector(
                       onTap: () {
-                        // 상태 변경 바텀시트 표시 (상품 상세 이동 방지)
-                        _showStatusChangeBottomSheet();
+                        // 판매자만 상태 변경 가능
+                        if (_currentUserId == widget.chatRoom.authorId) {
+                          // 상태 변경 바텀시트 표시 (상품 상세 이동 방지)
+                          _showStatusChangeBottomSheet();
+                        } else {
+                          // 판매자가 아닌 경우 안내 메시지
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('판매자만 거래 상태를 변경할 수 있습니다'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
                       },
                       child: Container(
                         margin: EdgeInsets.only(bottom: 4.h),
@@ -381,11 +392,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),
-                            Icon(
-                              Icons.keyboard_arrow_down,
-                              size: 16.sp,
-                              color: NewAppColor.neutral700,
-                            ),
+                            // 판매자인 경우만 드롭다운 아이콘 표시
+                            if (_currentUserId == widget.chatRoom.authorId)
+                              Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 16.sp,
+                                color: NewAppColor.neutral700,
+                              ),
                           ],
                         ),
                       ),

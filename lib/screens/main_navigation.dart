@@ -12,6 +12,7 @@ import 'bulletin_notices_integrated_screen.dart';
 import 'members_screen.dart';
 import 'community_screen.dart';
 import 'chat/chat_list_screen.dart';
+import 'settings_screen.dart';
 // import 'sermons_screen.dart'; // 명설교 주석처리
 
 class MainNavigation extends StatefulWidget {
@@ -88,9 +89,13 @@ class _MainNavigationState extends State<MainNavigation> {
       return [const HomeScreen()];
     }
 
-    // community_admin은 커뮤니티만 표시
+    // community_admin은 커뮤니티 + 채팅 + 설정 표시
     if (_currentUser!.isCommunityAdmin) {
-      return [const CommunityScreen()];
+      return [
+        const CommunityScreen(),
+        const ChatListScreen(),
+        const SettingsScreen(),
+      ];
     }
 
     // 일반 사용자 및 교회 관리자: 모든 메뉴 표시
@@ -152,7 +157,7 @@ class _MainNavigationState extends State<MainNavigation> {
       ];
     }
 
-    // community_admin: 커뮤니티만 표시
+    // community_admin: 커뮤니티 + 채팅 + 설정 표시
     if (_currentUser!.isCommunityAdmin) {
       return [
         _NavItem(
@@ -160,6 +165,19 @@ class _MainNavigationState extends State<MainNavigation> {
           label: '커뮤니티',
           isActive: _currentIndex == 0,
           onTap: () => _onTap(0),
+        ),
+        _NavItem(
+          icon: LucideIcons.messageCircle,
+          label: '채팅',
+          isActive: _currentIndex == 1,
+          badgeCount: _unreadChatCount,
+          onTap: () => _onTap(1),
+        ),
+        _NavItem(
+          icon: LucideIcons.settings,
+          label: '설정',
+          isActive: _currentIndex == 2,
+          onTap: () => _onTap(2),
         ),
       ];
     }
@@ -219,7 +237,11 @@ class _MainNavigationState extends State<MainNavigation> {
     setState(() => _currentIndex = index);
 
     // 채팅 탭으로 이동하면 잠시 후 배지 새로고침 (읽음 처리 반영)
-    if (index == 3 && _currentUser != null && !_currentUser!.isCommunityAdmin) {
+    // community_admin은 index 1이 채팅, 일반 사용자는 index 3이 채팅
+    final isChatTab = (_currentUser!.isCommunityAdmin && index == 1) ||
+                      (!_currentUser!.isCommunityAdmin && index == 3);
+
+    if (isChatTab && _currentUser != null) {
       Future.delayed(const Duration(milliseconds: 500), () {
         _loadUnreadCount();
       });
