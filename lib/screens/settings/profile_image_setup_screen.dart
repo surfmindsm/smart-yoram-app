@@ -29,7 +29,14 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
 
   bool _isLoading = false;
   File? _selectedImage;
-  String _selectedOption = 'existing'; // 'existing' or 'new'
+  late String _selectedOption; // 'existing' or 'new'
+
+  @override
+  void initState() {
+    super.initState();
+    // 교회 이미지가 있으면 'existing', 없으면(커뮤니티 회원) 'new'를 기본값으로
+    _selectedOption = widget.member.fullProfilePhotoUrl != null ? 'existing' : 'new';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +78,9 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '커뮤니티에서 사용할 프로필 이미지를 선택해주세요',
+                            widget.member.fullProfilePhotoUrl != null
+                                ? '커뮤니티에서 사용할 프로필 이미지를 선택해주세요'
+                                : '프로필 이미지를 설정해주세요',
                             style: FigmaTextStyles().body1.copyWith(
                                   color: NewAppColor.neutral900,
                                   fontWeight: FontWeight.w600,
@@ -79,7 +88,9 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
                           ),
                           SizedBox(height: 8.h),
                           Text(
-                            '주소록에서는 교회에서 등록한 이미지를 사용합니다.\n언제든 설정 > 프로필 이미지에서 변경할 수 있습니다.',
+                            widget.member.fullProfilePhotoUrl != null
+                                ? '주소록에서는 교회에서 등록한 이미지를 사용합니다.\n언제든 설정 > 프로필 이미지에서 변경할 수 있습니다.'
+                                : '커뮤니티에서 사용할 프로필 이미지를 업로드해주세요.\n언제든 설정 > 프로필 이미지에서 변경할 수 있습니다.',
                             style: FigmaTextStyles().body2.copyWith(
                                   color: NewAppColor.neutral600,
                                 ),
@@ -90,65 +101,58 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
 
                     SizedBox(height: 32.h),
 
-                    // 옵션 1: 기존 교회 이미지 사용
-                    _buildOptionCard(
-                      title: '기존 교회 이미지 사용',
-                      description: '교회에서 등록한 프로필 이미지를 사용합니다',
-                      isSelected: _selectedOption == 'existing',
-                      onTap: () {
-                        setState(() {
-                          _selectedOption = 'existing';
-                          _selectedImage = null;
-                        });
-                      },
-                      child: widget.member.fullProfilePhotoUrl != null
-                          ? Center(
-                              child: Container(
-                                width: 120.w,
-                                height: 120.w,
-                                margin: EdgeInsets.only(top: 16.h),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: NewAppColor.neutral200,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: ClipOval(
-                                  child: CachedNetworkImage(
-                                    imageUrl: widget.member.fullProfilePhotoUrl!,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                    errorWidget: (context, url, error) => Icon(
-                                      Icons.person,
-                                      size: 60.w,
-                                      color: NewAppColor.neutral400,
-                                    ),
-                                  ),
-                                ),
+                    // 옵션 1: 기존 교회 이미지 사용 (교회 이미지가 있는 경우만 표시)
+                    if (widget.member.fullProfilePhotoUrl != null) ...[
+                      _buildOptionCard(
+                        title: '기존 교회 이미지 사용',
+                        description: '교회에서 등록한 프로필 이미지를 사용합니다',
+                        isSelected: _selectedOption == 'existing',
+                        onTap: () {
+                          setState(() {
+                            _selectedOption = 'existing';
+                            _selectedImage = null;
+                          });
+                        },
+                        child: Center(
+                          child: Container(
+                            width: 120.w,
+                            height: 120.w,
+                            margin: EdgeInsets.only(top: 16.h),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: NewAppColor.neutral200,
+                                width: 2,
                               ),
-                            )
-                          : Center(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16.h),
-                                child: Text(
-                                  '등록된 교회 이미지가 없습니다',
-                                  style: FigmaTextStyles().body2.copyWith(
-                                        color: NewAppColor.neutral400,
-                                      ),
+                            ),
+                            child: ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: widget.member.fullProfilePhotoUrl!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                errorWidget: (context, url, error) => Icon(
+                                  Icons.person,
+                                  size: 60.w,
+                                  color: NewAppColor.neutral400,
                                 ),
                               ),
                             ),
-                    ),
-
-                    SizedBox(height: 16.h),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                    ],
 
                     // 옵션 2: 새 이미지 업로드
                     _buildOptionCard(
-                      title: '새 이미지 업로드',
-                      description: '커뮤니티 전용 프로필 이미지를 업로드합니다',
+                      title: widget.member.fullProfilePhotoUrl != null
+                          ? '새 이미지 업로드'
+                          : '프로필 이미지 업로드',
+                      description: widget.member.fullProfilePhotoUrl != null
+                          ? '커뮤니티 전용 프로필 이미지를 업로드합니다'
+                          : '프로필 이미지를 업로드합니다',
                       isSelected: _selectedOption == 'new',
                       onTap: () {
                         setState(() {
@@ -360,7 +364,17 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
 
     try {
       if (_selectedOption == 'existing') {
-        // 기존 교회 이미지 사용
+        // 기존 교회 이미지 사용 (교회 이미지가 있는 경우만)
+        if (widget.member.fullProfilePhotoUrl == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('교회에서 등록한 이미지가 없습니다')),
+            );
+            setState(() => _isLoading = false);
+          }
+          return;
+        }
+
         final response = await _memberService.setMobileProfileImageToExisting(
           widget.member.id,
         );
@@ -382,9 +396,12 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
       } else if (_selectedOption == 'new') {
         // 새 이미지 업로드
         if (_selectedImage == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('이미지를 선택해주세요')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('이미지를 선택해주세요')),
+            );
+            setState(() => _isLoading = false);
+          }
           return;
         }
 
