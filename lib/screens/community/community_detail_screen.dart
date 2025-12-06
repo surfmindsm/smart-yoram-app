@@ -3341,47 +3341,49 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // Container(height: 8.h, color: NewAppColor.white),
 
         // === 4. 연락처 정보 ===
-        Container(
-          color: NewAppColor.neutral100,
-          width: double.infinity,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '연락처 정보',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              // 전화번호
-              if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
-                _buildContactItem(
-                  icon: Icons.phone_outlined,
-                  label: '전화번호',
-                  value: item.contactPhone!,
-                  onTap: () => _showContactDialog(item.contactPhone!),
+        if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
+            (item.contactEmail != null && item.contactEmail!.isNotEmpty))
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '연락처 정보',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-              // 이메일
-              if (item.contactEmail != null &&
-                  item.contactEmail!.isNotEmpty) ...[
-                SizedBox(height: 12.h),
-                _buildContactItem(
-                  icon: Icons.email_outlined,
-                  label: '이메일',
-                  value: item.contactEmail!,
-                  onTap: () {
-                    // TODO: 이메일 보내기 기능
-                  },
-                ),
+                SizedBox(height: 16.h),
+                // 전화번호
+                if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                  _buildContactItem(
+                    icon: Icons.phone_outlined,
+                    label: '전화번호',
+                    value: item.contactPhone!,
+                    onTap: () => _showContactDialog(item.contactPhone!),
+                  ),
+                // 이메일
+                if (item.contactEmail != null &&
+                    item.contactEmail!.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  _buildContactItem(
+                    icon: Icons.email_outlined,
+                    label: '이메일',
+                    value: item.contactEmail!,
+                    onTap: () {
+                      // TODO: 이메일 보내기 기능
+                    },
+                  ),
+                ],
+                SizedBox(height: 20.h),
               ],
-              SizedBox(height: 20.h),
-            ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -3630,47 +3632,49 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // === 5. 연락처 정보 ===
-        Container(
-          color: NewAppColor.neutral100,
-          width: double.infinity,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '연락처 정보',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              // 전화번호
-              if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
-                _buildContactItem(
-                  icon: Icons.phone_outlined,
-                  label: '전화번호',
-                  value: item.contactPhone!,
-                  onTap: () => _showContactDialog(item.contactPhone!),
+        if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
+            (item.contactEmail != null && item.contactEmail!.isNotEmpty))
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '연락처 정보',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-              // 이메일
-              if (item.contactEmail != null &&
-                  item.contactEmail!.isNotEmpty) ...[
-                SizedBox(height: 12.h),
-                _buildContactItem(
-                  icon: Icons.email_outlined,
-                  label: '이메일',
-                  value: item.contactEmail!,
-                  onTap: () {
-                    // TODO: 이메일 보내기 기능
-                  },
-                ),
+                SizedBox(height: 16.h),
+                // 전화번호
+                if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                  _buildContactItem(
+                    icon: Icons.phone_outlined,
+                    label: '전화번호',
+                    value: item.contactPhone!,
+                    onTap: () => _showContactDialog(item.contactPhone!),
+                  ),
+                // 이메일
+                if (item.contactEmail != null &&
+                    item.contactEmail!.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  _buildContactItem(
+                    icon: Icons.email_outlined,
+                    label: '이메일',
+                    value: item.contactEmail!,
+                    onTap: () {
+                      // TODO: 이메일 보내기 기능
+                    },
+                  ),
+                ],
+                SizedBox(height: 20.h),
               ],
-              SizedBox(height: 20.h),
-            ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -3920,47 +3924,49 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // Container(height: 8.h, color: NewAppColor.white),
 
         // === 4. 연락처 정보 ===
-        Container(
-          color: NewAppColor.neutral100,
-          width: double.infinity,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '연락처 정보',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              // 전화번호
-              if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
-                _buildContactItem(
-                  icon: Icons.phone_outlined,
-                  label: '전화번호',
-                  value: item.contactPhone!,
-                  onTap: () => _showContactDialog(item.contactPhone!),
+        if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
+            (item.contactEmail != null && item.contactEmail!.isNotEmpty))
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '연락처 정보',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-              // 이메일
-              if (item.contactEmail != null &&
-                  item.contactEmail!.isNotEmpty) ...[
-                SizedBox(height: 12.h),
-                _buildContactItem(
-                  icon: Icons.email_outlined,
-                  label: '이메일',
-                  value: item.contactEmail!,
-                  onTap: () {
-                    // TODO: 이메일 보내기 기능
-                  },
-                ),
+                SizedBox(height: 16.h),
+                // 전화번호
+                if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                  _buildContactItem(
+                    icon: Icons.phone_outlined,
+                    label: '전화번호',
+                    value: item.contactPhone!,
+                    onTap: () => _showContactDialog(item.contactPhone!),
+                  ),
+                // 이메일
+                if (item.contactEmail != null &&
+                    item.contactEmail!.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  _buildContactItem(
+                    icon: Icons.email_outlined,
+                    label: '이메일',
+                    value: item.contactEmail!,
+                    onTap: () {
+                      // TODO: 이메일 보내기 기능
+                    },
+                  ),
+                ],
+                SizedBox(height: 20.h),
               ],
-              SizedBox(height: 20.h),
-            ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -4109,15 +4115,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '자기소개',
-                  style: FigmaTextStyles().body1.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                SizedBox(height: 12.h),
                 Text(
                   item.introduction!,
                   style: FigmaTextStyles().body2.copyWith(
@@ -4576,47 +4573,49 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ],
 
         // === 8. 연락처 정보 ===
-        Container(
-          color: NewAppColor.neutral100,
-          width: double.infinity,
-          padding: EdgeInsets.all(20.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '연락처 정보',
-                style: FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              // 전화번호
-              if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
-                _buildContactItem(
-                  icon: Icons.phone_outlined,
-                  label: '전화번호',
-                  value: item.contactPhone!,
-                  onTap: () => _showContactDialog(item.contactPhone!),
+        if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
+            (item.contactEmail != null && item.contactEmail!.isNotEmpty))
+          Container(
+            color: NewAppColor.neutral100,
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '연락처 정보',
+                  style: FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-              // 이메일
-              if (item.contactEmail != null &&
-                  item.contactEmail!.isNotEmpty) ...[
-                SizedBox(height: 12.h),
-                _buildContactItem(
-                  icon: Icons.email_outlined,
-                  label: '이메일',
-                  value: item.contactEmail!,
-                  onTap: () {
-                    // TODO: 이메일 보내기 기능
-                  },
-                ),
+                SizedBox(height: 16.h),
+                // 전화번호
+                if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                  _buildContactItem(
+                    icon: Icons.phone_outlined,
+                    label: '전화번호',
+                    value: item.contactPhone!,
+                    onTap: () => _showContactDialog(item.contactPhone!),
+                  ),
+                // 이메일
+                if (item.contactEmail != null &&
+                    item.contactEmail!.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  _buildContactItem(
+                    icon: Icons.email_outlined,
+                    label: '이메일',
+                    value: item.contactEmail!,
+                    onTap: () {
+                      // TODO: 이메일 보내기 기능
+                    },
+                  ),
+                ],
+                SizedBox(height: 20.h),
               ],
-              SizedBox(height: 20.h),
-            ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -5175,15 +5174,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '행사 내용',
-                  style: FigmaTextStyles().body1.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                SizedBox(height: 12.h),
                 Text(
                   item.content!,
                   style: FigmaTextStyles().body2.copyWith(
