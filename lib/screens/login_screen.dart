@@ -215,8 +215,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               SizedBox(height: 8.h),
                               Container(
                                 width: double.infinity,
-                                height: 54.h,
-                                padding: EdgeInsets.all(16.w),
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: NewAppColor.primary300,
@@ -244,6 +242,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       letterSpacing: -0.38,
                                     ),
                                     border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16.w, vertical: 16.h),
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -267,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '비밀 번호',
+                                '비밀번호',
                                 style: figmaStyles.bodyText2.copyWith(
                                   color: Colors.black,
                                   fontFamily: 'Pretendard Variable',
@@ -300,7 +300,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     }
                                   },
                                   decoration: InputDecoration(
-                                    hintText: 'password',
+                                    hintText: '비밀번호를 입력하세요',
                                     hintStyle: figmaStyles.body1.copyWith(
                                       color: NewAppColor.neutral200,
                                       fontFamily: 'Pretendard Variable',

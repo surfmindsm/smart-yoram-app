@@ -740,15 +740,14 @@ class _CommunitySignupScreenState extends State<CommunitySignupScreen> {
     );
   }
 
-  // 신청자 유형 목록 (API 문서 기준)
+  // 신청자 유형 목록
   List<Map<String, String>> _getApplicantTypes() {
     return [
-      {'value': 'individual', 'label': '개인 사용자'},
-      {'value': 'company', 'label': '기업/회사'},
-      {'value': 'musician', 'label': '음악사역자'},
-      {'value': 'minister', 'label': '목회자/전도사'},
-      {'value': 'organization', 'label': '비영리단체'},
-      {'value': 'church_admin', 'label': '교회 관계자'},
+      {'value': 'company', 'label': '업체/회사'},
+      {'value': 'individual', 'label': '개인사업자'},
+      {'value': 'musician', 'label': '연주자/음악가'},
+      {'value': 'minister', 'label': '사역자'},
+      {'value': 'organization', 'label': '단체/기관'},
       {'value': 'other', 'label': '기타'},
     ];
   }
