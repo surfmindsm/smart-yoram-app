@@ -53,9 +53,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     _scrollController.dispose();
     _chatService.unsubscribeFromMessages(widget.chatRoom.id);
 
-    // 채팅방 나갈 때 배지 업데이트
-    BadgeService.instance.updateBadge().catchError((e) {
-      print('❌ CHAT_ROOM_SCREEN: 배지 업데이트 실패 - $e');
+    // 채팅방 나갈 때 배지 업데이트 (약간의 지연 후)
+    Future.delayed(const Duration(milliseconds: 300), () {
+      BadgeService.instance.updateBadge().then((_) {
+        print('✅ CHAT_ROOM_SCREEN: 배지 업데이트 완료 (dispose)');
+      }).catchError((e) {
+        print('❌ CHAT_ROOM_SCREEN: 배지 업데이트 실패 - $e');
+      });
     });
 
     super.dispose();
@@ -80,10 +84,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       // 읽음 처리
       await _chatService.markAsRead(widget.chatRoom.id);
 
+      // 데이터베이스 업데이트 완료 대기
+      await Future.delayed(const Duration(milliseconds: 300));
+
       // 배지 업데이트 (메시지 읽음)
-      BadgeService.instance.updateBadge().catchError((e) {
-        print('❌ CHAT_ROOM_SCREEN: 배지 업데이트 실패 - $e');
-      });
+      await BadgeService.instance.updateBadge();
+      print('✅ CHAT_ROOM_SCREEN: 배지 업데이트 완료 (진입 시)');
 
       // 실시간 구독 시작
       _subscribeToMessages();
@@ -108,7 +114,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   void _subscribeToMessages() {
     _subscription = _chatService.subscribeToMessages(
       widget.chatRoom.id,
-      (newMessage) {
+      (newMessage) async {
         // 내가 보낸 메시지가 아니면 추가 (중복 방지)
         if (newMessage.senderId != _currentUserId) {
           setState(() {
@@ -127,12 +133,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           });
 
           // 읽음 처리
-          _chatService.markAsRead(widget.chatRoom.id);
+          await _chatService.markAsRead(widget.chatRoom.id);
+
+          // 데이터베이스 업데이트 완료 대기
+          await Future.delayed(const Duration(milliseconds: 300));
 
           // 배지 업데이트 (새 메시지 읽음)
-          BadgeService.instance.updateBadge().catchError((e) {
-            print('❌ CHAT_ROOM_SCREEN: 배지 업데이트 실패 - $e');
-          });
+          await BadgeService.instance.updateBadge();
+          print('✅ CHAT_ROOM_SCREEN: 배지 업데이트 완료 (실시간 메시지)');
         }
       },
       onMessageUpdate: (updatedMessage) {
