@@ -94,19 +94,56 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       // 실시간 구독 시작
       _subscribeToMessages();
 
-      // 스크롤을 맨 아래로 이동
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
+      // 스크롤을 맨 아래로 이동 (첫 진입 시 애니메이션 없이 즉시)
+      _scrollToBottom(animate: false);
     } catch (e) {
       print('❌ CHAT_ROOM_SCREEN: 데이터 로드 실패 - $e');
       setState(() => _isLoading = false);
+    }
+  }
+
+  /// 최신 메시지로 스크롤 (확실하게 작동)
+  void _scrollToBottom({bool animate = true}) {
+    // 즉시 스크롤 (애니메이션 없이)
+    if (!animate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          // 즉시 점프
+          _performScroll(animate: false);
+        }
+      });
+      // 한 번 더 확실하게 (UI 렌더링 완료 후)
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (mounted && _scrollController.hasClients) {
+          _performScroll(animate: false);
+        }
+      });
+      return;
+    }
+
+    // 애니메이션과 함께 스크롤
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _performScroll(animate: true);
+      }
+    });
+  }
+
+  /// 실제 스크롤 수행
+  void _performScroll({bool animate = true}) {
+    if (!_scrollController.hasClients) return;
+
+    // reverse: true이므로 minScrollExtent가 최신 메시지 위치 (0.0)
+    final targetPosition = _scrollController.position.minScrollExtent;
+
+    if (animate) {
+      _scrollController.animateTo(
+        targetPosition,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    } else {
+      _scrollController.jumpTo(targetPosition);
     }
   }
 
@@ -122,15 +159,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           });
 
           // 스크롤을 맨 아래로 이동
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_scrollController.hasClients) {
-              _scrollController.animateTo(
-                _scrollController.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-            }
-          });
+          _scrollToBottom();
 
           // 읽음 처리
           await _chatService.markAsRead(widget.chatRoom.id);
@@ -182,15 +211,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       });
 
       // 스크롤을 맨 아래로 이동
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
+      _scrollToBottom();
 
       // 실제 메시지 전송
       final response = await _chatService.sendMessage(
@@ -303,16 +324,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       ? _buildEmptyState()
                       : ListView.builder(
                           controller: _scrollController,
+                          reverse: true, // 최신 메시지가 하단에 고정
                           padding: EdgeInsets.symmetric(vertical: 16.h),
                           itemCount: _messages.length,
                           itemBuilder: (context, index) {
-                            final message = _messages[index];
+                            // reverse: true이므로 인덱스를 역순으로 접근
+                            final reversedIndex = _messages.length - 1 - index;
+                            final message = _messages[reversedIndex];
                             final isMe = message.senderId == _currentUserId;
 
                             // 이전 메시지와 같은 사람인지 확인 (프로필 표시 여부)
                             bool showProfile = true;
-                            if (index > 0) {
-                              final prevMessage = _messages[index - 1];
+                            if (reversedIndex > 0) {
+                              final prevMessage = _messages[reversedIndex - 1];
                               if (prevMessage.senderId == message.senderId) {
                                 // 같은 사람의 연속 메시지
                                 final timeDiff = message.createdAt
