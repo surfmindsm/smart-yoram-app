@@ -465,7 +465,7 @@ class ChatService {
     }
   }
 
-  /// 내 채팅방 목록 조회
+  /// 내 채팅방 목록 조회 (배치 최적화)
   Future<List<ChatRoom>> getChatRooms() async {
     try {
       final userResponse = await _authService.getCurrentUser();
@@ -506,44 +506,89 @@ class ChatService {
 
       print('📋 CHAT_SERVICE: 채팅방 ${(rooms as List).length}개 조회 완료');
 
-      // 게시글 작성자 ID를 배치로 조회
-      final authorIdMap = await _batchFetchAuthorIds(rooms as List);
+      if ((rooms as List).isEmpty) {
+        return [];
+      }
 
-      // ChatRoom 객체 리스트 생성
+      // ===== 배치 조회 시작 (N+1 문제 해결) =====
+
+      // 1. 모든 상대방 user_id 수집
+      final otherUserIds = <int>[];
+      for (var roomData in rooms) {
+        final participants = roomData['p2p_chat_participants'] as List;
+        final otherParticipant = participants.firstWhere(
+          (p) => p['user_id'] != myUserId,
+          orElse: () => null,
+        );
+        if (otherParticipant != null) {
+          final otherUserId = otherParticipant['user_id'] as int;
+          if (!otherUserIds.contains(otherUserId)) {
+            otherUserIds.add(otherUserId);
+          }
+        }
+      }
+
+      // 2. 병렬로 배치 조회 실행
+      final batchResults = await Future.wait([
+        _batchFetchAuthorIds(rooms),           // 게시글 작성자 ID
+        _batchFetchUserProfiles(otherUserIds), // 사용자 프로필 정보
+        _batchFetchPostInfo(rooms),            // 게시글 정보
+      ]);
+
+      final authorIdMap = batchResults[0] as Map<String, int>;
+      final userProfileMap = batchResults[1] as Map<int, Map<String, dynamic>>;
+      final postInfoMap = batchResults[2] as Map<String, Map<String, dynamic>>;
+
+      // 3. 교회 정보 배치 조회 (사용자 프로필에서 church_id 추출)
+      final churchIds = <int>[];
+      for (var profile in userProfileMap.values) {
+        final churchId = profile['church_id'] as int?;
+        if (churchId != null && churchId != 9998 && !churchIds.contains(churchId)) {
+          churchIds.add(churchId);
+        }
+      }
+      final churchInfoMap = await _batchFetchChurchInfo(churchIds);
+
+      // ===== 배치 조회 완료 =====
+
+      // ChatRoom 객체 리스트 생성 (캐시된 데이터 사용)
       final chatRooms = <ChatRoom>[];
       for (var roomData in rooms) {
-        final chatRoom = await _buildChatRoomWithDetails(roomData, myUserId);
-
-        final roomId = chatRoom.id;
-        final postKey = '${chatRoom.postTable}_${chatRoom.postId}';
-        final authorId = authorIdMap[postKey];
-
-        print('🔍 CHAT_SERVICE: 채팅방 $roomId - postTable: ${chatRoom.postTable}, postId: ${chatRoom.postId}, authorId: $authorId');
-
-        // 안 읽은 메시지 개수 업데이트 + authorId 추가
-        final updatedChatRoom = ChatRoom(
-          id: chatRoom.id,
-          postId: chatRoom.postId,
-          postTable: chatRoom.postTable,
-          postTitle: chatRoom.postTitle,
-          createdAt: chatRoom.createdAt,
-          updatedAt: chatRoom.updatedAt,
-          lastMessageAt: chatRoom.lastMessageAt,
-          lastMessage: chatRoom.lastMessage,
-          otherUserName: chatRoom.otherUserName,
-          otherUserPhotoUrl: chatRoom.otherUserPhotoUrl,
-          otherUserId: chatRoom.otherUserId,
-          otherUserChurch: chatRoom.otherUserChurch,
-          otherUserChurchAddress: chatRoom.otherUserChurchAddress,
-          otherUserLocation: chatRoom.otherUserLocation,
-          postImageUrl: chatRoom.postImageUrl,
-          postPrice: chatRoom.postPrice,
-          postStatus: chatRoom.postStatus,
-          unreadCount: unreadMap[roomId] ?? 0,
-          authorId: authorId,
+        final chatRoom = _buildChatRoomFromCache(
+          roomData,
+          myUserId,
+          userProfileMap,
+          churchInfoMap,
+          postInfoMap,
+          authorIdMap,
         );
 
-        chatRooms.add(updatedChatRoom);
+        if (chatRoom != null) {
+          // 안 읽은 메시지 개수 업데이트
+          final updatedChatRoom = ChatRoom(
+            id: chatRoom.id,
+            postId: chatRoom.postId,
+            postTable: chatRoom.postTable,
+            postTitle: chatRoom.postTitle,
+            createdAt: chatRoom.createdAt,
+            updatedAt: chatRoom.updatedAt,
+            lastMessageAt: chatRoom.lastMessageAt,
+            lastMessage: chatRoom.lastMessage,
+            otherUserName: chatRoom.otherUserName,
+            otherUserPhotoUrl: chatRoom.otherUserPhotoUrl,
+            otherUserId: chatRoom.otherUserId,
+            otherUserChurch: chatRoom.otherUserChurch,
+            otherUserChurchAddress: chatRoom.otherUserChurchAddress,
+            otherUserLocation: chatRoom.otherUserLocation,
+            postImageUrl: chatRoom.postImageUrl,
+            postPrice: chatRoom.postPrice,
+            postStatus: chatRoom.postStatus,
+            unreadCount: unreadMap[chatRoom.id] ?? 0,
+            authorId: chatRoom.authorId,
+          );
+
+          chatRooms.add(updatedChatRoom);
+        }
       }
 
       return chatRooms;
@@ -604,6 +649,295 @@ class ChatService {
 
     print('✅ CHAT_SERVICE: 총 ${authorIdMap.length}개 작성자 ID 조회 완료');
     return authorIdMap;
+  }
+
+  /// 사용자 프로필 정보 배치 조회 (N+1 문제 방지)
+  Future<Map<int, Map<String, dynamic>>> _batchFetchUserProfiles(List<int> userIds) async {
+    final profileMap = <int, Map<String, dynamic>>{};
+
+    if (userIds.isEmpty) {
+      return profileMap;
+    }
+
+    try {
+      print('🔍 CHAT_SERVICE: ${userIds.length}명의 사용자 프로필 배치 조회 시작');
+
+      // 1. members 테이블에서 프로필 정보 조회
+      final members = await _supabaseService.client
+          .from('members')
+          .select('user_id, profile_photo_url, mobile_profile_image_url, church_id')
+          .inFilter('user_id', userIds);
+
+      final memberMap = <int, Map<String, dynamic>>{};
+      for (var member in members as List) {
+        final userId = member['user_id'] as int;
+        memberMap[userId] = member;
+      }
+
+      // 2. users 테이블에서 church_id 조회 (members에 없는 경우)
+      final missingUserIds = userIds.where((id) => !memberMap.containsKey(id)).toList();
+      if (missingUserIds.isNotEmpty) {
+        final users = await _supabaseService.client
+            .from('users')
+            .select('id, church_id')
+            .inFilter('id', missingUserIds);
+
+        for (var user in users as List) {
+          final userId = user['id'] as int;
+          memberMap[userId] = {
+            'user_id': userId,
+            'church_id': user['church_id'],
+            'profile_photo_url': null,
+            'mobile_profile_image_url': null,
+          };
+        }
+      }
+
+      // 3. 프로필 URL 변환 및 맵 구성
+      for (var entry in memberMap.entries) {
+        final userId = entry.key;
+        final member = entry.value;
+
+        final mobilePhotoUrl = member['mobile_profile_image_url'] as String?;
+        final churchPhotoUrl = member['profile_photo_url'] as String?;
+        final photoUrl = mobilePhotoUrl ?? churchPhotoUrl;
+
+        profileMap[userId] = {
+          'photo_url': photoUrl != null ? _getFullProfilePhotoUrl(photoUrl) : null,
+          'church_id': member['church_id'] as int?,
+        };
+      }
+
+      print('✅ CHAT_SERVICE: ${profileMap.length}명의 프로필 조회 완료');
+    } catch (e) {
+      print('❌ CHAT_SERVICE: 사용자 프로필 배치 조회 실패 - $e');
+    }
+
+    return profileMap;
+  }
+
+  /// 교회 정보 배치 조회 (N+1 문제 방지)
+  Future<Map<int, Map<String, dynamic>>> _batchFetchChurchInfo(List<int> churchIds) async {
+    final churchMap = <int, Map<String, dynamic>>{};
+
+    if (churchIds.isEmpty) {
+      return churchMap;
+    }
+
+    try {
+      print('🔍 CHAT_SERVICE: ${churchIds.length}개 교회 정보 배치 조회 시작');
+
+      final churches = await _supabaseService.client
+          .from('churches')
+          .select('id, name, address')
+          .inFilter('id', churchIds);
+
+      for (var church in churches as List) {
+        final churchId = church['id'] as int;
+        churchMap[churchId] = {
+          'name': church['name'] as String?,
+          'address': church['address'] as String?,
+        };
+      }
+
+      print('✅ CHAT_SERVICE: ${churchMap.length}개 교회 정보 조회 완료');
+    } catch (e) {
+      print('❌ CHAT_SERVICE: 교회 정보 배치 조회 실패 - $e');
+    }
+
+    return churchMap;
+  }
+
+  /// 게시글 정보 배치 조회 (N+1 문제 방지)
+  Future<Map<String, Map<String, dynamic>>> _batchFetchPostInfo(List rooms) async {
+    final postInfoMap = <String, Map<String, dynamic>>{};
+
+    // postTable별로 그룹화
+    final postsByTable = <String, List<int>>{};
+    for (var roomData in rooms) {
+      final postTable = roomData['post_table'] as String?;
+      final postId = roomData['post_id'] as int?;
+
+      if (postTable != null && postId != null) {
+        if (!postsByTable.containsKey(postTable)) {
+          postsByTable[postTable] = [];
+        }
+        postsByTable[postTable]!.add(postId);
+      }
+    }
+
+    // 각 테이블별로 배치 조회
+    for (var entry in postsByTable.entries) {
+      final tableName = entry.key;
+      final postIds = entry.value;
+
+      try {
+        print('🔍 CHAT_SERVICE: $tableName 테이블에서 ${postIds.length}개 게시글 정보 조회');
+
+        final posts = await _supabaseService.client
+            .from(tableName)
+            .select('id, images, price, status, location, province, district')
+            .inFilter('id', postIds);
+
+        for (var post in posts as List) {
+          final postId = post['id'] as int;
+          final key = '${tableName}_$postId';
+
+          // 이미지 URL
+          String? imageUrl;
+          if (post['images'] != null) {
+            final images = post['images'] as List?;
+            if (images != null && images.isNotEmpty) {
+              imageUrl = images[0] as String?;
+            }
+          }
+
+          // 가격
+          int? price;
+          final priceValue = post['price'];
+          if (priceValue != null) {
+            if (priceValue is int) {
+              price = priceValue;
+            } else if (priceValue is double) {
+              price = priceValue.toInt();
+            }
+          }
+
+          // 지역
+          String? location;
+          if (post['province'] != null || post['district'] != null) {
+            final provincePart = post['province'] as String? ?? '';
+            final districtPart = post['district'] as String? ?? '';
+            location = [provincePart, districtPart]
+                .where((e) => e.isNotEmpty)
+                .join(' ')
+                .trim();
+            if (location.isEmpty) {
+              location = null;
+            }
+          } else if (post['location'] != null && (post['location'] as String).isNotEmpty) {
+            location = post['location'] as String;
+          }
+
+          postInfoMap[key] = {
+            'image_url': imageUrl,
+            'price': price,
+            'status': post['status'] as String?,
+            'location': location,
+          };
+        }
+
+        print('✅ CHAT_SERVICE: $tableName 테이블에서 ${postIds.length}개 게시글 정보 조회 완료');
+      } catch (e) {
+        print('⚠️ CHAT_SERVICE: $tableName 테이블 게시글 정보 조회 실패 - $e');
+      }
+    }
+
+    print('✅ CHAT_SERVICE: 총 ${postInfoMap.length}개 게시글 정보 조회 완료');
+    return postInfoMap;
+  }
+
+  /// 캐시된 데이터로 ChatRoom 객체 생성 (배치 조회 결과 활용)
+  ChatRoom? _buildChatRoomFromCache(
+    Map<String, dynamic> roomData,
+    int myUserId,
+    Map<int, Map<String, dynamic>> userProfileMap,
+    Map<int, Map<String, dynamic>> churchInfoMap,
+    Map<String, Map<String, dynamic>> postInfoMap,
+    Map<String, int> authorIdMap,
+  ) {
+    try {
+      final participants = roomData['p2p_chat_participants'] as List;
+
+      // 상대방 찾기
+      final otherParticipant = participants.firstWhere(
+        (p) => p['user_id'] != myUserId,
+        orElse: () => null,
+      );
+
+      // 내 참여자 정보 찾기
+      final myParticipant = participants.firstWhere(
+        (p) => p['user_id'] == myUserId,
+        orElse: () => {'unread_count': 0},
+      );
+
+      if (otherParticipant == null) {
+        return null;
+      }
+
+      final otherUserId = otherParticipant['user_id'] as int;
+      final otherUserName = otherParticipant['user_name'] as String?;
+
+      // 캐시에서 프로필 정보 가져오기
+      final profile = userProfileMap[otherUserId];
+      String? otherUserPhotoUrl = profile?['photo_url'] as String?;
+      final churchId = profile?['church_id'] as int?;
+
+      // 캐시에서 교회 정보 가져오기
+      String? otherUserChurch;
+      String? otherUserChurchAddress;
+      if (churchId == 9998) {
+        otherUserChurch = '커뮤니티 회원';
+      } else if (churchId != null) {
+        final church = churchInfoMap[churchId];
+        otherUserChurch = church?['name'] as String?;
+        otherUserChurchAddress = church?['address'] as String?;
+      }
+
+      // 캐시에서 게시글 정보 가져오기
+      final postTable = roomData['post_table'] as String?;
+      final postId = roomData['post_id'] as int?;
+      String? postImageUrl;
+      int? postPrice;
+      String? postStatus;
+      String? otherUserLocation;
+
+      if (postTable != null && postId != null) {
+        final postKey = '${postTable}_$postId';
+        final postInfo = postInfoMap[postKey];
+
+        if (postInfo != null) {
+          postImageUrl = postInfo['image_url'] as String?;
+          postPrice = postInfo['price'] as int?;
+          postStatus = postInfo['status'] as String?;
+          otherUserLocation = postInfo['location'] as String?;
+        }
+      }
+
+      // authorId 가져오기
+      int? authorId;
+      if (postTable != null && postId != null) {
+        final postKey = '${postTable}_$postId';
+        authorId = authorIdMap[postKey];
+      }
+
+      return ChatRoom(
+        id: roomData['id'] as int,
+        postId: postId,
+        postTable: postTable,
+        postTitle: roomData['post_title'] as String?,
+        createdAt: DateTime.parse(roomData['created_at'] as String),
+        updatedAt: DateTime.parse(roomData['updated_at'] as String),
+        lastMessageAt: roomData['last_message_at'] != null
+            ? DateTime.parse(roomData['last_message_at'] as String)
+            : null,
+        lastMessage: roomData['last_message'] as String?,
+        otherUserName: otherUserName,
+        otherUserPhotoUrl: otherUserPhotoUrl,
+        otherUserId: otherUserId,
+        otherUserChurch: otherUserChurch,
+        otherUserChurchAddress: otherUserChurchAddress,
+        otherUserLocation: otherUserLocation,
+        postImageUrl: postImageUrl,
+        postPrice: postPrice,
+        postStatus: postStatus,
+        unreadCount: myParticipant['unread_count'] as int? ?? 0,
+        authorId: authorId,
+      );
+    } catch (e) {
+      print('❌ CHAT_SERVICE: ChatRoom 생성 실패 - $e');
+      return null;
+    }
   }
 
   // ==========================================================================

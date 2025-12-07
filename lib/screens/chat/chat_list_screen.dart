@@ -28,6 +28,7 @@ class _ChatListScreenState extends State<ChatListScreen>
   List<ChatRoom> _filteredChatRooms = [];
   bool _isLoading = true;
   RealtimeChannel? _participantsChannel;
+  int? _currentUserId; // 현재 사용자 ID 캐싱
 
   // 필터 상태
   String _selectedFilter = '전체'; // 전체, 판매, 구매, 안 읽은 채팅방
@@ -36,8 +37,24 @@ class _ChatListScreenState extends State<ChatListScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _initCurrentUser();
     _loadChatRooms();
     _subscribeToParticipantsUpdates();
+  }
+
+  /// 현재 사용자 ID 캐싱 (한 번만 조회)
+  Future<void> _initCurrentUser() async {
+    try {
+      final userResponse = await _authService.getCurrentUser();
+      final currentUser = userResponse.data;
+      if (mounted) {
+        setState(() {
+          _currentUserId = currentUser?.id;
+        });
+      }
+    } catch (e) {
+      print('❌ CHAT_LIST_SCREEN: 사용자 조회 실패 - $e');
+    }
   }
 
   @override
@@ -64,16 +81,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     try {
       final chatRooms = await _chatService.getChatRooms();
 
-      // 현재 사용자 ID 가져오기
-      final userResponse = await _authService.getCurrentUser();
-      final currentUser = userResponse.data;
-      final currentUserId = currentUser?.id;
-
       if (!mounted) return;
       setState(() {
         _chatRooms = chatRooms;
-        if (currentUserId != null) {
-          _applyFilter(currentUserId);
+        // 캐시된 currentUserId 사용
+        if (_currentUserId != null) {
+          _applyFilter(_currentUserId!);
         } else {
           _filteredChatRooms = _chatRooms;
         }
@@ -258,19 +271,14 @@ class _ChatListScreenState extends State<ChatListScreen>
                 final isSelected = _selectedFilter == filter;
 
                 return GestureDetector(
-                  onTap: () async {
+                  onTap: () {
                     setState(() {
                       _selectedFilter = filter;
+                      // 캐시된 currentUserId 사용 (불필요한 API 호출 제거)
+                      if (_currentUserId != null) {
+                        _applyFilter(_currentUserId!);
+                      }
                     });
-
-                    // 필터 재적용
-                    final userResponse = await _authService.getCurrentUser();
-                    final currentUser = userResponse.data;
-                    if (currentUser != null) {
-                      setState(() {
-                        _applyFilter(currentUser.id);
-                      });
-                    }
                   },
                   child: Container(
                     padding:
