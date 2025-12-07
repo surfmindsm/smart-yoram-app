@@ -758,36 +758,32 @@ class ChatService {
   ///
   /// 상대방이 채팅방을 삭제했더라도(is_active = false),
   /// 새 메시지를 보내면 자동으로 재활성화(is_active = true)됩니다.
+  ///
+  /// 주의: unread_count 증가는 데이터베이스 트리거에서 자동으로 처리됩니다.
+  /// 이 함수는 is_active 재활성화만 처리합니다.
   Future<void> _incrementUnreadCount(int roomId, int myUserId) async {
     try {
-      // 상대방 참여자 조회
+      // 상대방 참여자 조회 (is_active = false인 경우 재활성화 필요)
       final participants = await _supabaseService.client
           .from('p2p_chat_participants')
-          .select('id, user_id, unread_count, is_active')
+          .select('id, is_active')
           .eq('room_id', roomId)
-          .neq('user_id', myUserId);
+          .neq('user_id', myUserId)
+          .eq('is_active', false); // 비활성 상태인 것만 조회
 
+      // 삭제했던 채팅방이면 재활성화 (unread_count는 트리거에서 자동 증가)
       for (var participant in participants as List) {
-        final currentCount = participant['unread_count'] as int? ?? 0;
-        final isActive = participant['is_active'] as bool? ?? true;
-
-        // 안 읽은 메시지 증가 + 삭제했던 채팅방이면 재활성화
+        final participantId = participant['id'] as int;
         await _supabaseService.client
             .from('p2p_chat_participants')
-            .update({
-              'unread_count': currentCount + 1,
-              'is_active': true, // 삭제했어도 새 메시지 오면 다시 활성화
-            })
-            .eq('id', participant['id']);
-
-        if (!isActive) {
-          print('🔄 CHAT_SERVICE: 상대방이 삭제한 채팅방 재활성화 (새 메시지 도착)');
-        }
+            .update({'is_active': true})
+            .eq('id', participantId);
+        print('🔄 CHAT_SERVICE: 상대방이 삭제한 채팅방 재활성화 (새 메시지 도착)');
       }
 
-      print('✅ CHAT_SERVICE: 상대방 unread_count 증가 완료');
+      print('✅ CHAT_SERVICE: 참여자 상태 업데이트 완료 (unread_count는 트리거에서 자동 처리)');
     } catch (e) {
-      print('❌ CHAT_SERVICE: unread_count 증가 실패 - $e');
+      print('❌ CHAT_SERVICE: 참여자 상태 업데이트 실패 - $e');
     }
   }
 

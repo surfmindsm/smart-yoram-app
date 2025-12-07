@@ -5,6 +5,7 @@ import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/chat_service.dart';
+import 'package:smart_yoram_app/services/badge_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, RealtimeChannel, PostgresChangeEvent;
 import 'home_screen.dart';
@@ -22,7 +23,7 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObserver {
   final AuthService _authService = AuthService();
   final ChatService _chatService = ChatService();
 
@@ -35,6 +36,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUser();
     _loadUnreadCount();
     _subscribeToChatUpdates();
@@ -42,8 +44,22 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _chatBadgeChannel?.unsubscribe();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // 앱이 포그라운드로 돌아올 때 배지 업데이트
+    if (state == AppLifecycleState.resumed) {
+      print('📱 MAIN_NAV: 앱 포그라운드 진입 - 배지 업데이트');
+      BadgeService.instance.updateBadge().catchError((e) {
+        print('❌ MAIN_NAV: 배지 업데이트 실패 - $e');
+      });
+    }
   }
 
   Future<void> _loadUser() async {

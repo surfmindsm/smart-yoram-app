@@ -7,6 +7,7 @@ import 'package:smart_yoram_app/models/chat_models.dart';
 import 'package:smart_yoram_app/services/chat_service.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/report_service.dart';
+import 'package:smart_yoram_app/services/badge_service.dart';
 import 'package:smart_yoram_app/models/report_model.dart';
 import 'package:smart_yoram_app/widgets/chat/message_bubble.dart';
 import 'package:smart_yoram_app/widgets/profile_info_dialog.dart';
@@ -51,6 +52,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     _chatService.unsubscribeFromMessages(widget.chatRoom.id);
+
+    // 채팅방 나갈 때 배지 업데이트
+    BadgeService.instance.updateBadge().catchError((e) {
+      print('❌ CHAT_ROOM_SCREEN: 배지 업데이트 실패 - $e');
+    });
+
     super.dispose();
   }
 
@@ -72,6 +79,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
       // 읽음 처리
       await _chatService.markAsRead(widget.chatRoom.id);
+
+      // 배지 업데이트 (메시지 읽음)
+      BadgeService.instance.updateBadge().catchError((e) {
+        print('❌ CHAT_ROOM_SCREEN: 배지 업데이트 실패 - $e');
+      });
 
       // 실시간 구독 시작
       _subscribeToMessages();
@@ -116,6 +128,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
           // 읽음 처리
           _chatService.markAsRead(widget.chatRoom.id);
+
+          // 배지 업데이트 (새 메시지 읽음)
+          BadgeService.instance.updateBadge().catchError((e) {
+            print('❌ CHAT_ROOM_SCREEN: 배지 업데이트 실패 - $e');
+          });
         }
       },
       onMessageUpdate: (updatedMessage) {

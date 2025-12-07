@@ -14,6 +14,7 @@ import 'notification_service_enhanced.dart';
 import 'notification_settings_service.dart';
 import 'auth_service.dart';
 import 'chat_service.dart';
+import 'badge_service.dart';
 import '../screens/chat/chat_room_screen.dart';
 import '../screens/community/community_detail_screen.dart';
 import '../main.dart' show navigatorKey;
@@ -23,9 +24,21 @@ import '../main.dart' show navigatorKey;
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   developer.log('백그라운드 메시지 수신: ${message.messageId}', name: 'FCM_BG');
-  
+
   // 백그라운드에서도 로컬 알림 표시
   await FCMService.instance._showLocalNotification(message);
+
+  // 데이터베이스 트리거 완료 대기 (메시지 저장 및 unread_count 업데이트)
+  await Future.delayed(const Duration(milliseconds: 500));
+
+  // 배지 업데이트 (백그라운드에서도 실행)
+  try {
+    await BadgeService.instance.initialize();
+    await BadgeService.instance.updateBadge();
+    developer.log('✅ 백그라운드 배지 업데이트 완료', name: 'FCM_BG');
+  } catch (e) {
+    developer.log('❌ 백그라운드 배지 업데이트 실패: $e', name: 'FCM_BG_ERROR');
+  }
 }
 
 /// Firebase Cloud Messaging 서비스 클래스
@@ -75,6 +88,9 @@ class FCMService {
 
       // 백그라운드 메시지 핸들러 설정
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+      // BadgeService 초기화
+      await BadgeService.instance.initialize();
 
       developer.log('FCM 초기화 완료', name: 'FCM');
     } catch (e) {
@@ -394,6 +410,11 @@ class FCMService {
       }
 
       developer.log('✅✅✅ 포어그라운드 알림 처리 완료 ✅✅✅', name: 'FCM');
+
+      // 배지 업데이트 (알림 받음)
+      BadgeService.instance.updateBadge().catchError((e) {
+        developer.log('❌ 배지 업데이트 실패: $e', name: 'FCM_ERROR');
+      });
     } catch (e, stackTrace) {
       developer.log('❌ 포어그라운드 메시지 처리 중 오류: $e', name: 'FCM_ERROR');
       developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');
@@ -640,6 +661,11 @@ class FCMService {
       );
 
       developer.log('✅ 채팅방으로 이동 완료: room_id=$roomId', name: 'FCM');
+
+      // 배지 업데이트 (채팅방 나올 때 읽은 메시지 반영)
+      BadgeService.instance.updateBadge().catchError((e) {
+        developer.log('❌ 배지 업데이트 실패: $e', name: 'FCM_ERROR');
+      });
     } catch (e, stackTrace) {
       developer.log('❌ 채팅방 이동 실패: $e', name: 'FCM_ERROR');
       developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');

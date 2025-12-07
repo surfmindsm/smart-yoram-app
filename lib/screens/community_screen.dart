@@ -4,8 +4,11 @@ import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/user.dart';
 import 'package:smart_yoram_app/services/auth_service.dart';
+import 'package:smart_yoram_app/services/notification_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_favorites_screen.dart';
+import 'package:smart_yoram_app/screens/notification_center_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, RealtimeChannel, PostgresChangeEvent;
 
 /// 커뮤니티 메인 화면
 /// 웹 명세서 기반 9개 카테고리 구조
@@ -18,14 +21,25 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   final AuthService _authService = AuthService();
+  final NotificationService _notificationService = NotificationService.instance;
 
   User? _currentUser;
   bool _isLoading = true;
+  int _unreadNotificationCount = 0;
+  RealtimeChannel? _notificationChannel;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadUnreadNotificationCount();
+    _subscribeToNotifications();
+  }
+
+  @override
+  void dispose() {
+    _notificationChannel?.unsubscribe();
+    super.dispose();
   }
 
   Future<void> _loadUser() async {
@@ -47,6 +61,43 @@ class _CommunityScreenState extends State<CommunityScreen> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  /// 읽지 않은 알림 개수 로드
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final response = await _notificationService.getMyNotifications(limit: 100);
+      if (response.success && response.data != null) {
+        final unreadCount = response.data!.where((n) => !n.isRead).length;
+        if (mounted) {
+          setState(() {
+            _unreadNotificationCount = unreadCount;
+          });
+        }
+      }
+    } catch (e) {
+      print('❌ COMMUNITY_SCREEN: 알림 개수 로드 실패 - $e');
+    }
+  }
+
+  /// 알림 업데이트 실시간 구독
+  void _subscribeToNotifications() {
+    try {
+      _notificationChannel = Supabase.instance.client
+          .channel('community_notification_badge')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'notifications',
+            callback: (payload) {
+              // 알림 테이블이 변경되면 배지 업데이트
+              _loadUnreadNotificationCount();
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      print('❌ COMMUNITY_SCREEN: 알림 구독 실패 - $e');
     }
   }
 
@@ -109,6 +160,62 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   ),
                   Row(
                     children: [
+                      // 알림
+                      GestureDetector(
+                        onTap: _navigateToNotifications,
+                        child: Container(
+                          padding: EdgeInsets.all(8.w),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                Icons.notifications_outlined,
+                                size: 24.sp,
+                                color: NewAppColor.neutral700,
+                              ),
+                              // 읽지 않은 알림 배지
+                              if (_unreadNotificationCount > 0)
+                                Positioned(
+                                  right: -4,
+                                  top: -4,
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: _unreadNotificationCount > 9 ? 4.w : 5.w,
+                                      vertical: 2.h,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: NewAppColor.danger600,
+                                      borderRadius: BorderRadius.circular(10.r),
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    constraints: BoxConstraints(
+                                      minWidth: 18.w,
+                                      minHeight: 18.w,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _unreadNotificationCount > 99
+                                            ? '99+'
+                                            : _unreadNotificationCount.toString(),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.w700,
+                                          fontFamily: 'Pretendard Variable',
+                                          height: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
                       // 내 글 관리
                       TextButton.icon(
                         onPressed: _navigateToMyPosts,
@@ -362,6 +469,19 @@ class _CommunityScreenState extends State<CommunityScreen> {
         builder: (context) => const CommunityFavoritesScreen(),
       ),
     );
+  }
+
+  /// 알림 센터로 이동
+  void _navigateToNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationCenterScreen(),
+      ),
+    );
+
+    // 알림 화면에서 돌아왔을 때 배지 업데이트
+    _loadUnreadNotificationCount();
   }
 }
 

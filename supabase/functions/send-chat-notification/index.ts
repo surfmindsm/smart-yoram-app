@@ -137,6 +137,25 @@ serve(async (req) => {
     const notifications = [];
 
     for (const participant of participants) {
+      // 수신자의 총 unread count 계산 (채팅 + 알림)
+      const { data: chatUnreadData } = await supabase
+        .from('p2p_chat_participants')
+        .select('unread_count')
+        .eq('user_id', participant.user_id)
+        .eq('is_active', true);
+
+      const { data: notificationUnreadData } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', participant.user_id)
+        .eq('is_read', false);
+
+      const chatUnreadCount = chatUnreadData?.reduce((sum, p) => sum + (p.unread_count || 0), 0) || 0;
+      const notificationUnreadCount = notificationUnreadData?.length || 0;
+      const totalUnreadCount = chatUnreadCount + notificationUnreadCount;
+
+      console.log(`📊 Unread count (user_id: ${participant.user_id}): 채팅=${chatUnreadCount}, 알림=${notificationUnreadCount}, 총=${totalUnreadCount}`);
+
       // 수신자의 FCM 토큰 조회
       const { data: devices, error: devicesError } = await supabase
         .from('device_tokens')
@@ -196,7 +215,7 @@ serve(async (req) => {
               payload: {
                 aps: {
                   sound: 'default',
-                  badge: 1,
+                  badge: totalUnreadCount, // 실제 unread count 설정
                 },
               },
             },

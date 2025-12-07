@@ -8,6 +8,7 @@ import '../models/api_response.dart';
 import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
 import '../services/notification_service.dart';
+import '../services/badge_service.dart';
 import 'notification_settings_screen.dart';
 import 'community/community_detail_screen.dart';
 
@@ -162,6 +163,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         notifications = notifications.map((notification) {
           return notification.copyWith(isRead: true);
         }).toList();
+      });
+
+      // 배지 업데이트 (모든 알림 읽음)
+      BadgeService.instance.updateBadge().catchError((e) {
+        print('❌ NOTIFICATION_CENTER: 배지 업데이트 실패 - $e');
       });
 
       if (mounted) {
@@ -714,6 +720,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       notifications[notificationIndex] =
                           notification.copyWith(isRead: true);
                     }
+                  });
+
+                  // 배지 업데이트 (알림 읽음)
+                  BadgeService.instance.updateBadge().catchError((e) {
+                    print('❌ NOTIFICATION_CENTER: 배지 업데이트 실패 - $e');
                   });
                 } catch (e) {
                   print('❌ NOTIFICATION_CENTER: 알림 읽음 처리 실패 - $e');
