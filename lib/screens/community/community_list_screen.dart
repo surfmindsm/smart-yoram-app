@@ -1446,13 +1446,24 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 팀형태 필터 그룹: 전체, 찬양팀, 워십팀, 밴드
+              // 팀형태 필터 그룹: 전체, 솔로, 찬양팀, 워십팀, 어쿠스틱, 밴드, 오케스트라, 합창단, 무용팀, 기타
               _buildSmallFilterChip(
                 label: '전체',
                 isSelected: _teamTypeFilter == 'all',
                 onTap: () {
                   setState(() {
                     _teamTypeFilter = 'all';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '솔로',
+                isSelected: _teamTypeFilter == 'solo',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'solo';
                     _updateFilteredItems();
                   });
                 },
@@ -1481,11 +1492,66 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               ),
               SizedBox(width: 6.w),
               _buildSmallFilterChip(
+                label: '어쿠스틱',
+                isSelected: _teamTypeFilter == 'acoustic-team',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'acoustic-team';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
                 label: '밴드',
                 isSelected: _teamTypeFilter == 'band',
                 onTap: () {
                   setState(() {
                     _teamTypeFilter = 'band';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '오케스트라',
+                isSelected: _teamTypeFilter == 'orchestra',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'orchestra';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '합창단',
+                isSelected: _teamTypeFilter == 'choir',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'choir';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '무용팀',
+                isSelected: _teamTypeFilter == 'dance-team',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'dance-team';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '기타',
+                isSelected: _teamTypeFilter == 'other',
+                onTap: () {
+                  setState(() {
+                    _teamTypeFilter = 'other';
                     _updateFilteredItems();
                   });
                 },
@@ -1538,7 +1604,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 악기/파트 필터 그룹: 전체, 솔로, 찬양팀, 워십팀, 밴드
+              // 팀형태 필터 그룹: 전체, 솔로, 찬양팀, 워십팀, 어쿠스틱, 밴드, 오케스트라, 합창단, 무용팀, 기타
               _buildSmallFilterChip(
                 label: '전체',
                 isSelected: _instrumentFilter == 'all',
@@ -1584,11 +1650,66 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               ),
               SizedBox(width: 6.w),
               _buildSmallFilterChip(
+                label: '어쿠스틱',
+                isSelected: _instrumentFilter == 'acoustic-team',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'acoustic-team';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
                 label: '밴드',
                 isSelected: _instrumentFilter == 'band',
                 onTap: () {
                   setState(() {
                     _instrumentFilter = 'band';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '오케스트라',
+                isSelected: _instrumentFilter == 'orchestra',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'orchestra';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '합창단',
+                isSelected: _instrumentFilter == 'choir',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'choir';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '무용팀',
+                isSelected: _instrumentFilter == 'dance-team',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'dance-team';
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+              SizedBox(width: 6.w),
+              _buildSmallFilterChip(
+                label: '기타',
+                isSelected: _instrumentFilter == 'other',
+                onTap: () {
+                  setState(() {
+                    _instrumentFilter = 'other';
                     _updateFilteredItems();
                   });
                 },
@@ -1623,73 +1744,58 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
 
   /// 빠른 필터 (교회 소식)
   Widget _buildQuickChurchNewsFilters() {
-    final List<Map<String, String>> tabs = [
-      {'label': '전체', 'value': 'all'},
-      {'label': '긴급', 'value': 'urgent'},
-      {'label': '중요', 'value': 'important'},
-      {'label': '일반', 'value': 'normal'},
-      {'label': '종료제거', 'value': 'hide_completed'},
-    ];
-
     return Container(
-      height: 56.h,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: NewAppColor.neutral100,
-        border: Border(
+        border: const Border(
           bottom: BorderSide(
-            color: Colors.transparent,
-            width: 2.0,
+            color: NewAppColor.neutral200,
+            width: 1,
           ),
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 22.w),
-        child: Row(
-          children: tabs.map((tab) {
-            final isHideCompletedTab = tab['value'] == 'hide_completed';
-            final isSelected = isHideCompletedTab
-                ? _hideCompleted
-                : _priorityFilter == tab['value'];
-
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (isHideCompletedTab) {
-                    _hideCompleted = !_hideCompleted;
-                  } else {
-                    _priorityFilter = tab['value']!;
-                  }
-                  _updateFilteredItems();
-                });
-              },
-              child: Container(
-                height: 56.h,
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                decoration: BoxDecoration(
-                  border: isSelected
-                      ? Border(
-                          bottom: BorderSide(
-                            color: NewAppColor.primary600,
-                            width: 2.0,
-                          ),
-                        )
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    tab['label']!,
-                    style: const FigmaTextStyles().title4.copyWith(
-                          color: isSelected
-                              ? NewAppColor.primary600
-                              : NewAppColor.neutral400,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 전체 칩
+              _buildSmallFilterChip(
+                label: '전체',
+                isSelected: !_hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = false;
+                    _updateFilteredItems();
+                  });
+                },
               ),
-            );
-          }).toList(),
+              SizedBox(width: 8.w),
+
+              // 구분선
+              Container(
+                width: 1,
+                height: 20.h,
+                color: NewAppColor.neutral300,
+              ),
+              SizedBox(width: 8.w),
+
+              // 종료 제거 필터
+              _buildSmallFilterChip(
+                label: '종료제거',
+                isSelected: _hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = !_hideCompleted;
+                    _updateFilteredItems();
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1741,7 +1847,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral100,
+          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral200,
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Text(
@@ -1785,6 +1891,17 @@ class _AdvancedFilterBottomSheetState
   String? _tempDistrict;
   String? _tempCategory;
 
+  // 카테고리 value와 표시 텍스트 매핑 (교회 소식용)
+  final Map<String, String> _newsCategories = {
+    'worship': '특별예배/연합예배',
+    'event': '행사',
+    'retreat': '수련회',
+    'mission': '선교',
+    'education': '교육',
+    'volunteer': '봉사',
+    'other': '기타',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -1796,18 +1913,17 @@ class _AdvancedFilterBottomSheetState
   @override
   Widget build(BuildContext context) {
     // 리스트 타입에 따라 다른 카테고리 옵션 사용
-    final List<String> categoryOptions;
-    final String categoryLabel;
+    final List<String>? categoryOptions;
+    final String? categoryLabel;
 
     if (widget.listType == CommunityListType.jobPosting) {
       // 사역자 모집: 직종 카테고리
       categoryOptions = [
-        '목회자',
-        '사무행정',
-        '교육',
-        '음악',
-        '미디어',
-        '시설관리',
+        '목사',
+        '전도사',
+        '찬양사역자',
+        '행정간사',
+        '교육간사',
         '기타',
       ];
       categoryLabel = '직종';
@@ -1824,18 +1940,13 @@ class _AdvancedFilterBottomSheetState
         '기타',
       ];
       categoryLabel = '예배 형태';
+    } else if (widget.listType == CommunityListType.musicTeamSeeking) {
+      // 행사팀 지원: 카테고리 필터 없음 (상단에 팀 형태 필터가 있음)
+      categoryOptions = null;
+      categoryLabel = null;
     } else if (widget.listType == CommunityListType.churchNews) {
-      // 교회 소식: 소식 카테고리
-      categoryOptions = [
-        '예배',
-        '모임',
-        '행사',
-        '공지',
-        '교육',
-        '봉사',
-        '선교',
-        '기타',
-      ];
+      // 교회 소식: 소식 카테고리 (value 사용)
+      categoryOptions = ['worship', 'event', 'retreat', 'mission', 'education', 'volunteer', 'other'];
       categoryLabel = '카테고리';
     } else {
       // 물품 판매/요청: 물품 카테고리
@@ -1853,7 +1964,7 @@ class _AdvancedFilterBottomSheetState
 
     return Container(
       decoration: BoxDecoration(
-        color: NewAppColor.neutral100,
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       child: SafeArea(
@@ -1972,75 +2083,82 @@ class _AdvancedFilterBottomSheetState
                       ),
                     ),
                   ),
-                  SizedBox(height: 24.h),
-
-                  // 카테고리/직종 선택
-                  Text(
-                    categoryLabel,
-                    style: FigmaTextStyles().subtitle3.copyWith(
-                          color: NewAppColor.neutral900,
-                        ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Wrap(
-                    spacing: 8.w,
-                    runSpacing: 8.h,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _tempCategory = null;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 8.h),
-                          decoration: BoxDecoration(
-                            color: _tempCategory == null
-                                ? NewAppColor.primary600
-                                : NewAppColor.neutral100,
-                            borderRadius: BorderRadius.circular(20.r),
+                  // 카테고리/직종 선택 (행사팀 지원은 제외)
+                  if (categoryOptions != null && categoryLabel != null) ...[
+                    SizedBox(height: 24.h),
+                    Text(
+                      categoryLabel,
+                      style: FigmaTextStyles().subtitle3.copyWith(
+                            color: NewAppColor.neutral900,
                           ),
-                          child: Text(
-                            '전체',
-                            style: FigmaTextStyles().body2.copyWith(
-                                  color: _tempCategory == null
-                                      ? Colors.white
-                                      : NewAppColor.neutral700,
-                                ),
-                          ),
-                        ),
-                      ),
-                      ...categoryOptions.map((category) {
-                        return GestureDetector(
+                    ),
+                    SizedBox(height: 12.h),
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: [
+                        GestureDetector(
                           onTap: () {
                             setState(() {
-                              _tempCategory = category;
+                              _tempCategory = null;
                             });
                           },
                           child: Container(
                             padding: EdgeInsets.symmetric(
                                 horizontal: 16.w, vertical: 8.h),
                             decoration: BoxDecoration(
-                              color: _tempCategory == category
+                              color: _tempCategory == null
                                   ? NewAppColor.primary600
                                   : NewAppColor.neutral100,
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Text(
-                              category,
+                              '전체',
                               style: FigmaTextStyles().body2.copyWith(
-                                    color: _tempCategory == category
+                                    color: _tempCategory == null
                                         ? Colors.white
                                         : NewAppColor.neutral700,
                                   ),
                             ),
                           ),
-                        );
-                      }),
-                    ],
-                  ),
-                  SizedBox(height: 24.h),
+                        ),
+                        ...categoryOptions.map((category) {
+                          // 교회 소식인 경우 한글 텍스트로 변환
+                          final displayText = widget.listType == CommunityListType.churchNews
+                              ? (_newsCategories[category] ?? category)
+                              : category;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _tempCategory = category;
+                              });
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w, vertical: 8.h),
+                              decoration: BoxDecoration(
+                                color: _tempCategory == category
+                                    ? NewAppColor.primary600
+                                    : NewAppColor.neutral100,
+                                borderRadius: BorderRadius.circular(20.r),
+                              ),
+                              child: Text(
+                                displayText,
+                                style: FigmaTextStyles().body2.copyWith(
+                                      color: _tempCategory == category
+                                          ? Colors.white
+                                          : NewAppColor.neutral700,
+                                    ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                    SizedBox(height: 24.h),
+                  ] else
+                    SizedBox(height: 24.h),
 
                   // 적용 버튼
                   SizedBox(
