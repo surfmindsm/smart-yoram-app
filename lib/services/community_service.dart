@@ -97,6 +97,7 @@ class CommunityService {
 
       // 한 번에 church 정보 조회 (name, address)
       Map<int, String> churchNames = {};
+      Map<int, String> churchAddresses = {}; // 전체 주소
       Map<int, String> churchLocations = {}; // 도시 + 구/동
       if (churchIds.isNotEmpty) {
         try {
@@ -109,6 +110,7 @@ class CommunityService {
 
           for (var church in churchesResponse as List) {
             churchNames[church['id'] as int] = church['name'] as String;
+            churchAddresses[church['id'] as int] = church['address'] as String? ?? ''; // 전체 주소 저장
 
             // 주소에서 도시 + 구/동만 추출
             if (church['address'] != null) {
@@ -120,6 +122,7 @@ class CommunityService {
           }
 
           print('📋 COMMUNITY_SERVICE: churchNames - $churchNames');
+          print('📋 COMMUNITY_SERVICE: churchAddresses - $churchAddresses');
           print('📋 COMMUNITY_SERVICE: churchLocations - $churchLocations');
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: churches 조회 실패 - $e');
@@ -131,18 +134,20 @@ class CommunityService {
       for (var item in responseList) {
         final itemMap = item as Map<String, dynamic>;
 
-        // author_name 추가
+        // author 정보 추가
         if (itemMap['author_id'] != null) {
-          itemMap['author_name'] = authorNames[itemMap['author_id']];
+          final authorId = itemMap['author_id'] as int;
+          itemMap['author_name'] = authorNames[authorId];
         }
 
-        // church_name, location 추가
+        // church_name, church_address, location 추가
         if (itemMap['church_id'] != null) {
           itemMap['church_name'] = churchNames[itemMap['church_id']];
+          itemMap['church_address'] = churchAddresses[itemMap['church_id']]; // 전체 주소 추가
           itemMap['church_location'] = churchLocations[itemMap['church_id']];
         }
 
-        print('📋 COMMUNITY_SERVICE: 병합된 항목 - author_name: ${itemMap['author_name']}, church_name: ${itemMap['church_name']}, location: ${itemMap['church_location']}');
+        print('📋 COMMUNITY_SERVICE: 병합된 항목 - author_name: ${itemMap['author_name']}, church_name: ${itemMap['church_name']}, church_address: ${itemMap['church_address']}, location: ${itemMap['church_location']}');
 
         items.add(SharingItem.fromJson(itemMap));
       }
@@ -156,17 +161,23 @@ class CommunityService {
 
   /// 무료 나눔/물품 판매 상세 조회
   Future<SharingItem?> getSharingItem(int id) async {
+    print('🚀 SHARING: getSharingItem 시작 - id=$id');
     try {
+      print('🔍 SHARING: community_sharing 테이블 조회 시작');
       final response = await _supabaseService.client
           .from('community_sharing')
           .select()
           .eq('id', id)
           .single();
+      print('🔍 SHARING: response 받음 - ${response.toString().substring(0, 100)}...');
 
       // 조회수 증가
+      print('🔍 SHARING: 조회수 증가 시작');
       await _incrementViewCount('community_sharing', id);
+      print('🔍 SHARING: 조회수 증가 완료');
 
       final itemMap = response as Map<String, dynamic>;
+      print('🔍 SHARING: itemMap 변환 완료 - church_id=${itemMap['church_id']}');
 
       // author 정보 가져오기 (users와 members 조인)
       if (itemMap['author_id'] != null) {
@@ -186,7 +197,7 @@ class CommunityService {
                 .select('profile_photo_url, mobile_profile_image_url')
                 .eq('user_id', itemMap['author_id'])
                 .single();
-            itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
+            itemMap['author_profile_photo_url'] = _getFullProfilePhotoUrl(memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url']);
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
           }
@@ -196,27 +207,38 @@ class CommunityService {
       }
 
       // church 정보 가져오기
+      print('🔍 SHARING: church_id = ${itemMap['church_id']}');
       if (itemMap['church_id'] != null) {
         try {
+          print('🔍 SHARING: church 정보 조회 시작');
           final churchResponse = await _supabaseService.client
               .from('churches')
               .select('name, address')
               .eq('id', itemMap['church_id'])
               .single();
+          print('🔍 SHARING: churchResponse = $churchResponse');
           itemMap['church_name'] = churchResponse['name'];
+          itemMap['church_address'] = churchResponse['address']; // 전체 주소 저장
+          print('🏠 COMMUNITY_SERVICE: church_name = ${churchResponse['name']}');
+          print('🏠 COMMUNITY_SERVICE: church_address = ${churchResponse['address']}');
 
           // 주소에서 도시 + 구/동 추출
           if (churchResponse['address'] != null) {
             final location = _extractCityDistrict(churchResponse['address'] as String);
             if (location != null) {
               itemMap['church_location'] = location;
+              print('🏠 COMMUNITY_SERVICE: extracted location = $location');
             }
           }
-        } catch (e) {
+        } catch (e, stackTrace) {
           print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
+          print('⚠️ COMMUNITY_SERVICE: stackTrace - $stackTrace');
         }
+      } else {
+        print('⚠️ SHARING: church_id가 null입니다!');
       }
 
+      print('🔍 SHARING: fromJson 호출 전 - church_address = ${itemMap['church_address']}');
       return SharingItem.fromJson(itemMap);
     } catch (e) {
       print('❌ COMMUNITY_SERVICE: 나눔/판매 상세 조회 실패 - $e');
@@ -354,7 +376,6 @@ class CommunityService {
 
       // 한 번에 author 정보 조회 (users 테이블)
       Map<int, String> authorNames = {};
-      Map<int, String?> authorPhotos = {};
 
       if (authorIds.isNotEmpty) {
         try {
@@ -366,16 +387,6 @@ class CommunityService {
           for (var author in authorsResponse as List) {
             authorNames[author['id'] as int] = author['full_name'] as String;
           }
-
-          // members 테이블에서 profile_photo_url 일괄 조회 (모바일 프로필 우선)
-          final membersResponse = await _supabaseService.client
-              .from('members')
-              .select('user_id, profile_photo_url, mobile_profile_image_url')
-              .inFilter('user_id', authorIds);
-
-          for (var member in membersResponse as List) {
-            authorPhotos[member['user_id'] as int] = member['mobile_profile_image_url'] ?? member['profile_photo_url'] as String?;
-          }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: authors 조회 실패 - $e');
         }
@@ -383,16 +394,18 @@ class CommunityService {
 
       // 한 번에 church 정보 조회
       Map<int, String> churchNames = {};
+      Map<int, String> churchAddresses = {}; // 전체 주소
 
       if (churchIds.isNotEmpty) {
         try {
           final churchesResponse = await _supabaseService.client
               .from('churches')
-              .select('id, name')
+              .select('id, name, address')
               .inFilter('id', churchIds);
 
           for (var church in churchesResponse as List) {
             churchNames[church['id'] as int] = church['name'] as String;
+            churchAddresses[church['id'] as int] = church['address'] as String? ?? ''; // 전체 주소 저장
           }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: churches 조회 실패 - $e');
@@ -408,13 +421,13 @@ class CommunityService {
         if (data['author_id'] != null) {
           final authorId = data['author_id'] as int;
           data['author_name'] = authorNames[authorId];
-          data['author_profile_photo_url'] = authorPhotos[authorId];
         }
 
         // church 정보 추가
         if (data['church_id'] != null) {
           final churchId = data['church_id'] as int;
           data['church_name'] = churchNames[churchId];
+          data['church_address'] = churchAddresses[churchId]; // 전체 주소 추가
         }
 
         items.add(RequestItem.fromJson(data));
@@ -460,7 +473,7 @@ class CommunityService {
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = _getFullProfilePhotoUrl(memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url']);
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -479,12 +492,16 @@ class CommunityService {
               .eq('id', itemMap['church_id'])
               .single();
           itemMap['church_name'] = churchResponse['name'];
+          itemMap['church_address'] = churchResponse['address']; // 전체 주소 저장
+          print('🏠 COMMUNITY_SERVICE: church_name = ${churchResponse['name']}');
+          print('🏠 COMMUNITY_SERVICE: church_address = ${churchResponse['address']}');
 
           // 주소에서 도시 + 구/동 추출
           if (churchResponse['address'] != null) {
             final location = _extractCityDistrict(churchResponse['address'] as String);
             if (location != null) {
               itemMap['location'] = location;
+              print('🏠 COMMUNITY_SERVICE: extracted location = $location');
             }
           }
         } catch (e) {
@@ -928,7 +945,7 @@ class CommunityService {
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = _getFullProfilePhotoUrl(memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url']);
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -947,12 +964,16 @@ class CommunityService {
               .eq('id', itemMap['church_id'])
               .single();
           itemMap['church_name'] = churchResponse['name'];
+          itemMap['church_address'] = churchResponse['address']; // 전체 주소 저장
+          print('🏠 COMMUNITY_SERVICE: church_name = ${churchResponse['name']}');
+          print('🏠 COMMUNITY_SERVICE: church_address = ${churchResponse['address']}');
 
           // 주소에서 도시 + 구/동 추출
           if (churchResponse['address'] != null) {
             final location = _extractCityDistrict(churchResponse['address'] as String);
             if (location != null) {
               itemMap['location'] = location;
+              print('🏠 COMMUNITY_SERVICE: extracted location = $location');
             }
           }
         } catch (e) {
@@ -1001,7 +1022,7 @@ class CommunityService {
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = _getFullProfilePhotoUrl(memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url']);
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -1020,12 +1041,16 @@ class CommunityService {
               .eq('id', itemMap['church_id'])
               .single();
           itemMap['church_name'] = churchResponse['name'];
+          itemMap['church_address'] = churchResponse['address']; // 전체 주소 저장
+          print('🏠 COMMUNITY_SERVICE: church_name = ${churchResponse['name']}');
+          print('🏠 COMMUNITY_SERVICE: church_address = ${churchResponse['address']}');
 
           // 주소에서 도시 + 구/동 추출
           if (churchResponse['address'] != null) {
             final location = _extractCityDistrict(churchResponse['address'] as String);
             if (location != null) {
               itemMap['location'] = location;
+              print('🏠 COMMUNITY_SERVICE: extracted location = $location');
             }
           }
         } catch (e) {
@@ -1074,7 +1099,7 @@ class CommunityService {
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = _getFullProfilePhotoUrl(memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url']);
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -1093,6 +1118,18 @@ class CommunityService {
               .eq('id', itemMap['church_id'])
               .single();
           itemMap['church_name'] = churchResponse['name'];
+          itemMap['church_address'] = churchResponse['address']; // 전체 주소 저장
+          print('🏠 COMMUNITY_SERVICE: church_name = ${churchResponse['name']}');
+          print('🏠 COMMUNITY_SERVICE: church_address = ${churchResponse['address']}');
+
+          // 주소에서 도시 + 구/동 추출
+          if (churchResponse['address'] != null) {
+            final location = _extractCityDistrict(churchResponse['address'] as String);
+            if (location != null) {
+              itemMap['location'] = location;
+              print('🏠 COMMUNITY_SERVICE: extracted location = $location');
+            }
+          }
         } catch (e) {
           print('⚠️ COMMUNITY_SERVICE: church 조회 실패 - $e');
         }
@@ -1139,7 +1176,7 @@ class CommunityService {
                 .maybeSingle();
 
             if (memberResponse != null) {
-              itemMap['author_profile_photo_url'] = memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url'];
+              itemMap['author_profile_photo_url'] = _getFullProfilePhotoUrl(memberResponse['mobile_profile_image_url'] ?? memberResponse['profile_photo_url']);
             }
           } catch (e) {
             print('⚠️ COMMUNITY_SERVICE: member profile 조회 실패 - $e');
@@ -1158,12 +1195,16 @@ class CommunityService {
               .eq('id', itemMap['church_id'])
               .single();
           itemMap['church_name'] = churchResponse['name'];
+          itemMap['church_address'] = churchResponse['address']; // 전체 주소 저장
+          print('🏠 COMMUNITY_SERVICE: church_name = ${churchResponse['name']}');
+          print('🏠 COMMUNITY_SERVICE: church_address = ${churchResponse['address']}');
 
           // 주소에서 도시 + 구/동 추출
           if (churchResponse['address'] != null) {
             final location = _extractCityDistrict(churchResponse['address'] as String);
             if (location != null) {
               itemMap['location'] = location;
+              print('🏠 COMMUNITY_SERVICE: extracted location = $location');
             }
           }
         } catch (e) {
@@ -1854,6 +1895,19 @@ class CommunityService {
       print('⚠️ COMMUNITY_SERVICE: 주소 파싱 실패 - $e');
       return null;
     }
+  }
+
+  /// 프로필 사진 URL 변환 (상대 경로 → 절대 경로)
+  String? _getFullProfilePhotoUrl(String? profilePhotoUrl) {
+    if (profilePhotoUrl == null || profilePhotoUrl.isEmpty) return null;
+    if (profilePhotoUrl.startsWith('http')) return profilePhotoUrl;
+
+    const supabaseUrl = 'https://adzhdsajdamrflvybhxq.supabase.co';
+    final cleanPath = profilePhotoUrl.startsWith('/')
+        ? profilePhotoUrl.substring(1)
+        : profilePhotoUrl;
+
+    return '$supabaseUrl/storage/v1/object/public/member-photos/$cleanPath';
   }
 
   // ==========================================================================

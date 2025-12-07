@@ -14,6 +14,7 @@ class MessageBubble extends StatelessWidget {
   final bool isMe;
   final String? otherUserPhotoUrl;
   final bool showProfile; // 프로필 표시 여부 (연속 메시지일 때 false)
+  final VoidCallback? onProfileTap; // 프로필 클릭 콜백
 
   const MessageBubble({
     super.key,
@@ -21,6 +22,7 @@ class MessageBubble extends StatelessWidget {
     required this.isMe,
     this.otherUserPhotoUrl,
     this.showProfile = true,
+    this.onProfileTap,
   });
 
   @override
@@ -91,7 +93,7 @@ class MessageBubble extends StatelessWidget {
       return SizedBox(width: 40.w); // 빈 공간 유지
     }
 
-    return Container(
+    final profileWidget = Container(
       width: 40.w,
       height: 40.w,
       decoration: BoxDecoration(
@@ -123,6 +125,16 @@ class MessageBubble extends StatelessWidget {
               size: 20.sp,
             ),
     );
+
+    // 프로필 클릭 콜백이 있으면 GestureDetector로 감싸기
+    if (onProfileTap != null) {
+      return GestureDetector(
+        onTap: onProfileTap,
+        child: profileWidget,
+      );
+    }
+
+    return profileWidget;
   }
 
   /// 발신자 이름

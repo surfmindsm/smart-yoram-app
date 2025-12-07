@@ -16,6 +16,7 @@ class ChatRoom {
   final String? otherUserPhotoUrl; // 상대방 프로필 사진
   final int? otherUserId; // 상대방 ID
   final String? otherUserChurch; // 상대방 교회
+  final String? otherUserChurchAddress; // 상대방 교회 주소
   final String? otherUserLocation; // 상대방 지역
   final String? postImageUrl; // 상품 이미지
   final int? postPrice; // 상품 가격
@@ -36,6 +37,7 @@ class ChatRoom {
     this.otherUserPhotoUrl,
     this.otherUserId,
     this.otherUserChurch,
+    this.otherUserChurchAddress,
     this.otherUserLocation,
     this.postImageUrl,
     this.postPrice,
@@ -60,6 +62,7 @@ class ChatRoom {
       otherUserPhotoUrl: json['other_user_photo_url'] as String?,
       otherUserId: json['other_user_id'] as int?,
       otherUserChurch: json['other_user_church'] as String?,
+      otherUserChurchAddress: json['other_user_church_address'] as String?,
       otherUserLocation: json['other_user_location'] as String?,
       postImageUrl: json['post_image_url'] as String?,
       postPrice: json['post_price'] as int?,

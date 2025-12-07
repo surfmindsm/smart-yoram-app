@@ -9,6 +9,7 @@ import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/report_service.dart';
 import 'package:smart_yoram_app/models/report_model.dart';
 import 'package:smart_yoram_app/widgets/chat/message_bubble.dart';
+import 'package:smart_yoram_app/widgets/profile_info_dialog.dart';
 import 'package:smart_yoram_app/screens/community/community_detail_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -212,35 +213,39 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 상대방 이름
-            Text(
-              widget.chatRoom.otherUserName ?? '알 수 없음',
-              style: FigmaTextStyles().body1.copyWith(
-                    color: NewAppColor.neutral900,
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            // 교회/지역 정보
-            if (widget.chatRoom.otherUserChurch != null ||
-                widget.chatRoom.otherUserLocation != null)
+        title: GestureDetector(
+          onTap: _showProfileDialog,
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 상대방 이름
               Text(
-                [
-                  widget.chatRoom.otherUserChurch,
-                  widget.chatRoom.otherUserLocation,
-                ].where((e) => e != null && e.isNotEmpty).join(' · '),
-                style: FigmaTextStyles().caption2.copyWith(
-                      color: NewAppColor.neutral600,
-                      fontSize: 12.sp,
+                widget.chatRoom.otherUserName ?? '알 수 없음',
+                style: FigmaTextStyles().body1.copyWith(
+                      color: NewAppColor.neutral900,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
                     ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-          ],
+              // 교회/지역 정보
+              if (widget.chatRoom.otherUserChurch != null ||
+                  widget.chatRoom.otherUserLocation != null)
+                Text(
+                  [
+                    widget.chatRoom.otherUserChurch,
+                    widget.chatRoom.otherUserLocation,
+                  ].where((e) => e != null && e.isNotEmpty).join(' · '),
+                  style: FigmaTextStyles().caption2.copyWith(
+                        color: NewAppColor.neutral600,
+                        fontSize: 12.sp,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
         ),
         actions: [
           // 더보기 버튼
@@ -300,6 +305,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                               otherUserPhotoUrl:
                                   widget.chatRoom.otherUserPhotoUrl,
                               showProfile: showProfile,
+                              onProfileTap: isMe ? null : _showProfileDialog,
                             );
                           },
                         ),
@@ -743,6 +749,18 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// 상대방 프로필 다이얼로그 표시
+  void _showProfileDialog() {
+    ProfileInfoDialog.show(
+      context,
+      name: widget.chatRoom.otherUserName ?? '알 수 없음',
+      churchName: widget.chatRoom.otherUserChurch,
+      location: widget.chatRoom.otherUserLocation,
+      churchAddress: widget.chatRoom.otherUserChurchAddress,
+      profileImageUrl: widget.chatRoom.otherUserPhotoUrl,
     );
   }
 

@@ -14,6 +14,7 @@ import 'package:smart_yoram_app/services/notification_service.dart';
 import 'package:smart_yoram_app/services/report_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
 import 'package:smart_yoram_app/models/report_model.dart';
+import 'package:smart_yoram_app/widgets/profile_info_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_create_screen.dart';
@@ -650,6 +651,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? authorName = '';
     String? authorProfilePhotoUrl = '';
     String? churchName = '';
+    String? churchAddress = '';
     String? churchLocation = '';
     String? category; // 카테고리
     String? status; // 상태
@@ -665,6 +667,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       authorName = post.authorName;
       authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
+      churchAddress = post.churchAddress;
       churchLocation = post.displayLocation; // province + district
       category = post.category;
       status = post.statusDisplayName;
@@ -678,6 +681,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       authorName = post.authorName;
       authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
+      churchAddress = post.churchAddress;
       churchLocation = post.displayLocation;
       category = post.category;
       status = post.statusDisplayName;
@@ -690,6 +694,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       authorName = post.authorName;
       authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
+      churchAddress = post.churchAddress;
       churchLocation = post.location;
     } else if (_post is MusicTeamRecruitment) {
       final post = _post as MusicTeamRecruitment;
@@ -700,6 +705,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       authorName = post.authorName;
       authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
+      churchAddress = post.churchAddress;
       // 프로필에는 province + district만 표시 (상세주소 제외)
       churchLocation = [post.province, post.district]
           .where((e) => e != null && e.isNotEmpty)
@@ -713,6 +719,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       authorName = post.authorName;
       authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
+      churchAddress = post.churchAddress;
     } else if (_post is ChurchNews) {
       final post = _post as ChurchNews;
       title = post.title;
@@ -723,6 +730,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       authorName = post.authorName;
       authorProfilePhotoUrl = post.authorProfilePhotoUrl;
       churchName = post.churchName;
+      churchAddress = post.churchAddress;
       churchLocation = post.location;
     }
 
@@ -800,17 +808,17 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           // === 무료나눔/물품판매 전용 레이아웃 ===
           if (_post is SharingItem) ...[
             _buildSharingLayout(_post as SharingItem, date, authorName,
-                authorProfilePhotoUrl, churchName, churchLocation, description),
+                authorProfilePhotoUrl, churchName, churchLocation, churchAddress, description),
           ]
           // === 물품요청 전용 레이아웃 ===
           else if (_post is RequestItem) ...[
             _buildRequestLayout(_post as RequestItem, date, authorName,
-                authorProfilePhotoUrl, churchName, churchLocation, description),
+                authorProfilePhotoUrl, churchName, churchLocation, churchAddress, description),
           ]
           // === 사역자 모집 전용 레이아웃 ===
           else if (_post is JobPost) ...[
             _buildJobPostingLayout(_post as JobPost, date, authorName,
-                authorProfilePhotoUrl, churchName, churchLocation, description),
+                authorProfilePhotoUrl, churchName, churchLocation, churchAddress, description),
           ]
           // === 행사팀 모집 전용 레이아웃 ===
           else if (_post is MusicTeamRecruitment) ...[
@@ -821,17 +829,18 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 authorProfilePhotoUrl,
                 churchName,
                 churchLocation,
+                churchAddress,
                 description),
           ]
           // === 행사팀 지원 전용 레이아웃 ===
           else if (_post is MusicTeamSeeker) ...[
             _buildMusicTeamSeekerLayout(_post as MusicTeamSeeker, date,
-                authorName, authorProfilePhotoUrl, churchName),
+                authorName, authorProfilePhotoUrl, churchName, churchAddress),
           ]
           // === 행사 소식 전용 레이아웃 ===
           else if (_post is ChurchNews) ...[
             _buildChurchNewsLayout(_post as ChurchNews, date,
-                authorName, authorProfilePhotoUrl, churchName),
+                authorName, authorProfilePhotoUrl, churchName, churchAddress),
           ]
           // === 기타 게시글 기본 레이아웃 ===
           else ...[
@@ -841,44 +850,54 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               padding: EdgeInsets.all(16.r),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      // 프로필 이미지
-                      _buildProfileImage(authorProfilePhotoUrl),
-                      SizedBox(width: 12.w),
-                      // 작성자 정보
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              authorName ?? '알 수 없음',
-                              style: TextStyle(
-                                color: NewAppColor.neutral900,
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Pretendard Variable',
+                  GestureDetector(
+                    onTap: () => _showAuthorProfileDialog(
+                      name: authorName ?? '알 수 없음',
+                      churchName: churchName,
+                      location: churchLocation,
+                      churchAddress: churchAddress,
+                      profileImageUrl: authorProfilePhotoUrl,
+                    ),
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      children: [
+                        // 프로필 이미지
+                        _buildProfileImage(authorProfilePhotoUrl),
+                        SizedBox(width: 12.w),
+                        // 작성자 정보
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                authorName ?? '알 수 없음',
+                                style: TextStyle(
+                                  color: NewAppColor.neutral900,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Pretendard Variable',
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              [
-                                if (churchName != null && churchName.isNotEmpty)
-                                  churchName,
-                                if (churchLocation != null &&
-                                    churchLocation.isNotEmpty)
-                                  churchLocation,
-                              ].join(' · '),
-                              style: TextStyle(
-                                color: NewAppColor.neutral600,
-                                fontSize: 13.sp,
-                                fontFamily: 'Pretendard Variable',
+                              SizedBox(height: 4.h),
+                              Text(
+                                [
+                                  if (churchName != null && churchName.isNotEmpty)
+                                    churchName,
+                                  if (churchLocation != null &&
+                                      churchLocation.isNotEmpty)
+                                    churchLocation,
+                                ].join(' · '),
+                                style: TextStyle(
+                                  color: NewAppColor.neutral600,
+                                  fontSize: 13.sp,
+                                  fontFamily: 'Pretendard Variable',
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   // 작성자인 경우 상태 변경 드롭다운 표시
                   if (_isAuthor()) ...[
@@ -1064,6 +1083,24 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// 작성자 프로필 다이얼로그 표시
+  void _showAuthorProfileDialog({
+    required String name,
+    String? churchName,
+    String? location,
+    String? churchAddress,
+    String? profileImageUrl,
+  }) {
+    ProfileInfoDialog.show(
+      context,
+      name: name,
+      churchName: churchName,
+      location: location,
+      churchAddress: churchAddress,
+      profileImageUrl: profileImageUrl,
     );
   }
 
@@ -3134,6 +3171,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? authorProfilePhotoUrl,
     String? churchName,
     String? churchLocation,
+    String? churchAddress,
     String? description,
   ) {
     return Column(
@@ -3143,45 +3181,55 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         Container(
           color: NewAppColor.neutral100,
           padding: EdgeInsets.all(20.r),
-          child: Row(
-            children: [
-              // 프로필 이미지
-              _buildProfileImage(authorProfilePhotoUrl),
-              SizedBox(width: 12.w),
-              // 사용자 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 사용자 이름
-                    Text(
-                      authorName ?? '알 수 없음',
-                      style: FigmaTextStyles().body1.copyWith(
-                            color: NewAppColor.neutral900,
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    SizedBox(height: 4.h),
-                    // 교회 정보 + 지역
-                    Text(
-                      [
-                        if (churchName != null && churchName.isNotEmpty)
-                          churchName
-                        else
-                          '커뮤니티 회원',
-                        if (churchLocation != null && churchLocation.isNotEmpty)
-                          churchLocation,
-                      ].join(' · '),
-                      style: FigmaTextStyles().body2.copyWith(
-                            color: NewAppColor.neutral600,
-                            fontSize: 13.sp,
-                          ),
-                    ),
-                  ],
+          child: GestureDetector(
+            onTap: () => _showAuthorProfileDialog(
+              name: authorName ?? '알 수 없음',
+              churchName: churchName,
+              location: churchLocation,
+              churchAddress: churchAddress,
+              profileImageUrl: authorProfilePhotoUrl,
+            ),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                // 프로필 이미지
+                _buildProfileImage(authorProfilePhotoUrl),
+                SizedBox(width: 12.w),
+                // 사용자 정보
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 사용자 이름
+                      Text(
+                        authorName ?? '알 수 없음',
+                        style: FigmaTextStyles().body1.copyWith(
+                              color: NewAppColor.neutral900,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      SizedBox(height: 4.h),
+                      // 교회 정보 + 지역
+                      Text(
+                        [
+                          if (churchName != null && churchName.isNotEmpty)
+                            churchName
+                          else
+                            '커뮤니티 회원',
+                          if (churchLocation != null && churchLocation.isNotEmpty)
+                            churchLocation,
+                        ].join(' · '),
+                        style: FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral600,
+                              fontSize: 13.sp,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
 
@@ -3439,6 +3487,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? authorProfilePhotoUrl,
     String? churchName,
     String? churchLocation,
+    String? churchAddress,
     String? description,
   ) {
     // 직책 표시명 변환
@@ -3484,45 +3533,55 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         Container(
           color: NewAppColor.neutral100,
           padding: EdgeInsets.all(20.r),
-          child: Row(
-            children: [
-              // 프로필 이미지
-              _buildProfileImage(authorProfilePhotoUrl),
-              SizedBox(width: 12.w),
-              // 사용자 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 사용자 이름
-                    Text(
-                      authorName ?? '알 수 없음',
-                      style: FigmaTextStyles().body1.copyWith(
-                            color: NewAppColor.neutral900,
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    SizedBox(height: 4.h),
-                    // 교회 정보 + 지역
-                    Text(
-                      [
-                        if (churchName != null && churchName.isNotEmpty)
-                          churchName
-                        else
-                          '커뮤니티 회원',
-                        if (churchLocation != null && churchLocation.isNotEmpty)
-                          churchLocation,
-                      ].join(' · '),
-                      style: FigmaTextStyles().body2.copyWith(
-                            color: NewAppColor.neutral600,
-                            fontSize: 13.sp,
-                          ),
-                    ),
-                  ],
+          child: GestureDetector(
+            onTap: () => _showAuthorProfileDialog(
+              name: authorName ?? '알 수 없음',
+              churchName: churchName,
+              location: churchLocation,
+              churchAddress: churchAddress,
+              profileImageUrl: authorProfilePhotoUrl,
+            ),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                // 프로필 이미지
+                _buildProfileImage(authorProfilePhotoUrl),
+                SizedBox(width: 12.w),
+                // 사용자 정보
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 사용자 이름
+                      Text(
+                        authorName ?? '알 수 없음',
+                        style: FigmaTextStyles().body1.copyWith(
+                              color: NewAppColor.neutral900,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      SizedBox(height: 4.h),
+                      // 교회 정보 + 지역
+                      Text(
+                        [
+                          if (churchName != null && churchName.isNotEmpty)
+                            churchName
+                          else
+                            '커뮤니티 회원',
+                          if (churchLocation != null && churchLocation.isNotEmpty)
+                            churchLocation,
+                        ].join(' · '),
+                        style: FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral600,
+                              fontSize: 13.sp,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
 
@@ -3687,6 +3746,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? authorProfilePhotoUrl,
     String? churchName,
     String? churchLocation,
+    String? churchAddress,
     String? description,
   ) {
     // 보상 정보 포맷팅
@@ -3978,6 +4038,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? authorName,
     String? authorProfilePhotoUrl,
     String? churchName,
+    String? churchAddress,
   ) {
     // 팀 형태 표시 텍스트 변환
     final teamTypeLabels = {
@@ -4628,6 +4689,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? authorProfilePhotoUrl,
     String? churchName,
     String? churchLocation,
+    String? churchAddress,
     String? description,
   ) {
     // 행사 유형 표시명 변환
@@ -4694,45 +4756,55 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         Container(
           color: NewAppColor.neutral100,
           padding: EdgeInsets.all(20.r),
-          child: Row(
-            children: [
-              // 프로필 이미지
-              _buildProfileImage(authorProfilePhotoUrl),
-              SizedBox(width: 12.w),
-              // 사용자 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 사용자 이름
-                    Text(
-                      authorName ?? '알 수 없음',
-                      style: FigmaTextStyles().body1.copyWith(
-                            color: NewAppColor.neutral900,
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    SizedBox(height: 4.h),
-                    // 교회 정보 + 지역
-                    Text(
-                      [
-                        if (churchName != null && churchName.isNotEmpty)
-                          churchName
-                        else
-                          '커뮤니티 회원',
-                        if (churchLocation != null && churchLocation.isNotEmpty)
-                          churchLocation,
-                      ].join(' · '),
-                      style: FigmaTextStyles().body2.copyWith(
-                            color: NewAppColor.neutral600,
-                            fontSize: 13.sp,
-                          ),
-                    ),
-                  ],
+          child: GestureDetector(
+            onTap: () => _showAuthorProfileDialog(
+              name: authorName ?? '알 수 없음',
+              churchName: churchName,
+              location: churchLocation,
+              churchAddress: churchAddress,
+              profileImageUrl: authorProfilePhotoUrl,
+            ),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                // 프로필 이미지
+                _buildProfileImage(authorProfilePhotoUrl),
+                SizedBox(width: 12.w),
+                // 사용자 정보
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 사용자 이름
+                      Text(
+                        authorName ?? '알 수 없음',
+                        style: FigmaTextStyles().body1.copyWith(
+                              color: NewAppColor.neutral900,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      SizedBox(height: 4.h),
+                      // 교회 정보 + 지역
+                      Text(
+                        [
+                          if (churchName != null && churchName.isNotEmpty)
+                            churchName
+                          else
+                            '커뮤니티 회원',
+                          if (churchLocation != null && churchLocation.isNotEmpty)
+                            churchLocation,
+                        ].join(' · '),
+                        style: FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral600,
+                              fontSize: 13.sp,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
 
@@ -5055,6 +5127,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     String? authorName,
     String? authorProfilePhotoUrl,
     String? churchName,
+    String? churchAddress,
   ) {
     // 카테고리 표시 텍스트 변환
     final categoryLabels = {

@@ -66,6 +66,7 @@ abstract class CommunityBasePost {
   final String? authorProfilePhotoUrl;
   final int? churchId;
   final String? churchName;
+  final String? churchAddress;
   final int viewCount;
   final int likes;
   final int? comments;
@@ -82,6 +83,7 @@ abstract class CommunityBasePost {
     this.authorProfilePhotoUrl,
     this.churchId,
     this.churchName,
+    this.churchAddress,
     this.viewCount = 0,
     this.likes = 0,
     this.comments,
@@ -148,6 +150,7 @@ class SharingItem extends CommunityBasePost {
     super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
+    super.churchAddress,
     super.viewCount,
     super.likes,
     super.comments,
@@ -181,10 +184,13 @@ class SharingItem extends CommunityBasePost {
     }
 
     String? churchName;
+    String? churchAddress;
     if (json['church'] != null && json['church'] is Map) {
       churchName = json['church']['name'];
+      churchAddress = json['church']['address'];
     } else {
       churchName = json['church_name'] ?? json['church'];
+      churchAddress = json['church_address'];
     }
 
     // images 파싱: JSON 문자열인 경우 처리
@@ -214,6 +220,7 @@ class SharingItem extends CommunityBasePost {
       authorProfilePhotoUrl: authorProfilePhotoUrl,
       churchId: json['church_id'],
       churchName: churchName,
+      churchAddress: churchAddress,
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
@@ -349,6 +356,7 @@ class RequestItem extends CommunityBasePost {
     super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
+    super.churchAddress,
     super.viewCount,
     super.likes,
     super.comments,
@@ -381,10 +389,13 @@ class RequestItem extends CommunityBasePost {
     }
 
     String? churchName;
+    String? churchAddress;
     if (json['church'] != null && json['church'] is Map) {
       churchName = json['church']['name'];
+      churchAddress = json['church']['address'];
     } else {
       churchName = json['church_name'] ?? json['church'];
+      churchAddress = json['church_address'];
     }
 
     // images 파싱: JSON 문자열인 경우 처리
@@ -414,6 +425,7 @@ class RequestItem extends CommunityBasePost {
       authorProfilePhotoUrl: authorProfilePhotoUrl,
       churchId: json['church_id'],
       churchName: churchName,
+      churchAddress: churchAddress,
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
@@ -530,6 +542,7 @@ class JobPost extends CommunityBasePost {
     super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
+    super.churchAddress,
     super.viewCount,
     super.likes,
     super.comments,
@@ -582,6 +595,7 @@ class JobPost extends CommunityBasePost {
       authorProfilePhotoUrl: json['author_profile_photo_url'],
       churchId: json['church_id'],
       churchName: json['churchName'] ?? json['church_name'],
+      churchAddress: json['church_address'],
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
@@ -642,6 +656,7 @@ class MusicTeamRecruitment extends CommunityBasePost {
     super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
+    super.churchAddress,
     super.viewCount,
     super.likes,
     super.comments,
@@ -690,6 +705,7 @@ class MusicTeamRecruitment extends CommunityBasePost {
       authorProfilePhotoUrl: json['author_profile_photo_url'],
       churchId: json['church_id'],
       churchName: json['church_name'],
+      churchAddress: json['church_address'],
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
@@ -766,6 +782,7 @@ class MusicTeamSeeker extends CommunityBasePost {
     super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
+    super.churchAddress,
     super.viewCount,
     super.likes,
     super.comments,
@@ -798,6 +815,7 @@ class MusicTeamSeeker extends CommunityBasePost {
       authorProfilePhotoUrl: json['author_profile_photo_url'],
       churchId: json['church_id'],
       churchName: json['church_name'],
+      churchAddress: json['church_address'],
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],
@@ -857,6 +875,7 @@ class ChurchNews extends CommunityBasePost {
     super.authorProfilePhotoUrl,
     super.churchId,
     super.churchName,
+    super.churchAddress,
     super.viewCount,
     super.likes,
     super.comments,
@@ -890,6 +909,7 @@ class ChurchNews extends CommunityBasePost {
       authorProfilePhotoUrl: json['author_profile_photo_url'],
       churchId: json['churchId'] ?? json['church_id'],
       churchName: json['churchName'] ?? json['church_name'],
+      churchAddress: json['church_address'],
       viewCount: json['view_count'] ?? 0,
       likes: json['likes'] ?? 0,
       comments: json['comments'],

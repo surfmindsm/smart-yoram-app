@@ -159,6 +159,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
                           _selectedOption = 'new';
                         });
                       },
+                      showSelectionUI: widget.member.fullProfilePhotoUrl != null, // 교회 이미지가 없으면 선택 UI 숨김
                       child: Column(
                         children: [
                           SizedBox(height: 16.h),
@@ -279,16 +280,21 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
     required bool isSelected,
     required VoidCallback onTap,
     required Widget child,
+    bool showSelectionUI = true, // 선택 UI 표시 여부
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: isSelected ? NewAppColor.primary100 : Colors.white,
+          color: showSelectionUI
+              ? (isSelected ? NewAppColor.primary100 : Colors.white)
+              : Colors.white,
           border: Border.all(
-            color: isSelected ? NewAppColor.primary500 : NewAppColor.neutral200,
-            width: isSelected ? 2 : 1,
+            color: showSelectionUI
+                ? (isSelected ? NewAppColor.primary500 : NewAppColor.neutral200)
+                : NewAppColor.neutral200,
+            width: showSelectionUI && isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(16.r),
         ),
@@ -297,15 +303,16 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  isSelected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: isSelected
-                      ? NewAppColor.primary500
-                      : NewAppColor.neutral400,
-                ),
-                SizedBox(width: 12.w),
+                if (showSelectionUI)
+                  Icon(
+                    isSelected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    color: isSelected
+                        ? NewAppColor.primary500
+                        : NewAppColor.neutral400,
+                  ),
+                if (showSelectionUI) SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

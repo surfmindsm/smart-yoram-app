@@ -203,6 +203,7 @@ class ChatService {
 
     String? otherUserPhotoUrl;
     String? otherUserChurch;
+    String? otherUserChurchAddress;
     String? otherUserLocation;
     if (otherParticipant != null) {
       final otherUserId = otherParticipant['user_id'] as int;
@@ -211,10 +212,10 @@ class ChatService {
       try {
         print('🔍 CHAT_SERVICE: 상대방 정보 조회 시작 - otherUserId: $otherUserId');
 
-        // 1. members 테이블에서 프로필 사진과 church_id 조회
+        // 1. members 테이블에서 프로필 사진과 church_id 조회 (모바일 프로필 우선)
         final member = await _supabaseService.client
             .from('members')
-            .select('profile_photo_url, church_id')
+            .select('profile_photo_url, mobile_profile_image_url, church_id')
             .eq('user_id', otherUserId)
             .maybeSingle();
 
@@ -223,9 +224,14 @@ class ChatService {
         int? churchId;
 
         if (member != null) {
-          // 프로필 사진 설정
-          if (member['profile_photo_url'] != null) {
-            otherUserPhotoUrl = _getFullProfilePhotoUrl(member['profile_photo_url'] as String);
+          // 프로필 사진 설정 (모바일 프로필 우선)
+          final mobilePhotoUrl = member['mobile_profile_image_url'] as String?;
+          final churchPhotoUrl = member['profile_photo_url'] as String?;
+          final photoUrl = mobilePhotoUrl ?? churchPhotoUrl;
+
+          if (photoUrl != null) {
+            otherUserPhotoUrl = _getFullProfilePhotoUrl(photoUrl);
+            print('✅ CHAT_SERVICE: 프로필 사진 설정 - 모바일: ${mobilePhotoUrl != null}, URL: $otherUserPhotoUrl');
           }
           churchId = member['church_id'] as int?;
         } else {
@@ -255,7 +261,7 @@ class ChatService {
           } else {
             final church = await _supabaseService.client
                 .from('churches')
-                .select('name')
+                .select('name, address')
                 .eq('id', churchId)
                 .maybeSingle();
 
@@ -263,7 +269,9 @@ class ChatService {
 
             if (church != null) {
               otherUserChurch = church['name'] as String?;
+              otherUserChurchAddress = church['address'] as String?;
               print('✅ CHAT_SERVICE: 교회 이름 설정 - $otherUserChurch');
+              print('✅ CHAT_SERVICE: 교회 주소 설정 - $otherUserChurchAddress');
             }
           }
         }
@@ -352,6 +360,7 @@ class ChatService {
       otherUserPhotoUrl: otherUserPhotoUrl,
       otherUserId: otherParticipant?['user_id'] as int?,
       otherUserChurch: otherUserChurch,
+      otherUserChurchAddress: otherUserChurchAddress,
       otherUserLocation: otherUserLocation,
       postImageUrl: postImageUrl,
       postPrice: postPrice,
@@ -525,6 +534,7 @@ class ChatService {
           otherUserPhotoUrl: chatRoom.otherUserPhotoUrl,
           otherUserId: chatRoom.otherUserId,
           otherUserChurch: chatRoom.otherUserChurch,
+          otherUserChurchAddress: chatRoom.otherUserChurchAddress,
           otherUserLocation: chatRoom.otherUserLocation,
           postImageUrl: chatRoom.postImageUrl,
           postPrice: chatRoom.postPrice,
