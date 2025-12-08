@@ -50,7 +50,8 @@ void main() async {
   // Supabase 초기화 (Firebase보다 먼저 - FCMService에서 사용하므로)
   await Supabase.initialize(
     url: 'https://adzhdsajdamrflvybhxq.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
   );
   print('✅ Supabase 초기화 완료');
 
@@ -126,13 +127,17 @@ class MyApp extends ConsumerWidget {
                   '/settings': (context) => const SettingsScreen(),
                   '/chat': (context) => const ChatListScreen(),
                   // Signup routes
-                  '/signup/selection': (context) => const SignupSelectionScreen(),
+                  '/signup/selection': (context) =>
+                      const SignupSelectionScreen(),
                   '/signup/church': (context) => const ChurchSignupScreen(),
-                  '/signup/community': (context) => const CommunitySignupScreen(),
+                  '/signup/community': (context) =>
+                      const CommunitySignupScreen(),
                   '/signup/success': (context) => const SignupSuccessScreen(),
                   // Admin routes
-                  '/admin/members': (context) => const AdminMemberManagementScreen(),
-                  '/admin/pastoral-care': (context) => const AdminPastoralCareListScreen(),
+                  '/admin/members': (context) =>
+                      const AdminMemberManagementScreen(),
+                  '/admin/pastoral-care': (context) =>
+                      const AdminPastoralCareListScreen(),
                   '/admin/notices': (context) => const AdminNoticeListScreen(),
                 },
               ),
@@ -244,13 +249,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
               const SizedBox(height: 40),
               const CircularProgressIndicator(),
               const SizedBox(height: 16),
-              const Text(
-                '로딩 중...',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
             ],
           ),
         ),

@@ -387,7 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: Row(
                                   children: [
                                     Text(
-                                      '아이디/비밀번호 찾기',
+                                      '비밀번호 찾기',
                                       style: figmaStyles.captionText1.copyWith(
                                         color: NewAppColor.neutral500,
                                         fontFamily: 'Pretendard Variable',
@@ -694,106 +694,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _forgotPassword() async {
-    final TextEditingController emailController = TextEditingController();
-    bool isLoading = false;
-
-    return showDialog(
+    showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('비밀번호 찾기'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('등록된 이메일을 입력하시면\n비밀번호 재설정 링크를 전송해드립니다.'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: '이메일',
-                  hintText: 'your-email@example.com',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.pop(context),
-              child: const Text('취소'),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      final email = emailController.text.trim();
-                      if (email.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('이메일을 입력해주세요')),
-                        );
-                        return;
-                      }
-
-                      if (!email.contains('@')) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('유효한 이메일 주소를 입력해주세요')),
-                        );
-                        return;
-                      }
-
-                      setState(() {
-                        isLoading = true;
-                      });
-
-                      try {
-                        // 비밀번호 재설정 API 호출
-                        final result =
-                            await _authService.requestPasswordReset(email);
-
-                        if (mounted) {
-                          Navigator.pop(context);
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(result.message),
-                              backgroundColor:
-                                  result.success ? Colors.green : Colors.red,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          setState(() {
-                            isLoading = false;
-                          });
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('오류가 발생했습니다: $e'),
-                              backgroundColor:
-                                  Color.fromARGB(255, 191, 156, 163),
-                            ),
-                          );
-                        }
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade700,
-                foregroundColor: Colors.white,
-              ),
-              child: isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text('전송'),
-            ),
-          ],
-        ),
-      ),
+      builder: (context) => _ForgotPasswordDialog(authService: _authService),
     );
   }
 
@@ -1098,6 +1001,154 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
         setState(() {
           _isLoading = false;
         });
+      }
+    }
+  }
+}
+
+// 비밀번호 찾기 다이얼로그 위젯
+class _ForgotPasswordDialog extends StatefulWidget {
+  final AuthService authService;
+
+  const _ForgotPasswordDialog({required this.authService});
+
+  @override
+  _ForgotPasswordDialogState createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppDialog(
+      title: '비밀번호 찾기',
+      description: '등록된 이메일과 전화번호를 입력하시면\n임시 비밀번호를 이메일로 전송해드립니다.',
+      dismissible: true,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppInput(
+            label: '이메일',
+            placeholder: 'your-email@example.com',
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            required: true,
+          ),
+          const SizedBox(height: 16),
+          AppInput(
+            label: '전화번호',
+            placeholder: '01012345678 (숫자만)',
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            required: true,
+          ),
+        ],
+      ),
+      actions: [
+        AppButton(
+          text: '취소',
+          variant: ButtonVariant.ghost,
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+        ),
+        AppButton(
+          text: '전송',
+          variant: ButtonVariant.primary,
+          onPressed: _isLoading ? null : _sendResetLink,
+          isLoading: _isLoading,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _sendResetLink() async {
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+
+    // 이메일 검증
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이메일을 입력해주세요'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('유효한 이메일 주소를 입력해주세요'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // 전화번호 검증
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('전화번호를 입력해주세요'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // 전화번호에서 숫자만 추출
+    final phoneDigits = phone.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (phoneDigits.length < 9 || phoneDigits.length > 11) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('유효한 전화번호를 입력해주세요 (9-11자리)'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 비밀번호 재설정 API 호출 (이메일 + 전화번호)
+      final result = await widget.authService.requestPasswordReset(email, phoneDigits);
+
+      if (mounted) {
+        Navigator.pop(context);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message),
+            backgroundColor: result.success ? Colors.green : Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Map<String, dynamic>? churchInfo;
   Map<String, dynamic>? userStats;
   bool isLoading = true;
-  bool _isChurchCardExpanded = false; // 교회 카드 펼침 상태 (초기값: 닫힘)
+  bool _isChurchCardExpanded = true; // 교회 카드 펼침 상태 (초기값: 펼침)
   bool _isWorshipScheduleExpanded = false; // 예배시간 카드 펼침 상태 (초기값: 닫힘)
   final ScrollController _scrollController = ScrollController(); // 스크롤 컨트롤러
   final GlobalKey _worshipKey = GlobalKey(); // 예배시간안내 위젯 키
@@ -118,6 +118,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           currentChurch = essentialData.church;
           isLoading = false; // 로딩 완료
         });
+
+        // 교회 정보 로그
+        print('🏦 HOME: === 교회 정보 로드 완료 ===');
+        if (currentChurch != null) {
+          print('🏦 HOME: 교회명: ${currentChurch!.name}');
+          print('🏦 HOME: 전화번호: ${currentChurch!.phone}');
+          print('🏦 HOME: 주소: ${currentChurch!.address}');
+        } else {
+          print('❌ HOME: currentChurch가 null입니다');
+        }
 
         // 프로필 이미지 디버깅 로그
         print('📸 PROFILE_IMAGE: === 프로필 이미지 로그 시작 ===');
@@ -617,34 +627,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // === 교인 기능 섹션 ===
-
-                    // 1. 오늘의 말씀
-                    _buildTodaysVerse(),
-                    const SizedBox(height: 24),
-
-                    // 2. 주요 기능 (심방신청, 중보기도)
-                    _buildQuickActions(),
-                    const SizedBox(height: 24),
-
-                    // === 교회 정보 섹션 ===
-
-                    // 3. 교회 정보
+                    // 1. 교회 소개
                     _buildChurchInfoCard(),
                     const SizedBox(height: 24),
 
-                    // 4. 교회 소식 (공지사항)
+                    // 2. 교회 소식 (공지사항)
                     _buildRecentAnnouncements(),
                     const SizedBox(height: 24),
 
-                    // 5. 예배안내
+                    // 3. 주요 기능 (심방신청, 중보기도)
+                    _buildQuickActions(),
+                    const SizedBox(height: 24),
+
+                    // 4. 예배시간 안내
                     Container(
                       key: _worshipKey,
                       child: _buildWorshipSchedule(),
                     ),
                     const SizedBox(height: 24),
 
-                    // 6. 바로가기 (홈페이지, 유튜브)
+                    // 5. 바로가기 (홈페이지, 유튜브)
                     _buildQuickLinks(),
                     const SizedBox(height: 24),
                   ],
@@ -941,11 +943,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Row(
                     children: [
                       Expanded(
-                        child: GestureDetector(
+                        child: InkWell(
                           onTap: () {
-                            final phone = currentChurch?.phone ?? '031-563-5210';
+                            print('📞 HOME: 전화 섹션 클릭됨!');
+                            // 전화번호 유효성 검사 (최소 9자리 이상, 숫자와 하이픈만 포함)
+                            String phone = currentChurch?.phone ?? '031-563-5210';
+                            if (phone.replaceAll(RegExp(r'[^\d]'), '').length < 9) {
+                              print('⚠️ HOME: 유효하지 않은 전화번호, fallback 사용');
+                              phone = '031-563-5210';
+                            }
                             _makePhoneCall(phone);
                           },
+                          borderRadius: BorderRadius.circular(12.r),
                           child: Container(
                             padding: EdgeInsets.all(12.r),
                             decoration: BoxDecoration(
@@ -2049,35 +2058,63 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  // 한국 전화번호 포맷팅 (하이픈 추가)
+  String _formatPhoneNumber(String phoneNumber) {
+    // 숫자만 추출
+    String digits = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+
+    print('📞 HOME: 원본 전화번호: $phoneNumber');
+    print('📞 HOME: 숫자만 추출: $digits');
+
+    // 이미 하이픈이 있는 경우 그대로 반환
+    if (phoneNumber.contains('-')) {
+      print('📞 HOME: 하이픈이 이미 포함됨, 그대로 사용');
+      return phoneNumber;
+    }
+
+    // 한국 전화번호 형식에 맞게 하이픈 추가
+    if (digits.length == 10) {
+      // 10자리: 지역번호(3자리) + 중간(3자리) + 끝(4자리)
+      // 예: 0638566240 -> 063-856-6240
+      final formatted = '${digits.substring(0, 3)}-${digits.substring(3, 6)}-${digits.substring(6)}';
+      print('📞 HOME: 10자리 포맷팅: $formatted');
+      return formatted;
+    } else if (digits.length == 11) {
+      // 11자리: 010-XXXX-XXXX
+      final formatted = '${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}';
+      print('📞 HOME: 11자리 포맷팅: $formatted');
+      return formatted;
+    } else if (digits.length == 9) {
+      // 9자리: 02-XXX-XXXX (서울)
+      final formatted = '${digits.substring(0, 2)}-${digits.substring(2, 5)}-${digits.substring(5)}';
+      print('📞 HOME: 9자리 포맷팅: $formatted');
+      return formatted;
+    }
+
+    // 기타 경우는 그대로 반환
+    print('📞 HOME: 알 수 없는 형식, 원본 사용');
+    return phoneNumber;
+  }
+
   // 전화 걸기 메서드
   Future<void> _makePhoneCall(String phoneNumber) async {
-    try {
-      // 전화번호에서 공백과 대시 제거
-      final cleanNumber = phoneNumber.replaceAll(RegExp(r'[\s-]'), '');
-      final Uri telUri = Uri.parse('tel:$cleanNumber');
+    print('📞 HOME: _makePhoneCall 호출됨 - 전화번호: $phoneNumber');
 
-      // iOS 시뮬레이터에서는 전화 기능이 제한되므로 try-catch로 처리
-      try {
-        await launchUrl(telUri, mode: LaunchMode.externalApplication);
-      } catch (e) {
-        print('전화 걸기 오류: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('전화를 걸 수 없습니다.\niOS 시뮬레이터에서는 전화 기능이 제한됩니다.\n실제 기기에서 테스트해주세요.'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    } catch (e) {
+    // 전화번호 포맷팅 (하이픈 추가)
+    final formattedNumber = _formatPhoneNumber(phoneNumber);
+    print('📞 HOME: 포맷팅 완료: $formattedNumber');
+
+    final Uri phoneUri = Uri(scheme: 'tel', path: formattedNumber);
+    print('📞 HOME: tel URI 생성 완료: $phoneUri');
+
+    if (await canLaunchUrl(phoneUri)) {
+      print('📞 HOME: canLaunchUrl = true, 전화 앱 실행 중...');
+      await launchUrl(phoneUri);
+    } else {
+      print('📞 HOME: canLaunchUrl = false, 전화를 걸 수 없음');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('전화 연결 오류: $e'),
-            backgroundColor: Colors.red,
-          ),
+          const SnackBar(content: Text('전화를 걸 수 없습니다')),
         );
       }
     }

@@ -222,9 +222,13 @@ class HomeDataService {
     }
   }
 
-  /// 🏛️ 교회 정보 로드 (캐시 우선)
+  /// 🏛️ 교회 정보 로드 (캐시 무시하고 항상 새로 로드)
   Future<Church?> _loadChurchInfo() async {
     try {
+      // 🧪 테스트를 위해 캐시 무시하고 새로 로드
+      print('🧪 HOME_DATA: 캐시 무시하고 교회 정보 새로 로드');
+
+      /*
       final cached = await _cacheService.getCachedData<Church>(
         'church_data',
         fromJson: (json) => Church.fromJson(json),
@@ -234,9 +238,14 @@ class HomeDataService {
         print('🏛️ HOME_DATA: 캐시된 교회 정보 사용');
         return cached;
       }
+      */
 
       final churchResponse = await _churchService.getMyChurch();
       if (churchResponse.success && churchResponse.data != null) {
+        print('✅ HOME_DATA: 교회 정보 API 로드 성공');
+        print('  - 교회명: ${churchResponse.data!.name}');
+        print('  - 전화번호: ${churchResponse.data!.phone}');
+
         await _cacheService.cacheData(
           'church_data',
           churchResponse.data!.toJson(),

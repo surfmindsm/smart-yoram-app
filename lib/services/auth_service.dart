@@ -184,20 +184,43 @@ class AuthService {
     }
   }
 
-  // 비밀번호 재설정 요청 (Supabase Auth 사용)
-  Future<ApiResponse<String>> requestPasswordReset(String email) async {
+  // 비밀번호 재설정 요청 (Supabase Edge Function + Resend 사용)
+  Future<ApiResponse<String>> requestPasswordReset(String email, String phone) async {
     try {
-      await _supabaseService.client.auth.resetPasswordForEmail(email);
+      print('🔐 AUTH_SERVICE: 비밀번호 재설정 요청 - email: $email, phone: $phone');
 
-      return ApiResponse<String>(
-        success: true,
-        message: '비밀번호 재설정 이메일이 전송되었습니다.',
-        data: 'success',
+      // Supabase Edge Function 호출 (reset-password)
+      final response = await _supabaseService.client.functions.invoke(
+        'reset-password',
+        body: {
+          'email': email,
+          'phone': phone,
+        },
       );
+
+      print('📧 AUTH_SERVICE: Edge Function 응답 - ${response.data}');
+
+      // Edge Function 응답 파싱
+      final responseData = response.data as Map<String, dynamic>?;
+
+      if (responseData != null && responseData['success'] == true) {
+        return ApiResponse<String>(
+          success: true,
+          message: responseData['message'] ?? '임시 비밀번호가 이메일로 전송되었습니다.',
+          data: 'success',
+        );
+      } else {
+        return ApiResponse<String>(
+          success: false,
+          message: responseData?['message'] ?? '비밀번호 재설정에 실패했습니다.',
+          data: null,
+        );
+      }
     } catch (e) {
+      print('❌ AUTH_SERVICE: 비밀번호 재설정 오류 - $e');
       return ApiResponse<String>(
         success: false,
-        message: '비밀번호 재설정 요청 중 오류가 발생했습니다: ${e.toString()}',
+        message: '비밀번호 재설정 요청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
         data: null,
       );
     }
