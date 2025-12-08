@@ -149,8 +149,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
 
-                // 관리자 메뉴 섹션 (관리자만 표시)
-                if (_currentUser?.isAdmin == true) ...[
+                // 관리자 메뉴 섹션 (일반 관리자만 표시, 커뮤니티 회원은 제외)
+                if (_currentUser?.isAdmin == true && _currentUser?.isCommunityAdmin != true) ...[
                   SizedBox(height: 16.h),
                   _buildGroupedSection(
                     title: '관리자 메뉴',
@@ -243,16 +243,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             setState(() => _pushNotifications = value),
                       ),
                     ),
-                    _GroupedSettingItem(
-                      icon: Icons.campaign_outlined,
-                      title: '교회 공지',
-                      subtitle: '새로운 공지사항 알림',
-                      trailing: AppSwitch(
-                        value: _churchNotices,
-                        onChanged: (value) =>
-                            setState(() => _churchNotices = value),
+                    // 커뮤니티 회원은 교회 공지 알림 메뉴 제외
+                    if (_currentUser?.isCommunityAdmin != true)
+                      _GroupedSettingItem(
+                        icon: Icons.campaign_outlined,
+                        title: '교회 공지',
+                        subtitle: '새로운 공지사항 알림',
+                        trailing: AppSwitch(
+                          value: _churchNotices,
+                          onChanged: (value) =>
+                              setState(() => _churchNotices = value),
+                        ),
                       ),
-                    ),
                   ],
                 ),
 

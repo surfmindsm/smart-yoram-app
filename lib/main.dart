@@ -32,6 +32,8 @@ import 'screens/signup/signup_success_screen.dart';
 import 'services/auth_service.dart';
 import 'services/fcm_service.dart';
 import 'services/font_settings_service.dart';
+import 'services/app_version_service.dart';
+import 'widgets/update_dialog.dart';
 
 /// 전역 네비게이터 키 (FCM 알림 탭 처리용)
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -154,11 +156,21 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
   final AuthService _authService = AuthService();
+  final AppVersionService _versionService = AppVersionService();
 
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    _initializeApp();
+  }
+
+  /// 앱 초기화: 버전 체크 → 인증 확인 순서로 진행
+  Future<void> _initializeApp() async {
+    // 1. 먼저 버전 체크 (로그인 여부 무관)
+    await _checkAppVersion();
+
+    // 2. 버전 체크 후 인증 상태 확인
+    await _checkAuthStatus();
   }
 
   Future<void> _checkAuthStatus() async {
@@ -194,6 +206,26 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
   }
 
+  Future<void> _checkAppVersion() async {
+    if (!mounted) return;
+
+    try {
+      print('🔍 AUTH_WRAPPER: Checking app version...');
+      final versionCheckResult = await _versionService.checkVersion();
+
+      if (!mounted) return;
+
+      // 화면이 빌드된 후 다이얼로그 표시
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await showUpdateDialogIfNeeded(context, versionCheckResult);
+      });
+    } catch (e) {
+      print('❌ AUTH_WRAPPER: Version check failed: $e');
+      // 버전 체크 실패는 앱 실행을 막지 않음
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -203,27 +235,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.blue[700],
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.church,
-                  size: 50,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                '스마트 교회요람',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[700],
-                ),
+              Image.asset(
+                'assets/images/logo_type3_white.png',
+                width: 200,
+                height: 80,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 40),
               const CircularProgressIndicator(),
