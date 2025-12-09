@@ -610,18 +610,7 @@ class _NoticesScreenState extends State<NoticesScreen>
   }
 
   String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date).inDays;
-
-    if (difference == 0) {
-      return '오늘';
-    } else if (difference == 1) {
-      return '어제';
-    } else if (difference < 7) {
-      return '$difference일 전';
-    } else {
-      return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
-    }
+    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   void _viewNoticeDetail(Announcement announcement) {

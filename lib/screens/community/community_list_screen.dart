@@ -1411,15 +1411,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     if (dateString == null) return '';
     try {
       final date = DateTime.parse(dateString.toString());
-      final now = DateTime.now();
-      final difference = now.difference(date);
-
-      if (difference.inMinutes < 1) return '방금 전';
-      if (difference.inHours < 1) return '${difference.inMinutes}분 전';
-      if (difference.inDays < 1) return '${difference.inHours}시간 전';
-      if (difference.inDays < 7) return '${difference.inDays}일 전';
-
-      return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
+      return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return '';
     }

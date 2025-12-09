@@ -1599,7 +1599,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                               ),
                                               SizedBox(height: 4.h),
                                               Text(
-                                                announcement.formattedDate,
+                                                _formatDate(announcement.createdAt),
                                                 style: TextStyle(
                                                   color: NewAppColor.neutral600,
                                                   fontSize: 13.sp,
@@ -2118,6 +2118,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         );
       }
     }
+  }
+
+  // 날짜 포맷팅 메서드
+  String _formatDate(DateTime date) {
+    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   // 네이버 지도 열기 메서드
