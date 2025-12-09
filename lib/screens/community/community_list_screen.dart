@@ -73,6 +73,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     super.initState();
     _loadCurrentUser();
     _loadItems();
+    _searchController.addListener(_onSearchChanged);
   }
 
   Future<void> _loadCurrentUser() async {
@@ -153,9 +154,63 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     }
   }
 
+  /// 검색어 변경 핸들러
+  void _onSearchChanged() {
+    setState(() {
+      _updateFilteredItems();
+    });
+  }
+
   /// 필터링된 아이템 목록 재계산
   void _updateFilteredItems() {
     List<dynamic> filtered = _items;
+
+    // 검색어 필터링
+    final searchQuery = _searchController.text.trim().toLowerCase();
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((item) {
+        String title = '';
+        String? churchName;
+        String? churchLocation;
+
+        if (item is SharingItem) {
+          title = item.title.toLowerCase();
+          churchName = item.churchName?.toLowerCase();
+          churchLocation = item.displayLocation?.toLowerCase();
+        } else if (item is RequestItem) {
+          title = item.title.toLowerCase();
+          churchName = item.churchName?.toLowerCase();
+          churchLocation = item.displayLocation?.toLowerCase();
+        } else if (item is JobPost) {
+          title = item.title.toLowerCase();
+          churchName = item.churchName?.toLowerCase();
+          churchLocation = item.location?.toLowerCase();
+        } else if (item is MusicTeamRecruitment) {
+          title = item.title.toLowerCase();
+          churchName = item.churchName?.toLowerCase();
+          churchLocation = [item.province, item.district]
+              .where((e) => e != null && e.isNotEmpty)
+              .join(' ')
+              .toLowerCase();
+        } else if (item is MusicTeamSeeker) {
+          title = item.title.toLowerCase();
+          churchName = item.churchName?.toLowerCase();
+        } else if (item is ChurchNews) {
+          title = item.title.toLowerCase();
+          churchName = item.churchName?.toLowerCase();
+          churchLocation = item.location?.toLowerCase();
+        } else if (item is Map<String, dynamic>) {
+          title = (item['title'] ?? '').toString().toLowerCase();
+          churchName = (item['church_name'] ?? '').toString().toLowerCase();
+          churchLocation =
+              (item['church_location'] ?? '').toString().toLowerCase();
+        }
+
+        return title.contains(searchQuery) ||
+            (churchName?.contains(searchQuery) ?? false) ||
+            (churchLocation?.contains(searchQuery) ?? false);
+      }).toList();
+    }
 
     // 가격 필터 (무료나눔/물품판매)
     if ((widget.type == CommunityListType.freeSharing ||
@@ -419,48 +474,138 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
-      appBar: AppBar(
-        backgroundColor: NewAppColor.neutral100,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          widget.title,
-          style: FigmaTextStyles().headline4.copyWith(
-                color: NewAppColor.neutral900,
+      appBar: widget.type == CommunityListType.churchNews
+          ? null
+          : AppBar(
+              backgroundColor: NewAppColor.neutral100,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              surfaceTintColor: Colors.transparent,
+              leading: IconButton(
+                icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
               ),
-        ),
-        actions: [
-          // 필터 버튼 (무료나눔/물품판매/물품요청/사역자모집/행사팀모집/행사팀지원/교회소식)
-          if (widget.type == CommunityListType.freeSharing ||
-              widget.type == CommunityListType.itemSale ||
-              widget.type == CommunityListType.itemRequest ||
-              widget.type == CommunityListType.jobPosting ||
-              widget.type == CommunityListType.musicTeamRecruit ||
-              widget.type == CommunityListType.musicTeamSeeking ||
-              widget.type == CommunityListType.churchNews)
-            IconButton(
-              icon: const Icon(LucideIcons.filter, color: Colors.black),
-              onPressed: _showAdvancedFilterBottomSheet,
+              title: Text(
+                widget.title,
+                style: FigmaTextStyles().headline4.copyWith(
+                      color: NewAppColor.neutral900,
+                    ),
+              ),
+              actions: [
+                // 필터 버튼 (무료나눔/물품판매/물품요청/사역자모집/행사팀모집/행사팀지원)
+                if (widget.type == CommunityListType.freeSharing ||
+                    widget.type == CommunityListType.itemSale ||
+                    widget.type == CommunityListType.itemRequest ||
+                    widget.type == CommunityListType.jobPosting ||
+                    widget.type == CommunityListType.musicTeamRecruit ||
+                    widget.type == CommunityListType.musicTeamSeeking)
+                  IconButton(
+                    icon: const Icon(LucideIcons.filter, color: Colors.black),
+                    onPressed: _showAdvancedFilterBottomSheet,
+                  ),
+                // 검색 버튼
+                IconButton(
+                  icon: const Icon(LucideIcons.search, color: Colors.black),
+                  onPressed: () {
+                    // TODO: 검색 기능
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('검색 기능은 준비 중입니다')),
+                    );
+                  },
+                ),
+              ],
             ),
-          // 검색 버튼
-          IconButton(
-            icon: const Icon(LucideIcons.search, color: Colors.black),
-            onPressed: () {
-              // TODO: 검색 기능
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('검색 기능은 준비 중입니다')),
-              );
-            },
-          ),
-        ],
-      ),
       body: Column(
         children: [
+          // 교회 소식 전용 헤더 (연락처 스타일)
+          if (widget.type == CommunityListType.churchNews) ...[
+            SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+            // 뒤로가기 버튼 + 제목
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(LucideIcons.chevronLeft,
+                        color: Colors.black, size: 24.sp),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    widget.title,
+                    style: FigmaTextStyles().headline4.copyWith(
+                          color: NewAppColor.neutral900,
+                        ),
+                  ),
+                  Spacer(),
+                  // 필터 버튼
+                  IconButton(
+                    icon: const Icon(LucideIcons.filter, color: Colors.black),
+                    onPressed: _showAdvancedFilterBottomSheet,
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+            // 검색창 (연락처 스타일)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              color: Colors.transparent,
+              child: Container(
+                width: double.infinity,
+                height: 48.h,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12.r),
+                  gradient: LinearGradient(
+                    colors: [
+                      NewAppColor.primary600,
+                      NewAppColor.primary600.withValues(alpha: 0.7),
+                      NewAppColor.primary600,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Container(
+                  margin: EdgeInsets.all(1.r), // 그라디언트 보더 두께
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(11.r),
+                    color: Colors.white,
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(width: 16.w),
+                      Icon(
+                        Icons.search,
+                        size: 20.r,
+                        color: NewAppColor.neutral500,
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: '교회 소식 검색',
+                            hintStyle: const FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral500,
+                                ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          style: const FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral900,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
           // 빠른 필터 (무료나눔/물품판매)
           if (widget.type == CommunityListType.freeSharing ||
               widget.type == CommunityListType.itemSale)
@@ -488,17 +633,26 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                     ? _buildEmptyState()
                     : RefreshIndicator(
                         onRefresh: _loadItems,
-                        child: ListView.separated(
-                          itemCount: _filteredItemsCache.length,
-                          separatorBuilder: (context, index) => Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: NewAppColor.neutral200,
-                          ),
-                          itemBuilder: (context, index) {
-                            return _buildItemCard(_filteredItemsCache[index]);
-                          },
-                        ),
+                        child: widget.type == CommunityListType.churchNews
+                            ? ListView.builder(
+                                itemCount: _filteredItemsCache.length,
+                                itemBuilder: (context, index) {
+                                  return _buildItemCard(
+                                      _filteredItemsCache[index]);
+                                },
+                              )
+                            : ListView.separated(
+                                itemCount: _filteredItemsCache.length,
+                                separatorBuilder: (context, index) => Divider(
+                                  height: 1,
+                                  thickness: 1,
+                                  color: NewAppColor.neutral200,
+                                ),
+                                itemBuilder: (context, index) {
+                                  return _buildItemCard(
+                                      _filteredItemsCache[index]);
+                                },
+                              ),
                       ),
           ),
         ],
@@ -545,6 +699,11 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   }
 
   Widget _buildItemCard(dynamic item) {
+    // 교회 소식인 경우 연락처 스타일 카드 사용
+    if (widget.type == CommunityListType.churchNews) {
+      return _buildChurchNewsCard(item);
+    }
+
     // 공통 필드 추출
     String title = '';
     String? imageUrl;
@@ -634,18 +793,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       authorId = item.authorId;
       authorName = item.authorName;
       churchName = item.churchName;
-      status = item.status;
-      statusLabel = item.statusDisplayName;
-    } else if (item is ChurchNews) {
-      title = item.title;
-      imageUrl = item.images?.isNotEmpty == true ? item.images!.first : null;
-      date = item.formattedDate;
-      viewCount = item.viewCount;
-      likes = item.likes;
-      authorId = item.authorId;
-      authorName = item.authorName;
-      churchName = item.churchName;
-      churchLocation = item.location;
       status = item.status;
       statusLabel = item.statusDisplayName;
     } else if (item is Map<String, dynamic>) {
@@ -899,6 +1046,198 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                         ],
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 교회 소식 카드 (연락처 스타일)
+  Widget _buildChurchNewsCard(dynamic item) {
+    String title = '';
+    String? imageUrl;
+    String date = '';
+    int viewCount = 0;
+    String? churchName;
+    String? churchLocation;
+    String? status;
+    String? statusLabel;
+
+    if (item is ChurchNews) {
+      title = item.title;
+      imageUrl = item.images?.isNotEmpty == true ? item.images!.first : null;
+      date = item.formattedDate;
+      viewCount = item.viewCount;
+      churchName = item.churchName;
+      churchLocation = item.location;
+      status = item.status;
+      statusLabel = item.statusDisplayName;
+    } else if (item is Map<String, dynamic>) {
+      title = item['title'] ?? '';
+      date = _formatDate(item['created_at']);
+      viewCount = item['view_count'] ?? 0;
+      churchName = item['church_name'];
+      churchLocation = item['church_location'];
+      status = item['status'];
+      statusLabel = _getStatusLabel(item['status'], tableName: 'church_news');
+
+      // 이미지 추출
+      if (item['images'] != null) {
+        if (item['images'] is List && (item['images'] as List).isNotEmpty) {
+          imageUrl = (item['images'] as List).first.toString();
+        }
+      }
+    }
+
+    final isCompleted = status != null &&
+        (status.toLowerCase() == 'completed' ||
+            status.toLowerCase() == 'closed');
+
+    return GestureDetector(
+      onTap: () => _navigateToDetail(item),
+      child: Container(
+        width: double.infinity,
+        height: 76.h,
+        margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              left: 16.w,
+              top: 7.h,
+              child: SizedBox(
+                width: 253.w,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // 썸네일 이미지 또는 기본 아이콘
+                    Container(
+                      width: 42.w,
+                      height: 42.h,
+                      decoration: ShapeDecoration(
+                        image: imageUrl != null && imageUrl.isNotEmpty
+                            ? DecorationImage(
+                                image: NetworkImage(imageUrl),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                        color: imageUrl == null || imageUrl.isEmpty
+                            ? NewAppColor.neutral200
+                            : null,
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: NewAppColor.neutral300,
+                          ),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: imageUrl == null || imageUrl.isEmpty
+                          ? Icon(
+                              LucideIcons.newspaper,
+                              color: NewAppColor.neutral500,
+                              size: 20.sp,
+                            )
+                          : null,
+                    ),
+                    SizedBox(width: 16.w),
+                    // 텍스트 정보
+                    SizedBox(
+                      width: 195.w,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 제목
+                          Text(
+                            title,
+                            style: TextStyle(
+                              color: isCompleted
+                                  ? NewAppColor.neutral500
+                                  : NewAppColor.neutral900,
+                              fontSize: 16.sp,
+                              fontFamily: 'Pretendard',
+                              fontWeight: FontWeight.w500,
+                              height: 1.50,
+                              letterSpacing: -0.40,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // 지역 · 날짜
+                          Text(
+                            [
+                              if (churchLocation != null &&
+                                  churchLocation.isNotEmpty)
+                                churchLocation,
+                              date,
+                            ].join(' · '),
+                            style: TextStyle(
+                              color: isCompleted
+                                  ? NewAppColor.neutral400
+                                  : NewAppColor.neutral600,
+                              fontSize: 13.sp,
+                              fontFamily: 'Pretendard Variable',
+                              fontWeight: FontWeight.w400,
+                              height: 1.38,
+                              letterSpacing: -0.33,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          // 상태 표시
+                          if (statusLabel != null &&
+                              status != null &&
+                              isCompleted)
+                            Text(
+                              statusLabel,
+                              style: TextStyle(
+                                color: NewAppColor.neutral600,
+                                fontSize: 11.sp,
+                                fontFamily: 'Pretendard Variable',
+                                fontWeight: FontWeight.w400,
+                                height: 1.45,
+                                letterSpacing: -0.28,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // 조회수 아이콘 (오른쪽)
+            Positioned(
+              right: 16.w,
+              top: 24.h,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.eye,
+                    size: 14.sp,
+                    color: NewAppColor.neutral600,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '$viewCount',
+                    style: TextStyle(
+                      color: NewAppColor.neutral600,
+                      fontSize: 12.sp,
+                      fontFamily: 'Pretendard Variable',
+                    ),
                   ),
                 ],
               ),

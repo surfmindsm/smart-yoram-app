@@ -26,8 +26,10 @@ class _NoticesScreenState extends State<NoticesScreen>
     with TickerProviderStateMixin {
   final _announcementService = AnnouncementService();
   final _authService = AuthService();
+  final TextEditingController _searchController = TextEditingController();
 
   List<Announcement> announcements = [];
+  List<Announcement> _filteredAnnouncementsCache = [];
   bool isLoading = true;
   String selectedCategory = 'all';
   String selectedDateFilter = 'latest';
@@ -44,13 +46,34 @@ class _NoticesScreenState extends State<NoticesScreen>
     super.initState();
     _tabController = TabController(length: tabCategories.length, vsync: this);
     _tabController.addListener(_onTabChanged);
+    _searchController.addListener(_onSearchChanged);
     _loadAnnouncements();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _updateFilteredAnnouncements();
+    });
+  }
+
+  void _updateFilteredAnnouncements() {
+    final searchQuery = _searchController.text.trim().toLowerCase();
+    if (searchQuery.isEmpty) {
+      _filteredAnnouncementsCache = announcements;
+    } else {
+      _filteredAnnouncementsCache = announcements.where((announcement) {
+        return announcement.title.toLowerCase().contains(searchQuery) ||
+            announcement.content.toLowerCase().contains(searchQuery) ||
+            (announcement.authorName?.toLowerCase().contains(searchQuery) ?? false);
+      }).toList();
+    }
   }
 
   void _onTabChanged() {
@@ -101,6 +124,7 @@ class _NoticesScreenState extends State<NoticesScreen>
       if (mounted) {
         setState(() {
           announcements = announcementList;
+          _updateFilteredAnnouncements();
           isLoading = false;
         });
       }
@@ -126,24 +150,84 @@ class _NoticesScreenState extends State<NoticesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
-      appBar: widget.showAppBar
-          ? AppBar(
-              title: Text(
-                '교회 소식',
-                style: const FigmaTextStyles().headline4.copyWith(
-                      color: Colors.white,
-                    ),
-              ),
-              backgroundColor: NewAppColor.primary600,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Colors.white),
-            )
-          : null,
       body: Column(
         children: [
-          // 상단 안전 영역 - AppBar가 없을 때만 적용
-          if (!widget.showAppBar)
-            SizedBox(height: MediaQuery.of(context).padding.top + 0.h),
+          // 상단 안전 영역
+          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
+
+          // 검색창 (연락처 스타일) - 모든 경로에서 표시
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: Row(
+              children: [
+                // 홈에서 들어왔을 때만 뒤로가기 버튼
+                if (widget.showAppBar) ...[
+                  IconButton(
+                    icon: Icon(Icons.arrow_back,
+                        color: Colors.black, size: 24.sp),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                  ),
+                  SizedBox(width: 8.w),
+                ],
+                // 검색창
+                Expanded(
+                  child: Container(
+                    height: 48.h,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12.r),
+                      gradient: LinearGradient(
+                        colors: [
+                          NewAppColor.primary600,
+                          NewAppColor.primary600.withValues(alpha: 0.7),
+                          NewAppColor.primary600,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Container(
+                      margin: EdgeInsets.all(1.r),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(11.r),
+                        color: Colors.white,
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(width: 16.w),
+                          Icon(
+                            Icons.search,
+                            size: 20.r,
+                            color: NewAppColor.neutral500,
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: '교회 소식 검색',
+                                hintStyle:
+                                    const FigmaTextStyles().body2.copyWith(
+                                          color: NewAppColor.neutral500,
+                                        ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              style: const FigmaTextStyles().body2.copyWith(
+                                    color: NewAppColor.neutral900,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
 
           // 탭바
           Container(
@@ -243,7 +327,7 @@ class _NoticesScreenState extends State<NoticesScreen>
       );
     }
 
-    if (announcements.isEmpty) {
+    if (_filteredAnnouncementsCache.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -274,9 +358,9 @@ class _NoticesScreenState extends State<NoticesScreen>
 
     return ListView.builder(
       padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
-      itemCount: announcements.length,
+      itemCount: _filteredAnnouncementsCache.length,
       itemBuilder: (context, index) {
-        final announcement = announcements[index];
+        final announcement = _filteredAnnouncementsCache[index];
         return _buildAnnouncementCard(announcement);
       },
     );
