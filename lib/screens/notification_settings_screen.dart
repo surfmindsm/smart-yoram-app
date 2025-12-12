@@ -21,6 +21,7 @@ class _NotificationSettingsScreenState
   bool chatNotifications = true;
   bool likeNotifications = true;
   bool churchNewsNotifications = true;
+  bool churchMessageNotifications = true;
   bool _isLoading = true;
 
   final _settingsService = NotificationSettingsService.instance;
@@ -37,12 +38,14 @@ class _NotificationSettingsScreenState
       final chat = await _settingsService.getChatNotifications();
       final like = await _settingsService.getLikeNotifications();
       final news = await _settingsService.getChurchNewsNotifications();
+      final message = await _settingsService.getChurchMessageNotifications();
       final sound = await _settingsService.getNotificationSound();
 
       setState(() {
         chatNotifications = chat;
         likeNotifications = like;
         churchNewsNotifications = news;
+        churchMessageNotifications = message;
         selectedSound = sound;
         _isLoading = false;
       });
@@ -163,6 +166,18 @@ class _NotificationSettingsScreenState
               });
               // 교회 소식 알림 설정 저장
               await _settingsService.setChurchNewsNotifications(value);
+            },
+          ),
+          _buildSwitchTile(
+            title: '교회 메시지',
+            subtitle: '관리자 커스텀 메시지 알림을 받습니다',
+            value: churchMessageNotifications,
+            onChanged: (value) async {
+              setState(() {
+                churchMessageNotifications = value;
+              });
+              // 교회 메시지 알림 설정 저장
+              await _settingsService.setChurchMessageNotifications(value);
             },
           ),
         ],

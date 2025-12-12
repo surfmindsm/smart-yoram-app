@@ -200,12 +200,18 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24.r),
+          topRight: Radius.circular(24.r),
+        ),
+      ),
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
+            topLeft: Radius.circular(24.r),
+            topRight: Radius.circular(24.r),
           ),
         ),
         child: SafeArea(
@@ -224,52 +230,77 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               ),
               SizedBox(height: 20.h),
               // 전체 읽기
-              ListTile(
-                leading: Icon(
-                  Icons.done_all,
-                  color: NewAppColor.neutral800,
-                ),
-                title: Text(
-                  '전체 읽기',
-                  style: FigmaTextStyles().body2,
-                ),
+              InkWell(
                 onTap: () {
                   Navigator.pop(context);
                   _markAllAsRead();
                 },
-              ),
-              Divider(height: 1, color: NewAppColor.neutral200),
-              // 전체 삭제
-              ListTile(
-                leading: Icon(
-                  Icons.delete_outline,
-                  color: NewAppColor.danger600,
-                ),
-                title: Text(
-                  '전체 삭제',
-                  style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.danger600,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: NewAppColor.primary100,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Icon(
+                          LucideIcons.checkCheck,
+                          color: NewAppColor.primary600,
+                          size: 20.w,
+                        ),
                       ),
+                      SizedBox(width: 16.w),
+                      Text(
+                        '전체 읽기',
+                        style: FigmaTextStyles().body1.copyWith(
+                              color: NewAppColor.neutral900,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
+              ),
+              Divider(height: 1, color: NewAppColor.neutral200, indent: 20.w, endIndent: 20.w),
+              // 전체 삭제
+              InkWell(
                 onTap: () {
                   Navigator.pop(context);
                   _deleteAllNotifications();
                 },
-              ),
-              Divider(height: 1, color: NewAppColor.neutral200),
-              // 닫기
-              ListTile(
-                leading: Icon(
-                  Icons.close,
-                  color: NewAppColor.neutral800,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: NewAppColor.danger100,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Icon(
+                          LucideIcons.trash2,
+                          color: NewAppColor.danger600,
+                          size: 20.w,
+                        ),
+                      ),
+                      SizedBox(width: 16.w),
+                      Text(
+                        '전체 삭제',
+                        style: FigmaTextStyles().body1.copyWith(
+                              color: NewAppColor.danger600,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
-                title: Text(
-                  '닫기',
-                  style: FigmaTextStyles().body2,
-                ),
-                onTap: () => Navigator.pop(context),
               ),
-              SizedBox(height: 20.h),
+              SizedBox(height: 8.h),
             ],
           ),
         ),
@@ -715,7 +746,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
             bottom: 0,
             child: Row(
               children: [
-                // 삭제 아이콘
+                // 더보기 메뉴 아이콘
                 GestureDetector(
                   onTap: _showDeleteMenu,
                   child: Container(
@@ -723,7 +754,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                     height: 28.h,
                     alignment: Alignment.center,
                     child: Icon(
-                      LucideIcons.trash2,
+                      Icons.more_vert,
                       color: NewAppColor.neutral800,
                       size: 22.w,
                     ),
@@ -802,33 +833,46 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     }
 
     if (notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_none,
-              size: 64.w,
-              color: NewAppColor.neutral500,
+      return RefreshIndicator(
+        onRefresh: _loadNotifications,
+        color: NewAppColor.primary600,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height - 200.h,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.notifications_none,
+                    size: 64.w,
+                    color: NewAppColor.neutral500,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    '알림이 없습니다',
+                    style: const FigmaTextStyles()
+                        .bodyText2
+                        .copyWith(color: NewAppColor.neutral500),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 16.h),
-            Text(
-              '알림이 없습니다',
-              style: const FigmaTextStyles()
-                  .bodyText2
-                  .copyWith(color: NewAppColor.neutral500),
-            ),
-          ],
+          ),
         ),
       );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      itemCount: notifications.length,
-      itemBuilder: (context, index) {
-        final notification = notifications[index];
-        return Slidable(
+    return RefreshIndicator(
+      onRefresh: _loadNotifications,
+      color: NewAppColor.primary600,
+      child: ListView.builder(
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        itemCount: notifications.length,
+        itemBuilder: (context, index) {
+          final notification = notifications[index];
+          return Slidable(
           key: Key('notification_${notification.id}'),
           endActionPane: ActionPane(
             motion: const DrawerMotion(),
@@ -900,7 +944,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
             },
           ),
         );
-      },
+        },
+      ),
     );
   }
 }
