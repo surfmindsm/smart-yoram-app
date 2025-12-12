@@ -194,6 +194,31 @@ serve(async (req) => {
           platform: device.platform,
           success: true,
         });
+
+        // 🆕 Supabase notifications 테이블에 저장
+        try {
+          await supabase.from('notifications').insert({
+            user_id: author_id,
+            title: '새 좋아요',
+            body: `${liker_name}님이 회원님의 게시글을 좋아합니다 - ${post_title}`,
+            type: 'community_like',
+            is_read: false,
+            related_id: post_id,
+            related_type: table_name,
+            data: {
+              liker_id: liker_id,
+              liker_name: liker_name,
+              post_title: post_title,
+              category_title: category_title,
+            },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          console.log(`💾 좋아요 알림 저장 완료 (user_id: ${author_id})`);
+        } catch (saveError) {
+          console.error(`⚠️ 알림 저장 실패 (user_id: ${author_id}):`, saveError);
+          // 저장 실패해도 FCM은 발송되었으므로 계속 진행
+        }
       } else {
         console.error(`❌ FCM 알림 발송 실패 (user_id: ${author_id}):`, fcmResult);
         notifications.push({

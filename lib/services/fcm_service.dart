@@ -331,6 +331,60 @@ class FCMService {
     }
   }
 
+  // 🚫 알림 저장은 백엔드 Edge Function에서 처리하므로 앱에서는 하지 않음
+  // 중복 저장 방지를 위해 주석 처리
+  /*
+  /// Supabase notifications 테이블에 알림 저장
+  Future<void> _saveNotificationToSupabase(RemoteMessage message) async {
+    try {
+      developer.log('💾 알림 Supabase 저장 시작', name: 'FCM');
+
+      final authService = AuthService();
+      final userResponse = await authService.getCurrentUser();
+
+      if (userResponse.data == null) {
+        developer.log('⚠️ 로그인되지 않아 알림 저장 생략', name: 'FCM');
+        return;
+      }
+
+      final userId = userResponse.data!.id;
+      final supabase = Supabase.instance.client;
+
+      // FCM 메시지 데이터 파싱
+      final title = message.notification?.title ?? '';
+      final body = message.notification?.body ?? '';
+      final type = message.data['type'] as String? ?? 'custom';
+      final relatedId = message.data['post_id'] != null
+          ? int.tryParse(message.data['post_id'].toString())
+          : (message.data['related_id'] != null
+              ? int.tryParse(message.data['related_id'].toString())
+              : null);
+      final relatedType = message.data['table_name'] as String? ?? message.data['related_type'] as String?;
+
+      developer.log('💾 저장할 알림 정보: userId=$userId, type=$type, relatedId=$relatedId, relatedType=$relatedType', name: 'FCM');
+
+      // notifications 테이블에 insert
+      await supabase.from('notifications').insert({
+        'user_id': userId,
+        'title': title,
+        'body': body,
+        'type': type,
+        'is_read': false,
+        'related_id': relatedId,
+        'related_type': relatedType,
+        'data': message.data,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      developer.log('✅ 알림 Supabase 저장 완료', name: 'FCM');
+    } catch (e, stackTrace) {
+      developer.log('❌ 알림 Supabase 저장 실패: $e', name: 'FCM_ERROR');
+      developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');
+    }
+  }
+  */
+
   /// 로그인 후 토큰 재등록 (외부에서 호출 가능)
   Future<void> refreshTokenRegistration() async {
     print('🔄 FCM: refreshTokenRegistration() 호출됨');

@@ -31,7 +31,8 @@ class NotificationModel {
       title: json['title'] ?? '',
       message: json['message'] ?? '',
       category: NotificationCategory.fromString(json['category'] ?? 'notice'),
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+          json['created_at'] ?? DateTime.now().toIso8601String()),
       isRead: json['is_read'] ?? false,
       isImportant: json['is_important'] ?? false,
       userId: json['user_id'],
@@ -124,11 +125,14 @@ class NotificationModel {
         break;
 
       case NotificationCategory.comment:
-        final commenterName = data!['commenter_name'] as String? ?? data!['liker_name'] as String?;
+        final commenterName = data!['commenter_name'] as String? ??
+            data!['liker_name'] as String?;
         final postTitle = data!['post_title'] as String?;
         final commentContent = data!['comment_content'] as String?;
 
-        if (commenterName != null && postTitle != null && commentContent != null) {
+        if (commenterName != null &&
+            postTitle != null &&
+            commentContent != null) {
           return '$commenterName님이 \'$postTitle\' 게시글에 댓글을 달았습니다: "$commentContent"';
         } else if (commenterName != null && postTitle != null) {
           return '$commenterName님이 \'$postTitle\' 게시글에 댓글을 달았습니다';
@@ -178,7 +182,8 @@ enum NotificationCategory {
   attendance('attendance', '출석'),
   message('message', '메시지'),
   like('like', '좋아요'),
-  comment('comment', '댓글');
+  comment('comment', '댓글'),
+  custom('custom', '교회 메시지');
 
   const NotificationCategory(this.value, this.displayName);
 
@@ -236,6 +241,12 @@ enum NotificationCategory {
           backgroundColor: 0xFFDEF3FF, // #def3ff (하늘색 계열)
           borderColor: 0xFF0EA5E9, // #0ea5e9
           textColor: 0xFF0EA5E9, // #0ea5e9
+        );
+      case NotificationCategory.custom:
+        return const NotificationCategoryStyle(
+          backgroundColor: 0xFFFFF4E5, // #fff4e5 (오렌지 계열)
+          borderColor: 0xFFFF9800, // #ff9800
+          textColor: 0xFFFF9800, // #ff9800
         );
       default:
         return const NotificationCategoryStyle(

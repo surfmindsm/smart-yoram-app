@@ -5,12 +5,15 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import '../models/notification.dart';
 import '../models/push_notification.dart';
 import '../models/api_response.dart';
+import '../models/announcement.dart';
 import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
 import '../services/notification_service.dart';
 import '../services/badge_service.dart';
+import '../services/announcement_service.dart';
 import 'notification_settings_screen.dart';
 import 'community/community_detail_screen.dart';
+import 'notice_detail_screen.dart';
 
 class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -22,6 +25,7 @@ class NotificationCenterScreen extends StatefulWidget {
 
 class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   final NotificationService _notificationService = NotificationService.instance;
+  final AnnouncementService _announcementService = AnnouncementService();
   List<NotificationModel> notifications = [];
   bool isLoading = true;
 
@@ -124,6 +128,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         break;
       case 'comment':
         category = NotificationCategory.comment;
+        break;
+      case 'custom':
+      case 'custom_message':
+        category = NotificationCategory.custom;
         break;
       default:
         category = NotificationCategory.notice;
@@ -388,17 +396,16 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     print(
         '📱 NOTIFICATION_CENTER: 알림 클릭 - 카테고리: ${notification.category}, relatedId: ${notification.relatedId}, relatedType: ${notification.relatedType}');
 
-    // relatedId가 없으면 이동하지 않음
-    if (notification.relatedId == null) {
-      print('⚠️ NOTIFICATION_CENTER: relatedId가 없어 이동할 수 없습니다');
-      return;
-    }
-
     try {
       switch (notification.category) {
         case NotificationCategory.like:
         case NotificationCategory.comment:
           // 좋아요, 댓글 알림 → 커뮤니티 게시글 상세로 이동
+          if (notification.relatedId == null) {
+            print('⚠️ NOTIFICATION_CENTER: relatedId가 없어 이동할 수 없습니다');
+            return;
+          }
+
           final tableName = notification.relatedType ?? 'community_sharing';
           final categoryTitle = _getCategoryTitle(tableName);
 
@@ -432,15 +439,53 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
         case NotificationCategory.notice:
         case NotificationCategory.important:
-          // 공지사항 알림 → 공지사항 목록으로 이동 (상세 화면은 Announcement 객체 필요)
-          print('📱 NOTIFICATION_CENTER: 공지사항 알림 - 공지사항 목록으로 이동');
+          // 공지사항 알림 → 공지사항 상세 화면으로 이동
+          print(
+              '📱 NOTIFICATION_CENTER: 공지사항 알림 - relatedId: ${notification.relatedId}');
+          if (notification.relatedId != null) {
+            try {
+              // relatedId로 공지사항 상세 조회
+              final announcement = await _announcementService
+                  .getAnnouncement(notification.relatedId!);
+
+              if (mounted) {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AnnouncementDetailScreen(announcement: announcement),
+                  ),
+                );
+              }
+            } catch (e) {
+              print('❌ NOTIFICATION_CENTER: 공지사항 조회 실패 - $e');
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('공지사항을 불러올 수 없습니다'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            }
+          } else {
+            print('⚠️ NOTIFICATION_CENTER: relatedId가 없어 공지사항 탭으로 이동');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('공지사항 탭에서 확인해주세요'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          }
+          break;
+
+        case NotificationCategory.custom:
+          // 관리자 커스텀 메시지 → 다이얼로그로 표시
+          print('📱 NOTIFICATION_CENTER: 커스텀 메시지 알림 - 다이얼로그 표시');
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('공지사항 탭에서 확인해주세요'),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            _showCustomMessageDialog(notification);
           }
           break;
 
@@ -484,6 +529,125 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       default:
         return '커뮤니티';
     }
+  }
+
+  // 관리자 커스텀 메시지 다이얼로그 표시
+  void _showCustomMessageDialog(NotificationModel notification) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(24.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 아이콘 + 제목
+              Row(
+                children: [
+                  Container(
+                    width: 40.w,
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      color: NewAppColor.primary100,
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Icon(
+                      Icons.campaign,
+                      color: NewAppColor.primary600,
+                      size: 24.w,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      '교회 메시지',
+                      style: FigmaTextStyles().headline4.copyWith(
+                            color: NewAppColor.neutral900,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 20.h),
+
+              // 구분선
+              Divider(height: 1, color: NewAppColor.neutral200),
+
+              SizedBox(height: 20.h),
+
+              // 제목
+              if (notification.title.isNotEmpty) ...[
+                Text(
+                  notification.title,
+                  style: FigmaTextStyles().title3.copyWith(
+                        color: NewAppColor.neutral900,
+                      ),
+                ),
+                SizedBox(height: 12.h),
+              ],
+
+              // 내용
+              Container(
+                constraints: BoxConstraints(
+                  maxHeight: 300.h,
+                ),
+                child: SingleChildScrollView(
+                  child: Text(
+                    notification.message,
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: NewAppColor.neutral800,
+                          height: 1.6,
+                        ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 24.h),
+
+              // 작성 시간
+              Text(
+                notification.timeAgo,
+                style: FigmaTextStyles().caption2.copyWith(
+                      color: NewAppColor.neutral500,
+                    ),
+              ),
+
+              SizedBox(height: 20.h),
+
+              // 확인 버튼
+              SizedBox(
+                width: double.infinity,
+                height: 48.h,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: NewAppColor.primary600,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  child: Text(
+                    '확인',
+                    style: FigmaTextStyles().button1.copyWith(
+                          color: Colors.white,
+                        ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -767,6 +931,8 @@ class NotificationItem extends StatelessWidget {
         return Icons.favorite;
       case NotificationCategory.comment:
         return Icons.mode_comment_outlined;
+      case NotificationCategory.custom:
+        return Icons.campaign;
       default:
         return Icons.notifications_outlined;
     }

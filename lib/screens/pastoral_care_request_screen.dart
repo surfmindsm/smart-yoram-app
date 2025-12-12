@@ -9,6 +9,7 @@ import '../models/pastoral_care_request.dart';
 import '../services/pastoral_care_service.dart';
 import '../services/auth_service.dart';
 import '../services/geocoding_service.dart';
+import '../services/member_service.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../widgets/datetime_picker_page.dart';
@@ -33,13 +34,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   final _contactController = TextEditingController();
   final _preferredDateController = TextEditingController();
   final _preferredTimeController = TextEditingController();
-  final _preferredTimeEndController = TextEditingController();
   final _addressController = TextEditingController();
   final _detailAddressController = TextEditingController();
-
-  bool _isUrgent = false;
-  String _selectedRequestType = PastoralCareRequestType.general;
-  String _selectedPriority = PastoralCarePriority.normal;
 
   // 지도 관련 변수들
   double? _latitude;
@@ -67,7 +63,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     _contactController.dispose();
     _preferredDateController.dispose();
     _preferredTimeController.dispose();
-    _preferredTimeEndController.dispose();
     _addressController.dispose();
     _detailAddressController.dispose();
     _debounceTimer?.cancel();
@@ -202,8 +197,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
           : '010-0000-0000';
 
       final request = PastoralCareRequestCreate(
-        requestType: _selectedRequestType,
-        priority: _selectedPriority,
+        requestType: PastoralCareRequestType.general, // 기본 유형으로 고정
+        priority: PastoralCarePriority.normal, // 기본 우선순위로 고정
         title: '심방 신청',
         description: _descriptionController.text.trim(),
         preferredDate: _preferredDateController.text.trim().isEmpty
@@ -212,13 +207,11 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         preferredTimeStart: _preferredTimeController.text.trim().isEmpty
             ? null
             : _preferredTimeController.text.trim(),
-        preferredTimeEnd: _preferredTimeEndController.text.trim().isEmpty
-            ? null
-            : _preferredTimeEndController.text.trim(),
+        preferredTimeEnd: null, // 종료시간은 항상 null
         contactInfo: _contactController.text.trim().isEmpty
             ? null
             : _contactController.text.trim(),
-        isUrgent: _isUrgent,
+        isUrgent: false, // 항상 일반 신청으로 고정
         requesterName: userName,
         requesterPhone: userPhone,
         address: _addressController.text.trim().isNotEmpty
@@ -276,13 +269,9 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     _contactController.clear();
     _preferredDateController.clear();
     _preferredTimeController.clear();
-    _preferredTimeEndController.clear();
     _addressController.clear();
     _detailAddressController.clear();
     setState(() {
-      _isUrgent = false;
-      _selectedRequestType = PastoralCareRequestType.general;
-      _selectedPriority = PastoralCarePriority.normal;
       _latitude = null;
       _longitude = null;
     });
@@ -486,56 +475,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   ),
                   SizedBox(height: 16.h),
 
-                  // 심방 유형 선택
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '심방 유형*',
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: NewAppColor.neutral200,
-                            width: 1,
-                          ),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedRequestType,
-                            isExpanded: true,
-                            items: PastoralCareRequestType.all.map((type) {
-                              return DropdownMenuItem(
-                                value: type,
-                                child: Text(
-                                  PastoralCareRequestType.displayNames[type] ?? type,
-                                  style: const FigmaTextStyles().body2.copyWith(
-                                    color: NewAppColor.neutral900,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _selectedRequestType = value;
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16.h),
-
                   // 내용
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -600,71 +539,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       ),
                     ],
                   ),
-                  SizedBox(height: 16.h),
-
-                  // 긴급 여부
-                  Container(
-                    width: double.infinity,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _isUrgent = !_isUrgent;
-                            });
-                          },
-                          child: Container(
-                            width: 44.w,
-                            height: 26.h,
-                            padding: EdgeInsets.all(2.r),
-                            clipBehavior: Clip.antiAlias,
-                            decoration: ShapeDecoration(
-                              color: _isUrgent
-                                  ? NewAppColor.success600
-                                  : NewAppColor.neutral300,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(1000.r),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: _isUrgent
-                                  ? MainAxisAlignment.end
-                                  : MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 22.w,
-                                  height: 22.h,
-                                  padding: EdgeInsets.all(4.r),
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: ShapeDecoration(
-                                    color: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(1000.r),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: Text(
-                            '긴급 신청',
-                            style: FigmaTextStyles().body1.copyWith(
-                                  color: NewAppColor.neutral600,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -693,7 +567,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '희망 날짜',
+                        '날짜',
                         style: const FigmaTextStyles().body2.copyWith(
                               color: NewAppColor.neutral900,
                               fontWeight: FontWeight.w500,
@@ -716,7 +590,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '희망 시작 시간',
+                        '시간',
                         style: const FigmaTextStyles().body2.copyWith(
                               color: NewAppColor.neutral900,
                               fontWeight: FontWeight.w500,
@@ -726,26 +600,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       AppInput(
                         controller: _preferredTimeController,
                         placeholder: 'HH:MM (예: 14:00)',
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // 희망 종료 시간
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '희망 종료 시간',
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      SizedBox(height: 8.h),
-                      AppInput(
-                        controller: _preferredTimeEndController,
-                        placeholder: 'HH:MM (예: 15:00)',
                       ),
                     ],
                   ),
@@ -773,7 +627,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               ),
             ),
             SizedBox(height: 16.h),
-
             // 방문 위치 설정
             Container(
               width: double.infinity,
@@ -888,7 +741,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                         )
                       : Text(
                           '신청하기',
-                          style: const FigmaTextStyles().title4.copyWith(
+                          style: const FigmaTextStyles().button1.copyWith(
                                 color: Colors.white,
                               ),
                         ),
@@ -903,7 +756,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   }
 
   Widget _buildMapWidget() {
-    print('🗺️ PASTORAL_CARE: _buildMapWidget 호출됨 - lat: $_latitude, lng: $_longitude');
+    print(
+        '🗺️ PASTORAL_CARE: _buildMapWidget 호출됨 - lat: $_latitude, lng: $_longitude');
     try {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8.r),
@@ -918,7 +772,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   return NaverMap(
                     options: NaverMapViewOptions(
                       initialCameraPosition: NCameraPosition(
-                        target: NLatLng(_latitude ?? 37.5665, _longitude ?? 126.9780),
+                        target: NLatLng(
+                            _latitude ?? 37.5665, _longitude ?? 126.9780),
                         zoom: 16,
                       ),
                       locationButtonEnable: false,
@@ -942,16 +797,19 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       _updateMapLocation(latLng.latitude, latLng.longitude);
 
                       // 역지오코딩으로 주소 업데이트
-                      final reverseResponse = await GeocodingService.reverseGeocode(
+                      final reverseResponse =
+                          await GeocodingService.reverseGeocode(
                         latitude: latLng.latitude,
                         longitude: latLng.longitude,
                       );
 
-                      if (reverseResponse.success && reverseResponse.data != null) {
+                      if (reverseResponse.success &&
+                          reverseResponse.data != null) {
                         _addressController.text = reverseResponse.data!.address;
                       }
                     },
-                    onCameraChange: (NCameraUpdateReason reason, bool animated) async {
+                    onCameraChange:
+                        (NCameraUpdateReason reason, bool animated) async {
                       // 지도가 제스처로 움직일 때만 위치 업데이트
                       if (reason == NCameraUpdateReason.gesture) {
                         // 현재 카메라 위치 가져오기
@@ -973,8 +831,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
                             // 역지오코딩으로 주소 업데이트 (디바운싱 적용)
                             _debounceTimer?.cancel();
-                            _debounceTimer =
-                                Timer(const Duration(milliseconds: 500), () async {
+                            _debounceTimer = Timer(
+                                const Duration(milliseconds: 500), () async {
                               final reverseResponse =
                                   await GeocodingService.reverseGeocode(
                                 latitude: newLat,
@@ -983,7 +841,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
                               if (reverseResponse.success &&
                                   reverseResponse.data != null) {
-                                _addressController.text = reverseResponse.data!.address;
+                                _addressController.text =
+                                    reverseResponse.data!.address;
                               }
                             });
                           }
@@ -994,52 +853,52 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 },
               ),
             ),
-          // 지도 중앙에 고정 마커
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.location_on,
-                  color: Colors.red,
-                  size: 40.w,
-                ),
-                // 마커 아래쪽 점
-                Container(
-                  width: 4.w,
-                  height: 4.w,
-                  decoration: const BoxDecoration(
+            // 지도 중앙에 고정 마커
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.location_on,
                     color: Colors.red,
-                    shape: BoxShape.circle,
+                    size: 40.w,
                   ),
-                ),
-              ],
-            ),
-          ),
-          // 지도 사용 안내
-          Positioned(
-            top: 10.h,
-            left: 10.w,
-            right: 10.w,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                '지도를 움직여서 위치를 선택하세요',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
+                  // 마커 아래쪽 점
+                  Container(
+                    width: 4.w,
+                    height: 4.w,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
-      ),
+            // 지도 사용 안내
+            Positioned(
+              top: 10.h,
+              left: 10.w,
+              right: 10.w,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  '지도를 움직여서 위치를 선택하세요',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     } catch (e) {
       return Container(
@@ -1119,15 +978,15 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             Text(
               '신청 내역이 없습니다',
               style: const FigmaTextStyles().title3.copyWith(
-                color: NewAppColor.neutral700,
-              ),
+                    color: NewAppColor.neutral700,
+                  ),
             ),
             SizedBox(height: 8.h),
             Text(
               '첫 번째 심방 신청서를 작성해보세요',
               style: const FigmaTextStyles().body1.copyWith(
-                color: NewAppColor.neutral500,
-              ),
+                    color: NewAppColor.neutral500,
+                  ),
             ),
             SizedBox(height: 32.h),
             GestureDetector(
@@ -1157,9 +1016,9 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     Text(
                       '새 신청 작성하기',
                       style: const FigmaTextStyles().body1.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                   ],
                 ),
@@ -1229,13 +1088,14 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                               child: Text(
                                 request.title,
                                 style: const FigmaTextStyles().title4.copyWith(
-                                  color: NewAppColor.neutral900,
-                                ),
+                                      color: NewAppColor.neutral900,
+                                    ),
                               ),
                             ),
                             // 상태 배지
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w, vertical: 4.h),
                               decoration: ShapeDecoration(
                                 color: _getStatusColor(request.status),
                                 shape: RoundedRectangleBorder(
@@ -1252,37 +1112,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        SizedBox(height: 4.h),
-                        Row(
-                          children: [
-                            Text(
-                              request.requestTypeDisplayName,
-                              style: const FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral600,
-                              ),
-                            ),
-                            if (request.isUrgent) ...[
-                              SizedBox(width: 8.w),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                                decoration: ShapeDecoration(
-                                  color: NewAppColor.danger100,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4.r),
-                                  ),
-                                ),
-                                child: Text(
-                                  '긴급',
-                                  style: TextStyle(
-                                    fontSize: 10.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: NewAppColor.danger600,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ],
@@ -1303,9 +1132,9 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     Text(
                       request.description,
                       style: const FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral800,
-                        height: 1.4,
-                      ),
+                            color: NewAppColor.neutral800,
+                            height: 1.4,
+                          ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1315,21 +1144,6 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   // 부가 정보들
                   Row(
                     children: [
-                      // 우선순위
-                      Icon(
-                        Icons.flag_outlined,
-                        size: 14.sp,
-                        color: NewAppColor.neutral500,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        request.priorityDisplayName,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: NewAppColor.neutral500,
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
                       // 신청일
                       Icon(
                         Icons.access_time,
@@ -1422,7 +1236,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                         ),
                       ),
                     ],
-                    if (request.canEdit && request.canCancel) SizedBox(width: 8.w),
+                    if (request.canEdit && request.canCancel)
+                      SizedBox(width: 8.w),
                     if (request.canCancel) ...[
                       Expanded(
                         child: GestureDetector(
@@ -1560,7 +1375,22 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     }
   }
 
-  void _showRequestDetailDialog(PastoralCareRequest request) {
+  Future<void> _showRequestDetailDialog(PastoralCareRequest request) async {
+    // 담당자 이름 조회
+    String? assignedPastorName;
+    if (request.assignedPastorId != null) {
+      try {
+        final memberResponse = await MemberService().getMember(request.assignedPastorId!);
+        if (memberResponse.success && memberResponse.data != null) {
+          assignedPastorName = memberResponse.data!.name;
+        }
+      } catch (e) {
+        print('담당자 정보 조회 실패: $e');
+      }
+    }
+
+    if (!mounted) return;
+
     showDialog(
       context: context,
       builder: (context) => AppDialog(
@@ -1571,10 +1401,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               // 기본 정보
-              _buildDetailSection('신청 유형', request.requestTypeDisplayName),
               _buildDetailSection('상태', request.statusDisplayName),
-              _buildDetailSection('우선순위', request.priorityDisplayName),
-              if (request.isUrgent) _buildDetailSection('긴급 여부', '긴급 신청'),
 
               SizedBox(height: 16.h),
 
@@ -1611,7 +1438,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               // 희망 일정 정보
               if (request.preferredDate != null)
                 _buildDetailSection('희망 날짜',
-                  '${request.preferredDate!.year}.${request.preferredDate!.month.toString().padLeft(2, '0')}.${request.preferredDate!.day.toString().padLeft(2, '0')}'),
+                    '${request.preferredDate!.year}.${request.preferredDate!.month.toString().padLeft(2, '0')}.${request.preferredDate!.day.toString().padLeft(2, '0')}'),
               if (request.preferredTime != null)
                 _buildDetailSection('희망 시간', request.preferredTime!),
               if (request.contactInfo != null)
@@ -1638,8 +1465,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     '수정일', _formatDetailDate(request.updatedAt!)),
 
               // 처리 정보
-              if (request.assignedTo != null)
-                _buildDetailSection('담당자', request.assignedTo!),
+              _buildDetailSection('담당자', assignedPastorName ?? '미지정'),
               if (request.completedAt != null)
                 _buildDetailSection(
                     '완료일', _formatDetailDate(request.completedAt!)),
