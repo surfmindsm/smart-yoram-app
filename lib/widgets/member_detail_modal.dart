@@ -2,17 +2,96 @@ import 'package:flutter/material.dart';
 // import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/member.dart';
 import '../resource/color_style.dart';
 import '../resource/text_style.dart';
 
-class MemberDetailModal extends StatelessWidget {
+class MemberDetailModal extends StatefulWidget {
   final Member member;
 
   const MemberDetailModal({
     super.key,
     required this.member,
   });
+
+  @override
+  State<MemberDetailModal> createState() => _MemberDetailModalState();
+}
+
+class _MemberDetailModalState extends State<MemberDetailModal> {
+  String? _organizationName;
+  bool _isLoadingOrganization = false;
+
+  @override
+  void initState() {
+    super.initState();
+    print('🔍 Member 정보:');
+    print('  - ID: ${widget.member.id}');
+    print('  - 이름: ${widget.member.name}');
+    print('  - organization_id: ${widget.member.organizationId}');
+    print('  - department: ${widget.member.department}');
+    _loadOrganizationName();
+  }
+
+  Future<void> _loadOrganizationName() async {
+    if (widget.member.organizationId == null || widget.member.organizationId!.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _isLoadingOrganization = true;
+    });
+
+    try {
+      final supabase = Supabase.instance.client;
+
+      // church_organizations 테이블에서 조직 정보 조회
+      try {
+        print('🔍 조직 정보 조회 시작 - ID: ${widget.member.organizationId}');
+
+        final response = await supabase
+            .from('church_organizations')
+            .select('*')
+            .eq('id', widget.member.organizationId!)
+            .maybeSingle();
+
+        print('📦 church_organizations 응답: $response');
+
+        if (response != null && mounted) {
+          // name 또는 organization_name 필드 시도
+          final orgName = response['name'] ?? response['organization_name'] ?? response['org_name'];
+
+          setState(() {
+            _organizationName = orgName as String?;
+            _isLoadingOrganization = false;
+          });
+          print('✅ 조직 정보 로드 성공: $_organizationName');
+        } else if (mounted) {
+          setState(() {
+            _isLoadingOrganization = false;
+          });
+          print('ℹ️ 조직 정보 없음 (ID: ${widget.member.organizationId})');
+        }
+      } catch (tableError) {
+        // church_organizations 테이블 조회 실패
+        print('❌ 조직 정보 로드 실패: $tableError');
+        if (mounted) {
+          setState(() {
+            _organizationName = null;
+            _isLoadingOrganization = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('❌ 조직 정보 로드 실패: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingOrganization = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,12 +176,12 @@ class MemberDetailModal extends StatelessWidget {
             color: Colors.blue,
             borderRadius: BorderRadius.circular(40.r),
           ),
-          child: member.profilePhotoUrl != null &&
-                  member.profilePhotoUrl!.isNotEmpty
+          child: widget.member.profilePhotoUrl != null &&
+                  widget.member.profilePhotoUrl!.isNotEmpty
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(40.r),
                   child: Image.network(
-                    member.profilePhotoUrl!,
+                    widget.member.profilePhotoUrl!,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
                         _buildDefaultAvatar(),
@@ -114,7 +193,7 @@ class MemberDetailModal extends StatelessWidget {
 
         // 이름
         Text(
-          member.name,
+          widget.member.name,
           style: AppTextStyle(color: AppColor.secondary07).h1().copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -129,7 +208,7 @@ class MemberDetailModal extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.r),
           ),
           child: Text(
-            member.position ?? '성도',
+            widget.member.position ?? '성도',
             style: AppTextStyle(color: _getPositionColor()).b3().copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -149,7 +228,7 @@ class MemberDetailModal extends StatelessWidget {
       ),
       child: Center(
         child: Text(
-          member.name.isNotEmpty ? member.name[0] : '?',
+          widget.member.name.isNotEmpty ? widget.member.name[0] : '?',
           style: AppTextStyle(color: Colors.white).h1().copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -161,21 +240,26 @@ class MemberDetailModal extends StatelessWidget {
   Widget _buildInfoSection() {
     return Column(
       children: [
-        _buildInfoItem('전화번호', member.phone),
-        if (member.email != null && member.email!.isNotEmpty)
-          _buildInfoItem('이메일', member.email!),
-        _buildInfoItem('성별', _getGenderDisplay(member.gender)),
-        if (member.birthdate != null)
-          _buildInfoItem('생년월일', _formatDate(member.birthdate!)),
-        if (member.address != null && member.address!.isNotEmpty)
-          _buildInfoItem('주소', member.address!),
-        if (member.district != null && member.district!.isNotEmpty)
-          _buildInfoItem('구역', member.district!),
-        _buildInfoItem('상태', _getMemberStatusText(member.memberStatus)),
-        if (member.registrationDate != null)
-          _buildInfoItem('등록일', _formatDate(member.registrationDate!)),
-        if (member.memo != null && member.memo!.isNotEmpty)
-          _buildInfoItem('메모', member.memo!, isMultiline: true),
+        _buildInfoItem('전화번호', widget.member.phone),
+        if (widget.member.email != null && widget.member.email!.isNotEmpty)
+          _buildInfoItem('이메일', widget.member.email!),
+        _buildInfoItem('성별', _getGenderDisplay(widget.member.gender)),
+        if (widget.member.birthdate != null)
+          _buildInfoItem('생년월일', _formatDate(widget.member.birthdate!)),
+        if (widget.member.address != null && widget.member.address!.isNotEmpty)
+          _buildInfoItem('주소', widget.member.address!),
+        if (widget.member.department != null && widget.member.department!.isNotEmpty)
+          _buildInfoItem('부서', _getDepartmentDisplay(widget.member.department!)),
+        // 조직 정보는 organizationId가 있고, 조직명을 성공적으로 로드한 경우에만 표시
+        if (_organizationName != null && _organizationName!.isNotEmpty)
+          _buildInfoItem('조직', _organizationName!),
+        if (widget.member.district != null && widget.member.district!.isNotEmpty)
+          _buildInfoItem('구역', widget.member.district!),
+        _buildInfoItem('상태', _getMemberStatusText(widget.member.memberStatus)),
+        if (widget.member.registrationDate != null)
+          _buildInfoItem('등록일', _formatDate(widget.member.registrationDate!)),
+        if (widget.member.memo != null && widget.member.memo!.isNotEmpty)
+          _buildInfoItem('메모', widget.member.memo!, isMultiline: true),
       ],
     );
   }
@@ -183,7 +267,7 @@ class MemberDetailModal extends StatelessWidget {
   Widget _buildInfoItem(String label, String value,
       {bool isMultiline = false}) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 12.h),
+      padding: EdgeInsets.symmetric(vertical: 10.h),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
@@ -197,17 +281,21 @@ class MemberDetailModal extends StatelessWidget {
             isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           SizedBox(
-            width: 70.w,
+            width: 60.w,
             child: Text(
               label,
-              style: AppTextStyle(color: AppColor.secondary04).b3(),
+              style: AppTextStyle(color: AppColor.secondary04).b4().copyWith(
+                fontSize: 12.sp,
+              ),
             ),
           ),
-          SizedBox(width: 16.w),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               value,
-              style: AppTextStyle(color: AppColor.secondary07).b2(),
+              style: AppTextStyle(color: AppColor.secondary07).b3().copyWith(
+                fontSize: 13.sp,
+              ),
               maxLines: isMultiline ? null : 1,
               overflow: isMultiline ? null : TextOverflow.ellipsis,
             ),
@@ -224,7 +312,7 @@ class MemberDetailModal extends StatelessWidget {
           child: Container(
             height: 48.h,
             child: OutlinedButton.icon(
-              onPressed: () => _makePhoneCall(context, member.phone),
+              onPressed: () => _makePhoneCall(context, widget.member.phone),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: Colors.green),
                 shape: RoundedRectangleBorder(
@@ -250,7 +338,7 @@ class MemberDetailModal extends StatelessWidget {
           child: Container(
             height: 48.h,
             child: ElevatedButton.icon(
-              onPressed: () => _sendMessage(context, member.phone),
+              onPressed: () => _sendMessage(context, widget.member.phone),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 shape: RoundedRectangleBorder(
@@ -276,7 +364,7 @@ class MemberDetailModal extends StatelessWidget {
   }
 
   Color _getPositionColor() {
-    switch (member.position?.toLowerCase()) {
+    switch (widget.member.position?.toLowerCase()) {
       case '목사':
       case '교역자':
         return Colors.purple;
@@ -321,6 +409,17 @@ class MemberDetailModal extends StatelessWidget {
       default:
         return gender; // 원본 값 반환
     }
+  }
+
+  String _getDepartmentDisplay(String department) {
+    const departmentMap = {
+      'WORSHIP': '예배부',
+      'EDUCATION': '교육부',
+      'MISSION': '선교부',
+      'YOUTH': '청년부',
+      'CHILDREN': '아동부',
+    };
+    return departmentMap[department.toUpperCase()] ?? department;
   }
 
   Future<void> _makePhoneCall(BuildContext context, String? phone) async {
