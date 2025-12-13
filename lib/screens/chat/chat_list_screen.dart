@@ -10,6 +10,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:smart_yoram_app/components/app_dialog.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 채팅 목록 화면
 class ChatListScreen extends StatefulWidget {
@@ -204,45 +205,36 @@ class _ChatListScreenState extends State<ChatListScreen>
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: _loadChatRooms,
-                    child: CustomScrollView(
-                      slivers: [
-                        // 필터 칩 (항상 표시)
-                        SliverToBoxAdapter(
-                          child: _buildFilterChips(),
-                        ),
-                        // 채팅방이 아예 없을 때
-                        if (_chatRooms.isEmpty)
-                          SliverFillRemaining(
-                            child: _buildEmptyState(),
-                          )
-                        // 채팅방은 있지만 필터 결과가 없을 때
-                        else if (_filteredChatRooms.isEmpty)
-                          SliverFillRemaining(
-                            child: _buildFilteredEmptyState(),
-                          )
-                        // 채팅방 리스트
-                        else
-                          SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final chatRoom = _filteredChatRooms[index];
-                                return Column(
-                                  children: [
-                                    _buildChatListTile(chatRoom),
-                                    if (index < _filteredChatRooms.length - 1)
-                                      Divider(
-                                        height: 1,
-                                        thickness: 1,
-                                        color: NewAppColor.neutral200,
-                                        indent: 72.w,
-                                      ),
-                                  ],
-                                );
-                              },
-                              childCount: _filteredChatRooms.length,
-                            ),
+                    child: SlidableAutoCloseBehavior(
+                      child: CustomScrollView(
+                        slivers: [
+                          // 필터 칩 (항상 표시)
+                          SliverToBoxAdapter(
+                            child: _buildFilterChips(),
                           ),
-                      ],
+                          // 채팅방이 아예 없을 때
+                          if (_chatRooms.isEmpty)
+                            SliverFillRemaining(
+                              child: _buildEmptyState(),
+                            )
+                          // 채팅방은 있지만 필터 결과가 없을 때
+                          else if (_filteredChatRooms.isEmpty)
+                            SliverFillRemaining(
+                              child: _buildFilteredEmptyState(),
+                            )
+                          // 채팅방 리스트
+                          else
+                            SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final chatRoom = _filteredChatRooms[index];
+                                  return _buildChatListTile(chatRoom);
+                                },
+                                childCount: _filteredChatRooms.length,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -483,16 +475,19 @@ class _ChatListScreenState extends State<ChatListScreen>
       key: Key('chat_room_${chatRoom.id}'),
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.3,
+        extentRatio: 0.25,
         children: [
-          SlidableAction(
+          CustomSlidableAction(
             onPressed: (context) {
               _deleteChatRoom(chatRoom);
             },
             backgroundColor: NewAppColor.danger600,
-            foregroundColor: Colors.white,
-            label: '나가기',
             borderRadius: BorderRadius.zero,
+            child: Icon(
+              LucideIcons.trash2,
+              color: Colors.white,
+              size: 24.sp,
+            ),
           ),
         ],
       ),

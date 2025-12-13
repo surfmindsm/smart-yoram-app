@@ -995,7 +995,7 @@ class NotificationItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: notification.isRead
               ? Colors.white
-              : Color(categoryStyle.backgroundColor).withOpacity(0.9),
+              : Color(categoryStyle.backgroundColor).withValues(alpha: 0.9),
           // borderRadius: BorderRadius.circular(8.r),
           // border: Border.all(
           //   color: notification.isRead

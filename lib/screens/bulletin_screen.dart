@@ -27,6 +27,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
   List<Bulletin> allBulletins = [];
   List<Bulletin> filteredBulletins = [];
   bool isLoading = true;
+  String? selectedYear; // 선택된 연도 (null이면 전체)
 
   @override
   void initState() {
@@ -144,11 +145,26 @@ class _BulletinScreenState extends State<BulletinScreen> {
     String query = _searchController.text.toLowerCase();
 
     filteredBulletins = allBulletins.where((bulletin) {
-      // 검색어 필터링만 적용
-      return query.isEmpty ||
+      // 검색어 필터링
+      bool matchesSearch = query.isEmpty ||
           bulletin.title.toLowerCase().contains(query) ||
           (bulletin.description?.toLowerCase().contains(query) ?? false);
+
+      // 연도 필터링
+      bool matchesYear = selectedYear == null ||
+          bulletin.date.year.toString() == selectedYear;
+
+      return matchesSearch && matchesYear;
     }).toList();
+  }
+
+  // 사용 가능한 연도 목록 가져오기
+  List<String> _getAvailableYears() {
+    if (allBulletins.isEmpty) return [];
+
+    final years = allBulletins.map((b) => b.date.year.toString()).toSet().toList();
+    years.sort((a, b) => b.compareTo(a)); // 최신 연도부터
+    return years;
   }
 
   void _filterBulletins() {
@@ -159,6 +175,8 @@ class _BulletinScreenState extends State<BulletinScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final availableYears = _getAvailableYears();
+
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
       body: Column(
@@ -169,6 +187,9 @@ class _BulletinScreenState extends State<BulletinScreen> {
             SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
 
           SizedBox(height: 12.h),
+
+          // 연도 필터
+          if (availableYears.isNotEmpty) _buildYearFilter(availableYears),
 
           // 주보 목록
           Expanded(
@@ -230,6 +251,69 @@ class _BulletinScreenState extends State<BulletinScreen> {
                           },
                         ),
                       ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildYearFilter(List<String> years) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String?>(
+                value: selectedYear,
+                icon: Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20.sp,
+                  color: NewAppColor.neutral700,
+                ),
+                isDense: true,
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text(
+                      '전체',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: NewAppColor.neutral900,
+                        fontFamily: 'Pretendard Variable',
+                      ),
+                    ),
+                  ),
+                  ...years.map((year) {
+                    return DropdownMenuItem<String?>(
+                      value: year,
+                      child: Text(
+                        '${year}년',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          color: NewAppColor.neutral900,
+                          fontFamily: 'Pretendard Variable',
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedYear = value;
+                    _filterBulletins();
+                  });
+                },
+              ),
+            ),
           ),
         ],
       ),

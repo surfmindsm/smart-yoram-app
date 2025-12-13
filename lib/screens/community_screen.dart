@@ -160,62 +160,64 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   ),
                   Row(
                     children: [
-                      // 알림
-                      GestureDetector(
-                        onTap: _navigateToNotifications,
-                        child: Container(
-                          padding: EdgeInsets.all(8.w),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Icon(
-                                Icons.notifications_outlined,
-                                size: 24.sp,
-                                color: NewAppColor.neutral700,
-                              ),
-                              // 읽지 않은 알림 배지
-                              if (_unreadNotificationCount > 0)
-                                Positioned(
-                                  right: -4,
-                                  top: -4,
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: _unreadNotificationCount > 9 ? 4.w : 5.w,
-                                      vertical: 2.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: NewAppColor.danger600,
-                                      borderRadius: BorderRadius.circular(10.r),
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 1.5,
+                      // 알림 (member와 community_admin만 표시)
+                      if (_currentUser!.role == 'member' || _currentUser!.role == 'community_admin') ...[
+                        GestureDetector(
+                          onTap: _navigateToNotifications,
+                          child: Container(
+                            padding: EdgeInsets.all(8.w),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Icon(
+                                  Icons.notifications_outlined,
+                                  size: 24.sp,
+                                  color: NewAppColor.neutral700,
+                                ),
+                                // 읽지 않은 알림 배지
+                                if (_unreadNotificationCount > 0)
+                                  Positioned(
+                                    right: -4,
+                                    top: -4,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: _unreadNotificationCount > 9 ? 4.w : 5.w,
+                                        vertical: 2.h,
                                       ),
-                                    ),
-                                    constraints: BoxConstraints(
-                                      minWidth: 18.w,
-                                      minHeight: 18.w,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        _unreadNotificationCount > 99
-                                            ? '99+'
-                                            : _unreadNotificationCount.toString(),
-                                        style: TextStyle(
+                                      decoration: BoxDecoration(
+                                        color: NewAppColor.danger600,
+                                        borderRadius: BorderRadius.circular(10.r),
+                                        border: Border.all(
                                           color: Colors.white,
-                                          fontSize: 10.sp,
-                                          fontWeight: FontWeight.w700,
-                                          fontFamily: 'Pretendard Variable',
-                                          height: 1.0,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      constraints: BoxConstraints(
+                                        minWidth: 18.w,
+                                        minHeight: 18.w,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          _unreadNotificationCount > 99
+                                              ? '99+'
+                                              : _unreadNotificationCount.toString(),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10.sp,
+                                            fontWeight: FontWeight.w700,
+                                            fontFamily: 'Pretendard Variable',
+                                            height: 1.0,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(width: 4.w),
+                        SizedBox(width: 4.w),
+                      ],
                       // 내 글 관리
                       TextButton.icon(
                         onPressed: _navigateToMyPosts,

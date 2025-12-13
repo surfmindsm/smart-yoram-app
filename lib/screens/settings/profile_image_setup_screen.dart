@@ -236,35 +236,59 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
               ),
               child: SafeArea(
                 top: false,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _saveProfileImage,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: NewAppColor.primary500,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isLoading
-                        ? SizedBox(
-                            height: 20.h,
-                            width: 20.w,
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            widget.isFirstSetup ? '완료' : '저장',
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 건너뛰기 버튼 (첫 설정일 때만 표시)
+                    if (widget.isFirstSetup)
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: _isLoading ? null : _skipProfileSetup,
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 16.h),
+                          ),
+                          child: Text(
+                            '건너뛰기',
                             style: FigmaTextStyles().button1.copyWith(
-                                  color: Colors.white,
+                                  color: NewAppColor.neutral600,
                                 ),
                           ),
-                  ),
+                        ),
+                      ),
+                    if (widget.isFirstSetup) SizedBox(height: 8.h),
+                    // 완료/저장 버튼
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveProfileImage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: NewAppColor.primary500,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                                height: 20.h,
+                                width: 20.w,
+                                child: const CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                widget.isFirstSetup ? '완료' : '저장',
+                                style: FigmaTextStyles().button1.copyWith(
+                                      color: Colors.white,
+                                    ),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -363,6 +387,18 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
           SnackBar(content: Text('이미지 선택 실패: ${e.toString()}')),
         );
       }
+    }
+  }
+
+  /// 건너뛰기 처리 - 기본 이미지 사용
+  Future<void> _skipProfileSetup() async {
+    // 건너뛰기는 이미지 설정 없이 그냥 화면을 닫음
+    // 백엔드에서 mobile_profile_image_url이 null이면 기본 아바타를 보여주도록 처리
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('기본 프로필 이미지를 사용합니다')),
+      );
+      Navigator.pop(context, true);
     }
   }
 

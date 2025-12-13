@@ -2073,61 +2073,89 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     );
   }
 
-  /// 빠른 필터 (교회 소식)
+  /// 빠른 필터 (교회 소식) - 기간/시간 탭바 스타일
   Widget _buildQuickChurchNewsFilters() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: NewAppColor.neutral100,
-        border: const Border(
-          bottom: BorderSide(
-            color: NewAppColor.neutral200,
-            width: 1,
-          ),
-        ),
       ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 전체 칩
-              _buildSmallFilterChip(
-                label: '전체',
-                isSelected: !_hideCompleted,
-                onTap: () {
-                  setState(() {
-                    _hideCompleted = false;
-                    _updateFilteredItems();
-                  });
-                },
+      child: Row(
+        children: [
+          // 기간 탭
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _hideCompleted = false;
+                  _updateFilteredItems();
+                });
+              },
+              child: Container(
+                height: 48.h,
+                decoration: BoxDecoration(
+                  color: !_hideCompleted ? Colors.white : NewAppColor.neutral200,
+                  border: !_hideCompleted
+                      ? Border.all(
+                          color: NewAppColor.primary600,
+                          width: 2,
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(24.r),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '기간',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: !_hideCompleted ? FontWeight.w600 : FontWeight.w400,
+                    color: !_hideCompleted
+                        ? NewAppColor.primary600
+                        : NewAppColor.neutral600,
+                    fontFamily: 'Pretendard Variable',
+                  ),
+                ),
               ),
-              SizedBox(width: 8.w),
-
-              // 구분선
-              Container(
-                width: 1,
-                height: 20.h,
-                color: NewAppColor.neutral300,
-              ),
-              SizedBox(width: 8.w),
-
-              // 종료 제거 필터
-              _buildSmallFilterChip(
-                label: '종료제거',
-                isSelected: _hideCompleted,
-                onTap: () {
-                  setState(() {
-                    _hideCompleted = !_hideCompleted;
-                    _updateFilteredItems();
-                  });
-                },
-              ),
-            ],
+            ),
           ),
-        ),
+          SizedBox(width: 8.w),
+          // 시간 탭
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _hideCompleted = true;
+                  _updateFilteredItems();
+                });
+              },
+              child: Container(
+                height: 48.h,
+                decoration: BoxDecoration(
+                  color: _hideCompleted ? Colors.white : NewAppColor.neutral200,
+                  border: _hideCompleted
+                      ? Border.all(
+                          color: NewAppColor.primary600,
+                          width: 2,
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(24.r),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '시간',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: _hideCompleted ? FontWeight.w600 : FontWeight.w400,
+                    color: _hideCompleted
+                        ? NewAppColor.primary600
+                        : NewAppColor.neutral600,
+                    fontFamily: 'Pretendard Variable',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

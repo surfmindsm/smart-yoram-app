@@ -7,7 +7,8 @@ import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/services/chat_service.dart';
 import 'package:smart_yoram_app/services/badge_service.dart';
 import 'package:smart_yoram_app/models/user.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, RealtimeChannel, PostgresChangeEvent;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show Supabase, RealtimeChannel, PostgresChangeEvent;
 import 'home_screen.dart';
 import 'bulletin_notices_integrated_screen.dart';
 import 'members_screen.dart';
@@ -23,7 +24,8 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObserver {
+class _MainNavigationState extends State<MainNavigation>
+    with WidgetsBindingObserver {
   final AuthService _authService = AuthService();
   final ChatService _chatService = ChatService();
 
@@ -255,7 +257,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     // 채팅 탭으로 이동하면 잠시 후 배지 새로고침 (읽음 처리 반영)
     // community_admin은 index 1이 채팅, 일반 사용자는 index 3이 채팅
     final isChatTab = (_currentUser!.isCommunityAdmin && index == 1) ||
-                      (!_currentUser!.isCommunityAdmin && index == 3);
+        (!_currentUser!.isCommunityAdmin && index == 3);
 
     if (isChatTab && _currentUser != null) {
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -302,7 +304,7 @@ class _NavItem extends StatelessWidget {
                 children: [
                   Icon(
                     icon,
-                    size: 24.w,
+                    size: 20.w,
                     color: iconColor,
                   ),
                   // 배지 표시 (개수가 0보다 클 때만)
@@ -332,7 +334,7 @@ class _NavItem extends StatelessWidget {
                             badgeCount > 99 ? '99+' : badgeCount.toString(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 10.sp,
+                              fontSize: 9.sp,
                               fontWeight: FontWeight.w700,
                               fontFamily: 'Pretendard Variable',
                               height: 1.0,

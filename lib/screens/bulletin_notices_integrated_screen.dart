@@ -82,12 +82,9 @@ class _BulletinNoticesIntegratedScreenState
       animation: _tabController,
       builder: (context, child) {
         return Container(
-          height: 48.h,
+          padding: EdgeInsets.all(4.r),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: NewAppColor.transparent,
-              width: 0,
-            ),
+            color: NewAppColor.neutral200,
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Row(
@@ -101,10 +98,17 @@ class _BulletinNoticesIntegratedScreenState
                     });
                   },
                   child: Container(
+                    height: 48.h,
                     decoration: BoxDecoration(
                       color: _tabController.index == 0
-                          ? NewAppColor.neutral700
+                          ? Colors.white
                           : Colors.transparent,
+                      border: _tabController.index == 0
+                          ? Border.all(
+                              color: NewAppColor.primary500,
+                              width: 1,
+                            )
+                          : null,
                       borderRadius: BorderRadius.circular(24.r),
                     ),
                     child: Center(
@@ -112,17 +116,20 @@ class _BulletinNoticesIntegratedScreenState
                         '주보',
                         style: TextStyle(
                           color: _tabController.index == 0
-                              ? Colors.white
+                              ? NewAppColor.primary600
                               : NewAppColor.neutral600,
                           fontSize: 16.sp,
                           fontFamily: 'Pretendard Variable',
-                          fontWeight: FontWeight.w600,
+                          fontWeight: _tabController.index == 0
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
+              SizedBox(width: 4.w),
               // 교회소식 버튼
               Expanded(
                 child: GestureDetector(
@@ -132,10 +139,17 @@ class _BulletinNoticesIntegratedScreenState
                     });
                   },
                   child: Container(
+                    height: 48.h,
                     decoration: BoxDecoration(
                       color: _tabController.index == 1
-                          ? NewAppColor.neutral700
+                          ? Colors.white
                           : Colors.transparent,
+                      border: _tabController.index == 1
+                          ? Border.all(
+                              color: NewAppColor.primary500,
+                              width: 1,
+                            )
+                          : null,
                       borderRadius: BorderRadius.circular(24.r),
                     ),
                     child: Center(
@@ -143,11 +157,13 @@ class _BulletinNoticesIntegratedScreenState
                         '교회소식',
                         style: TextStyle(
                           color: _tabController.index == 1
-                              ? Colors.white
+                              ? NewAppColor.primary600
                               : NewAppColor.neutral600,
                           fontSize: 16.sp,
                           fontFamily: 'Pretendard Variable',
-                          fontWeight: FontWeight.w600,
+                          fontWeight: _tabController.index == 1
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                     ),

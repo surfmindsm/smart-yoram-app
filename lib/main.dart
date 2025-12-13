@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import.*lucide_icons.*;
@@ -29,6 +31,7 @@ import 'screens/signup/signup_selection_screen.dart';
 import 'screens/signup/church_signup_screen.dart';
 import 'screens/signup/community_signup_screen.dart';
 import 'screens/signup/signup_success_screen.dart';
+import 'screens/lottie_test_screen.dart';
 import 'services/auth_service.dart';
 import 'services/fcm_service.dart';
 import 'services/font_settings_service.dart';
@@ -38,32 +41,13 @@ import 'widgets/update_dialog.dart';
 /// 전역 네비게이터 키 (FCM 알림 탭 처리용)
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() async {
+void main() {
+  print('🚀 MAIN: 앱 시작');
   WidgetsFlutterBinding.ensureInitialized();
+  print('🚀 MAIN: WidgetsFlutterBinding 초기화 완료');
 
-  // 기본 화면 방향을 세로 모드로 설정
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  // Supabase 초기화 (Firebase보다 먼저 - FCMService에서 사용하므로)
-  await Supabase.initialize(
-    url: 'https://adzhdsajdamrflvybhxq.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
-  );
-  print('✅ Supabase 초기화 완료');
-
-  // Firebase 초기화를 더 안전하게 처리
-  await initializeFirebase();
-
-  // 글꼴 설정 서비스 초기화
-  await FontSettingsService().initialize();
-
-  // 네이버 지도 SDK 초기화
-  await NaverMapSdk.instance.initialize(clientId: NaverMapConfig.clientId);
-
+  // 즉시 앱 실행 (스플래시 화면 표시)
+  print('🚀 MAIN: runApp() 호출 시작');
   runApp(
     ProviderScope(
       child: provider.ChangeNotifierProvider(
@@ -72,6 +56,7 @@ void main() async {
       ),
     ),
   );
+  print('🚀 MAIN: runApp() 호출 완료');
 }
 
 class MyApp extends ConsumerWidget {
@@ -139,6 +124,8 @@ class MyApp extends ConsumerWidget {
                   '/admin/pastoral-care': (context) =>
                       const AdminPastoralCareListScreen(),
                   '/admin/notices': (context) => const AdminNoticeListScreen(),
+                  // Test routes
+                  '/lottie-test': (context) => const LottieTestScreen(),
                 },
               ),
             );
@@ -158,24 +145,91 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
-  bool _isLoading = true;
+  bool _isInitialized = false;
   bool _isLoggedIn = false;
   final AuthService _authService = AuthService();
-  final AppVersionService _versionService = AppVersionService();
+  AppVersionService? _versionService; // Supabase 초기화 후 생성
 
   @override
   void initState() {
     super.initState();
+    print('🔧 AUTH_WRAPPER: initState() 시작');
+    // 바로 초기화 시작 (네이티브 스플래시가 계속 표시됨)
     _initializeApp();
   }
 
-  /// 앱 초기화: 버전 체크 → 인증 확인 순서로 진행
+  /// 앱 초기화: 최소한만 하고 빠르게 화면 표시
   Future<void> _initializeApp() async {
-    // 1. 먼저 버전 체크 (로그인 여부 무관)
-    await _checkAppVersion();
+    print('⏱️ AUTH_WRAPPER: _initializeApp() 시작');
 
-    // 2. 버전 체크 후 인증 상태 확인
-    await _checkAuthStatus();
+    // 1. 화면 방향 설정 (빠름)
+    print('📱 AUTH_WRAPPER: 화면 방향 설정');
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
+    // 2. Supabase 초기화를 백그라운드로 이동
+    _initializeSupabase();
+
+    // 3. Flutter 스플래시를 충분히 보여주기 (2초)
+    await Future.delayed(const Duration(milliseconds: 2000));
+
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
+  }
+
+  /// Supabase 및 기타 서비스 초기화 (백그라운드)
+  Future<void> _initializeSupabase() async {
+    try {
+      print('🔄 AUTH_WRAPPER: Supabase 초기화 시작 (백그라운드)');
+      await Supabase.initialize(
+        url: 'https://adzhdsajdamrflvybhxq.supabase.co',
+        anonKey:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemhkc2FqZGFtcmZsdnliaHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NDg5ODEsImV4cCI6MjA2OTQyNDk4MX0.pgn6M5_ihDFt3ojQmCoc3Qf8pc7LzRvQEIDT7g1nW3c',
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          print('⚠️ Supabase 초기화 타임아웃');
+          throw TimeoutException('Supabase initialization timeout');
+        },
+      );
+      print('✅ Supabase 초기화 완료');
+
+      // AppVersionService 생성
+      _versionService = AppVersionService();
+
+      // 인증 상태 확인
+      await _checkAuthStatus();
+
+      // 백그라운드 서비스 초기화
+      _initializeBackgroundServices();
+    } catch (e) {
+      print('⚠️ Supabase 초기화 중 오류: $e');
+      if (mounted) {
+        setState(() {
+          _isLoggedIn = false;
+        });
+      }
+    }
+  }
+
+  /// 백그라운드 서비스 초기화 (앱 시작을 방해하지 않음)
+  void _initializeBackgroundServices() {
+    // Firebase, FCM, 글꼴, 네이버 지도, 버전 체크를 병렬로 비동기 실행
+    Future.wait([
+      initializeFirebase(),
+      FontSettingsService().initialize(),
+      NaverMapSdk.instance.initialize(clientId: NaverMapConfig.clientId),
+      _checkAppVersion(),
+    ]).then((_) {
+      print('✅ 백그라운드 서비스 초기화 완료');
+    }).catchError((error) {
+      print('⚠️ 백그라운드 서비스 초기화 중 일부 실패: $error');
+    });
   }
 
   Future<void> _checkAuthStatus() async {
@@ -187,7 +241,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
         if (mounted) {
           setState(() {
             _isLoggedIn = false;
-            _isLoading = false;
           });
         }
         return;
@@ -197,7 +250,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
       if (mounted) {
         setState(() {
           _isLoggedIn = hasStoredAuth;
-          _isLoading = false;
         });
       }
     } catch (e) {
@@ -205,18 +257,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
       if (mounted) {
         setState(() {
           _isLoggedIn = false;
-          _isLoading = false;
         });
       }
     }
   }
 
   Future<void> _checkAppVersion() async {
-    if (!mounted) return;
+    if (!mounted || _versionService == null) return;
 
     try {
       print('🔍 AUTH_WRAPPER: Checking app version...');
-      final versionCheckResult = await _versionService.checkVersion();
+      final versionCheckResult = await _versionService!.checkVersion();
 
       if (!mounted) return;
 
@@ -233,28 +284,38 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    // 초기화 중에는 스플래시 화면 표시
+    if (!_isInitialized) {
       return Scaffold(
         backgroundColor: Colors.white,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // 로고 (네이티브 스플래시와 동일한 크기)
               Image.asset(
                 'assets/images/logo_type3_white.png',
-                width: 200,
-                height: 80,
+                width: 200.w,
+                height: 80.h,
                 fit: BoxFit.contain,
               ),
-              const SizedBox(height: 40),
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
+              SizedBox(height: 40.h),
+              // 로딩 인디케이터
+              SizedBox(
+                width: 32.w,
+                height: 32.h,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                ),
+              ),
             ],
           ),
         ),
       );
     }
 
+    // 초기화 완료 후 로그인 또는 메인 화면으로 이동
     return _isLoggedIn ? const MainNavigation() : const LoginScreen();
   }
 }
