@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/user.dart';
@@ -8,7 +9,8 @@ import 'package:smart_yoram_app/services/notification_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_favorites_screen.dart';
 import 'package:smart_yoram_app/screens/notification_center_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, RealtimeChannel, PostgresChangeEvent;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show Supabase, RealtimeChannel, PostgresChangeEvent;
 
 /// 커뮤니티 메인 화면
 /// 웹 명세서 기반 9개 카테고리 구조
@@ -67,7 +69,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
   /// 읽지 않은 알림 개수 로드
   Future<void> _loadUnreadNotificationCount() async {
     try {
-      final response = await _notificationService.getMyNotifications(limit: 100);
+      final response =
+          await _notificationService.getMyNotifications(limit: 100);
       if (response.success && response.data != null) {
         final unreadCount = response.data!.where((n) => !n.isRead).length;
         if (mounted) {
@@ -161,7 +164,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   Row(
                     children: [
                       // 알림 (member와 community_admin만 표시)
-                      if (_currentUser!.role == 'member' || _currentUser!.role == 'community_admin') ...[
+                      if (_currentUser!.role == 'member' ||
+                          _currentUser!.role == 'community_admin') ...[
                         GestureDetector(
                           onTap: _navigateToNotifications,
                           child: Container(
@@ -181,12 +185,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                     top: -4,
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
-                                        horizontal: _unreadNotificationCount > 9 ? 4.w : 5.w,
+                                        horizontal: _unreadNotificationCount > 9
+                                            ? 4.w
+                                            : 5.w,
                                         vertical: 2.h,
                                       ),
                                       decoration: BoxDecoration(
                                         color: NewAppColor.danger600,
-                                        borderRadius: BorderRadius.circular(10.r),
+                                        borderRadius:
+                                            BorderRadius.circular(10.r),
                                         border: Border.all(
                                           color: Colors.white,
                                           width: 1.5,
@@ -200,7 +207,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                         child: Text(
                                           _unreadNotificationCount > 99
                                               ? '99+'
-                                              : _unreadNotificationCount.toString(),
+                                              : _unreadNotificationCount
+                                                  .toString(),
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 10.sp,
@@ -276,47 +284,56 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  /// 카테고리 리스트 빌드 (당근마켓 스타일)
+  /// 카테고리 리스트 빌드 (케이뱅크 스타일)
   Widget _buildCategoryList() {
     final categories = _getCategories();
 
-    return ListView.separated(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      itemCount: categories.length,
-      separatorBuilder: (context, index) => Divider(
-        height: 1,
-        thickness: 1,
-        indent: 72.w,
-        color: NewAppColor.transparent,
+    return Container(
+      color: NewAppColor.neutral100,
+      child: ListView.separated(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
+        itemCount: categories.length,
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          thickness: 1,
+          color: Colors.transparent,
+          indent: 20.w,
+          endIndent: 20.w,
+        ),
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          return _CategoryListItem(
+            category: category,
+            onTap: () => _navigateToCategory(category),
+          );
+        },
       ),
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return _CategoryListItem(
-          category: category,
-          onTap: () => _navigateToCategory(category),
-        );
-      },
     );
   }
 
   /// 권한에 따른 카테고리 목록 반환
   List<CommunityCategory> _getCategories() {
+    // 통일된 아이콘 컬러 (케이뱅크 스타일)
+    const iconColor = Color(0xFF4A90E2);
+    const iconBgColor = Color(0xFFE8F2FC);
+
     final baseCategories = [
       CommunityCategory(
         id: 'sharing-market',
         title: '물품 판매',
         subtitle: '나눔하고 판매하는 물품',
-        icon: Icons.storefront_outlined,
-        color: NewAppColor.primary600,
-        backgroundColor: NewAppColor.primary200,
+        icon: LucideIcons.shoppingBag,
+        color: iconColor,
+        backgroundColor: iconBgColor,
       ),
       CommunityCategory(
         id: 'item-request',
         title: '물품 요청',
         subtitle: '필요한 물품 요청',
-        icon: Icons.shopping_cart_outlined,
-        color: NewAppColor.primary600,
-        backgroundColor: NewAppColor.primary200,
+        icon: LucideIcons.search,
+        color: iconColor,
+        backgroundColor: iconBgColor,
       ),
     ];
 
@@ -328,33 +345,33 @@ class _CommunityScreenState extends State<CommunityScreen> {
           id: 'job-posting',
           title: '사역자 모집',
           subtitle: '교회/기관 채용',
-          icon: Icons.work_outline,
-          color: Colors.blue,
-          backgroundColor: Colors.blue.shade50,
+          icon: LucideIcons.briefcase,
+          color: iconColor,
+          backgroundColor: iconBgColor,
         ),
         CommunityCategory(
           id: 'music-team-recruit',
           title: '행사팀 모집',
           subtitle: '행사팀 모집',
-          icon: Icons.music_note_outlined,
-          color: NewAppColor.secondary600,
-          backgroundColor: NewAppColor.secondary200,
+          icon: LucideIcons.users,
+          color: iconColor,
+          backgroundColor: iconBgColor,
         ),
         CommunityCategory(
           id: 'music-team-seeking',
           title: '행사팀 지원',
           subtitle: '행사팀 지원하기',
-          icon: Icons.queue_music_outlined,
-          color: NewAppColor.secondary600,
-          backgroundColor: NewAppColor.secondary200,
+          icon: LucideIcons.userPlus,
+          color: iconColor,
+          backgroundColor: iconBgColor,
         ),
         CommunityCategory(
           id: 'church-news',
           title: '행사 소식',
           subtitle: '교회 행사 및 소식',
-          icon: Icons.event_outlined,
-          color: Colors.purple,
-          backgroundColor: Colors.purple.shade50,
+          icon: LucideIcons.megaphone,
+          color: iconColor,
+          backgroundColor: iconBgColor,
         ),
       ];
     }
@@ -366,33 +383,33 @@ class _CommunityScreenState extends State<CommunityScreen> {
         id: 'job-posting',
         title: '사역자 모집',
         subtitle: '교회/기관 채용',
-        icon: Icons.work_outline,
-        color: Colors.blue,
-        backgroundColor: Colors.blue.shade50,
+        icon: LucideIcons.briefcase,
+        color: iconColor,
+        backgroundColor: iconBgColor,
       ),
       CommunityCategory(
         id: 'music-team-recruit',
         title: '행사팀 모집',
         subtitle: '행사팀 모집',
-        icon: Icons.music_note_outlined,
-        color: NewAppColor.secondary600,
-        backgroundColor: NewAppColor.secondary200,
+        icon: LucideIcons.users,
+        color: iconColor,
+        backgroundColor: iconBgColor,
       ),
       CommunityCategory(
         id: 'music-team-seeking',
         title: '행사팀 지원',
         subtitle: '행사팀 지원하기',
-        icon: Icons.queue_music_outlined,
-        color: NewAppColor.secondary600,
-        backgroundColor: NewAppColor.secondary200,
+        icon: LucideIcons.userPlus,
+        color: iconColor,
+        backgroundColor: iconBgColor,
       ),
       CommunityCategory(
         id: 'church-news',
         title: '행사 소식',
         subtitle: '교회 행사 및 소식',
-        icon: Icons.event_outlined,
-        color: Colors.purple,
-        backgroundColor: Colors.purple.shade50,
+        icon: LucideIcons.megaphone,
+        color: iconColor,
+        backgroundColor: iconBgColor,
       ),
     ];
   }
@@ -506,7 +523,7 @@ class CommunityCategory {
   });
 }
 
-/// 카테고리 리스트 아이템 (당근마켓 스타일)
+/// 카테고리 리스트 아이템 (케이뱅크 스타일 - 구분선)
 class _CategoryListItem extends StatelessWidget {
   final CommunityCategory category;
   final VoidCallback onTap;
@@ -521,16 +538,17 @@ class _CategoryListItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        color: NewAppColor.neutral100,
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
         child: Row(
           children: [
-            // 아이콘
+            // 아이콘 컨테이너
             Container(
               width: 48.w,
               height: 48.h,
               decoration: BoxDecoration(
                 color: category.backgroundColor,
-                borderRadius: BorderRadius.circular(8.r),
+                borderRadius: BorderRadius.circular(14.r),
               ),
               child: Icon(
                 category.icon,
@@ -547,30 +565,26 @@ class _CategoryListItem extends StatelessWidget {
                   Text(
                     category.title,
                     style: TextStyle(
-                      color: NewAppColor.neutral900,
-                      fontSize: 16.sp,
+                      color: const Color(0xFF000000),
+                      fontSize: 17.sp,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Pretendard Variable',
+                      height: 1.4,
                     ),
                   ),
                   SizedBox(height: 2.h),
                   Text(
                     category.subtitle,
                     style: TextStyle(
-                      color: NewAppColor.neutral600,
-                      fontSize: 13.sp,
+                      color: const Color(0xFF999999),
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w400,
                       fontFamily: 'Pretendard Variable',
+                      height: 1.4,
                     ),
                   ),
                 ],
               ),
-            ),
-            // 화살표
-            Icon(
-              Icons.chevron_right,
-              color: NewAppColor.neutral400,
-              size: 24.sp,
             ),
           ],
         ),

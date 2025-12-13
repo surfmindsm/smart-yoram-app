@@ -105,7 +105,7 @@ class _BulletinNoticesIntegratedScreenState
                           : Colors.transparent,
                       border: _tabController.index == 0
                           ? Border.all(
-                              color: NewAppColor.primary500,
+                              color: NewAppColor.white,
                               width: 1,
                             )
                           : null,
@@ -146,7 +146,7 @@ class _BulletinNoticesIntegratedScreenState
                           : Colors.transparent,
                       border: _tabController.index == 1
                           ? Border.all(
-                              color: NewAppColor.primary500,
+                              color: NewAppColor.white,
                               width: 1,
                             )
                           : null,
