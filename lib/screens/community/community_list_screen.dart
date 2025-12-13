@@ -65,8 +65,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   String _instrumentFilter =
       'all'; // 악기/파트 필터 (행사팀 지원): all(전체), solo(솔로), praise-team(찬양팀), etc.
   String? _selectedDayFilter; // 활동 가능 요일 필터 (행사팀 지원)
-  String _priorityFilter =
-      'all'; // 우선순위 필터 (교회소식): all(전체), urgent(긴급), important(중요), normal(일반)
 
   @override
   void initState() {
@@ -434,17 +432,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       }).toList();
     }
 
-    // 우선순위 필터 (교회 소식)
-    if (_priorityFilter != 'all' &&
-        widget.type == CommunityListType.churchNews) {
-      filtered = filtered.where((item) {
-        if (item is ChurchNews) {
-          return item.priority?.toLowerCase() == _priorityFilter;
-        }
-        return false;
-      }).toList();
-    }
-
     // 카테고리 필터 (교회 소식)
     if (_selectedCategory != null &&
         widget.type == CommunityListType.churchNews) {
@@ -474,138 +461,48 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
-      appBar: widget.type == CommunityListType.churchNews
-          ? null
-          : AppBar(
-              backgroundColor: NewAppColor.neutral100,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              surfaceTintColor: Colors.transparent,
-              leading: IconButton(
-                icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
-                onPressed: () => Navigator.pop(context),
+      appBar: AppBar(
+        backgroundColor: NewAppColor.neutral100,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.title,
+          style: FigmaTextStyles().headline4.copyWith(
+                color: NewAppColor.neutral900,
               ),
-              title: Text(
-                widget.title,
-                style: FigmaTextStyles().headline4.copyWith(
-                      color: NewAppColor.neutral900,
-                    ),
-              ),
-              actions: [
-                // 필터 버튼 (무료나눔/물품판매/물품요청/사역자모집/행사팀모집/행사팀지원)
-                if (widget.type == CommunityListType.freeSharing ||
-                    widget.type == CommunityListType.itemSale ||
-                    widget.type == CommunityListType.itemRequest ||
-                    widget.type == CommunityListType.jobPosting ||
-                    widget.type == CommunityListType.musicTeamRecruit ||
-                    widget.type == CommunityListType.musicTeamSeeking)
-                  IconButton(
-                    icon: const Icon(LucideIcons.filter, color: Colors.black),
-                    onPressed: _showAdvancedFilterBottomSheet,
-                  ),
-                // 검색 버튼
-                IconButton(
-                  icon: const Icon(LucideIcons.search, color: Colors.black),
-                  onPressed: () {
-                    // TODO: 검색 기능
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('검색 기능은 준비 중입니다')),
-                    );
-                  },
-                ),
-              ],
+        ),
+        actions: [
+          // 필터 버튼 (무료나눔/물품판매/물품요청/사역자모집/행사팀모집/행사팀지원/교회소식)
+          if (widget.type == CommunityListType.freeSharing ||
+              widget.type == CommunityListType.itemSale ||
+              widget.type == CommunityListType.itemRequest ||
+              widget.type == CommunityListType.jobPosting ||
+              widget.type == CommunityListType.musicTeamRecruit ||
+              widget.type == CommunityListType.musicTeamSeeking ||
+              widget.type == CommunityListType.churchNews)
+            IconButton(
+              icon: const Icon(LucideIcons.filter, color: Colors.black),
+              onPressed: _showAdvancedFilterBottomSheet,
             ),
+          // 검색 버튼
+          IconButton(
+            icon: const Icon(LucideIcons.search, color: Colors.black),
+            onPressed: () {
+              // TODO: 검색 기능
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('검색 기능은 준비 중입니다')),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          // 교회 소식 전용 헤더 (연락처 스타일)
-          if (widget.type == CommunityListType.churchNews) ...[
-            SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
-            // 뒤로가기 버튼 + 제목
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(LucideIcons.chevronLeft,
-                        color: Colors.black, size: 24.sp),
-                    onPressed: () => Navigator.pop(context),
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    widget.title,
-                    style: FigmaTextStyles().headline4.copyWith(
-                          color: NewAppColor.neutral900,
-                        ),
-                  ),
-                  Spacer(),
-                  // 필터 버튼
-                  IconButton(
-                    icon: const Icon(LucideIcons.filter, color: Colors.black),
-                    onPressed: _showAdvancedFilterBottomSheet,
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                  ),
-                ],
-              ),
-            ),
-            // 검색창 (연락처 스타일)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              color: Colors.transparent,
-              child: Container(
-                width: double.infinity,
-                height: 48.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12.r),
-                  gradient: LinearGradient(
-                    colors: [
-                      NewAppColor.primary600,
-                      NewAppColor.primary600.withValues(alpha: 0.7),
-                      NewAppColor.primary600,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Container(
-                  margin: EdgeInsets.all(1.r), // 그라디언트 보더 두께
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(11.r),
-                    color: Colors.white,
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(width: 16.w),
-                      Icon(
-                        Icons.search,
-                        size: 20.r,
-                        color: NewAppColor.neutral500,
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: '교회 소식 검색',
-                            hintStyle: const FigmaTextStyles().body2.copyWith(
-                                  color: NewAppColor.neutral500,
-                                ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          style: const FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral900,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
           // 빠른 필터 (무료나눔/물품판매)
           if (widget.type == CommunityListType.freeSharing ||
               widget.type == CommunityListType.itemSale)
@@ -2073,89 +1970,40 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     );
   }
 
-  /// 빠른 필터 (교회 소식) - 기간/시간 탭바 스타일
+  /// 빠른 필터 (교회 소식)
   Widget _buildQuickChurchNewsFilters() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: NewAppColor.neutral100,
+        border: const Border(
+          bottom: BorderSide(
+            color: NewAppColor.neutral200,
+            width: 1,
+          ),
+        ),
       ),
-      child: Row(
-        children: [
-          // 기간 탭
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _hideCompleted = false;
-                  _updateFilteredItems();
-                });
-              },
-              child: Container(
-                height: 48.h,
-                decoration: BoxDecoration(
-                  color: !_hideCompleted ? Colors.white : NewAppColor.neutral200,
-                  border: !_hideCompleted
-                      ? Border.all(
-                          color: NewAppColor.primary600,
-                          width: 2,
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(24.r),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '기간',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: !_hideCompleted ? FontWeight.w600 : FontWeight.w400,
-                    color: !_hideCompleted
-                        ? NewAppColor.primary600
-                        : NewAppColor.neutral600,
-                    fontFamily: 'Pretendard Variable',
-                  ),
-                ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 종료 제거 필터
+              _buildSmallFilterChip(
+                label: '종료제거',
+                isSelected: _hideCompleted,
+                onTap: () {
+                  setState(() {
+                    _hideCompleted = !_hideCompleted;
+                    _updateFilteredItems();
+                  });
+                },
               ),
-            ),
+            ],
           ),
-          SizedBox(width: 8.w),
-          // 시간 탭
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _hideCompleted = true;
-                  _updateFilteredItems();
-                });
-              },
-              child: Container(
-                height: 48.h,
-                decoration: BoxDecoration(
-                  color: _hideCompleted ? Colors.white : NewAppColor.neutral200,
-                  border: _hideCompleted
-                      ? Border.all(
-                          color: NewAppColor.primary600,
-                          width: 2,
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(24.r),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '시간',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: _hideCompleted ? FontWeight.w600 : FontWeight.w400,
-                    color: _hideCompleted
-                        ? NewAppColor.primary600
-                        : NewAppColor.neutral600,
-                    fontFamily: 'Pretendard Variable',
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
