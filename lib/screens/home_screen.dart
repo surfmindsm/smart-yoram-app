@@ -940,123 +940,67 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   SizedBox(height: 12.h),
-                  // 전화번호와 위치 (2열 그리드)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            print('📞 HOME: 전화 섹션 클릭됨!');
-                            // 전화번호 유효성 검사 (최소 9자리 이상, 숫자와 하이픈만 포함)
-                            String phone = currentChurch?.phone ?? '031-563-5210';
-                            if (phone.replaceAll(RegExp(r'[^\d]'), '').length < 9) {
-                              print('⚠️ HOME: 유효하지 않은 전화번호, fallback 사용');
-                              phone = '031-563-5210';
-                            }
-                            _makePhoneCall(phone);
-                          },
-                          borderRadius: BorderRadius.circular(12.r),
-                          child: Container(
-                            padding: EdgeInsets.all(12.r),
+                  // 전화번호
+                  InkWell(
+                    onTap: () {
+                      print('📞 HOME: 전화 섹션 클릭됨!');
+                      // 전화번호 유효성 검사 (최소 9자리 이상, 숫자와 하이픈만 포함)
+                      String phone = currentChurch?.phone ?? '031-563-5210';
+                      if (phone.replaceAll(RegExp(r'[^\d]'), '').length < 9) {
+                        print('⚠️ HOME: 유효하지 않은 전화번호, fallback 사용');
+                        phone = '031-563-5210';
+                      }
+                      _makePhoneCall(phone);
+                    },
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Container(
+                      padding: EdgeInsets.all(12.r),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.neutral100,
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(6.r),
                             decoration: BoxDecoration(
-                              color: NewAppColor.neutral100,
-                              borderRadius: BorderRadius.circular(12.r),
+                              color: NewAppColor.success200,
+                              borderRadius: BorderRadius.circular(6.r),
                             ),
-                            child: Row(
+                            child: Icon(
+                              Icons.phone,
+                              color: NewAppColor.success600,
+                              size: 16,
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  padding: EdgeInsets.all(6.r),
-                                  decoration: BoxDecoration(
-                                    color: NewAppColor.success200,
-                                    borderRadius: BorderRadius.circular(6.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.phone,
-                                    color: NewAppColor.success600,
-                                    size: 16,
-                                  ),
+                                Text(
+                                  '전화',
+                                  style: const FigmaTextStyles()
+                                      .body3
+                                      .copyWith(
+                                        color: NewAppColor.neutral600,
+                                      ),
                                 ),
-                                SizedBox(width: 8.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '전화',
-                                        style: const FigmaTextStyles()
-                                            .body3
-                                            .copyWith(
-                                              color: NewAppColor.neutral600,
-                                            ),
+                                Text(
+                                  currentChurch?.phone ?? '031-563-5210',
+                                  style: const FigmaTextStyles()
+                                      .body2
+                                      .copyWith(
+                                        color: NewAppColor.neutral900,
                                       ),
-                                      Text(
-                                        currentChurch?.phone ?? '031-563-5210',
-                                        style: const FigmaTextStyles()
-                                            .body2
-                                            .copyWith(
-                                              color: NewAppColor.neutral900,
-                                            ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.all(12.r),
-                          decoration: BoxDecoration(
-                            color: NewAppColor.neutral100,
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(6.r),
-                                decoration: BoxDecoration(
-                                  color: NewAppColor.warning200,
-                                  borderRadius: BorderRadius.circular(6.r),
-                                ),
-                                child: Icon(
-                                  Icons.location_on,
-                                  color: NewAppColor.warning600,
-                                  size: 16,
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '위치',
-                                      style: const FigmaTextStyles()
-                                          .body3
-                                          .copyWith(
-                                            color: NewAppColor.neutral600,
-                                          ),
-                                    ),
-                                    Text(
-                                      currentChurch?.city ?? '구리시',
-                                      style: const FigmaTextStyles()
-                                          .body2
-                                          .copyWith(
-                                            color: NewAppColor.neutral900,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                   SizedBox(height: 12.h),
                   // 교회 주소 (파란색 배경)
