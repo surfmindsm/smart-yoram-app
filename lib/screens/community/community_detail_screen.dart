@@ -488,38 +488,36 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                                             : ElevatedButton(
                                                                 onPressed:
                                                                     _togglePostStatus,
-                                                                style:
-                                                                    ElevatedButton
-                                                                        .styleFrom(
+                                                                style: ElevatedButton
+                                                                    .styleFrom(
                                                                   backgroundColor:
                                                                       NewAppColor
                                                                           .primary600,
                                                                   foregroundColor:
-                                                                      Colors.white,
+                                                                      Colors
+                                                                          .white,
                                                                   padding: EdgeInsets
                                                                       .symmetric(
                                                                           vertical:
                                                                               14.h),
                                                                   shape:
-                                                                  RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
+                                                                      RoundedRectangleBorder(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
                                                                             12.r),
-                                                              ),
-                                                              elevation: 0,
-                                                            ),
-                                                            child: Text(
-                                                              _getStatusButtonText(),
-                                                              style:
-                                                                  FigmaTextStyles()
+                                                                  ),
+                                                                  elevation: 0,
+                                                                ),
+                                                                child: Text(
+                                                                  _getStatusButtonText(),
+                                                                  style: FigmaTextStyles()
                                                                       .button1
                                                                       .copyWith(
                                                                         color: Colors
                                                                             .white,
                                                                       ),
-                                                            ),
-                                                          ),
+                                                                ),
+                                                              ),
                                   ),
                                 // 작성자가 아닌 경우: 좋아요 + 전화/채팅 버튼
                                 if (!_isAuthor()) ...[
@@ -580,8 +578,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                   // 채팅 버튼
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed:
-                                          _canChat() ? _onChatButtonPressed : null,
+                                      onPressed: _canChat()
+                                          ? _onChatButtonPressed
+                                          : null,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: NewAppColor.primary600,
                                         foregroundColor: Colors.white,
@@ -807,18 +806,39 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
           // === 무료나눔/물품판매 전용 레이아웃 ===
           if (_post is SharingItem) ...[
-            _buildSharingLayout(_post as SharingItem, date, authorName,
-                authorProfilePhotoUrl, churchName, churchLocation, churchAddress, description),
+            _buildSharingLayout(
+                _post as SharingItem,
+                date,
+                authorName,
+                authorProfilePhotoUrl,
+                churchName,
+                churchLocation,
+                churchAddress,
+                description),
           ]
           // === 물품요청 전용 레이아웃 ===
           else if (_post is RequestItem) ...[
-            _buildRequestLayout(_post as RequestItem, date, authorName,
-                authorProfilePhotoUrl, churchName, churchLocation, churchAddress, description),
+            _buildRequestLayout(
+                _post as RequestItem,
+                date,
+                authorName,
+                authorProfilePhotoUrl,
+                churchName,
+                churchLocation,
+                churchAddress,
+                description),
           ]
           // === 사역자 모집 전용 레이아웃 ===
           else if (_post is JobPost) ...[
-            _buildJobPostingLayout(_post as JobPost, date, authorName,
-                authorProfilePhotoUrl, churchName, churchLocation, churchAddress, description),
+            _buildJobPostingLayout(
+                _post as JobPost,
+                date,
+                authorName,
+                authorProfilePhotoUrl,
+                churchName,
+                churchLocation,
+                churchAddress,
+                description),
           ]
           // === 행사팀 모집 전용 레이아웃 ===
           else if (_post is MusicTeamRecruitment) ...[
@@ -839,8 +859,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ]
           // === 행사 소식 전용 레이아웃 ===
           else if (_post is ChurchNews) ...[
-            _buildChurchNewsLayout(_post as ChurchNews, date,
-                authorName, authorProfilePhotoUrl, churchName, churchAddress),
+            _buildChurchNewsLayout(_post as ChurchNews, date, authorName,
+                authorProfilePhotoUrl, churchName, churchAddress),
           ]
           // === 기타 게시글 기본 레이아웃 ===
           else ...[
@@ -881,7 +901,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               SizedBox(height: 4.h),
                               Text(
                                 [
-                                  if (churchName != null && churchName.isNotEmpty)
+                                  if (churchName != null &&
+                                      churchName.isNotEmpty)
                                     churchName,
                                   if (churchLocation != null &&
                                       churchLocation.isNotEmpty)
@@ -3217,7 +3238,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             churchName
                           else
                             '커뮤니티 회원',
-                          if (churchLocation != null && churchLocation.isNotEmpty)
+                          if (churchLocation != null &&
+                              churchLocation.isNotEmpty)
                             churchLocation,
                         ].join(' · '),
                         style: FigmaTextStyles().body2.copyWith(
@@ -3569,7 +3591,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             churchName
                           else
                             '커뮤니티 회원',
-                          if (churchLocation != null && churchLocation.isNotEmpty)
+                          if (churchLocation != null &&
+                              churchLocation.isNotEmpty)
                             churchLocation,
                         ].join(' · '),
                         style: FigmaTextStyles().body2.copyWith(
@@ -4792,7 +4815,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             churchName
                           else
                             '커뮤니티 회원',
-                          if (churchLocation != null && churchLocation.isNotEmpty)
+                          if (churchLocation != null &&
+                              churchLocation.isNotEmpty)
                             churchLocation,
                         ].join(' · '),
                         style: FigmaTextStyles().body2.copyWith(
@@ -5288,17 +5312,16 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 child: Column(
                   children: [
                     _buildInfoRow(label: '카테고리', value: categoryDisplay),
-
-                    if (item.eventDate != null && item.eventDate!.isNotEmpty) ...[
+                    if (item.eventDate != null &&
+                        item.eventDate!.isNotEmpty) ...[
                       SizedBox(height: 12.h),
                       _buildInfoRow(label: '행사일', value: item.eventDate!),
                     ],
-
-                    if (item.eventTime != null && item.eventTime!.isNotEmpty) ...[
+                    if (item.eventTime != null &&
+                        item.eventTime!.isNotEmpty) ...[
                       SizedBox(height: 12.h),
                       _buildInfoRow(label: '행사 시간', value: item.eventTime!),
                     ],
-
                     if (item.location != null && item.location!.isNotEmpty) ...[
                       SizedBox(height: 12.h),
                       _buildInfoRow(label: '장소', value: item.location!),
@@ -5339,8 +5362,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     onTap: () => _showContactDialog(item.contactPhone!),
                   ),
                 // 이메일
-                if (item.contactEmail != null && item.contactEmail!.isNotEmpty) ...[
-                  if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
+                if (item.contactEmail != null &&
+                    item.contactEmail!.isNotEmpty) ...[
+                  if (item.contactPhone != null &&
+                      item.contactPhone!.isNotEmpty)
                     SizedBox(height: 12.h),
                   _buildContactItem(
                     icon: Icons.email_outlined,

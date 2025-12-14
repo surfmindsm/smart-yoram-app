@@ -19,31 +19,31 @@ class MembersScreen extends StatefulWidget {
   State<MembersScreen> createState() => _MembersScreenState();
 }
 
-class _MembersScreenState extends State<MembersScreen>
-    with SingleTickerProviderStateMixin {
+class _MembersScreenState extends State<MembersScreen> {
   final MemberService _memberService = MemberService();
   final TextEditingController _searchController = TextEditingController();
-  late TabController _tabController;
 
   List<Member> allMembers = [];
   List<Member> filteredMembers = [];
   bool isLoading = true;
 
-  // 주소록 탭 목록 (백엔드 정책에 따라)
-  final List<String> tabs = MemberPosition.addressBookTabs;
+  // 필터 상태
+  String? selectedPositionCategory; // 선택된 직분 카테고리
+  String? selectedDepartment; // 선택된 부서
+  String? selectedDistrict; // 선택된 구역 (조직)
+
+  // 정렬 상태
+  bool sortAscending = true; // true: 오름차순, false: 내림차순
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: tabs.length, vsync: this);
-    _tabController.addListener(_filterMembers); // 탭 변경 시 필터링
     _loadMembers();
     _searchController.addListener(_filterMembers);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -98,7 +98,6 @@ class _MembersScreenState extends State<MembersScreen>
 
   void _filterMembers() {
     String query = _searchController.text.toLowerCase();
-    int currentTab = _tabController.index;
 
     setState(() {
       // allMembers가 비어있는 경우 빈 리스트 반환
@@ -109,20 +108,23 @@ class _MembersScreenState extends State<MembersScreen>
 
       List<Member> baseList = allMembers;
 
-      // 탭에 따른 필터링 (position_category 사용)
-      if (currentTab == 0) {
-        // 전체 탭
-        baseList = List.from(allMembers);
-      } else {
-        // 선택된 카테고리로 필터링
-        final selectedCategory =
-            MemberPosition.addressBookCategories[currentTab - 1];
-        baseList = allMembers.where((m) {
-          // positionCategory가 없으면 클라이언트 측에서 계산
+      // 직분별 필터링
+      if (selectedPositionCategory != null) {
+        baseList = baseList.where((m) {
           final category = m.positionCategory ??
               MemberPosition.getPositionCategory(m.position, m.birthdate);
-          return category == selectedCategory;
+          return category == selectedPositionCategory;
         }).toList();
+      }
+
+      // 부서별 필터링
+      if (selectedDepartment != null) {
+        baseList = baseList.where((m) => m.department == selectedDepartment).toList();
+      }
+
+      // 조직별(구역) 필터링
+      if (selectedDistrict != null) {
+        baseList = baseList.where((m) => m.district == selectedDistrict).toList();
       }
 
       // 검색 필터링
@@ -136,9 +138,53 @@ class _MembersScreenState extends State<MembersScreen>
         filteredMembers = List.from(baseList);
       }
 
-      // 가나다 순으로 정렬
-      filteredMembers.sort((a, b) => a.name.compareTo(b.name));
+      // 정렬 (이름순)
+      filteredMembers.sort((a, b) =>
+          sortAscending ? a.name.compareTo(b.name) : b.name.compareTo(a.name));
     });
+  }
+
+  // 직분 카테고리 목록 (한글)
+  Map<String, String> get positionCategories {
+    return {
+      'CLERGY': '교역자',
+      'ELDER': '장로',
+      'DEACONESS': '권사',
+      'DEACON': '집사',
+      'YOUTH': '청년',
+      'CHILDREN': '교회학교',
+      'MEMBER': '성도',
+    };
+  }
+
+  // 사용 가능한 부서 목록 추출
+  List<String> get availableDepartments {
+    final departments = allMembers
+        .where((m) => m.department != null && m.department!.isNotEmpty)
+        .map((m) => m.department!)
+        .toSet()
+        .toList();
+    departments.sort();
+    return departments;
+  }
+
+  // 사용 가능한 구역 목록 추출 (조직)
+  List<String> get availableDistricts {
+    final districts = allMembers
+        .where((m) => m.district != null && m.district!.isNotEmpty)
+        .map((m) => m.district!)
+        .toSet()
+        .toList();
+    // 구역 정렬 (숫자가 있으면 숫자순으로)
+    districts.sort((a, b) {
+      final numA = int.tryParse(a.replaceAll(RegExp(r'[^0-9]'), ''));
+      final numB = int.tryParse(b.replaceAll(RegExp(r'[^0-9]'), ''));
+      if (numA != null && numB != null) {
+        return numA.compareTo(numB);
+      }
+      return a.compareTo(b);
+    });
+    return districts;
   }
 
   @override
@@ -204,70 +250,286 @@ class _MembersScreenState extends State<MembersScreen>
             ),
           ),
 
-          // 탭바
-          Container(
-            height: 56.h,
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.transparent,
-                  width: 2.0,
-                ),
-              ),
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 22.w),
-              child: Row(
-                children: List.generate(tabs.length, (index) {
-                  final isSelected = _tabController.index == index;
-                  return GestureDetector(
-                    onTap: () {
-                      _tabController.animateTo(index);
-                      _filterMembers();
-                    },
-                    child: Container(
-                      height: 56.h,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      decoration: BoxDecoration(
-                        border: isSelected
-                            ? Border(
-                                bottom: BorderSide(
-                                  color: NewAppColor.primary600,
-                                  width: 2.0,
-                                ),
-                              )
-                            : null,
-                      ),
-                      child: Center(
-                        child: Text(
-                          tabs[index],
-                          style: const FigmaTextStyles().title4.copyWith(
-                                color: isSelected
-                                    ? NewAppColor.primary600
-                                    : NewAppColor.neutral400,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ),
+          // 필터 및 정렬 바
+          _buildFilterBar(),
 
           // 교인 목록
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: List.generate(tabs.length, (tabIndex) {
-                return _buildMemberList();
-              }),
-            ),
+            child: _buildMemberList(),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      color: Colors.white,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // 직분별 필터
+            _buildDropdownButton(
+              label: selectedPositionCategory != null
+                  ? positionCategories[selectedPositionCategory]!
+                  : '직분별',
+              isSelected: selectedPositionCategory != null,
+              onTap: _showPositionFilter,
+            ),
+            SizedBox(width: 8.w),
+
+            // 부서별 필터
+            _buildDropdownButton(
+              label: selectedDepartment != null
+                  ? MemberDepartmentOptions.getLabel(selectedDepartment) ??
+                      selectedDepartment!
+                  : '부서별',
+              isSelected: selectedDepartment != null,
+              onTap: _showDepartmentFilter,
+            ),
+            SizedBox(width: 8.w),
+
+            // 조직별 필터 (구역)
+            _buildDropdownButton(
+              label: selectedDistrict ?? '조직별',
+              isSelected: selectedDistrict != null,
+              onTap: _showDistrictFilter,
+            ),
+            SizedBox(width: 8.w),
+
+            // 정렬
+            _buildDropdownButton(
+              label: sortAscending ? '이름순(오름)' : '이름순(내림)',
+              isSelected: !sortAscending, // 내림차순일 때 선택 표시
+              onTap: _toggleSort,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 36.h,
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral100,
+          borderRadius: BorderRadius.circular(18.r),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: FigmaTextStyles().body2.copyWith(
+                    color: isSelected ? Colors.white : NewAppColor.neutral700,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 16.sp,
+              color: isSelected ? Colors.white : NewAppColor.neutral700,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggleSort() {
+    setState(() {
+      sortAscending = !sortAscending;
+    });
+    _filterMembers();
+  }
+
+  void _showPositionFilter() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '직분별 필터',
+                style: FigmaTextStyles().title3.copyWith(
+                      color: NewAppColor.neutral900,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              // 전체 옵션
+              ListTile(
+                title: Text('전체'),
+                trailing: selectedPositionCategory == null
+                    ? Icon(Icons.check, color: NewAppColor.primary600)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    selectedPositionCategory = null;
+                  });
+                  _filterMembers();
+                  Navigator.pop(context);
+                },
+              ),
+              ...positionCategories.entries.map((entry) {
+                return ListTile(
+                  title: Text(entry.value),
+                  trailing: selectedPositionCategory == entry.key
+                      ? Icon(Icons.check, color: NewAppColor.primary600)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      selectedPositionCategory = entry.key;
+                    });
+                    _filterMembers();
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDepartmentFilter() {
+    final departments = availableDepartments;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '부서별 필터',
+                style: FigmaTextStyles().title3.copyWith(
+                      color: NewAppColor.neutral900,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              // 전체 옵션
+              ListTile(
+                title: Text('전체'),
+                trailing: selectedDepartment == null
+                    ? Icon(Icons.check, color: NewAppColor.primary600)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    selectedDepartment = null;
+                  });
+                  _filterMembers();
+                  Navigator.pop(context);
+                },
+              ),
+              ...departments.map((dept) {
+                final label = MemberDepartmentOptions.getLabel(dept) ?? dept;
+                return ListTile(
+                  title: Text(label),
+                  trailing: selectedDepartment == dept
+                      ? Icon(Icons.check, color: NewAppColor.primary600)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      selectedDepartment = dept;
+                    });
+                    _filterMembers();
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDistrictFilter() {
+    final districts = availableDistricts;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '조직별 필터',
+                style: FigmaTextStyles().title3.copyWith(
+                      color: NewAppColor.neutral900,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              // 전체 옵션
+              ListTile(
+                title: Text('전체'),
+                trailing: selectedDistrict == null
+                    ? Icon(Icons.check, color: NewAppColor.primary600)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    selectedDistrict = null;
+                  });
+                  _filterMembers();
+                  Navigator.pop(context);
+                },
+              ),
+              ...districts.map((district) {
+                return ListTile(
+                  title: Text(district),
+                  trailing: selectedDistrict == district
+                      ? Icon(Icons.check, color: NewAppColor.primary600)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      selectedDistrict = district;
+                    });
+                    _filterMembers();
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        );
+      },
     );
   }
 
