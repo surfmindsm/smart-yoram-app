@@ -8,6 +8,7 @@ class Church {
   final String? phone;
   final String? email;
   final String? pastorName;
+  final String? account;           // 교회 헌금 계좌
   final String? homepageUrl;       // 교회 홈페이지 URL
   final String? youtubeChannel;    // 유튜브 채널 URL
   final String? subscriptionStatus;
@@ -27,6 +28,7 @@ class Church {
     this.phone,
     this.email,
     this.pastorName,
+    this.account,
     this.homepageUrl,
     this.youtubeChannel,
     this.subscriptionStatus,
@@ -48,6 +50,7 @@ class Church {
       phone: json['phone'] as String?,
       email: json['email'] as String?,
       pastorName: json['pastor_name'] as String?,
+      account: json['account'] as String?,
       homepageUrl: json['homepage_url'] as String?,
       youtubeChannel: json['youtube_channel'] as String?,
       subscriptionStatus: json['subscription_status'] as String?,
@@ -74,6 +77,7 @@ class Church {
       'phone': phone,
       'email': email,
       'pastor_name': pastorName,
+      'account': account,
       'homepage_url': homepageUrl,
       'youtube_channel': youtubeChannel,
       'subscription_status': subscriptionStatus,

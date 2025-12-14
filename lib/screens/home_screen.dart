@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 // // import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -1126,6 +1127,62 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
+                  // 교회 헌금 계좌 (account가 있을 경우에만 표시)
+                  if (currentChurch?.account != null && currentChurch!.account!.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    GestureDetector(
+                      onTap: () => _copyToClipboard(currentChurch!.account!),
+                      child: Container(
+                        padding: EdgeInsets.all(12.r),
+                        decoration: BoxDecoration(
+                          color: NewAppColor.neutral100,
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(top: 2.h),
+                              child: Icon(
+                                Icons.account_balance,
+                                color: NewAppColor.success600,
+                                size: 16,
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '교회 헌금 계좌',
+                                    style: const FigmaTextStyles().body3.copyWith(
+                                          color: NewAppColor.neutral600,
+                                        ),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    currentChurch!.account!,
+                                    style: const FigmaTextStyles().body2.copyWith(
+                                          color: NewAppColor.neutral900,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(top: 2.h),
+                              child: Icon(
+                                Icons.copy,
+                                color: NewAppColor.neutral500,
+                                size: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               secondChild: const SizedBox.shrink(),
@@ -2164,6 +2221,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('지도 연결 오류: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 클립보드에 복사하기 메서드
+  Future<void> _copyToClipboard(String text) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('계좌번호가 복사되었습니다'),
+            backgroundColor: NewAppColor.success600,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('복사 실패: $e'),
             backgroundColor: Colors.red,
           ),
         );
