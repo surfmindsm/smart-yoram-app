@@ -14,6 +14,103 @@ class MemberService {
   final SupabaseService _supabaseService = SupabaseService();
   final AuthService _authService = AuthService();
 
+  // 교인 목록 캐시
+  List<Member>? _cachedMembers;
+  DateTime? _cacheTimestamp;
+  static const Duration _cacheDuration = Duration(minutes: 10);
+
+  // 조직 계층 구조 캐시 (organizationId -> 계층 경로)
+  final Map<String, String> _organizationPathCache = {};
+
+  /// 캐시 무효화
+  void invalidateCache() {
+    _cachedMembers = null;
+    _cacheTimestamp = null;
+    print('🗑️ MEMBER_SERVICE: 캐시 무효화됨');
+  }
+
+  /// 조직 경로 캐시 무효화
+  void invalidateOrganizationCache() {
+    _organizationPathCache.clear();
+    print('🗑️ MEMBER_SERVICE: 조직 경로 캐시 무효화됨');
+  }
+
+  /// 조직 계층 구조 경로 조회 (캐싱 포함)
+  Future<String?> getOrganizationPath(String organizationId) async {
+    // 캐시 확인
+    if (_organizationPathCache.containsKey(organizationId)) {
+      print('✨ MEMBER_SERVICE: 캐시된 조직 경로 반환 - $organizationId');
+      return _organizationPathCache[organizationId];
+    }
+
+    try {
+      final supabase = _supabaseService.client;
+
+      // 현재 조직 정보 조회
+      final response = await supabase
+          .from('church_organizations')
+          .select('*')
+          .eq('id', organizationId)
+          .maybeSingle();
+
+      if (response == null) {
+        return null;
+      }
+
+      // 계층 구조 경로 생성
+      final path = await _buildOrganizationPath(response);
+
+      // 캐시에 저장
+      _organizationPathCache[organizationId] = path;
+      print('💾 MEMBER_SERVICE: 조직 경로 캐시에 저장 - $organizationId: $path');
+
+      return path;
+    } catch (e) {
+      print('❌ MEMBER_SERVICE: 조직 경로 조회 실패 - $e');
+      return null;
+    }
+  }
+
+  /// 조직 계층 구조를 따라 올라가며 경로 생성 (예: 1교구 > 2구역 > 4셀)
+  Future<String> _buildOrganizationPath(Map<String, dynamic> organization) async {
+    final supabase = _supabaseService.client;
+    final List<String> pathParts = [];
+
+    // 현재 조직명 추가
+    final currentName = organization['name'] ?? organization['organization_name'] ?? organization['org_name'];
+    if (currentName != null) {
+      pathParts.insert(0, currentName as String);
+    }
+
+    // parent_id를 따라 상위 조직 탐색
+    var parentId = organization['parent_id'];
+    while (parentId != null) {
+      try {
+        final parentResponse = await supabase
+            .from('church_organizations')
+            .select('*')
+            .eq('id', parentId)
+            .maybeSingle();
+
+        if (parentResponse != null) {
+          final parentName = parentResponse['name'] ?? parentResponse['organization_name'] ?? parentResponse['org_name'];
+          if (parentName != null) {
+            pathParts.insert(0, parentName as String);
+          }
+          parentId = parentResponse['parent_id'];
+        } else {
+          break;
+        }
+      } catch (e) {
+        print('❌ MEMBER_SERVICE: 상위 조직 조회 실패 (parent_id: $parentId): $e');
+        break;
+      }
+    }
+
+    // ' > ' 구분자로 연결
+    return pathParts.join(' > ');
+  }
+
   /// 교인 목록 조회 (Supabase Edge Function)
   Future<ApiResponse<List<Member>>> getMembers({
     int page = 1,
@@ -22,6 +119,23 @@ class MemberService {
     String? memberStatus,
   }) async {
     try {
+      // 캐시 확인 (검색/필터가 없고 첫 페이지일 때만)
+      if (page == 1 && search == null && memberStatus == null) {
+        if (_cachedMembers != null && _cacheTimestamp != null) {
+          final now = DateTime.now();
+          if (now.difference(_cacheTimestamp!) < _cacheDuration) {
+            print('✨ MEMBER_SERVICE: 캐시된 교인 목록 반환 (${_cachedMembers!.length}명)');
+            return ApiResponse<List<Member>>(
+              success: true,
+              message: '교인 목록 조회 성공 (캐시)',
+              data: _cachedMembers!,
+            );
+          } else {
+            print('⏰ MEMBER_SERVICE: 캐시 만료됨');
+          }
+        }
+      }
+
       // 현재 사용자 정보 가져오기
       final userResponse = await _authService.getCurrentUser();
       if (!userResponse.success || userResponse.data == null) {
@@ -45,36 +159,54 @@ class MemberService {
 
       // 검색 필터 적용
       if (search != null && search.isNotEmpty) {
-        query = query.or('full_name.ilike.%$search%,email.ilike.%$search%');
+        query = query.or('name.ilike.%$search%,phone.ilike.%$search%');
       }
 
       // 상태 필터 적용
       if (memberStatus != null && memberStatus != 'all') {
-        query = query.eq('status', memberStatus);
+        query = query.eq('member_status', memberStatus);
       }
 
       // 페이징 적용
       final offset = (page - 1) * limit;
+      print('📁 MEMBER_SERVICE: 페이징 - offset: $offset, limit: $limit');
+
       final response = await query.range(offset, offset + limit - 1);
 
       print('📁 MEMBER_SERVICE: Supabase 응답 타입: ${response.runtimeType}');
-      print('📁 MEMBER_SERVICE: Supabase 응답 데이터: $response');
+      print('📁 MEMBER_SERVICE: Supabase 응답 길이: ${response is List ? response.length : 'null'}');
+      if (response is List && response.isNotEmpty) {
+        print('📁 MEMBER_SERVICE: 첫 번째 항목: ${response.first}');
+      }
 
       final List<Member> members = (response as List)
           .map((item) => Member.fromJson(item as Map<String, dynamic>))
           .toList();
 
       print('📁 MEMBER_SERVICE: 파싱된 교인 수: ${members.length}');
+      if (members.isNotEmpty) {
+        print('📁 MEMBER_SERVICE: 첫 번째 교인 - 이름: ${members.first.name}, position_main: ${members.first.positionMain}');
+      }
+
+      // 캐시에 저장 (검색/필터가 없고 첫 페이지일 때만)
+      if (page == 1 && search == null && memberStatus == null) {
+        _cachedMembers = members;
+        _cacheTimestamp = DateTime.now();
+        print('💾 MEMBER_SERVICE: 교인 목록 캐시에 저장 (${members.length}명)');
+      }
 
       return ApiResponse<List<Member>>(
         success: true,
         message: '교인 목록 조회 성공',
         data: members,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ MEMBER_SERVICE: 교인 목록 조회 실패');
+      print('❌ 에러: $e');
+      print('❌ 스택 트레이스: $stackTrace');
       return ApiResponse<List<Member>>(
-        success: true,
-        message: '교인 목록을 찾을 수 없습니다',
+        success: false,
+        message: '교인 목록 조회 실패: ${e.toString()}',
         data: [],
       );
     }
@@ -170,6 +302,9 @@ class MemberService {
 
       print('✅ MEMBER_SERVICE: 교인 정보 수정 성공');
 
+      // 캐시 무효화
+      invalidateCache();
+
       return ApiResponse<Member>(
         success: true,
         message: '교인 정보 수정 성공',
@@ -201,6 +336,9 @@ class MemberService {
       final member = Member.fromJson(response);
 
       print('✅ MEMBER_SERVICE: 교인 추가 성공');
+
+      // 캐시 무효화
+      invalidateCache();
 
       return ApiResponse<Member>(
         success: true,
@@ -236,6 +374,9 @@ class MemberService {
 
       print('✅ MEMBER_SERVICE: 교인 상태 변경 성공');
 
+      // 캐시 무효화
+      invalidateCache();
+
       return ApiResponse<Member>(
         success: true,
         message: '교인 상태가 변경되었습니다',
@@ -262,6 +403,9 @@ class MemberService {
           .eq('id', memberId);
 
       print('✅ MEMBER_SERVICE: 교인 삭제 성공');
+
+      // 캐시 무효화
+      invalidateCache();
 
       return ApiResponse<bool>(
         success: true,

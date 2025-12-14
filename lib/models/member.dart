@@ -7,6 +7,8 @@ class Member {
   final String phone;
   final String? address;
   final String? position; // 직분 코드 (영문): PASTOR, ELDER, DEACON 등
+  final String? positionMain; // 주 직분 (position_main 컬럼)
+  final String? positionDetail; // 상세 직분 (position_detail 컬럼)
   final String? positionCategory; // 주소록 카테고리: CLERGY, ELDER, DEACONESS, DEACON, YOUTH, CHILDREN, MEMBER
   final String? department; // 부서: WORSHIP, EDUCATION, MISSION, YOUTH, CHILDREN
   final String? district; // 구역: 텍스트 입력 (예: "1구역")
@@ -33,6 +35,8 @@ class Member {
     required this.phone,
     this.address,
     this.position,
+    this.positionMain,
+    this.positionDetail,
     this.positionCategory,
     this.department,
     this.district,
@@ -63,6 +67,8 @@ class Member {
       phone: json['phone'] ?? '',
       address: json['address'],
       position: json['position'],
+      positionMain: json['position_main'], // 주 직분
+      positionDetail: json['position_detail'], // 상세 직분
       positionCategory: json['position_category'], // 주소록 카테고리
       department: json['department'],
       district: json['district'],
@@ -100,6 +106,8 @@ class Member {
       'phone': phone,
       'address': address,
       'position': position,
+      'position_main': positionMain,
+      'position_detail': positionDetail,
       'position_category': positionCategory,
       'department': department,
       'district': district,
@@ -133,25 +141,52 @@ class Member {
 
   // 직분 한글 레이블 (화면 표시용)
   String get positionLabel {
-    // MemberPosition import 필요
-    // return MemberPosition.getLabel(position);
-    // 임시로 하위 호환성 유지
-    const labels = {
-      'PASTOR': '목사',
+    // 상세 직분 한글 변환 맵 (영문 코드인 경우 대비)
+    const detailLabels = {
+      // 교역자(CLERGY) 계열
+      'SENIOR_PASTOR': '담임목사',
+      'EMERITUS_PASTOR': '원로목사',
+      'ASSOCIATE_PASTOR': '부목사',
+      'COOPERATE_PASTOR': '협동목사',
       'EVANGELIST': '전도사',
-      'EDUCATION_EVANGELIST': '교육전도사',
+      'INTERN_EVANGELIST': '전임전도사',
+      'EDUCATION_EVANGELIST': '교육담당전도사',
+
+      // 장로(ELDER) 계열
+      'ACTIVE_ELDER': '시무장로',
+      'EMERITUS_ELDER': '원로장로',
+      'TRANSFERRED_EMERITUS_ELDER': '이명은퇴장로',
+
+      // 권사(DEACONESS) 계열
+      'HONORARY_DEACONESS': '명예권사',
+      'ACTIVE_DEACONESS': '시무권사',
+
+      // 집사(DEACON) 계열
+      'HONORARY_DEACON': '명예집사',
+      'PROBATIONARY_DEACON': '서리집사',
+      'ACTIVE_DEACON': '집사',
+      'ORDAINED_DEACON': '안수집사',
+
+      // 기타(MEMBER) 계열
+      'TEACHER': '교사',
+      'STUDENT': '학생',
+    };
+
+    // position_detail 값이 있으면 우선 표시 (영문 코드면 한글로 변환)
+    if (positionDetail != null && positionDetail!.isNotEmpty) {
+      return detailLabels[positionDetail] ?? positionDetail!;
+    }
+
+    // position_main을 한글로 변환
+    const mainLabels = {
       'CLERGY': '교역자',
       'ELDER': '장로',
-      'RETIRED_ELDER': '은퇴장로',
       'DEACONESS': '권사',
-      'RETIRED_DEACONESS': '은퇴권사',
       'DEACON': '집사',
-      'ORDAINED_DEACON': '안수집사',
-      'TEACHER': '교사',
       'MEMBER': '성도',
     };
-    if (position == null || position!.isEmpty) return '성도';
-    return labels[position] ?? position!;
+    if (positionMain == null || positionMain!.isEmpty) return '성도';
+    return mainLabels[positionMain] ?? positionMain!;
   }
 
   // 카테고리 한글 레이블 (주소록 탭)

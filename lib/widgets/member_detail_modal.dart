@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/member.dart';
 import '../resource/color_style.dart';
 import '../resource/text_style.dart';
+import '../services/member_service.dart';
 
 class MemberDetailModal extends StatefulWidget {
   final Member member;
@@ -20,6 +21,7 @@ class MemberDetailModal extends StatefulWidget {
 }
 
 class _MemberDetailModalState extends State<MemberDetailModal> {
+  final MemberService _memberService = MemberService();
   String? _organizationName;
   bool _isLoadingOrganization = false;
 
@@ -44,44 +46,17 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
     });
 
     try {
-      final supabase = Supabase.instance.client;
+      print('🔍 조직 정보 조회 시작 - ID: ${widget.member.organizationId}');
 
-      // church_organizations 테이블에서 조직 정보 조회
-      try {
-        print('🔍 조직 정보 조회 시작 - ID: ${widget.member.organizationId}');
+      // MemberService의 캐싱된 메서드 사용
+      final organizationPath = await _memberService.getOrganizationPath(widget.member.organizationId!);
 
-        final response = await supabase
-            .from('church_organizations')
-            .select('*')
-            .eq('id', widget.member.organizationId!)
-            .maybeSingle();
-
-        print('📦 church_organizations 응답: $response');
-
-        if (response != null && mounted) {
-          // name 또는 organization_name 필드 시도
-          final orgName = response['name'] ?? response['organization_name'] ?? response['org_name'];
-
-          setState(() {
-            _organizationName = orgName as String?;
-            _isLoadingOrganization = false;
-          });
-          print('✅ 조직 정보 로드 성공: $_organizationName');
-        } else if (mounted) {
-          setState(() {
-            _isLoadingOrganization = false;
-          });
-          print('ℹ️ 조직 정보 없음 (ID: ${widget.member.organizationId})');
-        }
-      } catch (tableError) {
-        // church_organizations 테이블 조회 실패
-        print('❌ 조직 정보 로드 실패: $tableError');
-        if (mounted) {
-          setState(() {
-            _organizationName = null;
-            _isLoadingOrganization = false;
-          });
-        }
+      if (mounted) {
+        setState(() {
+          _organizationName = organizationPath;
+          _isLoadingOrganization = false;
+        });
+        print('✅ 조직 정보 로드 성공: $_organizationName');
       }
     } catch (e) {
       print('❌ 조직 정보 로드 실패: $e');
@@ -208,7 +183,7 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
             borderRadius: BorderRadius.circular(12.r),
           ),
           child: Text(
-            widget.member.position ?? '성도',
+            widget.member.positionLabel,
             style: AppTextStyle(color: _getPositionColor()).b3().copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -255,11 +230,6 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
           _buildInfoItem('조직', _organizationName!),
         if (widget.member.district != null && widget.member.district!.isNotEmpty)
           _buildInfoItem('구역', widget.member.district!),
-        _buildInfoItem('상태', _getMemberStatusText(widget.member.memberStatus)),
-        if (widget.member.registrationDate != null)
-          _buildInfoItem('등록일', _formatDate(widget.member.registrationDate!)),
-        if (widget.member.memo != null && widget.member.memo!.isNotEmpty)
-          _buildInfoItem('메모', widget.member.memo!, isMultiline: true),
       ],
     );
   }
@@ -364,18 +334,27 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
   }
 
   Color _getPositionColor() {
-    switch (widget.member.position?.toLowerCase()) {
-      case '목사':
-      case '교역자':
-        return Colors.purple;
-      case '장로':
-        return Colors.indigo;
-      case '권사':
-        return Colors.pink;
-      case '집사':
-        return Colors.orange;
-      default:
-        return Colors.blue;
+    final positionLabel = widget.member.positionLabel.toLowerCase();
+
+    // 교역자 계열
+    if (positionLabel.contains('목사') || positionLabel.contains('전도사') || positionLabel == '교역자') {
+      return Colors.purple;
+    }
+    // 장로 계열
+    else if (positionLabel.contains('장로')) {
+      return Colors.indigo;
+    }
+    // 권사 계열
+    else if (positionLabel.contains('권사')) {
+      return Colors.pink;
+    }
+    // 집사 계열
+    else if (positionLabel.contains('집사')) {
+      return Colors.orange;
+    }
+    // 기타 (교사, 학생, 성도)
+    else {
+      return Colors.blue;
     }
   }
 
