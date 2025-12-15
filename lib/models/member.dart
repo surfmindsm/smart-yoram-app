@@ -1,6 +1,7 @@
 class Member {
   final int id;
   final String name;
+  final String? nameEng; // 영문명
   final String? email;
   final String gender;
   final DateTime? birthdate;
@@ -13,12 +14,53 @@ class Member {
   final String? department; // 부서: WORSHIP, EDUCATION, MISSION, YOUTH, CHILDREN
   final String? district; // 구역: 텍스트 입력 (예: "1구역")
   final String? organizationId; // 조직 ID (UUID)
+  final DateTime? appointedOn; // 임명일
+  final String? ordinationChurch; // 안수교회
+  final String? memberType; // 교인구분: 정교인, 학습교인, 세례교인, 방문자
+  final DateTime? confirmationDate; // 입교일
+  final DateTime? baptismDate; // 세례일
+  final String? baptismChurch; // 세례교회
+  final String? ageGroup; // 나이그룹: 어린이, 학생, 청년, 성인, 시니어
+  final String? spiritualGrade; // 신급: 초신자, B급, A급, 리더
+  final DateTime? lastContactDate; // 마지막 연락일
+  final String? maritalStatus; // 결혼 상태: 미혼, 기혼, 이혼, 사별
+  final String? spouseName; // 배우자 이름
+  final DateTime? marriedOn; // 결혼일
+  final String? postalCode; // 우편번호
+  final String? region1; // 지역 1
+  final String? region2; // 지역 2
+  final String? region3; // 지역 3
+  final String? jobCategory; // 직업분류: 사무직, 교육직, 의료진, 서비스업, 자영업, 학생, 주부, 기타
+  final String? jobDetail; // 구체적 업무
+  final String? jobPosition; // 직책/직위
+  final String? jobTitle; // 직업명
+  final String? workplace; // 직장명
+  final String? workplacePhone; // 직장 전화번호
+  final DateTime? ministryStartDate; // 사역 시작일
+  final String? neighboringChurch; // 이웃교회
+  final String? positionDecision; // 직분 결정
+  final int? inviter3MemberId; // 인도자 (member_id)
+  final String? dailyActivity; // 일상 활동
+  final String? customField1; // 자유필드 1
+  final String? customField2; // 자유필드 2
+  final String? customField3; // 자유필드 3
+  final String? customField4; // 자유필드 4
+  final String? customField5; // 자유필드 5
+  final String? customField6; // 자유필드 6
+  final String? customField7; // 자유필드 7
+  final String? customField8; // 자유필드 8
+  final String? customField9; // 자유필드 9
+  final String? customField10; // 자유필드 10
+  final String? customField11; // 자유필드 11
+  final String? customField12; // 자유필드 12
+  final String? specialNotes; // 개인 특별사항
   final int churchId;
   final String? profilePhotoUrl;
   final String? mobileProfileImageUrl; // 커뮤니티용 프로필 이미지
-  final String memberStatus;
+  final String memberStatus; // 상태 (status 컬럼)
   final DateTime? registrationDate;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
   final String? transferChurch;
   final DateTime? transferDate;
   final String? memo;
@@ -29,6 +71,7 @@ class Member {
   Member({
     required this.id,
     required this.name,
+    this.nameEng,
     this.email,
     required this.gender,
     this.birthdate,
@@ -41,12 +84,53 @@ class Member {
     this.department,
     this.district,
     this.organizationId,
+    this.appointedOn,
+    this.ordinationChurch,
+    this.memberType,
+    this.confirmationDate,
+    this.baptismDate,
+    this.baptismChurch,
+    this.ageGroup,
+    this.spiritualGrade,
+    this.lastContactDate,
+    this.maritalStatus,
+    this.spouseName,
+    this.marriedOn,
+    this.postalCode,
+    this.region1,
+    this.region2,
+    this.region3,
+    this.jobCategory,
+    this.jobDetail,
+    this.jobPosition,
+    this.jobTitle,
+    this.workplace,
+    this.workplacePhone,
+    this.ministryStartDate,
+    this.neighboringChurch,
+    this.positionDecision,
+    this.inviter3MemberId,
+    this.dailyActivity,
+    this.customField1,
+    this.customField2,
+    this.customField3,
+    this.customField4,
+    this.customField5,
+    this.customField6,
+    this.customField7,
+    this.customField8,
+    this.customField9,
+    this.customField10,
+    this.customField11,
+    this.customField12,
+    this.specialNotes,
     required this.churchId,
     this.profilePhotoUrl,
     this.mobileProfileImageUrl,
     required this.memberStatus,
     this.registrationDate,
     this.createdAt,
+    this.updatedAt,
     this.transferChurch,
     this.transferDate,
     this.memo,
@@ -59,6 +143,7 @@ class Member {
     return Member(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
+      nameEng: json['name_eng'],
       email: json['email'],
       gender: json['gender'] ?? '',
       birthdate: json['birthdate'] != null
@@ -67,21 +152,76 @@ class Member {
       phone: json['phone'] ?? '',
       address: json['address'],
       position: json['position'],
-      positionMain: json['position_main'], // 주 직분
-      positionDetail: json['position_detail'], // 상세 직분
-      positionCategory: json['position_category'], // 주소록 카테고리
+      positionMain: json['position_main'],
+      positionDetail: json['position_detail'],
+      positionCategory: json['position_category'],
       department: json['department'],
       district: json['district'],
       organizationId: json['organization_id'],
+      appointedOn: json['appointed_on'] != null
+          ? DateTime.parse(json['appointed_on'])
+          : null,
+      ordinationChurch: json['ordination_church'],
+      memberType: json['member_type'],
+      confirmationDate: json['confirmation_date'] != null
+          ? DateTime.parse(json['confirmation_date'])
+          : null,
+      baptismDate: json['baptism_date'] != null
+          ? DateTime.parse(json['baptism_date'])
+          : null,
+      baptismChurch: json['baptism_church'],
+      ageGroup: json['age_group'],
+      spiritualGrade: json['spiritual_grade'],
+      lastContactDate: json['last_contact_date'] != null
+          ? DateTime.parse(json['last_contact_date'])
+          : null,
+      maritalStatus: json['marital_status'],
+      spouseName: json['spouse_name'],
+      marriedOn: json['married_on'] != null
+          ? DateTime.parse(json['married_on'])
+          : null,
+      postalCode: json['postal_code'],
+      region1: json['region_1'],
+      region2: json['region_2'],
+      region3: json['region_3'],
+      jobCategory: json['job_category'],
+      jobDetail: json['job_detail'],
+      jobPosition: json['job_position'],
+      jobTitle: json['job_title'],
+      workplace: json['workplace'],
+      workplacePhone: json['workplace_phone'],
+      ministryStartDate: json['ministry_start_date'] != null
+          ? DateTime.parse(json['ministry_start_date'])
+          : null,
+      neighboringChurch: json['neighboring_church'],
+      positionDecision: json['position_decision'],
+      inviter3MemberId: json['inviter3_member_id'],
+      dailyActivity: json['daily_activity'],
+      customField1: json['custom_field_1'],
+      customField2: json['custom_field_2'],
+      customField3: json['custom_field_3'],
+      customField4: json['custom_field_4'],
+      customField5: json['custom_field_5'],
+      customField6: json['custom_field_6'],
+      customField7: json['custom_field_7'],
+      customField8: json['custom_field_8'],
+      customField9: json['custom_field_9'],
+      customField10: json['custom_field_10'],
+      customField11: json['custom_field_11'],
+      customField12: json['custom_field_12'],
+      specialNotes: json['special_notes'],
       churchId: json['church_id'] ?? 0,
       profilePhotoUrl: json['profile_photo_url'],
       mobileProfileImageUrl: json['mobile_profile_image_url'],
-      memberStatus: json['member_status'] ?? 'active',
+      memberStatus: json['member_status'] ?? json['status'] ?? 'active',
       registrationDate: json['registration_date'] != null
           ? DateTime.parse(json['registration_date'])
           : null,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : null,
       transferChurch: json['transfer_church'],
       transferDate: json['transfer_date'] != null
@@ -92,7 +232,7 @@ class Member {
       invitationSentAt: json['invitation_sent_at'] != null
           ? DateTime.parse(json['invitation_sent_at'])
           : null,
-      userId: json['user_id'], // user_id 매핑 필드 추가
+      userId: json['user_id'],
     );
   }
 
@@ -100,6 +240,7 @@ class Member {
     return {
       'id': id,
       'name': name,
+      'name_eng': nameEng,
       'email': email,
       'gender': gender,
       'birthdate': birthdate?.toIso8601String().split('T')[0],
@@ -112,18 +253,59 @@ class Member {
       'department': department,
       'district': district,
       'organization_id': organizationId,
+      'appointed_on': appointedOn?.toIso8601String().split('T')[0],
+      'ordination_church': ordinationChurch,
+      'member_type': memberType,
+      'confirmation_date': confirmationDate?.toIso8601String().split('T')[0],
+      'baptism_date': baptismDate?.toIso8601String().split('T')[0],
+      'baptism_church': baptismChurch,
+      'age_group': ageGroup,
+      'spiritual_grade': spiritualGrade,
+      'last_contact_date': lastContactDate?.toIso8601String().split('T')[0],
+      'marital_status': maritalStatus,
+      'spouse_name': spouseName,
+      'married_on': marriedOn?.toIso8601String().split('T')[0],
+      'postal_code': postalCode,
+      'region_1': region1,
+      'region_2': region2,
+      'region_3': region3,
+      'job_category': jobCategory,
+      'job_detail': jobDetail,
+      'job_position': jobPosition,
+      'job_title': jobTitle,
+      'workplace': workplace,
+      'workplace_phone': workplacePhone,
+      'ministry_start_date': ministryStartDate?.toIso8601String().split('T')[0],
+      'neighboring_church': neighboringChurch,
+      'position_decision': positionDecision,
+      'inviter3_member_id': inviter3MemberId,
+      'daily_activity': dailyActivity,
+      'custom_field_1': customField1,
+      'custom_field_2': customField2,
+      'custom_field_3': customField3,
+      'custom_field_4': customField4,
+      'custom_field_5': customField5,
+      'custom_field_6': customField6,
+      'custom_field_7': customField7,
+      'custom_field_8': customField8,
+      'custom_field_9': customField9,
+      'custom_field_10': customField10,
+      'custom_field_11': customField11,
+      'custom_field_12': customField12,
+      'special_notes': specialNotes,
       'church_id': churchId,
       'profile_photo_url': profilePhotoUrl,
       'mobile_profile_image_url': mobileProfileImageUrl,
       'member_status': memberStatus,
       'registration_date': registrationDate?.toIso8601String().split('T')[0],
       'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
       'transfer_church': transferChurch,
       'transfer_date': transferDate?.toIso8601String().split('T')[0],
       'memo': memo,
       'invitation_sent': invitationSent,
       'invitation_sent_at': invitationSentAt?.toIso8601String(),
-      'user_id': userId, // user_id 매핑 필드 추가
+      'user_id': userId,
     };
   }
 

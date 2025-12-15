@@ -559,4 +559,77 @@ class MemberService {
       );
     }
   }
+
+  /// 자기 자신의 교인 정보 수정 (본인만 수정 가능한 필드만)
+  /// 수정 불가 필드: name, email, position_main, position_detail
+  Future<ApiResponse<Member>> updateMyMemberInfo(Map<String, dynamic> memberData) async {
+    try {
+      print('📝 MEMBER_SERVICE: 자기 교인 정보 수정 시작');
+
+      // 현재 사용자 정보 가져오기
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        return ApiResponse<Member>(
+          success: false,
+          message: '사용자 정보 조회 실패: ${userResponse.message}',
+          data: null,
+        );
+      }
+
+      final userId = userResponse.data!.id;
+
+      // user_id로 교인 정보 조회
+      final memberResponse = await getMemberByUserId(userId);
+      if (!memberResponse.success || memberResponse.data == null) {
+        return ApiResponse<Member>(
+          success: false,
+          message: '교인 정보를 찾을 수 없습니다',
+          data: null,
+        );
+      }
+
+      final memberId = memberResponse.data!.id;
+
+      // 수정 불가 필드 제거 (보안상 중요)
+      memberData.remove('name');
+      memberData.remove('email');
+      memberData.remove('position_main');
+      memberData.remove('position_detail');
+      memberData.remove('id');
+      memberData.remove('church_id');
+      memberData.remove('user_id');
+      memberData.remove('created_at');
+      memberData.remove('updated_at');
+      memberData.remove('member_status');
+      memberData.remove('status');
+
+      // 교인 정보 업데이트
+      final response = await _supabaseService.client
+          .from('members')
+          .update(memberData)
+          .eq('id', memberId)
+          .select()
+          .single();
+
+      final member = Member.fromJson(response);
+
+      print('✅ MEMBER_SERVICE: 자기 교인 정보 수정 성공');
+
+      // 캐시 무효화
+      invalidateCache();
+
+      return ApiResponse<Member>(
+        success: true,
+        message: '개인정보가 성공적으로 수정되었습니다',
+        data: member,
+      );
+    } catch (e) {
+      print('❌ MEMBER_SERVICE: 자기 교인 정보 수정 실패 - $e');
+      return ApiResponse<Member>(
+        success: false,
+        message: '개인정보 수정 실패: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
 }

@@ -553,6 +553,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final currentUser = userResponse.data!;
 
+      // 프로필 이미지 설정 완료 여부 확인 (SharedPreferences)
+      final prefs = await SharedPreferences.getInstance();
+      final profileSetupKey = 'profile_setup_completed_${currentUser.id}';
+      final hasCompletedSetup = prefs.getBool(profileSetupKey) ?? false;
+
+      if (hasCompletedSetup) {
+        print('🖼️ LOGIN: 이미 프로필 이미지 설정 완료 - 홈으로 이동');
+        Navigator.pushReplacementNamed(context, '/home');
+        return;
+      }
+
       // Member 정보 가져오기
       final memberResponse = await _memberService.getMemberByUserId(currentUser.id);
 
@@ -574,14 +585,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
 
+            // 프로필 이미지 설정 완료 후 플래그 저장
+            await prefs.setBool(profileSetupKey, true);
+            print('🖼️ LOGIN: 프로필 이미지 설정 완료 플래그 저장');
+
             // 프로필 이미지 설정 후 홈으로 이동
             if (mounted) {
               Navigator.pushReplacementNamed(context, '/home');
             }
           }
         } else {
-          // 이미 프로필 이미지가 설정되어 있으면 바로 홈으로 이동
-          print('🖼️ LOGIN: 모바일 프로필 이미지 이미 설정됨 - 홈으로 이동');
+          // 이미 프로필 이미지가 설정되어 있으면 플래그 저장하고 홈으로 이동
+          print('🖼️ LOGIN: 모바일 프로필 이미지 이미 설정됨 - 플래그 저장 후 홈으로 이동');
+          await prefs.setBool(profileSetupKey, true);
           Navigator.pushReplacementNamed(context, '/home');
         }
       } else {

@@ -18,6 +18,7 @@ import '../utils/admin_permission_utils.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
 import 'profile_edit_screen.dart';
+import 'member_info_edit_screen.dart';
 import 'settings/profile_image_setup_screen.dart';
 
 class _GroupedSettingItem {
@@ -126,11 +127,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _GroupedSettingItem(
                       icon: Icons.person_outline,
                       title: '개인정보 수정',
-                      subtitle: '이름, 전화번호, 주소 등',
+                      subtitle: '생년월일, 전화번호, 주소, 직업 등',
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ProfileEditScreen(),
+                          builder: (context) => const MemberInfoEditScreen(),
                         ),
                       ),
                     ),
