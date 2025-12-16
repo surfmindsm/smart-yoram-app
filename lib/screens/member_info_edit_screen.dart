@@ -30,15 +30,12 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
   String? _selectedGender;
   DateTime? _selectedBirthdate;
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _detailAddressController = TextEditingController();
 
   // 교회 정보 확장
-  String? _selectedMemberType;
   DateTime? _selectedConfirmationDate;
   DateTime? _selectedBaptismDate;
   final TextEditingController _baptismChurchController = TextEditingController();
-  String? _selectedAgeGroup;
-  String? _selectedSpiritualGrade;
 
   // 개인 및 가족 정보
   String? _selectedMaritalStatus;
@@ -72,7 +69,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
   void dispose() {
     _nameEngController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
+    _detailAddressController.dispose();
     _baptismChurchController.dispose();
     _spouseNameController.dispose();
     _postalCodeController.dispose();
@@ -128,15 +125,11 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
         _selectedGender = (member.gender.isEmpty) ? null : member.gender;
         _selectedBirthdate = member.birthdate;
         _phoneController.text = member.phone;
-        _addressController.text = member.address ?? '';
 
         // 교회 정보 확장
-        _selectedMemberType = member.memberType;
         _selectedConfirmationDate = member.confirmationDate;
         _selectedBaptismDate = member.baptismDate;
         _baptismChurchController.text = member.baptismChurch ?? '';
-        _selectedAgeGroup = member.ageGroup;
-        _selectedSpiritualGrade = member.spiritualGrade;
 
         // 개인 및 가족 정보
         _selectedMaritalStatus = member.maritalStatus;
@@ -148,6 +141,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
         _selectedRegion1 = member.region1;
         _selectedRegion2 = member.region2;
         _selectedRegion3 = member.region3;
+        _detailAddressController.text = member.address ?? '';
 
         // 직업 정보
         _selectedJobCategory = member.jobCategory;
@@ -192,12 +186,8 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
         updateData['birthdate'] = _selectedBirthdate!.toIso8601String().split('T')[0];
       }
       updateData['phone'] = _phoneController.text.trim();
-      if (_addressController.text.isNotEmpty) {
-        updateData['address'] = _addressController.text.trim();
-      }
 
       // 교회 정보 확장
-      if (_selectedMemberType != null) updateData['member_type'] = _selectedMemberType;
       if (_selectedConfirmationDate != null) {
         updateData['confirmation_date'] = _selectedConfirmationDate!.toIso8601String().split('T')[0];
       }
@@ -207,8 +197,6 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
       if (_baptismChurchController.text.isNotEmpty) {
         updateData['baptism_church'] = _baptismChurchController.text.trim();
       }
-      if (_selectedAgeGroup != null) updateData['age_group'] = _selectedAgeGroup;
-      if (_selectedSpiritualGrade != null) updateData['spiritual_grade'] = _selectedSpiritualGrade;
 
       // 개인 및 가족 정보
       if (_selectedMaritalStatus != null) updateData['marital_status'] = _selectedMaritalStatus;
@@ -226,6 +214,9 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
       if (_selectedRegion1 != null) updateData['region_1'] = _selectedRegion1;
       if (_selectedRegion2 != null) updateData['region_2'] = _selectedRegion2;
       if (_selectedRegion3 != null) updateData['region_3'] = _selectedRegion3;
+      if (_detailAddressController.text.isNotEmpty) {
+        updateData['address'] = _detailAddressController.text.trim();
+      }
 
       // 직업 정보
       if (_selectedJobCategory != null) updateData['job_category'] = _selectedJobCategory;
@@ -428,101 +419,6 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                         placeholder: '전화번호를 입력하세요',
                         keyboardType: TextInputType.phone,
                       ),
-                      SizedBox(height: 16.h),
-                      _buildInputField(
-                        label: '주소',
-                        controller: _addressController,
-                        placeholder: '주소를 입력하세요',
-                        maxLines: 2,
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 24.h),
-
-                  // 교회 정보 확장
-                  _buildSection(
-                    title: '교회 정보',
-                    children: [
-                      _buildDropdownField(
-                        label: '교인구분',
-                        value: _selectedMemberType,
-                        items: const ['정교인', '학습교인', '세례교인', '방문자'],
-                        onChanged: (value) => setState(() => _selectedMemberType = value),
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildDateField(
-                        label: '입교일',
-                        date: _selectedConfirmationDate,
-                        onTap: () => _selectDate(
-                          context,
-                          _selectedConfirmationDate,
-                          (date) => setState(() => _selectedConfirmationDate = date),
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildDateField(
-                        label: '세례일',
-                        date: _selectedBaptismDate,
-                        onTap: () => _selectDate(
-                          context,
-                          _selectedBaptismDate,
-                          (date) => setState(() => _selectedBaptismDate = date),
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildInputField(
-                        label: '세례교회',
-                        controller: _baptismChurchController,
-                        placeholder: '세례받은 교회를 입력하세요',
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildDropdownField(
-                        label: '나이그룹',
-                        value: _selectedAgeGroup,
-                        items: const ['어린이', '학생', '청년', '성인', '시니어'],
-                        onChanged: (value) => setState(() => _selectedAgeGroup = value),
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildDropdownField(
-                        label: '신급',
-                        value: _selectedSpiritualGrade,
-                        items: const ['초신자', 'B급', 'A급', '리더'],
-                        onChanged: (value) => setState(() => _selectedSpiritualGrade = value),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 24.h),
-
-                  // 개인 및 가족 정보
-                  _buildSection(
-                    title: '개인 및 가족 정보',
-                    children: [
-                      _buildDropdownField(
-                        label: '결혼 상태',
-                        value: _selectedMaritalStatus,
-                        items: const ['미혼', '기혼', '이혼', '사별'],
-                        onChanged: (value) => setState(() => _selectedMaritalStatus = value),
-                      ),
-                      if (_selectedMaritalStatus == '기혼') ...[
-                        SizedBox(height: 16.h),
-                        _buildInputField(
-                          label: '배우자 이름',
-                          controller: _spouseNameController,
-                          placeholder: '배우자 이름을 입력하세요',
-                        ),
-                        SizedBox(height: 16.h),
-                        _buildDateField(
-                          label: '결혼일',
-                          date: _selectedMarriedOn,
-                          onTap: () => _selectDate(
-                            context,
-                            _selectedMarriedOn,
-                            (date) => setState(() => _selectedMarriedOn = date),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
 
@@ -572,6 +468,80 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                           controller: TextEditingController(text: _selectedRegion3 ?? ''),
                           placeholder: '동/읍/면을 입력하세요',
                           onChanged: (value) => _selectedRegion3 = value,
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildInputField(
+                          label: '상세주소',
+                          controller: _detailAddressController,
+                          placeholder: '상세주소를 입력하세요 (예: 101동 203호)',
+                          maxLines: 2,
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  SizedBox(height: 24.h),
+
+                  // 교회 정보 확장
+                  _buildSection(
+                    title: '교회 정보',
+                    children: [
+                      _buildDateField(
+                        label: '입교일',
+                        date: _selectedConfirmationDate,
+                        onTap: () => _selectDate(
+                          context,
+                          _selectedConfirmationDate,
+                          (date) => setState(() => _selectedConfirmationDate = date),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      _buildDateField(
+                        label: '세례일',
+                        date: _selectedBaptismDate,
+                        onTap: () => _selectDate(
+                          context,
+                          _selectedBaptismDate,
+                          (date) => setState(() => _selectedBaptismDate = date),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      _buildInputField(
+                        label: '세례교회',
+                        controller: _baptismChurchController,
+                        placeholder: '세례받은 교회를 입력하세요',
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 24.h),
+
+                  // 개인 및 가족 정보
+                  _buildSection(
+                    title: '개인 및 가족 정보',
+                    children: [
+                      _buildDropdownField(
+                        label: '결혼 상태',
+                        value: _selectedMaritalStatus,
+                        items: const ['미혼', '기혼', '이혼', '사별'],
+                        onChanged: (value) => setState(() => _selectedMaritalStatus = value),
+                      ),
+                      if (_selectedMaritalStatus == '기혼') ...[
+                        SizedBox(height: 16.h),
+                        _buildInputField(
+                          label: '배우자 이름',
+                          controller: _spouseNameController,
+                          placeholder: '배우자 이름을 입력하세요',
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildDateField(
+                          label: '결혼일',
+                          date: _selectedMarriedOn,
+                          onTap: () => _selectDate(
+                            context,
+                            _selectedMarriedOn,
+                            (date) => setState(() => _selectedMarriedOn = date),
+                          ),
                         ),
                       ],
                     ],
@@ -711,26 +681,35 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const FigmaTextStyles().body1.copyWith(
-                color: NewAppColor.neutral900,
-                fontWeight: FontWeight.w500,
-              ),
+        Row(
+          children: [
+            Text(
+              label,
+              style: const FigmaTextStyles().body1.copyWith(
+                    color: NewAppColor.neutral900,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+            SizedBox(width: 6.w),
+            Icon(
+              Icons.lock_outline,
+              size: 14.sp,
+              color: NewAppColor.neutral400,
+            ),
+          ],
         ),
         SizedBox(height: 8.h),
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
-            color: NewAppColor.neutral100,
+            color: NewAppColor.neutral200,
             borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: NewAppColor.neutral200),
           ),
           child: Text(
             value,
             style: const FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.neutral600,
+                  color: NewAppColor.neutral500,
                 ),
           ),
         ),
@@ -759,9 +738,9 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
           width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: NewAppColor.neutral200),
+            border: Border.all(color: NewAppColor.neutral300, width: 1),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -773,6 +752,10 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                     ),
               ),
               isExpanded: true,
+              icon: Icon(
+                Icons.keyboard_arrow_down,
+                color: NewAppColor.neutral600,
+              ),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
@@ -814,9 +797,9 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: NewAppColor.neutral100,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: NewAppColor.neutral200),
+              border: Border.all(color: NewAppColor.neutral300, width: 1),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -834,7 +817,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                 Icon(
                   Icons.calendar_today,
                   size: 16.sp,
-                  color: NewAppColor.neutral400,
+                  color: NewAppColor.neutral600,
                 ),
               ],
             ),
