@@ -10,6 +10,7 @@ import 'package:smart_yoram_app/services/auth_service.dart';
 import 'package:smart_yoram_app/screens/community/community_detail_screen.dart';
 import 'package:smart_yoram_app/screens/community/community_create_screen.dart';
 import 'package:smart_yoram_app/utils/location_data.dart';
+import 'package:smart_yoram_app/widgets/community_search_overlay.dart';
 
 /// 커뮤니티 목록 화면 (공통)
 /// 모든 카테고리에서 재사용 가능한 목록 화면
@@ -49,6 +50,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   List<dynamic> _items = [];
   List<dynamic> _filteredItemsCache = []; // 캐시된 필터링 결과
   User? _currentUser;
+  bool _isSearchMode = false; // 검색 모드 여부
 
   // 검색 및 필터
   final TextEditingController _searchController = TextEditingController();
@@ -157,6 +159,27 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
     setState(() {
       _updateFilteredItems();
     });
+  }
+
+  /// 검색 페이지 열기
+  void _openSearchOverlay() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CommunitySearchOverlay(
+          title: widget.title,
+          onSearch: (query) {
+            // 검색어를 컨트롤러에 설정하고 필터링
+            setState(() {
+              _searchController.text = query;
+              _updateFilteredItems();
+            });
+          },
+          onClose: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
+    );
   }
 
   /// 필터링된 아이템 목록 재계산
@@ -492,17 +515,65 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
           // 검색 버튼
           IconButton(
             icon: const Icon(LucideIcons.search, color: Colors.black),
-            onPressed: () {
-              // TODO: 검색 기능
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('검색 기능은 준비 중입니다')),
-              );
-            },
+            onPressed: _openSearchOverlay,
           ),
         ],
       ),
       body: Column(
         children: [
+          // 검색 중일 때 검색어 표시
+          if (_searchController.text.isNotEmpty)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: NewAppColor.primary100,
+                border: Border(
+                  bottom: BorderSide(
+                    color: NewAppColor.primary200,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    LucideIcons.search,
+                    size: 16.sp,
+                    color: NewAppColor.primary600,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      '검색: ${_searchController.text}',
+                      style: FigmaTextStyles().body2.copyWith(
+                            color: NewAppColor.primary600,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _searchController.clear();
+                        _updateFilteredItems();
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(4.w),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.primary100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        LucideIcons.x,
+                        size: 16.sp,
+                        color: NewAppColor.primary600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // 빠른 필터 (무료나눔/물품판매)
           if (widget.type == CommunityListType.freeSharing ||
               widget.type == CommunityListType.itemSale)
