@@ -111,9 +111,9 @@ class _LoginScreenState extends State<LoginScreen> {
           RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
               .hasMatch(_usernameController.text);
 
-      // 전화번호 유효성 검사 (11자리)
+      // 전화번호 유효성 검사 (9자리 이상)
       _isPhoneValid = _usernameController.text.isNotEmpty &&
-          RegExp(r'^\d{9}$').hasMatch(_usernameController.text);
+          RegExp(r'^\d{9,}$').hasMatch(_usernameController.text);
 
       // 비밀번호 유효성 검사 (6자 이상)
       _isPasswordValid = _passwordController.text.isNotEmpty &&

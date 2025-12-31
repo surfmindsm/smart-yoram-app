@@ -33,6 +33,7 @@ import 'notice_detail_screen.dart';
 import 'notification_center_screen.dart';
 import '../screens/pastoral_care_request_screen.dart';
 import '../screens/prayer_request_screen.dart';
+import '../screens/offering_history_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -815,6 +816,68 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ],
+            ),
+            SizedBox(height: 12.w),
+            // 헌금 내역 버튼 (전체 폭)
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OfferingHistoryScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: NewAppColor.neutral100,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48.w,
+                      height: 48.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.account_balance_wallet_outlined,
+                        color: NewAppColor.warning400,
+                        size: 24.sp,
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '내 헌금 내역',
+                            style: const FigmaTextStyles().headline5.copyWith(
+                                  color: NewAppColor.neutral900,
+                                ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            '헌금 내역을 확인하세요',
+                            style: const FigmaTextStyles().body1.copyWith(
+                                  color: NewAppColor.neutral600,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: NewAppColor.neutral400,
+                      size: 16.sp,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

@@ -23,3 +23,4 @@ export 'notification.dart';
 export 'sermon.dart';
 export 'bug_report.dart';
 export 'app_version.dart';
+export 'offering.dart';
