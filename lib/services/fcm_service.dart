@@ -15,8 +15,10 @@ import 'notification_settings_service.dart';
 import 'auth_service.dart';
 import 'chat_service.dart';
 import 'badge_service.dart';
+import 'announcement_service.dart';
 import '../screens/chat/chat_room_screen.dart';
 import '../screens/community/community_detail_screen.dart';
+import '../screens/notice_detail_screen.dart';
 import '../main.dart' show navigatorKey;
 
 /// FCM 백그라운드 메시지 핸들러 (top-level function)
@@ -25,8 +27,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   developer.log('백그라운드 메시지 수신: ${message.messageId}', name: 'FCM_BG');
 
-  // 백그라운드에서도 로컬 알림 표시
-  await FCMService.instance._showLocalNotification(message);
+  // 백그라운드에서는 FCM이 자동으로 알림을 표시하므로 로컬 알림 불필요
+  // 로컬 알림을 표시하면 중복 알림이 발생하여 화면이 중복으로 쌓임
+  developer.log('ℹ️ 백그라운드: FCM이 자동으로 알림 표시 (로컬 알림 생략)', name: 'FCM_BG');
 
   // 데이터베이스 트리거 완료 대기 (메시지 저장 및 unread_count 업데이트)
   await Future.delayed(const Duration(milliseconds: 500));
@@ -52,6 +55,7 @@ class FCMService {
   late FlutterLocalNotificationsPlugin _localNotifications;
   String? _currentToken;
   bool _initialMessageHandled = false; // 앱 종료 상태 알림 중복 처리 방지
+  final Set<String> _handledMessageIds = {}; // 처리된 메시지 ID 추적 (중복 방지)
   
   /// FCM 초기화 (안전 모드)
   Future<void> initialize() async {
@@ -564,12 +568,16 @@ class FCMService {
       developer.log('📱 알림 ID: $notificationId', name: 'FCM');
       developer.log('📱 알림 표시 시작...', name: 'FCM');
 
+      // payload에 messageId 포함 (중복 방지용)
+      final payloadData = notification.toJson();
+      payloadData['messageId'] = message.messageId;
+
       await _localNotifications.show(
         notificationId,
         notification.title ?? '새 메시지',
         notification.body ?? '',
         notificationDetails,
-        payload: jsonEncode(notification.toJson()),
+        payload: jsonEncode(payloadData),
       );
 
       developer.log('✅✅✅ 로컬 알림 show() 호출 완료: ${notification.title} ✅✅✅', name: 'FCM');
@@ -605,8 +613,24 @@ class FCMService {
   
   /// 알림 탭 처리
   void _handleNotificationTap(RemoteMessage message) {
+    // 중복 처리 방지: 같은 메시지 ID는 한 번만 처리
+    final messageId = message.messageId;
+    if (messageId != null && _handledMessageIds.contains(messageId)) {
+      developer.log('⚠️ 이미 처리된 메시지: $messageId (중복 방지)', name: 'FCM');
+      return;
+    }
+
     final notification = PushNotificationModel.fromFirebaseMessage(message);
-    developer.log('알림 탭 처리: ${notification.title}', name: 'FCM');
+    developer.log('알림 탭 처리: ${notification.title}, messageId: $messageId', name: 'FCM');
+
+    // 메시지 ID 기록
+    if (messageId != null) {
+      _handledMessageIds.add(messageId);
+      // 메모리 관리: 100개 이상 쌓이면 오래된 것부터 제거
+      if (_handledMessageIds.length > 100) {
+        _handledMessageIds.remove(_handledMessageIds.first);
+      }
+    }
 
     // 알림 타입에 따른 화면 이동
     _navigateToRelevantScreen(notification, message.data);
@@ -619,7 +643,23 @@ class FCMService {
         final json = jsonDecode(response.payload!);
         final notification = PushNotificationModel.fromJson(json);
         final data = json['data'] as Map<String, dynamic>?;
-        developer.log('로컬 알림 탭: ${notification.title}', name: 'FCM');
+
+        // 중복 처리 방지: 메시지 ID 확인
+        final messageId = json['messageId'] as String?;
+        if (messageId != null && _handledMessageIds.contains(messageId)) {
+          developer.log('⚠️ 이미 처리된 로컬 알림: $messageId (중복 방지)', name: 'FCM');
+          return;
+        }
+
+        developer.log('로컬 알림 탭: ${notification.title}, messageId: $messageId', name: 'FCM');
+
+        // 메시지 ID 기록
+        if (messageId != null) {
+          _handledMessageIds.add(messageId);
+          if (_handledMessageIds.length > 100) {
+            _handledMessageIds.remove(_handledMessageIds.first);
+          }
+        }
 
         _navigateToRelevantScreen(notification, data ?? {});
       } catch (e) {
@@ -660,19 +700,23 @@ class FCMService {
         }
       }
 
-      // 다른 알림 타입 처리 (추후 확장 가능)
-      switch (notification.type?.name) {
-        case 'announcement':
-          developer.log('공지사항 화면으로 이동 예정', name: 'FCM');
-          // TODO: 공지사항 화면 이동
-          break;
-        case 'worship_reminder':
-          developer.log('예배 화면으로 이동 예정', name: 'FCM');
-          // TODO: 예배 화면 이동
-          break;
-        default:
-          developer.log('기본 알림 처리: ${notification.type?.displayName ?? 'custom'}', name: 'FCM');
+      // 공지사항 알림 (announcement, worship, worship_reminder 등)
+      if (type == 'announcement' || type == 'worship' || type == 'worship_reminder') {
+        // announcement_id, related_id 등 여러 필드 확인
+        final announcementId = int.tryParse(
+          data['announcement_id']?.toString() ??
+          data['related_id']?.toString() ??
+          ''
+        );
+
+        if (announcementId != null) {
+          _navigateToAnnouncementDetail(announcementId);
+          return;
+        }
       }
+
+      // 다른 알림 타입 처리 (추후 확장 가능)
+      developer.log('기본 알림 처리: type=$type', name: 'FCM');
     } catch (e) {
       developer.log('화면 이동 실패: $e', name: 'FCM_ERROR');
     }
@@ -756,6 +800,40 @@ class FCMService {
       developer.log('✅ 커뮤니티 상세로 이동 완료: post_id=$postId', name: 'FCM');
     } catch (e, stackTrace) {
       developer.log('❌ 커뮤니티 상세 이동 실패: $e', name: 'FCM_ERROR');
+      developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');
+    }
+  }
+
+  /// 공지사항 상세 화면으로 이동
+  Future<void> _navigateToAnnouncementDetail(int announcementId) async {
+    try {
+      developer.log('🔔 공지사항 상세로 이동 시작: announcement_id=$announcementId', name: 'FCM');
+
+      // navigatorKey를 통해 Navigator 접근
+      final navigator = navigatorKey.currentState;
+      if (navigator == null) {
+        developer.log('❌ Navigator를 찾을 수 없습니다', name: 'FCM_ERROR');
+        return;
+      }
+
+      // AnnouncementService를 통해 공지사항 정보 조회
+      final announcementService = AnnouncementService();
+      final announcement = await announcementService.getAnnouncement(announcementId);
+
+      developer.log('✅ 공지사항 정보 조회 완료: ${announcement.title}', name: 'FCM');
+
+      // 공지사항 상세 화면으로 이동
+      await navigator.push(
+        MaterialPageRoute(
+          builder: (context) => AnnouncementDetailScreen(
+            announcement: announcement,
+          ),
+        ),
+      );
+
+      developer.log('✅ 공지사항 상세로 이동 완료: announcement_id=$announcementId', name: 'FCM');
+    } catch (e, stackTrace) {
+      developer.log('❌ 공지사항 상세 이동 실패: $e', name: 'FCM_ERROR');
       developer.log('스택 트레이스: $stackTrace', name: 'FCM_ERROR');
     }
   }
