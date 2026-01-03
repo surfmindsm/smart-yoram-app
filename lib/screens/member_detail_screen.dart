@@ -26,7 +26,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-  late TextEditingController _addressController;
   
   String _selectedGender = '남';
   String _selectedPosition = 'MEMBER'; // 영문 코드 사용
@@ -48,7 +47,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.member.name);
     _phoneController = TextEditingController(text: widget.member.phone);
-    _addressController = TextEditingController(text: widget.member.address ?? '');
 
     _selectedGender = widget.member.gender;
     // position은 영문 코드로 저장되어 있음 (PASTOR, ELDER 등)
@@ -64,7 +62,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -153,7 +150,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             _buildGenderSelector(),
             _buildDateField('생년월일', _selectedBirthDate, _selectBirthDate),
             _buildTextField('휴대폰', _phoneController, enabled: _isEditing),
-            _buildTextField('주소', _addressController, enabled: _isEditing, maxLines: 2),
             const SizedBox(height: 16),
             
             // 교회 정보
@@ -562,7 +558,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       final request = MemberUpdateRequest(
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
-        address: _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : null,
         position: _selectedPosition,
         district: _selectedDistrict,
         memberStatus: _selectedStatus,
