@@ -9,6 +9,7 @@ import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../components/index.dart' hide IconButton;
 import 'admin_member_detail_screen.dart';
+import 'admin_member_create_screen.dart';
 
 /// 관리자용 교인 관리 화면
 class AdminMemberManagementScreen extends StatefulWidget {
@@ -173,6 +174,11 @@ class _AdminMemberManagementScreenState
         title: const Text('교인 관리'),
         backgroundColor: NewAppColor.neutral100,
         foregroundColor: NewAppColor.neutral900,
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToCreate,
+        backgroundColor: NewAppColor.primary600,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Column(
         children: [
@@ -958,6 +964,19 @@ class _AdminMemberManagementScreenState
         builder: (context) => AdminMemberDetailScreen(member: member),
       ),
     ).then((_) => _loadMembers());
+  }
+
+  void _navigateToCreate() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminMemberCreateScreen(),
+      ),
+    ).then((result) {
+      if (result == true) {
+        _loadMembers(); // 교인 추가 성공 시 목록 새로고침
+      }
+    });
   }
 }
 

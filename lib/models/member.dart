@@ -15,6 +15,7 @@ class Member {
   final String? department; // 부서: WORSHIP, EDUCATION, MISSION, YOUTH, CHILDREN
   final String? district; // 구역: 텍스트 입력 (예: "1구역")
   final String? organizationId; // 조직 ID (UUID)
+  final String? organizationName; // 조직 이름 (조회 시 enrichment)
   final DateTime? appointedOn; // 임명일
   final String? ordinationChurch; // 안수교회
   final String? memberType; // 교인구분: 정교인, 학습교인, 세례교인, 방문자
@@ -86,6 +87,7 @@ class Member {
     this.department,
     this.district,
     this.organizationId,
+    this.organizationName,
     this.appointedOn,
     this.ordinationChurch,
     this.memberType,
@@ -161,6 +163,7 @@ class Member {
       department: json['department'],
       district: json['district'],
       organizationId: json['organization_id'],
+      organizationName: json['organization_name'],
       appointedOn: json['appointed_on'] != null
           ? DateTime.parse(json['appointed_on'])
           : null,
