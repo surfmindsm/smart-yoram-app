@@ -220,7 +220,7 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
           _buildInfoItem('이메일', widget.member.email!),
         _buildInfoItem('성별', _getGenderDisplay(widget.member.gender)),
         if (widget.member.birthdate != null)
-          _buildInfoItem('생년월일', _formatDate(widget.member.birthdate!)),
+          _buildInfoItem('생년월일', '${_formatDate(widget.member.birthdate!)} (${widget.member.birthdateType ?? '양력'})'),
         if (widget.member.department != null && widget.member.department!.isNotEmpty)
           _buildInfoItem('부서', _getDepartmentDisplay(widget.member.department!)),
         // 조직 정보는 organizationId가 있고, 조직명을 성공적으로 로드한 경우에만 표시

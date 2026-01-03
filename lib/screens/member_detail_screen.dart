@@ -32,6 +32,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   String _selectedStatus = 'active';
   String _selectedDistrict = '';
   DateTime? _selectedBirthDate;
+  String _selectedBirthdateType = '양력'; // 양력 또는 음력
   DateTime? _selectedRegistrationDate;
 
   bool _isEditing = false;
@@ -54,6 +55,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     _selectedStatus = widget.member.memberStatus;
     _selectedDistrict = widget.member.district ?? '1구역';
     _selectedBirthDate = widget.member.birthdate;
+    _selectedBirthdateType = widget.member.birthdateType ?? '양력';
     _selectedRegistrationDate = widget.member.registrationDate;
     _isEditing = widget.isEditable;
   }
@@ -148,7 +150,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             _buildSectionTitle('기본 정보'),
             _buildTextField('이름', _nameController, enabled: _isEditing),
             _buildGenderSelector(),
-            _buildDateField('생년월일', _selectedBirthDate, _selectBirthDate),
+            _buildBirthdateField(),
             _buildTextField('휴대폰', _phoneController, enabled: _isEditing),
             const SizedBox(height: 16),
             
@@ -346,6 +348,26 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
         ),
         readOnly: true,
         onTap: _isEditing ? onTap : null,
+      ),
+    );
+  }
+
+  Widget _buildBirthdateField() {
+    final dateText = _selectedBirthDate != null
+        ? '${_selectedBirthDate!.year}-${_selectedBirthDate!.month.toString().padLeft(2, '0')}-${_selectedBirthDate!.day.toString().padLeft(2, '0')} ($_selectedBirthdateType)'
+        : '';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        decoration: InputDecoration(
+          labelText: '생년월일',
+          border: const OutlineInputBorder(),
+          suffixIcon: const Icon(Icons.calendar_today),
+        ),
+        controller: TextEditingController(text: dateText),
+        readOnly: true,
+        onTap: _isEditing ? _selectBirthDate : null,
       ),
     );
   }

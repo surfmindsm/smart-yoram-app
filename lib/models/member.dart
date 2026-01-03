@@ -5,6 +5,7 @@ class Member {
   final String? email;
   final String gender;
   final DateTime? birthdate;
+  final String? birthdateType; // 생일 구분: '양력' 또는 '음력'
   final String phone;
   final String? address;
   final String? position; // 직분 코드 (영문): PASTOR, ELDER, DEACON 등
@@ -75,6 +76,7 @@ class Member {
     this.email,
     required this.gender,
     this.birthdate,
+    this.birthdateType,
     required this.phone,
     this.address,
     this.position,
@@ -149,6 +151,7 @@ class Member {
       birthdate: json['birthdate'] != null
           ? DateTime.parse(json['birthdate'])
           : null,
+      birthdateType: json['birthdate_type'],
       phone: json['phone'] ?? '',
       address: json['address'],
       position: json['position'],
@@ -244,6 +247,7 @@ class Member {
       'email': email,
       'gender': gender,
       'birthdate': birthdate?.toIso8601String().split('T')[0],
+      'birthdate_type': birthdateType,
       'phone': phone,
       'address': address,
       'position': position,
