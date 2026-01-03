@@ -16,11 +16,10 @@ class AdminMemberManagementScreen extends StatefulWidget {
 class _AdminMemberManagementScreenState
     extends State<AdminMemberManagementScreen> with TickerProviderStateMixin {
   final MemberService _memberService = MemberService();
-  final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
+  String _searchQuery = '';
 
   List<Member> _members = [];
-  List<Member> _filteredMembers = [];
   bool _isLoading = false;
 
   // TabBar 카테고리 (주소록과 동일)
@@ -30,14 +29,12 @@ class _AdminMemberManagementScreenState
   void initState() {
     super.initState();
     _tabController = TabController(length: _categories.length, vsync: this);
-    _tabController.addListener(_applyFilters);
     _loadMembers();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -50,7 +47,6 @@ class _AdminMemberManagementScreenState
       if (response.success && response.data != null) {
         setState(() {
           _members = response.data!;
-          _applyFilters();
         });
       } else {
         if (mounted) {
@@ -78,50 +74,40 @@ class _AdminMemberManagementScreenState
     }
   }
 
-  void _applyFilters() {
-    List<Member> filtered = _members;
+  List<Member> _getFilteredMembers(String category) {
+    List<Member> allMembers = _members;
 
-    // TabBar 직분별 필터링 (주소록과 동일)
-    final selectedCategory = _categories[_tabController.index];
-    if (selectedCategory != '전체') {
-      filtered = filtered.where((m) {
-        final positionMain = m.positionMain ?? 'MEMBER';
-        final positionDetail = m.positionDetail;
-
-        switch (selectedCategory) {
-          case '목회진':
-            return positionMain == 'CLERGY';
-          case '장로':
-            return positionMain == 'ELDER';
-          case '안수집사':
-            return positionMain == 'DEACON' && positionDetail == 'ORDAINED_DEACON';
-          case '권사':
-            return positionMain == 'DEACONESS';
-          case '집사':
-            return positionMain == 'DEACON' && positionDetail != 'ORDAINED_DEACON';
-          default:
-            return true;
-        }
-      }).toList();
+    // 검색어 필터링
+    if (_searchQuery.isNotEmpty) {
+      allMembers = allMembers.where((member) =>
+        member.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+        (member.email?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+        member.phone.toLowerCase().contains(_searchQuery.toLowerCase())
+      ).toList();
     }
 
-    // 검색 필터
-    final query = _searchController.text.toLowerCase();
-    if (query.isNotEmpty) {
-      filtered = filtered.where((m) {
-        return m.name.toLowerCase().contains(query) ||
-            (m.email?.toLowerCase().contains(query) ?? false) ||
-            m.phone.toLowerCase().contains(query);
-      }).toList();
-    }
+    // 카테고리 필터링
+    if (category == '전체') return allMembers;
 
-    setState(() {
-      _filteredMembers = filtered;
-    });
-  }
+    return allMembers.where((m) {
+      final positionMain = m.positionMain ?? 'MEMBER';
+      final positionDetail = m.positionDetail;
 
-  void _onSearchChanged(String value) {
-    _applyFilters();
+      switch (category) {
+        case '목회진':
+          return positionMain == 'CLERGY';
+        case '장로':
+          return positionMain == 'ELDER';
+        case '안수집사':
+          return positionMain == 'DEACON' && positionDetail == 'ORDAINED_DEACON';
+        case '권사':
+          return positionMain == 'DEACONESS';
+        case '집사':
+          return positionMain == 'DEACON' && positionDetail != 'ORDAINED_DEACON';
+        default:
+          return false;
+      }
+    }).toList();
   }
 
   void _navigateToDetail(Member member) {
@@ -158,7 +144,7 @@ class _AdminMemberManagementScreenState
       body: Column(
         children: [
           // 검색 결과 표시
-          if (_searchController.text.isNotEmpty)
+          if (_searchQuery.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(16),
               color: Colors.blue[50],
@@ -168,7 +154,7 @@ class _AdminMemberManagementScreenState
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '검색: "${_searchController.text}"',
+                      '검색: "$_searchQuery"',
                       style: TextStyle(
                         color: Colors.blue[700],
                         fontWeight: FontWeight.bold,
@@ -178,29 +164,23 @@ class _AdminMemberManagementScreenState
                   TextButton(
                     onPressed: () {
                       setState(() {
-                        _searchController.text = '';
+                        _searchQuery = '';
                       });
-                      _applyFilters();
                     },
                     child: const Text('초기화'),
                   ),
                 ],
               ),
             ),
-          // 교인 목록
+
+          // 탭뷰 컨텐츠
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredMembers.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _filteredMembers.length,
-                        itemBuilder: (context, index) {
-                          final member = _filteredMembers[index];
-                          return _buildMemberCard(member);
-                        },
-                      ),
+            child: TabBarView(
+              controller: _tabController,
+              children: _categories.map((category) {
+                return _buildMemberList(category);
+              }).toList(),
+            ),
           ),
         ],
       ),
@@ -213,7 +193,28 @@ class _AdminMemberManagementScreenState
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildMemberList(String category) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final filteredMembers = _getFilteredMembers(category);
+
+    if (filteredMembers.isEmpty) {
+      return _buildEmptyState(category);
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filteredMembers.length,
+      itemBuilder: (context, index) {
+        final member = filteredMembers[index];
+        return _buildMemberCard(member);
+      },
+    );
+  }
+
+  Widget _buildEmptyState(String category) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -225,7 +226,7 @@ class _AdminMemberManagementScreenState
           ),
           const SizedBox(height: 16),
           Text(
-            '교인이 없습니다',
+            '$category 교인이 없습니다',
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey[600],
@@ -234,7 +235,7 @@ class _AdminMemberManagementScreenState
           ),
           const SizedBox(height: 8),
           Text(
-            '등록된 교인이 없습니다',
+            '등록된 $category 교인이 없습니다',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
@@ -403,7 +404,7 @@ class _AdminMemberManagementScreenState
     showDialog(
       context: context,
       builder: (context) {
-        String searchText = _searchController.text;
+        String searchText = _searchQuery;
         return AlertDialog(
           title: const Text('교인 검색'),
           content: TextField(
@@ -415,7 +416,7 @@ class _AdminMemberManagementScreenState
             onChanged: (value) {
               searchText = value;
             },
-            controller: TextEditingController(text: _searchController.text),
+            controller: TextEditingController(text: _searchQuery),
             autofocus: true,
           ),
           actions: [
@@ -426,9 +427,8 @@ class _AdminMemberManagementScreenState
             TextButton(
               onPressed: () {
                 setState(() {
-                  _searchController.text = searchText;
+                  _searchQuery = searchText;
                 });
-                _applyFilters();
                 Navigator.pop(context);
               },
               child: const Text('검색'),
