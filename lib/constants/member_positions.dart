@@ -6,11 +6,12 @@
 /// - 주소록 필터링은 position_category 사용
 class MemberPosition {
   // ===== 1. 직분 대분류 (position_main) =====
-  static const String CLERGY = 'CLERGY';       // 교역자
-  static const String ELDER = 'ELDER';         // 장로
-  static const String DEACONESS = 'DEACONESS'; // 권사
-  static const String DEACON = 'DEACON';       // 집사
-  static const String MEMBER = 'MEMBER';       // 성도
+  static const String CLERGY = 'CLERGY';               // 교역자
+  static const String ELDER = 'ELDER';                 // 장로
+  static const String DEACONESS = 'DEACONESS';         // 권사
+  static const String DEACON = 'DEACON';               // 집사
+  static const String CHURCH_SCHOOL = 'CHURCH_SCHOOL'; // 교회학교
+  static const String MEMBER = 'MEMBER';               // 성도
 
   // ===== 2. 직분 세부 (position_detail) =====
   // 교역자 계열
@@ -37,6 +38,16 @@ class MemberPosition {
   static const String ACTIVE_DEACON = 'ACTIVE_DEACON';               // 집사
   static const String ORDAINED_DEACON = 'ORDAINED_DEACON';           // 안수집사
 
+  // 교회학교 계열
+  static const String INFANT = 'INFANT';                             // 영아부
+  static const String KINDERGARTEN = 'KINDERGARTEN';                 // 유치부
+  static const String YOUNG_CHILDREN = 'YOUNG_CHILDREN';             // 유년부
+  static const String ELEMENTARY = 'ELEMENTARY';                     // 초등부
+  static const String JUNIOR = 'JUNIOR';                             // 소년부
+  static const String MIDDLE_SCHOOL = 'MIDDLE_SCHOOL';               // 중등부
+  static const String HIGH_SCHOOL = 'HIGH_SCHOOL';                   // 고등부
+  static const String YOUTH = 'YOUTH';                               // 청년부
+
   // 기타
   static const String TEACHER = 'TEACHER';                           // 교사
   static const String STUDENT = 'STUDENT';                           // 학생
@@ -47,6 +58,7 @@ class MemberPosition {
     ELDER: '장로',
     DEACONESS: '권사',
     DEACON: '집사',
+    CHURCH_SCHOOL: '교회학교',
     MEMBER: '성도',
   };
 
@@ -74,6 +86,16 @@ class MemberPosition {
     PROBATIONARY_DEACON: '서리집사',
     ACTIVE_DEACON: '집사',
     ORDAINED_DEACON: '안수집사',
+
+    // 교회학교
+    INFANT: '영아부',
+    KINDERGARTEN: '유치부',
+    YOUNG_CHILDREN: '유년부',
+    ELEMENTARY: '초등부',
+    JUNIOR: '소년부',
+    MIDDLE_SCHOOL: '중등부',
+    HIGH_SCHOOL: '고등부',
+    YOUTH: '청년부',
 
     // 기타
     TEACHER: '교사',

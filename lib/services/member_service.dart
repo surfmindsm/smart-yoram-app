@@ -185,7 +185,29 @@ class MemberService {
 
       print('📁 MEMBER_SERVICE: 파싱된 교인 수: ${members.length}');
       if (members.isNotEmpty) {
-        print('📁 MEMBER_SERVICE: 첫 번째 교인 - 이름: ${members.first.name}, position_main: ${members.first.positionMain}');
+        print('📁 MEMBER_SERVICE: 첫 번째 교인 - 이름: ${members.first.name}, position_main: ${members.first.positionMain}, position_detail: ${members.first.positionDetail}');
+
+        // 교회학교 교인 수 확인 (position_main = 'CHURCH_SCHOOL')
+        final churchSchoolMembers = members.where((m) => m.positionMain == 'CHURCH_SCHOOL').toList();
+        print('📁 MEMBER_SERVICE: 교회학교(CHURCH_SCHOOL) 교인 수: ${churchSchoolMembers.length}');
+
+        // position_main 분포 출력
+        final positionMainCount = <String, int>{};
+        for (var member in members) {
+          final posMain = member.positionMain ?? 'MEMBER';
+          positionMainCount[posMain] = (positionMainCount[posMain] ?? 0) + 1;
+        }
+        print('📁 MEMBER_SERVICE: position_main 분포: $positionMainCount');
+
+        // 교회학교 세부 분포 (position_detail)
+        if (churchSchoolMembers.isNotEmpty) {
+          final detailCount = <String, int>{};
+          for (var member in churchSchoolMembers) {
+            final detail = member.positionDetail ?? 'null';
+            detailCount[detail] = (detailCount[detail] ?? 0) + 1;
+          }
+          print('📁 MEMBER_SERVICE: 교회학교 세부 분포 (position_detail): $detailCount');
+        }
       }
 
       // 캐시에 저장 (검색/필터가 없고 첫 페이지일 때만)

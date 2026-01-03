@@ -10,6 +10,7 @@ import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../widgets/member_detail_modal.dart';
 import '../components/index.dart' hide IconButton;
+import '../scripts/check_member_data.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -43,6 +44,17 @@ class _MembersScreenState extends State<MembersScreen> {
     super.initState();
     _loadMembers();
     _searchController.addListener(_filterMembers);
+
+    // 🔍 백엔드 데이터 구조 확인 (디버깅용)
+    _checkBackendData();
+  }
+
+  Future<void> _checkBackendData() async {
+    try {
+      await MemberDataChecker.checkMemberData();
+    } catch (e) {
+      print('⚠️ 데이터 체커 실행 실패: $e');
+    }
   }
 
   @override
@@ -157,6 +169,7 @@ class _MembersScreenState extends State<MembersScreen> {
       'ELDER': '장로',
       'DEACONESS': '권사',
       'DEACON': '집사',
+      'CHURCH_SCHOOL': '교회학교',
       'MEMBER': '성도',
     };
   }

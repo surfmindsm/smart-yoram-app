@@ -349,6 +349,16 @@ class Member {
       'ACTIVE_DEACON': '집사',
       'ORDAINED_DEACON': '안수집사',
 
+      // 교회학교(CHURCH_SCHOOL) 계열
+      'INFANT': '영아부',
+      'KINDERGARTEN': '유치부',
+      'YOUNG_CHILDREN': '유년부',
+      'ELEMENTARY': '초등부',
+      'JUNIOR': '소년부',
+      'MIDDLE_SCHOOL': '중등부',
+      'HIGH_SCHOOL': '고등부',
+      'YOUTH': '청년부',
+
       // 기타(MEMBER) 계열
       'TEACHER': '교사',
       'STUDENT': '학생',
@@ -365,6 +375,7 @@ class Member {
       'ELDER': '장로',
       'DEACONESS': '권사',
       'DEACON': '집사',
+      'CHURCH_SCHOOL': '교회학교',
       'MEMBER': '성도',
     };
     if (positionMain == null || positionMain!.isEmpty) return '성도';
