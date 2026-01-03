@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../config/api_config.dart';
 import '../models/api_response.dart';
 import '../models/member.dart';
@@ -414,31 +416,103 @@ class MemberService {
     }
   }
 
-  /// 교인 삭제 (직접 테이블 삭제)
+  /// 교인 삭제 (Supabase Edge Function 사용)
+  /// 웹 admin-dashboard와 동일한 방식으로 처리:
+  /// - inviter 참조 제거 (다른 교인이 이 교인을 인도자로 참조하는 경우)
+  /// - 연관 테이블 데이터 삭제 (member_contacts, sacraments, transfers, member_vehicles)
+  /// - 인증 계정 삭제 (auth.users, users)
+  /// - 최종 교인 레코드 삭제 (Hard Delete)
   Future<ApiResponse<bool>> deleteMember(int memberId) async {
     try {
       print('🗑️ MEMBER_SERVICE: 교인 삭제 시작 - memberId: $memberId');
 
+      // 1. 먼저 이 교인을 인도자로 참조하는 다른 교인들의 참조를 NULL로 설정
+      print('🔗 MEMBER_SERVICE: inviter 참조 제거 중...');
       await _supabaseService.client
           .from('members')
-          .delete()
-          .eq('id', memberId);
+          .update({'inviter1_member_id': null})
+          .eq('inviter1_member_id', memberId);
 
-      print('✅ MEMBER_SERVICE: 교인 삭제 성공');
+      await _supabaseService.client
+          .from('members')
+          .update({'inviter2_member_id': null})
+          .eq('inviter2_member_id', memberId);
 
-      // 캐시 무효화
-      invalidateCache();
+      await _supabaseService.client
+          .from('members')
+          .update({'inviter3_member_id': null})
+          .eq('inviter3_member_id', memberId);
 
-      return ApiResponse<bool>(
-        success: true,
-        message: '교인이 삭제되었습니다',
-        data: true,
+      print('✅ MEMBER_SERVICE: inviter 참조 제거 완료');
+
+      // 2. 현재 사용자 정보 가져오기 (인증 토큰 생성용)
+      final userResponse = await _authService.getCurrentUser();
+      if (!userResponse.success || userResponse.data == null) {
+        return ApiResponse<bool>(
+          success: false,
+          message: '사용자 인증 실패: ${userResponse.message}',
+          data: false,
+        );
+      }
+
+      final userId = userResponse.data!.id;
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+      // 3. Supabase Edge Function URL 구성
+      final url = Uri.parse('${SupabaseConfig.supabaseUrl}/functions/v1/members?id=$memberId');
+
+      print('🌐 MEMBER_SERVICE: Edge Function 호출 - URL: $url');
+
+      // HTTP DELETE 요청 (웹과 동일한 방식)
+      final response = await http.delete(
+        url,
+        headers: {
+          'X-Custom-Auth': 'temp_token_${userId}_$timestamp',
+          'Authorization': 'Bearer ${_supabaseService.client.auth.currentSession?.accessToken ?? ''}',
+          'Content-Type': 'application/json',
+        },
       );
-    } catch (e) {
-      print('❌ MEMBER_SERVICE: 교인 삭제 실패 - $e');
+
+      print('📡 MEMBER_SERVICE: 응답 상태 코드 - ${response.statusCode}');
+      print('📡 MEMBER_SERVICE: 응답 본문 - ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+
+        if (responseData['success'] == true) {
+          print('✅ MEMBER_SERVICE: 교인 삭제 성공 (완전 삭제)');
+          print('   - ${responseData['message']}');
+
+          // 캐시 무효화
+          invalidateCache();
+
+          return ApiResponse<bool>(
+            success: true,
+            message: responseData['message'] ?? '교인이 완전히 삭제되었습니다',
+            data: true,
+          );
+        } else {
+          print('❌ MEMBER_SERVICE: 교인 삭제 실패 - ${responseData['message']}');
+          return ApiResponse<bool>(
+            success: false,
+            message: responseData['message'] ?? '교인 삭제에 실패했습니다',
+            data: false,
+          );
+        }
+      } else {
+        print('❌ MEMBER_SERVICE: HTTP 오류 - 상태 코드: ${response.statusCode}');
+        return ApiResponse<bool>(
+          success: false,
+          message: '교인 삭제 요청 실패 (HTTP ${response.statusCode})',
+          data: false,
+        );
+      }
+    } catch (e, stackTrace) {
+      print('❌ MEMBER_SERVICE: 교인 삭제 중 오류 발생 - $e');
+      print('❌ 스택 트레이스: $stackTrace');
       return ApiResponse<bool>(
         success: false,
-        message: '교인 삭제 실패: ${e.toString()}',
+        message: '교인 삭제 중 오류가 발생했습니다: ${e.toString()}',
         data: false,
       );
     }
