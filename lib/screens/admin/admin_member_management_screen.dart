@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../models/member.dart';
 import '../../services/member_service.dart';
+import '../../resource/color_style_new.dart';
+import '../../resource/text_style_new.dart';
+import '../../components/index.dart' hide IconButton;
 import 'admin_member_detail_screen.dart';
-import 'admin_member_edit_screen.dart';
 
 /// 관리자용 교인 관리 화면
 class AdminMemberManagementScreen extends StatefulWidget {
@@ -14,100 +20,935 @@ class AdminMemberManagementScreen extends StatefulWidget {
 }
 
 class _AdminMemberManagementScreenState
-    extends State<AdminMemberManagementScreen> with TickerProviderStateMixin {
+    extends State<AdminMemberManagementScreen> {
   final MemberService _memberService = MemberService();
-  late TabController _tabController;
-  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
-  List<Member> _members = [];
-  bool _isLoading = false;
+  List<Member> allMembers = [];
+  List<Member> filteredMembers = [];
+  bool isLoading = true;
 
-  // TabBar 카테고리 (주소록과 동일)
-  final List<String> _categories = ['전체', '목회진', '장로', '안수집사', '권사', '집사'];
+  // 필터 상태
+  String? selectedPositionCategory; // 선택된 직분 카테고리
+  String? selectedDepartment; // 선택된 부서
+  String? selectedDistrict; // 선택된 구역 (조직) - organizationId 값
+  String? selectedDistrictName; // 선택된 구역 이름 (표시용)
+
+  // 정렬 상태
+  bool sortAscending = true; // true: 오름차순, false: 내림차순
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _categories.length, vsync: this);
     _loadMembers();
+    _searchController.addListener(_filterMembers);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadMembers() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadMembers({String? search}) async {
+    setState(() => isLoading = true);
 
     try {
-      final response = await _memberService.getMembers(limit: 1000);
+      final response = await _memberService.getMembers(
+        search: search?.isNotEmpty == true ? search : null,
+        limit: 1000,
+      );
 
       if (response.success && response.data != null) {
-        setState(() {
-          _members = response.data!;
-        });
+        allMembers = response.data!;
+        _filterMembers();
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message.isNotEmpty
-                  ? response.message
-                  : '교인 목록을 불러오는데 실패했습니다'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        throw Exception(response.message);
       }
+
+      setState(() => isLoading = false);
     } catch (e) {
+      setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('교인 목록 조회 중 오류가 발생했습니다: $e'),
+            content: Text('교인 정보 로드 실패: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
-  List<Member> _getFilteredMembers(String category) {
-    List<Member> allMembers = _members;
+  void _filterMembers() {
+    String query = _searchController.text.toLowerCase();
 
-    // 검색어 필터링
-    if (_searchQuery.isNotEmpty) {
-      allMembers = allMembers.where((member) =>
-        member.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        (member.email?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-        member.phone.toLowerCase().contains(_searchQuery.toLowerCase())
-      ).toList();
+    setState(() {
+      if (allMembers.isEmpty) {
+        filteredMembers = [];
+        return;
+      }
+
+      List<Member> baseList = allMembers;
+
+      // 직분별 필터링 (position_main 컬럼 기반)
+      if (selectedPositionCategory != null) {
+        baseList = baseList.where((m) {
+          final positionMain = m.positionMain ?? 'MEMBER';
+          return positionMain == selectedPositionCategory;
+        }).toList();
+      }
+
+      // 부서별 필터링
+      if (selectedDepartment != null) {
+        baseList =
+            baseList.where((m) => m.department == selectedDepartment).toList();
+      }
+
+      // 조직별(구역) 필터링 - organizationId 필드 기준
+      if (selectedDistrict != null) {
+        baseList = baseList
+            .where((m) => m.organizationId == selectedDistrict)
+            .toList();
+      }
+
+      // 검색 필터링
+      if (query.isNotEmpty) {
+        filteredMembers = baseList.where((member) {
+          return member.name.toLowerCase().contains(query) ||
+              member.phone.contains(query) ||
+              member.positionLabel.toLowerCase().contains(query);
+        }).toList();
+      } else {
+        filteredMembers = List.from(baseList);
+      }
+
+      // 정렬 (이름순)
+      filteredMembers.sort((a, b) =>
+          sortAscending ? a.name.compareTo(b.name) : b.name.compareTo(a.name));
+    });
+  }
+
+  // 직분 카테고리 목록 (한글) - position_main 컬럼 기반
+  Map<String, String> get positionCategories {
+    return {
+      'CLERGY': '교역자',
+      'ELDER': '장로',
+      'DEACONESS': '권사',
+      'DEACON': '집사',
+      'CHURCH_SCHOOL': '교회학교',
+      'MEMBER': '성도',
+    };
+  }
+
+  // 사용 가능한 부서 목록 추출
+  List<String> get availableDepartments {
+    final departments = allMembers
+        .where((m) => m.department != null && m.department!.isNotEmpty)
+        .map((m) => m.department!)
+        .toSet()
+        .toList();
+    departments.sort();
+    return departments;
+  }
+
+  // 사용 가능한 구역 목록 추출 (조직) - organizationId 사용
+  List<String> get availableDistricts {
+    final Set<String> districtsSet = {};
+
+    for (var m in allMembers) {
+      if (m.organizationId != null && m.organizationId!.isNotEmpty) {
+        districtsSet.add(m.organizationId!);
+      }
     }
 
-    // 카테고리 필터링
-    if (category == '전체') return allMembers;
+    return districtsSet.toList();
+  }
 
-    return allMembers.where((m) {
-      final positionMain = m.positionMain ?? 'MEMBER';
-      final positionDetail = m.positionDetail;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: NewAppColor.neutral100,
+      appBar: AppBar(
+        title: const Text('교인 관리'),
+        backgroundColor: NewAppColor.neutral100,
+        foregroundColor: NewAppColor.neutral900,
+      ),
+      body: Column(
+        children: [
+          SizedBox(height: 10.h),
+          // 검색창
+          Container(
+            padding: EdgeInsets.all(16.r),
+            color: Colors.transparent,
+            child: Container(
+              width: 350.w,
+              height: 48.h,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12.r),
+                gradient: LinearGradient(
+                  colors: [
+                    NewAppColor.primary600,
+                    NewAppColor.primary600.withValues(alpha: 0.7),
+                    NewAppColor.primary600,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Container(
+                margin: EdgeInsets.all(1.r), // 그라디언트 보더 두께
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(11.r),
+                  color: Colors.white,
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: 16.w),
+                    Icon(
+                      Icons.search,
+                      size: 20.r,
+                      color: NewAppColor.neutral500,
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: '이름 또는 전화번호로 검색',
+                          hintStyle: const FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.neutral500,
+                              ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        style: const FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.neutral900,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
-      switch (category) {
-        case '목회진':
-          return positionMain == 'CLERGY';
-        case '장로':
-          return positionMain == 'ELDER';
-        case '안수집사':
-          return positionMain == 'DEACON' && positionDetail == 'ORDAINED_DEACON';
-        case '권사':
-          return positionMain == 'DEACONESS';
-        case '집사':
-          return positionMain == 'DEACON' && positionDetail != 'ORDAINED_DEACON';
-        default:
-          return false;
+          // 필터 바와 정렬 버튼
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Row(
+              children: [
+                Expanded(child: _buildFilterBar()),
+                SizedBox(width: 8.w),
+                _buildSortButton(),
+              ],
+            ),
+          ),
+
+          // 교인 목록
+          Expanded(
+            child: _buildMemberList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 12.h),
+      color: Colors.transparent,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // 직분별 필터
+            _buildDropdownButton(
+              label: selectedPositionCategory != null
+                  ? positionCategories[selectedPositionCategory]!
+                  : '직분별',
+              isSelected: selectedPositionCategory != null,
+              onTap: _showPositionFilter,
+            ),
+            SizedBox(width: 8.w),
+
+            // 부서별 필터
+            _buildDropdownButton(
+              label: selectedDepartment != null
+                  ? MemberDepartmentOptions.getLabel(selectedDepartment) ??
+                      selectedDepartment!
+                  : '부서별',
+              isSelected: selectedDepartment != null,
+              onTap: _showDepartmentFilter,
+            ),
+            SizedBox(width: 8.w),
+
+            // 조직별 필터 (구역)
+            _buildDropdownButton(
+              label: selectedDistrictName ?? '조직별',
+              isSelected: selectedDistrict != null,
+              onTap: _showDistrictFilter,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSortButton() {
+    return GestureDetector(
+      onTap: _toggleSort,
+      child: Container(
+        height: 36.h,
+        padding: EdgeInsets.symmetric(horizontal: 12.w),
+        decoration: BoxDecoration(
+          color: NewAppColor.transparent,
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '이름순',
+              style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral700,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+              size: 16.sp,
+              color: NewAppColor.neutral700,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 36.h,
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral200,
+          borderRadius: BorderRadius.circular(18.r),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: FigmaTextStyles().body2.copyWith(
+                    color: isSelected ? Colors.white : NewAppColor.neutral700,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 16.sp,
+              color: isSelected ? Colors.white : NewAppColor.neutral700,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggleSort() {
+    setState(() {
+      sortAscending = !sortAscending;
+    });
+    _filterMembers();
+  }
+
+  void _showPositionFilter() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '직분별 필터',
+                style: FigmaTextStyles().headline6.copyWith(
+                      color: NewAppColor.neutral900,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // 전체 옵션
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: selectedPositionCategory == null
+                              ? NewAppColor.primary100
+                              : null,
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: ListTile(
+                          title: const Text('전체'),
+                          trailing: selectedPositionCategory == null
+                              ? Icon(Icons.check, color: NewAppColor.primary600)
+                              : null,
+                          onTap: () {
+                            setState(() {
+                              selectedPositionCategory = null;
+                            });
+                            _filterMembers();
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                      ...positionCategories.entries.map((entry) {
+                        final isSelected =
+                            selectedPositionCategory == entry.key;
+                        return Container(
+                          margin: EdgeInsets.symmetric(vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: isSelected ? NewAppColor.primary100 : null,
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: ListTile(
+                            title: Text(entry.value),
+                            trailing: isSelected
+                                ? Icon(Icons.check,
+                                    color: NewAppColor.primary600)
+                                : null,
+                            onTap: () {
+                              setState(() {
+                                selectedPositionCategory = entry.key;
+                              });
+                              _filterMembers();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDepartmentFilter() {
+    final departments = availableDepartments;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '부서별 필터',
+                style: FigmaTextStyles().headline6.copyWith(
+                      color: NewAppColor.neutral900,
+                    ),
+              ),
+              SizedBox(height: 16.h),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // 전체 옵션
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: selectedDepartment == null
+                              ? NewAppColor.primary100
+                              : null,
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: ListTile(
+                          title: const Text('전체'),
+                          trailing: selectedDepartment == null
+                              ? Icon(Icons.check, color: NewAppColor.primary600)
+                              : null,
+                          onTap: () {
+                            setState(() {
+                              selectedDepartment = null;
+                            });
+                            _filterMembers();
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                      ...departments.map((dept) {
+                        final label =
+                            MemberDepartmentOptions.getLabel(dept) ?? dept;
+                        final isSelected = selectedDepartment == dept;
+                        return Container(
+                          margin: EdgeInsets.symmetric(vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: isSelected ? NewAppColor.primary100 : null,
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: ListTile(
+                            title: Text(label),
+                            trailing: isSelected
+                                ? Icon(Icons.check,
+                                    color: NewAppColor.primary600)
+                                : null,
+                            onTap: () {
+                              setState(() {
+                                selectedDepartment = dept;
+                              });
+                              _filterMembers();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDistrictFilter() {
+    final districtIds = availableDistricts;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return _DistrictFilterSheet(
+          districtIds: districtIds,
+          selectedDistrictId: selectedDistrict,
+          memberService: _memberService,
+          onDistrictSelected: (String? districtId, String? districtName) {
+            setState(() {
+              selectedDistrict = districtId;
+              selectedDistrictName = districtName;
+            });
+            _filterMembers();
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMemberList() {
+    if (isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: NewAppColor.primary600),
+            SizedBox(height: 16.h),
+            Text(
+              '교인 정보를 불러오는 중...',
+              style: const FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.neutral500,
+                  ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (filteredMembers.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () => _loadMembers(),
+        color: NewAppColor.primary600,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height - 300.h,
+            child: Center(
+              child: SizedBox(
+                width: 272.w,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 48.w,
+                      height: 48.h,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: const BoxDecoration(),
+                      child: SvgPicture.asset(
+                        'assets/icons/members_empty.svg',
+                        width: 48.w,
+                        height: 48.h,
+                        colorFilter: ColorFilter.mode(
+                          NewAppColor.neutral800,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            '교인 정보가 없습니다',
+                            textAlign: TextAlign.center,
+                            style: FigmaTextStyles().title3.copyWith(
+                                  color: NewAppColor.neutral800,
+                                ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '다른 카테고리를 선택하거나 검색어를 변경해보세요',
+                            textAlign: TextAlign.center,
+                            style: FigmaTextStyles().body2.copyWith(
+                                  color: NewAppColor.neutral500,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _loadMembers(),
+      color: NewAppColor.primary600,
+      child: ListView.separated(
+        padding: EdgeInsets.all(20.w),
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: filteredMembers.length,
+        separatorBuilder: (context, index) => SizedBox(height: 8.h),
+        itemBuilder: (context, index) {
+          if (index >= filteredMembers.length) {
+            return const SizedBox.shrink();
+          }
+          final member = filteredMembers[index];
+          return _buildMemberCard(member);
+        },
+      ),
+    );
+  }
+
+  Widget _buildMemberCard(Member member) {
+    return GestureDetector(
+      onTap: () => _navigateToDetail(member),
+      child: Container(
+        width: double.infinity,
+        height: 76.h,
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              left: 16.w,
+              top: 7.h,
+              child: SizedBox(
+                width: 253.w,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 42.w,
+                      height: 42.h,
+                      decoration: ShapeDecoration(
+                        image: member.fullProfilePhotoUrl != null &&
+                                member.fullProfilePhotoUrl!.isNotEmpty
+                            ? DecorationImage(
+                                image:
+                                    NetworkImage(member.fullProfilePhotoUrl!),
+                                fit: BoxFit.fill,
+                              )
+                            : null,
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: NewAppColor.neutral300,
+                          ),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: member.fullProfilePhotoUrl == null ||
+                              member.fullProfilePhotoUrl!.isEmpty
+                          ? Center(
+                              child: Text(
+                                member.name.isNotEmpty ? member.name[0] : '?',
+                                style: TextStyle(
+                                  color: NewAppColor.neutral900,
+                                  fontSize: 16.sp,
+                                  fontFamily: 'Pretendard',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    SizedBox(width: 16.w),
+                    SizedBox(
+                      width: 195.w,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 195.w,
+                                  child: Text(
+                                    member.name,
+                                    style: TextStyle(
+                                      color: NewAppColor.neutral900,
+                                      fontSize: 16.sp,
+                                      fontFamily: 'Pretendard',
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.50,
+                                      letterSpacing: -0.40,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 195.w,
+                                  child: Text(
+                                    member.phone,
+                                    style: TextStyle(
+                                      color: NewAppColor.neutral600,
+                                      fontSize: 13.sp,
+                                      fontFamily: 'Pretendard Variable',
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.38,
+                                      letterSpacing: -0.33,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          SizedBox(
+                            width: 195.w,
+                            child: Text(
+                              member.positionLabel,
+                              style: TextStyle(
+                                color: NewAppColor.neutral600,
+                                fontSize: 11.sp,
+                                fontFamily: 'Pretendard Variable',
+                                fontWeight: FontWeight.w400,
+                                height: 1.45,
+                                letterSpacing: -0.28,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 269.w,
+              top: 24.h,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 28.w,
+                    height: 28.h,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: ShapeDecoration(
+                      color: NewAppColor.success200,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100.r),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.phone,
+                        color: NewAppColor.success600,
+                        size: 16.sp,
+                      ),
+                      onPressed: () => _makePhoneCall(member.phone),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                  SizedBox(width: 9.w),
+                  Container(
+                    width: 28.w,
+                    height: 28.h,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: ShapeDecoration(
+                      color: NewAppColor.primary200,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100.r),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.chat_bubble,
+                        color: NewAppColor.primary600,
+                        size: 16.sp,
+                      ),
+                      onPressed: () => _sendMessage(member.phone),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _makePhoneCall(String? phone) async {
+    if (phone != null && phone.isNotEmpty) {
+      String cleanedPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+
+      if (cleanedPhone.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('유효하지 않은 전화번호입니다')),
+          );
+        }
+        return;
       }
-    }).toList();
+
+      try {
+        PermissionStatus phonePermission = await Permission.phone.status;
+        if (phonePermission.isDenied) {
+          await Permission.phone.request();
+        }
+      } catch (e) {
+        // 권한 오류는 무시하고 계속 진행
+      }
+
+      final Uri phoneUri = Uri(scheme: 'tel', path: cleanedPhone);
+
+      try {
+        bool canLaunch = await canLaunchUrl(phoneUri);
+
+        if (canLaunch) {
+          await launchUrl(phoneUri);
+        } else {
+          await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('전화 앱을 열 수 없습니다')),
+          );
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('전화번호가 없습니다')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendMessage(String? phone) async {
+    if (phone != null && phone.isNotEmpty) {
+      String cleanedPhone = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+
+      if (cleanedPhone.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('유효하지 않은 전화번호입니다')),
+          );
+        }
+        return;
+      }
+
+      final Uri smsUri = Uri(scheme: 'sms', path: cleanedPhone);
+
+      try {
+        bool canLaunch = await canLaunchUrl(smsUri);
+
+        if (canLaunch) {
+          await launchUrl(smsUri);
+        } else {
+          await launchUrl(smsUri, mode: LaunchMode.externalApplication);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('메시지 앱을 열 수 없습니다')),
+          );
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('전화번호가 없습니다')),
+        );
+      }
+    }
   }
 
   void _navigateToDetail(Member member) {
@@ -116,426 +957,136 @@ class _AdminMemberManagementScreenState
       MaterialPageRoute(
         builder: (context) => AdminMemberDetailScreen(member: member),
       ),
-    ).then((_) => _loadMembers()); // 돌아올 때 목록 새로고침
+    ).then((_) => _loadMembers());
+  }
+}
+
+// 조직 필터 바텀시트
+class _DistrictFilterSheet extends StatefulWidget {
+  final List<String> districtIds;
+  final String? selectedDistrictId;
+  final MemberService memberService;
+  final Function(String?, String?) onDistrictSelected;
+
+  const _DistrictFilterSheet({
+    required this.districtIds,
+    required this.selectedDistrictId,
+    required this.memberService,
+    required this.onDistrictSelected,
+  });
+
+  @override
+  State<_DistrictFilterSheet> createState() => _DistrictFilterSheetState();
+}
+
+class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
+  Map<String, String> organizationNames = {};
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrganizationNames();
+  }
+
+  Future<void> _loadOrganizationNames() async {
+    for (final id in widget.districtIds) {
+      final name = await widget.memberService.getOrganizationPath(id);
+      if (name != null) {
+        organizationNames[id] = name;
+      } else {
+        organizationNames[id] = id;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('교인 관리'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: _categories.map((category) => Tab(text: category)).toList(),
-          isScrollable: true,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-        ),
-        actions: [
-          IconButton(
-            onPressed: _showSearchDialog,
-            icon: const Icon(Icons.search),
-          ),
-        ],
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.6,
       ),
-      body: Column(
-        children: [
-          // 검색 결과 표시
-          if (_searchQuery.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.blue[50],
-              child: Row(
-                children: [
-                  Icon(Icons.search, color: Colors.blue[700]),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '검색: "$_searchQuery"',
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _searchQuery = '';
-                      });
-                    },
-                    child: const Text('초기화'),
-                  ),
-                ],
-              ),
-            ),
-
-          // 탭뷰 컨텐츠
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: _categories.map((category) {
-                return _buildMemberList(category);
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: "admin_member_fab",
-        onPressed: _showContactAllDialog,
-        backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.email, color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildMemberList(String category) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final filteredMembers = _getFilteredMembers(category);
-
-    if (filteredMembers.isEmpty) {
-      return _buildEmptyState(category);
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: filteredMembers.length,
-      itemBuilder: (context, index) {
-        final member = filteredMembers[index];
-        return _buildMemberCard(member);
-      },
-    );
-  }
-
-  Widget _buildEmptyState(String category) {
-    return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.group,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
           Text(
-            '$category 교인이 없습니다',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
-            ),
+            '조직별 필터',
+            style: FigmaTextStyles().headline6.copyWith(
+                  color: NewAppColor.neutral900,
+                ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '등록된 $category 교인이 없습니다',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMemberCard(Member member) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: InkWell(
-        onTap: () => _navigateToDetail(member),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-            // 프로필 사진
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.grey[300],
-              child: member.fullProfilePhotoUrl != null
-                  ? ClipOval(
-                      child: Image.network(
-                        member.fullProfilePhotoUrl!,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.person, size: 30, color: Colors.grey[600]),
+          SizedBox(height: 16.h),
+          if (isLoading)
+            Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.h),
+                child: CircularProgressIndicator(
+                  color: NewAppColor.primary600,
+                ),
+              ),
+            )
+          else
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Container(
+                      margin: EdgeInsets.symmetric(vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: widget.selectedDistrictId == null
+                            ? NewAppColor.primary100
+                            : null,
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
-                    )
-                  : Icon(Icons.person, size: 30, color: Colors.grey[600]),
-            ),
-            const SizedBox(width: 16),
-
-            // 정보 섹션
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        member.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: ListTile(
+                        title: const Text('전체'),
+                        trailing: widget.selectedDistrictId == null
+                            ? Icon(Icons.check, color: NewAppColor.primary600)
+                            : null,
+                        onTap: () {
+                          widget.onDistrictSelected(null, null);
+                          Navigator.pop(context);
+                        },
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    ),
+                    ...widget.districtIds.map((districtId) {
+                      final isSelected =
+                          widget.selectedDistrictId == districtId;
+                      final displayName =
+                          organizationNames[districtId] ?? districtId;
+                      return Container(
+                        margin: EdgeInsets.symmetric(vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: _getPositionColor(member.positionLabel).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _getPositionColor(member.positionLabel).withOpacity(0.3),
-                          ),
+                          color: isSelected ? NewAppColor.primary100 : null,
+                          borderRadius: BorderRadius.circular(8.r),
                         ),
-                        child: Text(
-                          member.positionLabel,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _getPositionColor(member.positionLabel),
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: ListTile(
+                          title: Text(displayName),
+                          trailing: isSelected
+                              ? Icon(Icons.check, color: NewAppColor.primary600)
+                              : null,
+                          onTap: () {
+                            widget.onDistrictSelected(districtId, displayName);
+                            Navigator.pop(context);
+                          },
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
-                  if (member.department != null && member.department!.isNotEmpty)
-                    Text(
-                      member.department!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      Icon(Icons.phone, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text(
-                        member.phone,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  if (member.email != null && member.email!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        children: [
-                          Icon(Icons.email, size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              member.email!,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
+                      );
+                    }),
+                  ],
+                ),
               ),
             ),
-
-            // 액션 버튼들
-            Column(
-              children: [
-                IconButton(
-                  onPressed: () => _makeCall(member.phone),
-                  icon: Icon(Icons.phone, color: Colors.green[600]),
-                  tooltip: '전화걸기',
-                ),
-                IconButton(
-                  onPressed: () => _sendMessage(member.phone),
-                  icon: Icon(Icons.chat, color: Colors.blue[600]),
-                  tooltip: '문자보내기',
-                ),
-              ],
-            ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Color _getPositionColor(String position) {
-    if (position.contains('목사') || position.contains('교역')) {
-      return Colors.purple;
-    } else if (position.contains('전도사')) {
-      return Colors.indigo;
-    } else if (position.contains('장로')) {
-      return Colors.blue;
-    } else if (position.contains('안수집사')) {
-      return Colors.teal;
-    } else if (position.contains('권사')) {
-      return Colors.pink;
-    } else if (position.contains('집사')) {
-      return Colors.orange;
-    }
-    return Colors.grey;
-  }
-
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String searchText = _searchQuery;
-        return AlertDialog(
-          title: const Text('교인 검색'),
-          content: TextField(
-            decoration: const InputDecoration(
-              labelText: '이름, 전화번호, 이메일 검색',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (value) {
-              searchText = value;
-            },
-            controller: TextEditingController(text: _searchQuery),
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('취소'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _searchQuery = searchText;
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('검색'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _makeCall(String phoneNumber) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('전화 걸기'),
-        content: Text('$phoneNumber 로 전화를 걸겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('전화 걸기 기능은 추후 구현 예정입니다')),
-              );
-            },
-            child: const Text('전화'),
-          ),
+          SizedBox(height: 16.h),
         ],
       ),
-    );
-  }
-
-  void _sendMessage(String phoneNumber) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('문자 보내기'),
-        content: Text('$phoneNumber 로 문자를 보내겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('문자 보내기 기능은 추후 구현 예정입니다')),
-              );
-            },
-            child: const Text('문자'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showContactAllDialog() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '단체 연락',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.chat, color: Colors.blue),
-              title: const Text('단체 문자 보내기'),
-              subtitle: const Text('선택된 그룹에 단체 문자를 보냅니다'),
-              onTap: () {
-                Navigator.pop(context);
-                _sendGroupMessage();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.email, color: Colors.green),
-              title: const Text('단체 이메일 보내기'),
-              subtitle: const Text('선택된 그룹에 단체 이메일을 보냅니다'),
-              onTap: () {
-                Navigator.pop(context);
-                _sendGroupEmail();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _sendGroupMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('단체 문자 기능은 추후 구현 예정입니다')),
-    );
-  }
-
-  void _sendGroupEmail() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('단체 이메일 기능은 추후 구현 예정입니다')),
     );
   }
 }
