@@ -150,8 +150,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
 
-                // 관리자 메뉴 섹션 (일반 관리자만 표시, 커뮤니티 회원은 제외)
-                if (_currentUser?.isAdmin == true && _currentUser?.isCommunityAdmin != true) ...[
+                // 관리자 메뉴 섹션 (church_admin, system_admin, church_super_admin만 표시)
+                if (_currentUser?.isChurchAdmin == true) ...[
                   SizedBox(height: 16.h),
                   _buildGroupedSection(
                     title: '관리자 메뉴',
