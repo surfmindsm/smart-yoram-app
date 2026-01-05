@@ -26,7 +26,6 @@ class _AdminNoticeListScreenState extends State<AdminNoticeListScreen> {
   List<Announcement> _notices = [];
   List<Announcement> _filteredNotices = [];
   bool _isLoading = false;
-  bool _showImportantOnly = false;
 
   @override
   void initState() {
@@ -68,21 +67,8 @@ class _AdminNoticeListScreenState extends State<AdminNoticeListScreen> {
   }
 
   void _applyFilters() {
-    List<Announcement> filtered = _notices;
-
-    if (_showImportantOnly) {
-      filtered = filtered.where((n) => n.isPinned).toList();
-    }
-
     setState(() {
-      _filteredNotices = filtered;
-    });
-  }
-
-  void _toggleImportantFilter() {
-    setState(() {
-      _showImportantOnly = !_showImportantOnly;
-      _applyFilters();
+      _filteredNotices = _notices;
     });
   }
 
@@ -131,61 +117,14 @@ class _AdminNoticeListScreenState extends State<AdminNoticeListScreen> {
             color: NewAppColor.neutral900,
           ),
         ),
-        actions: [
-          material.IconButton(
-            icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: _navigateToAdd,
-          ),
-          material.IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black),
-            onPressed: _loadNotices,
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToAdd,
+        backgroundColor: NewAppColor.primary600,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Column(
         children: [
-          // 필터 섹션
-          Container(
-            padding: EdgeInsets.all(16.w),
-            color: Colors.white,
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: _toggleImportantFilter,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    decoration: BoxDecoration(
-                      color: _showImportantOnly ? NewAppColor.primary600 : Colors.white,
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: _showImportantOnly ? NewAppColor.primary600 : NewAppColor.neutral300,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.star,
-                          size: 16.sp,
-                          color: _showImportantOnly ? Colors.white : NewAppColor.neutral700,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          '중요 공지',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: _showImportantOnly ? FontWeight.w600 : FontWeight.w400,
-                            color: _showImportantOnly ? Colors.white : NewAppColor.neutral700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           // 결과 카운트
           Container(
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
