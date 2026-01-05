@@ -28,6 +28,7 @@ class Member {
   final String? maritalStatus; // 결혼 상태: 미혼, 기혼, 이혼, 사별
   final String? spouseName; // 배우자 이름
   final DateTime? marriedOn; // 결혼일
+  final List<Map<String, dynamic>>? children; // 자녀 정보
   final String? postalCode; // 우편번호
   final String? region1; // 지역 1
   final String? region2; // 지역 2
@@ -100,6 +101,7 @@ class Member {
     this.maritalStatus,
     this.spouseName,
     this.marriedOn,
+    this.children,
     this.postalCode,
     this.region1,
     this.region2,
@@ -185,6 +187,11 @@ class Member {
       spouseName: json['spouse_name'],
       marriedOn: json['married_on'] != null
           ? DateTime.parse(json['married_on'])
+          : null,
+      children: json['children'] != null
+          ? (json['children'] as List<dynamic>)
+              .map((e) => e as Map<String, dynamic>)
+              .toList()
           : null,
       postalCode: json['postal_code'],
       region1: json['region_1'],
@@ -272,6 +279,7 @@ class Member {
       'marital_status': maritalStatus,
       'spouse_name': spouseName,
       'married_on': marriedOn?.toIso8601String().split('T')[0],
+      'children': children,
       'postal_code': postalCode,
       'region_1': region1,
       'region_2': region2,

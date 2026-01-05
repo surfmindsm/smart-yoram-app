@@ -426,29 +426,27 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
                   // 기본 정보 섹션
                   _buildBasicInfoSection(),
                   SizedBox(height: 16.h),
-                  // 연락처 정보 섹션
-                  _buildContactInfoSection(),
-                  // 사역 정보 섹션 (있는 경우만)
-                  if (_hasMinistryInfo()) ...[
+                  // 개인 및 가족 정보 섹션
+                  _buildPersonalFamilyInfoSection(),
+                  SizedBox(height: 16.h),
+                  // 교회 정보 섹션
+                  _buildChurchInfoSection(),
+                  // 교회 정보 확장 섹션 (있는 경우만)
+                  if (_hasChurchInfoExtended()) ...[
                     SizedBox(height: 16.h),
-                    _buildMinistryInfoSection(),
-                  ],
-                  // 신앙 정보 섹션 (있는 경우만)
-                  if (_hasFaithInfo()) ...[
-                    SizedBox(height: 16.h),
-                    _buildFaithInfoSection(),
+                    _buildChurchInfoExtendedSection(),
                   ],
                   // 직업 정보 섹션 (있는 경우만)
                   if (_hasJobInfo()) ...[
                     SizedBox(height: 16.h),
                     _buildJobInfoSection(),
                   ],
-                  // 가족 정보 섹션 (있는 경우만)
-                  if (_hasFamilyInfo()) ...[
+                  // 사역 정보 확장 섹션 (있는 경우만)
+                  if (_hasMinistryInfoExtended()) ...[
                     SizedBox(height: 16.h),
-                    _buildFamilyInfoSection(),
+                    _buildMinistryInfoExtendedSection(),
                   ],
-                  // 커스텀 필드 섹션 (있는 경우만)
+                  // 자유필드 섹션 (있는 경우만)
                   if (_hasCustomFields()) ...[
                     SizedBox(height: 16.h),
                     _buildCustomFieldsSection(),
@@ -571,6 +569,24 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
             ),
             SizedBox(height: 12.h),
           ],
+          if (_member.email != null && _member.email!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.email_outlined,
+              label: '이메일',
+              value: _member.email!,
+              onTap: _sendEmail,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.phone.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.phone_outlined,
+              label: '전화번호',
+              value: _member.phone,
+              onTap: _makePhoneCall,
+            ),
+            SizedBox(height: 12.h),
+          ],
           if (_member.birthdate != null) ...[
             _buildInfoRow(
               icon: Icons.cake_outlined,
@@ -585,66 +601,6 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
             label: '성별',
             value: _getGenderDisplay(_member.gender),
           ),
-          if (_member.maritalStatus != null &&
-              _member.maritalStatus!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.favorite_outline,
-              label: '결혼상태',
-              value: _member.maritalStatus!,
-            ),
-          ],
-          if (_member.position != null && _member.position!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.work_outline,
-              label: '직분',
-              value: _member.position!,
-            ),
-          ],
-          if (_member.department != null && _member.department!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.group_outlined,
-              label: '부서',
-              value: _member.department!,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '연락처 정보',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          _buildInfoRow(
-            icon: Icons.phone_outlined,
-            label: '전화번호',
-            value: _member.phone,
-            onTap: _member.phone.isNotEmpty ? _makePhoneCall : null,
-          ),
-          if (_member.email != null && _member.email!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.email_outlined,
-              label: '이메일',
-              value: _member.email!,
-              onTap: _sendEmail,
-            ),
-          ],
           if (_member.address != null && _member.address!.isNotEmpty) ...[
             SizedBox(height: 12.h),
             _buildInfoRow(
@@ -653,44 +609,12 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
               value: _member.address!,
             ),
           ],
-          if (_member.postalCode != null && _member.postalCode!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.markunread_mailbox_outlined,
-              label: '우편번호',
-              value: _member.postalCode!,
-            ),
-          ],
-          if (_member.region1 != null && _member.region1!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.map_outlined,
-              label: '지역 (시/도)',
-              value: _member.region1!,
-            ),
-          ],
-          if (_member.region2 != null && _member.region2!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.location_city_outlined,
-              label: '지역 (구/군)',
-              value: _member.region2!,
-            ),
-          ],
-          if (_member.region3 != null && _member.region3!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.place_outlined,
-              label: '지역 (동/읍/면)',
-              value: _member.region3!,
-            ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildJobInfoSection() {
+  Widget _buildPersonalFamilyInfoSection() {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
@@ -699,86 +623,25 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '직업 정보',
+            '개인 및 가족 정보',
             style: const FigmaTextStyles().title3.copyWith(
               color: NewAppColor.neutral900,
             ),
           ),
           SizedBox(height: 16.h),
-          if (_member.jobCategory != null &&
-              _member.jobCategory!.isNotEmpty) ...[
+          if (_member.maritalStatus != null &&
+              _member.maritalStatus!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.category_outlined,
-              label: '직업 분류',
-              value: _member.jobCategory!,
+              icon: Icons.favorite_outline,
+              label: '결혼 상태',
+              value: _member.maritalStatus!,
             ),
             SizedBox(height: 12.h),
           ],
-          if (_member.jobDetail != null && _member.jobDetail!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.business_center_outlined,
-              label: '직업 상세',
-              value: _member.jobDetail!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.jobTitle != null && _member.jobTitle!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.work_outline,
-              label: '직함',
-              value: _member.jobTitle!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.jobPosition != null &&
-              _member.jobPosition!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.badge_outlined,
-              label: '직위',
-              value: _member.jobPosition!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.workplace != null && _member.workplace!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.apartment_outlined,
-              label: '직장',
-              value: _member.workplace!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.workplacePhone != null &&
-              _member.workplacePhone!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.phone_in_talk_outlined,
-              label: '직장 전화번호',
-              value: _member.workplacePhone!,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFamilyInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '가족 정보',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
           if (_member.spouseName != null && _member.spouseName!.isNotEmpty) ...[
             _buildInfoRow(
               icon: Icons.people_outline,
-              label: '배우자',
+              label: '배우자 이름',
               value: _member.spouseName!,
             ),
             SizedBox(height: 12.h),
@@ -786,9 +649,68 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.marriedOn != null) ...[
             _buildInfoRow(
               icon: Icons.celebration_outlined,
-              label: '결혼기념일',
+              label: '결혼일',
               value:
                   '${_member.marriedOn!.year}.${_member.marriedOn!.month.toString().padLeft(2, '0')}.${_member.marriedOn!.day.toString().padLeft(2, '0')}',
+            ),
+            SizedBox(height: 12.h),
+          ],
+          // 자녀 정보 표시
+          if (_member.children != null && _member.children!.isNotEmpty) ...[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 32.w,
+                      height: 32.h,
+                      decoration: BoxDecoration(
+                        color: NewAppColor.neutral100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.child_care_outlined,
+                        size: 18.sp,
+                        color: NewAppColor.neutral700,
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      '자녀',
+                      style: const FigmaTextStyles().caption1.copyWith(
+                        color: NewAppColor.neutral600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                ...(_member.children!).asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final child = entry.value;
+                  final name = child['name'] ?? '';
+                  final gender = child['gender'] ?? '';
+                  final birthdate = child['birthdate'];
+
+                  String childInfo = '${index + 1}. $name';
+                  if (gender.isNotEmpty) {
+                    childInfo += ' ($gender)';
+                  }
+                  if (birthdate != null && birthdate is String && birthdate.isNotEmpty) {
+                    childInfo += ' - $birthdate';
+                  }
+
+                  return Padding(
+                    padding: EdgeInsets.only(left: 44.w, bottom: 4.h),
+                    child: Text(
+                      childInfo,
+                      style: const FigmaTextStyles().body1.copyWith(
+                        color: NewAppColor.neutral900,
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ),
           ],
         ],
@@ -796,7 +718,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
     );
   }
 
-  Widget _buildMinistryInfoSection() {
+  Widget _buildChurchInfoSection() {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
@@ -805,7 +727,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '사역 정보',
+            '교회 정보',
             style: const FigmaTextStyles().title3.copyWith(
               color: NewAppColor.neutral900,
             ),
@@ -820,11 +742,16 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
             ),
             SizedBox(height: 12.h),
           ],
-          if (_member.positionDetail != null &&
+          // 주 직분이 교역자, 장로, 권사, 집사, 교회학교인 경우 세부 직분 표시
+          if (_member.positionMain != null &&
+              _member.positionMain!.isNotEmpty &&
+              ['CLERGY', 'ELDER', 'DEACONESS', 'DEACON', 'CHURCH_SCHOOL']
+                  .contains(_member.positionMain) &&
+              _member.positionDetail != null &&
               _member.positionDetail!.isNotEmpty) ...[
             _buildInfoRow(
               icon: Icons.info_outline,
-              label: '직분 상세',
+              label: '세부 직분',
               value: _getPositionDetailDisplay(_member.positionDetail),
             ),
             SizedBox(height: 12.h),
@@ -834,6 +761,14 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
               icon: Icons.corporate_fare_outlined,
               label: '조직',
               value: _organizationName!,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.department != null && _member.department!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.group_outlined,
+              label: '부서',
+              value: _member.department!,
             ),
             SizedBox(height: 12.h),
           ],
@@ -853,57 +788,13 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
               label: '안수교회',
               value: _member.ordinationChurch!,
             ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.ministryStartDate != null) ...[
-            _buildInfoRow(
-              icon: Icons.calendar_today_outlined,
-              label: '사역 시작일',
-              value:
-                  '${_member.ministryStartDate!.year}.${_member.ministryStartDate!.month.toString().padLeft(2, '0')}.${_member.ministryStartDate!.day.toString().padLeft(2, '0')}',
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.neighboringChurch != null &&
-              _member.neighboringChurch!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.location_city_outlined,
-              label: '이웃 교회',
-              value: _member.neighboringChurch!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.positionDecision != null &&
-              _member.positionDecision!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.assignment_outlined,
-              label: '직분 결정',
-              value: _member.positionDecision!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.dailyActivity != null &&
-              _member.dailyActivity!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.schedule_outlined,
-              label: '일상 활동',
-              value: _member.dailyActivity!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.inviter3MemberId != null) ...[
-            _buildInfoRow(
-              icon: Icons.person_add_outlined,
-              label: '인도자 ID',
-              value: _member.inviter3MemberId.toString(),
-            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildFaithInfoSection() {
+  Widget _buildChurchInfoExtendedSection() {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
@@ -912,7 +803,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '신앙 정보',
+            '교회 정보 확장',
             style: const FigmaTextStyles().title3.copyWith(
               color: NewAppColor.neutral900,
             ),
@@ -923,23 +814,6 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
               icon: Icons.badge_outlined,
               label: '교인 구분',
               value: _member.memberType!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.ageGroup != null && _member.ageGroup!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.groups_outlined,
-              label: '연령대',
-              value: _member.ageGroup!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.spiritualGrade != null &&
-              _member.spiritualGrade!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.auto_awesome_outlined,
-              label: '신급',
-              value: _member.spiritualGrade!,
             ),
             SizedBox(height: 12.h),
           ],
@@ -968,31 +842,138 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
               label: '세례교회',
               value: _member.baptismChurch!,
             ),
-            SizedBox(height: 12.h),
           ],
-          if (_member.district != null && _member.district!.isNotEmpty) ...[
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJobInfoSection() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '직업 정보',
+            style: const FigmaTextStyles().title3.copyWith(
+              color: NewAppColor.neutral900,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          if (_member.jobCategory != null &&
+              _member.jobCategory!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.map_outlined,
-              label: '구역',
-              value: _member.district!,
+              icon: Icons.category_outlined,
+              label: '직업분류',
+              value: _member.jobCategory!,
             ),
             SizedBox(height: 12.h),
           ],
-          if (_member.lastContactDate != null) ...[
+          if (_member.jobDetail != null && _member.jobDetail!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.contact_phone_outlined,
-              label: '마지막 연락일',
-              value:
-                  '${_member.lastContactDate!.year}.${_member.lastContactDate!.month.toString().padLeft(2, '0')}.${_member.lastContactDate!.day.toString().padLeft(2, '0')}',
+              icon: Icons.business_center_outlined,
+              label: '구체적 업무',
+              value: _member.jobDetail!,
             ),
             SizedBox(height: 12.h),
           ],
-          if (_member.registrationDate != null) ...[
+          if (_member.jobPosition != null &&
+              _member.jobPosition!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.app_registration_outlined,
-              label: '등록일',
+              icon: Icons.badge_outlined,
+              label: '직책/직위',
+              value: _member.jobPosition!,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.jobTitle != null && _member.jobTitle!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.work_outline,
+              label: '직함',
+              value: _member.jobTitle!,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.workplace != null && _member.workplace!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.apartment_outlined,
+              label: '직장',
+              value: _member.workplace!,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.workplacePhone != null &&
+              _member.workplacePhone!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.phone_in_talk_outlined,
+              label: '직장 전화번호',
+              value: _member.workplacePhone!,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinistryInfoExtendedSection() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '사역 정보 확장',
+            style: const FigmaTextStyles().title3.copyWith(
+              color: NewAppColor.neutral900,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          if (_member.ministryStartDate != null) ...[
+            _buildInfoRow(
+              icon: Icons.calendar_today_outlined,
+              label: '사역 시작일',
               value:
-                  '${_member.registrationDate!.year}.${_member.registrationDate!.month.toString().padLeft(2, '0')}.${_member.registrationDate!.day.toString().padLeft(2, '0')}',
+                  '${_member.ministryStartDate!.year}.${_member.ministryStartDate!.month.toString().padLeft(2, '0')}.${_member.ministryStartDate!.day.toString().padLeft(2, '0')}',
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.neighboringChurch != null &&
+              _member.neighboringChurch!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.location_city_outlined,
+              label: '이웃교회',
+              value: _member.neighboringChurch!,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.positionDecision != null &&
+              _member.positionDecision!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.assignment_outlined,
+              label: '직분 결정',
+              value: _member.positionDecision!,
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.inviter3MemberId != null) ...[
+            _buildInfoRow(
+              icon: Icons.person_add_outlined,
+              label: '인도자',
+              value: _member.inviter3MemberId.toString(),
+            ),
+            SizedBox(height: 12.h),
+          ],
+          if (_member.dailyActivity != null &&
+              _member.dailyActivity!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.schedule_outlined,
+              label: '일상 활동',
+              value: _member.dailyActivity!,
             ),
           ],
         ],
@@ -1091,34 +1072,8 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
               _member.specialNotes!.isNotEmpty) ...[
             _buildInfoRow(
               icon: Icons.notes_outlined,
-              label: '특이사항',
+              label: '특별 사항',
               value: _member.specialNotes!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.transferChurch != null &&
-              _member.transferChurch!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.transfer_within_a_station_outlined,
-              label: '전입교회',
-              value: _member.transferChurch!,
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.transferDate != null) ...[
-            _buildInfoRow(
-              icon: Icons.date_range_outlined,
-              label: '전입일',
-              value:
-                  '${_member.transferDate!.year}.${_member.transferDate!.month.toString().padLeft(2, '0')}.${_member.transferDate!.day.toString().padLeft(2, '0')}',
-            ),
-            SizedBox(height: 12.h),
-          ],
-          if (_member.memo != null && _member.memo!.isNotEmpty) ...[
-            _buildInfoRow(
-              icon: Icons.description_outlined,
-              label: '메모',
-              value: _member.memo!,
             ),
           ],
         ],
@@ -1163,34 +1118,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
     );
   }
 
-  bool _hasMinistryInfo() {
-    return (_member.positionMain != null && _member.positionMain!.isNotEmpty) ||
-        (_member.positionDetail != null &&
-            _member.positionDetail!.isNotEmpty) ||
-        (_organizationName != null && _organizationName!.isNotEmpty) ||
-        _member.appointedOn != null ||
-        (_member.ordinationChurch != null &&
-            _member.ordinationChurch!.isNotEmpty) ||
-        _member.ministryStartDate != null ||
-        (_member.neighboringChurch != null &&
-            _member.neighboringChurch!.isNotEmpty) ||
-        (_member.positionDecision != null &&
-            _member.positionDecision!.isNotEmpty) ||
-        (_member.dailyActivity != null && _member.dailyActivity!.isNotEmpty) ||
-        _member.inviter3MemberId != null;
-  }
-
-  bool _hasFaithInfo() {
+  bool _hasChurchInfoExtended() {
     return (_member.memberType != null && _member.memberType!.isNotEmpty) ||
-        (_member.ageGroup != null && _member.ageGroup!.isNotEmpty) ||
-        (_member.spiritualGrade != null &&
-            _member.spiritualGrade!.isNotEmpty) ||
         _member.confirmationDate != null ||
         _member.baptismDate != null ||
-        (_member.baptismChurch != null && _member.baptismChurch!.isNotEmpty) ||
-        (_member.district != null && _member.district!.isNotEmpty) ||
-        _member.lastContactDate != null ||
-        _member.registrationDate != null;
+        (_member.baptismChurch != null && _member.baptismChurch!.isNotEmpty);
   }
 
   bool _hasJobInfo() {
@@ -1202,9 +1134,14 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
         (_member.workplacePhone != null && _member.workplacePhone!.isNotEmpty);
   }
 
-  bool _hasFamilyInfo() {
-    return (_member.spouseName != null && _member.spouseName!.isNotEmpty) ||
-        _member.marriedOn != null;
+  bool _hasMinistryInfoExtended() {
+    return _member.ministryStartDate != null ||
+        (_member.neighboringChurch != null &&
+            _member.neighboringChurch!.isNotEmpty) ||
+        (_member.positionDecision != null &&
+            _member.positionDecision!.isNotEmpty) ||
+        _member.inviter3MemberId != null ||
+        (_member.dailyActivity != null && _member.dailyActivity!.isNotEmpty);
   }
 
   bool _hasCustomFields() {
@@ -1225,11 +1162,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   bool _hasAdditionalInfo() {
-    return (_member.specialNotes != null && _member.specialNotes!.isNotEmpty) ||
-        (_member.transferChurch != null &&
-            _member.transferChurch!.isNotEmpty) ||
-        _member.transferDate != null ||
-        (_member.memo != null && _member.memo!.isNotEmpty);
+    return _member.specialNotes != null && _member.specialNotes!.isNotEmpty;
   }
 
   bool _hasSystemInfo() {
