@@ -237,10 +237,6 @@ class _AdminPastoralCareListScreenState
         decoration: BoxDecoration(
           color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral200,
           borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(
-            color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral300,
-            width: 1,
-          ),
         ),
         child: Text(
           label,

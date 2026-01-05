@@ -130,8 +130,10 @@ class _AdminPastoralCareDetailScreenState
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.neutral100,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: material.IconButton(
           icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
