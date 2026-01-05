@@ -595,6 +595,17 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
         // 시스템 필드
         'church_id': churchId,
         'member_status': _selectedStatus,
+
+        // 자녀 정보
+        if (_children.isNotEmpty)
+          'children': _children.map((child) {
+            return {
+              'name': child['name'],
+              'gender': child['gender'],
+              if (child['birthdate'] != null)
+                'birthdate': (child['birthdate'] as DateTime).toIso8601String().split('T')[0],
+            };
+          }).toList(),
       };
 
       final response = await _memberService.createMember(memberData);
