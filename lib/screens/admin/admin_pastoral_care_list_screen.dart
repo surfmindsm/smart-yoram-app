@@ -112,8 +112,10 @@ class _AdminPastoralCareListScreenState
     return Scaffold(
       backgroundColor: NewAppColor.neutral100,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.neutral100,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: material.IconButton(
           icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -124,19 +126,13 @@ class _AdminPastoralCareListScreenState
             color: NewAppColor.neutral900,
           ),
         ),
-        actions: [
-          material.IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black),
-            onPressed: _loadRequests,
-          ),
-        ],
       ),
       body: Column(
         children: [
           // 상태 필터 칩
           Container(
             padding: EdgeInsets.all(16.w),
-            color: Colors.white,
+            color: NewAppColor.neutral100,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -239,7 +235,7 @@ class _AdminPastoralCareListScreenState
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? NewAppColor.primary600 : Colors.white,
+          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral200,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
             color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral300,
