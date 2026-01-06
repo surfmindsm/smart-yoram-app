@@ -77,21 +77,62 @@ class AuthService {
   }
 
   // 로그인 (Custom Users 테이블 + Supabase Auth)
-  Future<ApiResponse<AuthResponse>> login(String email, String password) async {
+  Future<ApiResponse<AuthResponse>> login(String identifier, String password) async {
     try {
-      print('🔐 AUTH_SERVICE: 로그인 시도 - $email');
+      // 이메일인지 전화번호인지 판단
+      final isEmail = identifier.contains('@');
+      final loginType = isEmail ? '이메일' : '전화번호';
 
-      // 1. Custom users 테이블에서 사용자 검색
-      final response = await _supabaseService.client
+      print('🔐 AUTH_SERVICE: $loginType 로그인 시도 - $identifier');
+      print('🔐 AUTH_SERVICE: 입력한 비밀번호 길이: ${password.length}자');
+
+      // 1. Custom users 테이블에서 사용자 검색 (이메일 또는 전화번호)
+      var query = _supabaseService.client
           .from('users')
           .select('*')
-          .eq('email', email)
-          .eq('is_active', true)
-          .maybeSingle();
+          .eq('is_active', true);
+
+      // 이메일 또는 전화번호로 조회
+      if (isEmail) {
+        query = query.eq('email', identifier);
+      } else {
+        // 전화번호: "-" 없는 형식과 "-" 있는 형식 모두 조회
+        final phoneClean = identifier.replaceAll('-', '');
+
+        // "-" 포함 형식으로 변환
+        String phoneWithHyphen = phoneClean;
+        if (phoneClean.length == 11) {
+          // 010-1234-5678 형식
+          phoneWithHyphen = '${phoneClean.substring(0, 3)}-${phoneClean.substring(3, 7)}-${phoneClean.substring(7)}';
+        } else if (phoneClean.length == 10) {
+          // 02-1234-5678 형식 (서울 지역번호)
+          phoneWithHyphen = '${phoneClean.substring(0, 2)}-${phoneClean.substring(2, 6)}-${phoneClean.substring(6)}';
+        }
+
+        print('🔍 AUTH_SERVICE: 전화번호 조회 - clean: $phoneClean, with hyphen: $phoneWithHyphen');
+
+        // 두 가지 형식 모두 조회 (or 조건)
+        query = query.or('phone.eq.$phoneClean,phone.eq.$phoneWithHyphen');
+      }
+
+      final response = await query.maybeSingle();
+
+      print('🔍 AUTH_SERVICE: DB 쿼리 결과 - response null 여부: ${response == null}');
 
       if (response != null) {
         final userData = response as Map<String, dynamic>;
+        print('📋 AUTH_SERVICE: 사용자 정보 조회 성공');
+        print('   - User ID: ${userData['id']}');
+        print('   - Email: ${userData['email']}');
+        print('   - Username: ${userData['username']}');
+        print('   - is_active: ${userData['is_active']}');
+        print('   - is_first: ${userData['is_first']}');
+        print('   - role: ${userData['role']}');
+
         final storedPassword = userData['hashed_password'] as String;
+        print('🔑 AUTH_SERVICE: 저장된 비밀번호 길이: ${storedPassword.length}자');
+        print('🔑 AUTH_SERVICE: 비밀번호 첫 2자 비교 - 입력: ${password.substring(0, password.length >= 2 ? 2 : password.length)}, 저장: ${storedPassword.substring(0, storedPassword.length >= 2 ? 2 : storedPassword.length)}');
+        print('🔑 AUTH_SERVICE: 비밀번호 완전 일치 여부: ${password == storedPassword}');
 
         // 2. 비밀번호 확인 (단순 문자열 비교)
         if (password == storedPassword) {
@@ -103,22 +144,26 @@ class AuthService {
           await _saveUser(user);
           await setAutoLoginEnabled(true);
 
-          // 3. Supabase Auth 로그인 시도 (JWT 토큰 발급용) - 선택사항
-          try {
-            print('🔑 AUTH_SERVICE: Supabase Auth 로그인 시도...');
-            final authResponse = await _supabaseService.client.auth.signInWithPassword(
-              email: email,
-              password: password,
-            );
+          // 3. Supabase Auth 로그인 시도 (JWT 토큰 발급용) - 이메일 로그인인 경우만
+          if (isEmail) {
+            try {
+              print('🔑 AUTH_SERVICE: Supabase Auth 로그인 시도...');
+              final authResponse = await _supabaseService.client.auth.signInWithPassword(
+                email: identifier,
+                password: password,
+              );
 
-            if (authResponse.session != null) {
-              print('✅ AUTH_SERVICE: Supabase Auth 로그인 성공');
-              print('🔑 AUTH_SERVICE: JWT 토큰 발급됨 (길이: ${authResponse.session!.accessToken.length})');
+              if (authResponse.session != null) {
+                print('✅ AUTH_SERVICE: Supabase Auth 로그인 성공');
+                print('🔑 AUTH_SERVICE: JWT 토큰 발급됨 (길이: ${authResponse.session!.accessToken.length})');
+              }
+            } catch (authError) {
+              print('⚠️ AUTH_SERVICE: Supabase Auth 로그인 실패 - $authError');
+              print('ℹ️ AUTH_SERVICE: Auth 계정 없음 - Custom users 인증만으로 진행');
+              // Auth 계정이 없어도 Custom users 인증이 성공했으므로 계속 진행
             }
-          } catch (authError) {
-            print('⚠️ AUTH_SERVICE: Supabase Auth 로그인 실패 - $authError');
-            print('ℹ️ AUTH_SERVICE: Auth 계정 없음 - Custom users 인증만으로 진행');
-            // Auth 계정이 없어도 Custom users 인증이 성공했으므로 계속 진행
+          } else {
+            print('ℹ️ AUTH_SERVICE: 전화번호 로그인 - Supabase Auth 건너뜀 (Custom users 인증만 사용)');
           }
 
           // 5. Custom users 테이블 인증이 성공했으므로 로그인 성공 반환
@@ -130,13 +175,19 @@ class AuthService {
             data: mockAuthResponse,
           );
         } else {
+          print('❌ AUTH_SERVICE: 비밀번호 불일치');
+          print('   - 입력한 비밀번호: "$password" (${password.length}자)');
+          print('   - 저장된 비밀번호: "$storedPassword" (${storedPassword.length}자)');
           return ApiResponse<AuthResponse>(
             success: false,
-            message: '로그인 실패: 잘못된 이메일 또는 비밀번호',
+            message: '로그인 실패: 잘못된 $loginType 또는 비밀번호',
             data: null,
           );
         }
       } else {
+        print('❌ AUTH_SERVICE: 사용자를 찾을 수 없습니다');
+        print('   - 조회한 $loginType: $identifier');
+        print('   - is_active=true 조건으로 검색했으나 결과 없음');
         return ApiResponse<AuthResponse>(
           success: false,
           message: '로그인 실패: 사용자를 찾을 수 없습니다',
