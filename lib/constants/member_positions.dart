@@ -31,12 +31,14 @@ class MemberPosition {
   // 권사 계열
   static const String HONORARY_DEACONESS = 'HONORARY_DEACONESS';     // 명예권사
   static const String ACTIVE_DEACONESS = 'ACTIVE_DEACONESS';         // 시무권사
+  static const String RETIRED_DEACONESS = 'RETIRED_DEACONESS';       // 은퇴권사
 
   // 집사 계열
   static const String HONORARY_DEACON = 'HONORARY_DEACON';           // 명예집사
   static const String PROBATIONARY_DEACON = 'PROBATIONARY_DEACON';   // 서리집사
   static const String ACTIVE_DEACON = 'ACTIVE_DEACON';               // 집사
   static const String ORDAINED_DEACON = 'ORDAINED_DEACON';           // 안수집사
+  static const String RETIRED_ORDAINED_DEACON = 'RETIRED_ORDAINED_DEACON'; // 은퇴안수집사
 
   // 교회학교 계열
   static const String INFANT = 'INFANT';                             // 영아부
@@ -80,12 +82,14 @@ class MemberPosition {
     // 권사
     HONORARY_DEACONESS: '명예권사',
     ACTIVE_DEACONESS: '시무권사',
+    RETIRED_DEACONESS: '은퇴권사',
 
     // 집사
     HONORARY_DEACON: '명예집사',
     PROBATIONARY_DEACON: '서리집사',
     ACTIVE_DEACON: '집사',
     ORDAINED_DEACON: '안수집사',
+    RETIRED_ORDAINED_DEACON: '은퇴안수집사',
 
     // 교회학교
     INFANT: '영아부',
@@ -207,6 +211,7 @@ class MemberPosition {
       'details': [
         {'value': ACTIVE_DEACONESS, 'label': '시무권사'},
         {'value': HONORARY_DEACONESS, 'label': '명예권사'},
+        {'value': RETIRED_DEACONESS, 'label': '은퇴권사'},
       ]
     },
     {
@@ -217,6 +222,7 @@ class MemberPosition {
         {'value': ORDAINED_DEACON, 'label': '안수집사'},
         {'value': PROBATIONARY_DEACON, 'label': '서리집사'},
         {'value': HONORARY_DEACON, 'label': '명예집사'},
+        {'value': RETIRED_ORDAINED_DEACON, 'label': '은퇴안수집사'},
       ]
     },
   ];
@@ -292,9 +298,9 @@ class MemberPosition {
           main = CLERGY;
         } else if ([ACTIVE_ELDER, EMERITUS_ELDER, TRANSFERRED_EMERITUS_ELDER].contains(detail)) {
           main = ELDER;
-        } else if ([ACTIVE_DEACONESS, HONORARY_DEACONESS].contains(detail)) {
+        } else if ([ACTIVE_DEACONESS, HONORARY_DEACONESS, RETIRED_DEACONESS].contains(detail)) {
           main = DEACONESS;
-        } else if ([ACTIVE_DEACON, ORDAINED_DEACON, PROBATIONARY_DEACON, HONORARY_DEACON].contains(detail)) {
+        } else if ([ACTIVE_DEACON, ORDAINED_DEACON, PROBATIONARY_DEACON, HONORARY_DEACON, RETIRED_ORDAINED_DEACON].contains(detail)) {
           main = DEACON;
         }
 
