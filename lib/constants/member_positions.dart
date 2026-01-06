@@ -19,6 +19,7 @@ class MemberPosition {
   static const String EMERITUS_PASTOR = 'EMERITUS_PASTOR';           // 원로목사
   static const String ASSOCIATE_PASTOR = 'ASSOCIATE_PASTOR';         // 부목사
   static const String COOPERATE_PASTOR = 'COOPERATE_PASTOR';         // 협동목사
+  static const String PASTOR_WIFE = 'PASTOR_WIFE';                   // 사모
   static const String EVANGELIST = 'EVANGELIST';                     // 전도사
   static const String INTERN_EVANGELIST = 'INTERN_EVANGELIST';       // 전임전도사
   static const String EDUCATION_EVANGELIST = 'EDUCATION_EVANGELIST'; // 교육담당전도사
@@ -70,6 +71,7 @@ class MemberPosition {
     EMERITUS_PASTOR: '원로목사',
     ASSOCIATE_PASTOR: '부목사',
     COOPERATE_PASTOR: '협동목사',
+    PASTOR_WIFE: '사모',
     EVANGELIST: '전도사',
     INTERN_EVANGELIST: '전임전도사',
     EDUCATION_EVANGELIST: '교육담당전도사',
@@ -191,6 +193,7 @@ class MemberPosition {
         {'value': EMERITUS_PASTOR, 'label': '원로목사'},
         {'value': ASSOCIATE_PASTOR, 'label': '부목사'},
         {'value': COOPERATE_PASTOR, 'label': '협동목사'},
+        {'value': PASTOR_WIFE, 'label': '사모'},
         {'value': EVANGELIST, 'label': '전도사'},
         {'value': INTERN_EVANGELIST, 'label': '전임전도사'},
         {'value': EDUCATION_EVANGELIST, 'label': '교육담당전도사'},
@@ -294,7 +297,7 @@ class MemberPosition {
         String main = MEMBER;
 
         // 대분류 결정
-        if ([SENIOR_PASTOR, EMERITUS_PASTOR, ASSOCIATE_PASTOR, COOPERATE_PASTOR, EVANGELIST, INTERN_EVANGELIST, EDUCATION_EVANGELIST].contains(detail)) {
+        if ([SENIOR_PASTOR, EMERITUS_PASTOR, ASSOCIATE_PASTOR, COOPERATE_PASTOR, PASTOR_WIFE, EVANGELIST, INTERN_EVANGELIST, EDUCATION_EVANGELIST].contains(detail)) {
           main = CLERGY;
         } else if ([ACTIVE_ELDER, EMERITUS_ELDER, TRANSFERRED_EMERITUS_ELDER].contains(detail)) {
           main = ELDER;
