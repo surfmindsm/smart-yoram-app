@@ -8,6 +8,7 @@ import '../../services/member_service.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../components/index.dart' hide IconButton;
+import '../../utils/korean_search_util.dart';
 import 'admin_member_detail_screen.dart';
 import 'admin_member_create_screen.dart';
 
@@ -113,12 +114,15 @@ class _AdminMemberManagementScreenState
             .toList();
       }
 
-      // 검색 필터링
+      // 검색 필터링 (초성 검색 지원)
       if (query.isNotEmpty) {
         filteredMembers = baseList.where((member) {
-          return member.name.toLowerCase().contains(query) ||
-              member.phone.contains(query) ||
-              member.positionLabel.toLowerCase().contains(query);
+          // 초성 검색을 포함한 통합 검색
+          return KoreanSearchUtil.searchMultipleFields([
+            member.name,
+            member.phone,
+            member.positionLabel,
+          ], query);
         }).toList();
       } else {
         filteredMembers = List.from(baseList);
@@ -221,7 +225,7 @@ class _AdminMemberManagementScreenState
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: '이름 또는 전화번호로 검색',
+                          hintText: '이름, 전화번호 검색 (초성 검색 가능)',
                           hintStyle: const FigmaTextStyles().body2.copyWith(
                                 color: NewAppColor.neutral500,
                               ),
