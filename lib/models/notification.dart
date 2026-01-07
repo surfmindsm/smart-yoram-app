@@ -183,7 +183,8 @@ enum NotificationCategory {
   message('message', '메시지'),
   like('like', '좋아요'),
   comment('comment', '댓글'),
-  custom('custom', '교회 메시지');
+  custom('custom', '교회 메시지'),
+  pastoralCare('pastoral_care', '심방');
 
   const NotificationCategory(this.value, this.displayName);
 
@@ -247,6 +248,12 @@ enum NotificationCategory {
           backgroundColor: 0xFFFFF4E5, // #fff4e5 (오렌지 계열)
           borderColor: 0xFFFF9800, // #ff9800
           textColor: 0xFFFF9800, // #ff9800
+        );
+      case NotificationCategory.pastoralCare:
+        return const NotificationCategoryStyle(
+          backgroundColor: 0xFFE8F5E9, // #e8f5e9 (연한 녹색 계열)
+          borderColor: 0xFF4CAF50, // #4caf50 (녹색)
+          textColor: 0xFF2E7D32, // #2e7d32 (진한 녹색)
         );
       default:
         return const NotificationCategoryStyle(

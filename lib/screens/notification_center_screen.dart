@@ -133,6 +133,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       case 'custom_message':
         category = NotificationCategory.custom;
         break;
+      case 'pastoral_care_request':
+      case 'pastoral_care_approved':
+      case 'pastoral_care':
+        category = NotificationCategory.pastoralCare;
+        break;
       default:
         category = NotificationCategory.notice;
     }
@@ -517,6 +522,19 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           print('📱 NOTIFICATION_CENTER: 커스텀 메시지 알림 - 다이얼로그 표시');
           if (mounted) {
             _showCustomMessageDialog(notification);
+          }
+          break;
+
+        case NotificationCategory.pastoralCare:
+          // 심방 알림 → 심방 목록 화면으로 이동
+          print('📱 NOTIFICATION_CENTER: 심방 알림 - 심방 신청 화면으로 이동 안내');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('심방 신청 화면에서 확인해주세요'),
+                duration: Duration(seconds: 2),
+              ),
+            );
           }
           break;
 
@@ -905,7 +923,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 },
                 backgroundColor: NewAppColor.danger600,
                 foregroundColor: Colors.white,
-                label: '나가기',
+                label: '삭제',
                 borderRadius: BorderRadius.zero,
               ),
             ],
@@ -978,6 +996,8 @@ class NotificationItem extends StatelessWidget {
         return Icons.mode_comment_outlined;
       case NotificationCategory.custom:
         return Icons.campaign;
+      case NotificationCategory.pastoralCare:
+        return Icons.home_outlined;
       default:
         return Icons.notifications_outlined;
     }
