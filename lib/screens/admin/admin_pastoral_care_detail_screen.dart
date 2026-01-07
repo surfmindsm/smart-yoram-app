@@ -3,12 +3,14 @@ import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../components/index.dart';
 import '../../components/admin/status_badge.dart';
 import '../../models/pastoral_care_request.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../services/pastoral_care_service.dart';
+import '../../services/member_service.dart';
 
 /// 관리자용 심방 신청 상세 화면
 class AdminPastoralCareDetailScreen extends StatefulWidget {
@@ -93,6 +95,13 @@ class _AdminPastoralCareDetailScreenState
         setState(() {
           _request = response.data!;
         });
+
+        // 승인 시 요청자에게 알림 전송 (비동기, 실패해도 상태 변경은 성공)
+        if (newStatus == 'approved') {
+          _sendNotificationToRequester(response.data!).catchError((e) {
+            print('❌ ADMIN_PASTORAL_CARE: 요청자 알림 전송 실패 - $e');
+          });
+        }
 
         if (mounted) {
           AppToast.show(
@@ -577,6 +586,80 @@ class _AdminPastoralCareDetailScreenState
         return const Color(0xFF2E7D32);
       default:
         return NewAppColor.neutral600;
+    }
+  }
+
+  /// 요청자에게 심방 승인 알림 전송
+  Future<void> _sendNotificationToRequester(PastoralCareRequest request) async {
+    try {
+      print('🔔 ADMIN_PASTORAL_CARE: 요청자 알림 전송 시작');
+
+      // 1. 요청자의 user_id 찾기
+      int? requesterUserId = request.member?.userId;
+
+      // member 정보가 없거나 userId가 없으면 member_id로 다시 조회
+      if (requesterUserId == null && request.memberId != null) {
+        print('🔔 ADMIN_PASTORAL_CARE: member에서 user_id를 찾을 수 없어 member_id로 재조회');
+        final memberService = MemberService();
+        final memberResponse = await memberService.getMember(request.memberId!);
+        if (memberResponse.success && memberResponse.data != null) {
+          requesterUserId = memberResponse.data!.userId;
+          print('🔔 ADMIN_PASTORAL_CARE: member_id ${request.memberId}의 user_id: $requesterUserId');
+        }
+      }
+
+      if (requesterUserId == null) {
+        print('⚠️ ADMIN_PASTORAL_CARE: 요청자의 user_id를 찾을 수 없어 알림 전송 생략');
+        return;
+      }
+
+      print('🔔 ADMIN_PASTORAL_CARE: 요청자 user_id: $requesterUserId');
+
+      // 2. 알림 메시지 구성
+      final title = '심방 요청 승인';
+      final body = '심방 요청이 승인되었습니다. 담당자가 곧 연락드릴 예정입니다.';
+      final notificationData = {
+        'type': 'pastoral_care_approved',
+        'request_id': request.id,
+        'request_type': request.requestType,
+        'status': 'approved',
+      };
+
+      // 3. notifications 테이블 삽입 + Edge Function으로 FCM 전송
+      final now = DateTime.now().toUtc().toIso8601String();
+
+      // 3-1. notifications 테이블에 삽입
+      await Supabase.instance.client
+          .from('notifications')
+          .insert({
+        'user_id': requesterUserId,
+        'title': title,
+        'body': body,
+        'type': 'pastoral_care_approved',
+        'is_read': false,
+        'data': notificationData,
+        'related_id': null,
+        'related_type': 'pastoral_care_request',
+        'created_at': now,
+        'updated_at': now,
+      });
+
+      // 3-2. Edge Function 호출하여 FCM 전송
+      final fcmResponse = await Supabase.instance.client.functions.invoke(
+        'send-notification',
+        body: {
+          'user_id': requesterUserId,
+          'title': title,
+          'body': body,
+          'data': notificationData,
+        },
+      );
+
+      print('✅ ADMIN_PASTORAL_CARE: Edge Function 응답: ${fcmResponse.data}');
+    } catch (e, stackTrace) {
+      print('❌ ADMIN_PASTORAL_CARE: 요청자 알림 전송 예외 - $e');
+      print('❌ ADMIN_PASTORAL_CARE: 스택 트레이스 - $stackTrace');
+      // 예외를 다시 던지지 않음 (알림 실패해도 상태 변경은 성공)
     }
   }
 }

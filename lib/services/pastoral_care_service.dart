@@ -127,6 +127,12 @@ class PastoralCareService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final createdRequest = PastoralCareRequest.fromJson(jsonData);
+
+        // 교역자들에게 알림 전송 (비동기, 실패해도 심방 요청은 성공)
+        _sendNotificationToClergy(user.churchId, createdRequest).catchError((e) {
+          print('🙏 PASTORAL_CARE_SERVICE: 교역자 알림 전송 실패 - $e');
+        });
+
         return ApiResponse<PastoralCareRequest>(
           success: true,
           message: '심방 신청이 성공적으로 생성되었습니다',
@@ -453,6 +459,98 @@ class PastoralCareService {
         message: '담당자 지정 실패: ${e.toString()}',
         data: null,
       );
+    }
+  }
+
+  /// 교역자들에게 심방 요청 알림 전송 (내부 메서드)
+  Future<void> _sendNotificationToClergy(
+    int churchId,
+    PastoralCareRequest request,
+  ) async {
+    try {
+      print('🔔 PASTORAL_CARE_SERVICE: 교역자 알림 전송 시작 - 교회 ID: $churchId');
+
+      // 1. 교역자 조회 (position_main = 'CLERGY' OR position_main = '교역자')
+      final clergyResponse = await _supabaseService.client
+          .from('members')
+          .select('user_id, name, position_detail')
+          .eq('church_id', churchId)
+          .or('position_main.eq.CLERGY,position_main.eq.교역자')
+          .not('user_id', 'is', null);
+
+      print('🔔 PASTORAL_CARE_SERVICE: 교역자 조회 결과 - ${clergyResponse.length}명');
+
+      if (clergyResponse.isEmpty) {
+        print('⚠️ PASTORAL_CARE_SERVICE: 교역자가 없어 알림 전송 생략');
+        return;
+      }
+
+      // 2. user_id 추출
+      final userIds = (clergyResponse as List)
+          .map((member) => member['user_id'] as int)
+          .toList();
+
+      if (userIds.isEmpty) {
+        print('⚠️ PASTORAL_CARE_SERVICE: user_id가 있는 교역자가 없어 알림 전송 생략');
+        return;
+      }
+
+      print('🔔 PASTORAL_CARE_SERVICE: 알림 전송 대상 user_id: $userIds');
+
+      // 3. 알림 메시지 구성
+      final title = '새로운 심방 요청';
+      final body = '${request.requesterName}님이 심방을 요청했습니다';
+      final notificationData = {
+        'type': 'pastoral_care_request',
+        'request_id': request.id,
+        'request_type': request.requestType,
+        'requester_name': request.requesterName,
+      };
+
+      // 4. 각 교역자에게 알림 전송 (notifications 테이블 삽입 + Edge Function으로 FCM 전송)
+      final now = DateTime.now().toUtc().toIso8601String();
+
+      for (final userId in userIds) {
+        try {
+          // 4-1. notifications 테이블에 삽입
+          await _supabaseService.client
+              .from('notifications')
+              .insert({
+            'user_id': userId,
+            'title': title,
+            'body': body,
+            'type': 'pastoral_care_request',
+            'is_read': false,
+            'data': notificationData,
+            'related_id': null,
+            'related_type': 'pastoral_care_request',
+            'created_at': now,
+            'updated_at': now,
+          });
+
+          // 4-2. Edge Function 호출하여 FCM 전송
+          final fcmResponse = await _supabaseService.client.functions.invoke(
+            'send-notification',
+            body: {
+              'user_id': userId,
+              'title': title,
+              'body': body,
+              'data': notificationData,
+            },
+          );
+
+          print('✅ PASTORAL_CARE_SERVICE: 교역자 user_id=$userId Edge Function 응답: ${fcmResponse.data}');
+        } catch (e) {
+          print('❌ PASTORAL_CARE_SERVICE: 교역자 user_id=$userId 알림 전송 실패 - $e');
+          // 개별 실패는 무시하고 계속 진행
+        }
+      }
+
+      print('✅ PASTORAL_CARE_SERVICE: 교역자 ${userIds.length}명에게 알림 전송 완료');
+    } catch (e, stackTrace) {
+      print('❌ PASTORAL_CARE_SERVICE: 교역자 알림 전송 예외 - $e');
+      print('❌ PASTORAL_CARE_SERVICE: 스택 트레이스 - $stackTrace');
+      // 예외를 다시 던지지 않음 (알림 실패해도 심방 요청은 성공)
     }
   }
 }
