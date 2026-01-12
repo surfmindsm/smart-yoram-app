@@ -93,8 +93,9 @@ class AuthService {
           .eq('is_active', true);
 
       // 이메일 또는 전화번호로 조회
+      List<dynamic> responseList;
       if (isEmail) {
-        query = query.eq('email', identifier);
+        responseList = await query.eq('email', identifier).limit(1);
       } else {
         // 전화번호: "-" 없는 형식과 "-" 있는 형식 모두 조회
         final phoneClean = identifier.replaceAll('-', '');
@@ -111,13 +112,13 @@ class AuthService {
 
         print('🔍 AUTH_SERVICE: 전화번호 조회 - clean: $phoneClean, with hyphen: $phoneWithHyphen');
 
-        // 두 가지 형식 모두 조회 (or 조건)
-        query = query.or('phone.eq.$phoneClean,phone.eq.$phoneWithHyphen');
+        // 두 가지 형식 모두 조회 (or 조건) - 여러 행이 있을 수 있으므로 limit 추가
+        responseList = await query.or('phone.eq.$phoneClean,phone.eq.$phoneWithHyphen').limit(1);
       }
 
-      final response = await query.maybeSingle();
+      print('🔍 AUTH_SERVICE: DB 쿼리 결과 - 행 개수: ${responseList.length}');
 
-      print('🔍 AUTH_SERVICE: DB 쿼리 결과 - response null 여부: ${response == null}');
+      final response = responseList.isNotEmpty ? responseList.first : null;
 
       if (response != null) {
         final userData = response as Map<String, dynamic>;
