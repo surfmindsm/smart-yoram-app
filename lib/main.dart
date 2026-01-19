@@ -36,6 +36,7 @@ import 'services/auth_service.dart';
 import 'services/fcm_service.dart';
 import 'services/font_settings_service.dart';
 import 'services/app_version_service.dart';
+import 'services/presence_service.dart';
 import 'widgets/update_dialog.dart';
 
 /// 전역 네비게이터 키 (FCM 알림 탭 처리용)
@@ -144,18 +145,47 @@ class AuthWrapper extends StatefulWidget {
   State<AuthWrapper> createState() => _AuthWrapperState();
 }
 
-class _AuthWrapperState extends State<AuthWrapper> {
+class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   bool _isInitialized = false;
   bool _isLoggedIn = false;
   final AuthService _authService = AuthService();
+  final PresenceService _presenceService = PresenceService();
   AppVersionService? _versionService; // Supabase 초기화 후 생성
 
   @override
   void initState() {
     super.initState();
     print('🔧 AUTH_WRAPPER: initState() 시작');
+    // 앱 생명주기 관찰자 등록
+    WidgetsBinding.instance.addObserver(this);
     // 바로 초기화 시작 (네이티브 스플래시가 계속 표시됨)
     _initializeApp();
+  }
+
+  @override
+  void dispose() {
+    // 앱 생명주기 관찰자 제거 및 Presence 중지
+    WidgetsBinding.instance.removeObserver(this);
+    _presenceService.stopTracking();
+    super.dispose();
+  }
+
+  /// 앱 생명주기 상태 변경 처리
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (_isLoggedIn && _authService.currentUser != null) {
+      if (state == AppLifecycleState.resumed) {
+        // 앱이 포그라운드로 돌아오면 Presence 재시작
+        print('📱 LIFECYCLE: 앱이 포그라운드로 전환됨 - Presence 재시작');
+        _presenceService.startTracking();
+      } else if (state == AppLifecycleState.paused) {
+        // 앱이 백그라운드로 가면 Presence 중지
+        print('📱 LIFECYCLE: 앱이 백그라운드로 전환됨 - Presence 중지');
+        _presenceService.stopTracking();
+      }
+    }
   }
 
   /// 앱 초기화: 최소한만 하고 빠르게 화면 표시
@@ -251,6 +281,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
         setState(() {
           _isLoggedIn = hasStoredAuth;
         });
+
+        // 로그인 성공 시 Presence 추적 시작
+        if (hasStoredAuth) {
+          print('✅ AUTH_WRAPPER: 로그인 성공 - Presence 추적 시작');
+          _presenceService.startTracking();
+        }
       }
     } catch (e) {
       print('인증 상태 확인 실패: $e');

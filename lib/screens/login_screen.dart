@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/fcm_service.dart';
 import '../services/member_service.dart';
+import '../services/presence_service.dart';
 import '../models/user.dart';
 import '../models/api_response.dart';
 import '../services/user_service.dart';
@@ -26,6 +27,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   final MemberService _memberService = MemberService();
+  final PresenceService _presenceService = PresenceService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -667,6 +669,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // 아이디 저장 처리
         await _saveIdIfEnabled();
+
+        // Presence 추적 시작
+        try {
+          _presenceService.startTracking();
+          print('🔑 LOGIN: Presence 추적 시작됨');
+        } catch (e) {
+          print('⚠️ LOGIN: Presence 추적 시작 실패 (계속 진행) - $e');
+        }
 
         // FCM 토큰 재등록 (Supabase device_tokens 테이블에 저장)
         try {

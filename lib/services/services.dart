@@ -23,3 +23,4 @@ export 'notification_service.dart';
 export 'notification_settings_service.dart';
 export 'sermon_service.dart';
 export 'app_version_service.dart';
+export 'presence_service.dart';
