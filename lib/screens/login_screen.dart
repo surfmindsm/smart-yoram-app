@@ -585,9 +585,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
 
-            // 프로필 이미지 설정 완료 후 플래그 저장
-            await prefs.setBool(profileSetupKey, true);
-            print('🖼️ LOGIN: 프로필 이미지 설정 완료 플래그 저장');
+            // 프로필 이미지 설정 완료 후 플래그 저장 (건너뛰기 포함)
+            if (result == true) {
+              await prefs.setBool(profileSetupKey, true);
+              print('🖼️ LOGIN: 프로필 이미지 설정 완료 플래그 저장');
+            }
 
             // 프로필 이미지 설정 후 홈으로 이동
             if (mounted) {

@@ -40,9 +40,24 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !widget.isFirstSetup, // 첫 설정일 때는 뒤로 가기 막기
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        // 첫 설정인 경우 뒤로 가기 시도 시 안내 메시지
+        if (widget.isFirstSetup) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('건너뛰기 또는 완료 버튼을 눌러주세요'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: widget.isFirstSetup
@@ -295,6 +310,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
