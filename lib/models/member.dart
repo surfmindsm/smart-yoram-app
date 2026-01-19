@@ -345,6 +345,7 @@ class Member {
       'EMERITUS_PASTOR': '원로목사',
       'ASSOCIATE_PASTOR': '부목사',
       'COOPERATE_PASTOR': '협동목사',
+      'PASTOR_WIFE': '사모',
       'EVANGELIST': '전도사',
       'INTERN_EVANGELIST': '전임전도사',
       'EDUCATION_EVANGELIST': '교육담당전도사',
@@ -357,12 +358,14 @@ class Member {
       // 권사(DEACONESS) 계열
       'HONORARY_DEACONESS': '명예권사',
       'ACTIVE_DEACONESS': '시무권사',
+      'RETIRED_DEACONESS': '은퇴권사',
 
       // 집사(DEACON) 계열
       'HONORARY_DEACON': '명예집사',
       'PROBATIONARY_DEACON': '서리집사',
       'ACTIVE_DEACON': '집사',
       'ORDAINED_DEACON': '안수집사',
+      'RETIRED_ORDAINED_DEACON': '은퇴안수집사',
 
       // 교회학교(CHURCH_SCHOOL) 계열
       'INFANT': '영아부',
