@@ -64,7 +64,56 @@ class AnnouncementService {
         log('📢 첫 번째 공지사항 church_id: ${response[0]['church_id']}');
       }
 
-      final announcements = (response as List)
+      final responseList = response as List;
+
+      // 웹과 동일한 로직: author_id로 users 테이블의 full_name 조회
+      if (responseList.isNotEmpty) {
+        // 모든 author_id 수집
+        final authorIds = responseList
+            .map((item) => item['author_id'] as int?)
+            .where((id) => id != null)
+            .toSet()
+            .toList();
+
+        if (authorIds.isNotEmpty) {
+          try {
+            log('📢 users 테이블에서 작성자 이름 조회: $authorIds');
+
+            // users 테이블에서 full_name 배치 조회
+            final usersResponse = await _supabaseService.client
+                .from('users')
+                .select('id, full_name')
+                .inFilter('id', authorIds);
+
+            // author_id -> full_name 매핑
+            final Map<int, String> authorNames = {};
+            for (var user in usersResponse as List) {
+              authorNames[user['id'] as int] = user['full_name'] as String;
+            }
+
+            log('📢 조회된 작성자 이름: $authorNames');
+
+            // author_name enrichment (웹과 동일한 우선순위)
+            for (var item in responseList) {
+              final itemMap = item as Map<String, dynamic>;
+              final authorId = itemMap['author_id'] as int?;
+
+              if (authorId != null && authorNames.containsKey(authorId)) {
+                // 우선순위 1: users 테이블의 full_name
+                itemMap['author_name'] = authorNames[authorId];
+              } else if (itemMap['author_name'] == null || (itemMap['author_name'] as String).isEmpty) {
+                // 우선순위 3: 기본값 '관리자'
+                itemMap['author_name'] = '관리자';
+              }
+              // 우선순위 2: 기존 author_name 컬럼 값은 그대로 유지
+            }
+          } catch (e) {
+            log('⚠️ users 테이블 조회 실패, author_name 컬럼 사용: $e');
+          }
+        }
+      }
+
+      final announcements = responseList
           .map((item) => Announcement.fromJson(item as Map<String, dynamic>))
           .toList();
 
@@ -87,7 +136,36 @@ class AnnouncementService {
           .eq('id', id)
           .single();
 
-      final announcement = Announcement.fromJson(response);
+      final itemMap = response as Map<String, dynamic>;
+
+      // 웹과 동일한 로직: author_id로 users 테이블의 full_name 조회
+      if (itemMap['author_id'] != null) {
+        try {
+          final authorId = itemMap['author_id'] as int;
+          log('📢 users 테이블에서 작성자 이름 조회: $authorId');
+
+          final userResponse = await _supabaseService.client
+              .from('users')
+              .select('full_name')
+              .eq('id', authorId)
+              .single();
+
+          // 우선순위 1: users 테이블의 full_name
+          itemMap['author_name'] = userResponse['full_name'];
+          log('📢 조회된 작성자 이름: ${userResponse['full_name']}');
+        } catch (e) {
+          log('⚠️ users 테이블 조회 실패, author_name 컬럼 사용: $e');
+          // 우선순위 2: 기존 author_name 컬럼 또는 3: 기본값 '관리자'
+          if (itemMap['author_name'] == null || (itemMap['author_name'] as String).isEmpty) {
+            itemMap['author_name'] = '관리자';
+          }
+        }
+      } else if (itemMap['author_name'] == null || (itemMap['author_name'] as String).isEmpty) {
+        // author_id가 없고 author_name도 없으면 '관리자'
+        itemMap['author_name'] = '관리자';
+      }
+
+      final announcement = Announcement.fromJson(itemMap);
       log('📢 공지사항 상세 조회 완료');
       return announcement;
     } catch (e) {
