@@ -13,7 +13,7 @@ import 'package:smart_yoram_app/services/supabase_service.dart';
 import 'package:smart_yoram_app/screens/community/community_list_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:smart_yoram_app/components/index.dart';
+import 'package:smart_yoram_app/components/index.dart' hide IconButton;
 import 'package:smart_yoram_app/utils/location_data.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_yoram_app/widgets/custom_date_picker.dart';
@@ -962,50 +962,37 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => Navigator.pop(context),
-            child: Icon(LucideIcons.chevronLeft, color: Colors.black),
-          ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           _getTitleByType(),
-          style: FigmaTextStyles().headline4.copyWith(
-                color: NewAppColor.neutral900,
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
               ),
         ),
         actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 8.w),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _showGuide,
-                borderRadius: BorderRadius.circular(24.r),
-                child: Padding(
-                  padding: EdgeInsets.all(8.r),
-                  child: Icon(
-                    Icons.info_outline,
-                    color: NewAppColor.neutral700,
-                    size: 24.sp,
-                  ),
-                ),
-              ),
-            ),
+          IconButton(
+            icon: Icon(Icons.info_outline,
+                color: NewAppColor.textMuted, size: 22.sp),
+            onPressed: _showGuide,
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: NewAppColor.neutral200,
+            color: NewAppColor.borderSoft,
           ),
         ),
       ),
@@ -1481,7 +1468,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     width: 100.w,
                     height: 100.h,
                     decoration: BoxDecoration(
-                      color: NewAppColor.neutral100,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
                         color: NewAppColor.neutral200,

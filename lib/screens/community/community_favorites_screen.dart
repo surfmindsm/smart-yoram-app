@@ -83,21 +83,27 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        backgroundColor: NewAppColor.neutral100,
+        backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
+        centerTitle: true,
         leading: IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '내가 찜한 글',
-          style: FigmaTextStyles().headline4.copyWith(
-                color: NewAppColor.neutral900,
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
               ),
+        ),
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
         ),
       ),
       body: Column(
@@ -123,52 +129,47 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
       {'label': '교회소식', 'value': 'church-events'},
     ];
 
+    // 1.2.0 C 방향: 가로 스크롤 칩 row (활성=skyPrimary 채움)
     return Container(
-      height: 56.h,
-      decoration: BoxDecoration(
-        color: NewAppColor.neutral100,
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.transparent,
-            width: 2.0,
-          ),
-        ),
-      ),
+      color: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 22.w),
         child: Row(
           children: tabs.map((tab) {
             final isSelected = _selectedTab == tab['value'];
-
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedTab = tab['value']!;
-                });
-              },
-              child: Container(
-                height: 56.h,
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                decoration: BoxDecoration(
-                  border: isSelected
-                      ? Border(
-                          bottom: BorderSide(
-                            color: NewAppColor.primary600,
-                            width: 2.0,
-                          ),
-                        )
-                      : null,
-                ),
-                child: Center(
+            return Padding(
+              padding: EdgeInsets.only(right: 8.w),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedTab = tab['value']!;
+                  });
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 15.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? NewAppColor.skyPrimary
+                        : Colors.white,
+                    border: isSelected
+                        ? null
+                        : Border.all(
+                            color: NewAppColor.borderStrong, width: 1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                   child: Text(
                     tab['label']!,
-                    style: const FigmaTextStyles().title4.copyWith(
-                          color: isSelected
-                              ? NewAppColor.primary600
-                              : NewAppColor.neutral400,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    style: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : NewAppColor.textSecondary,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Pretendard',
+                      height: 1.2,
+                    ),
                   ),
                 ),
               ),
@@ -201,12 +202,13 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadWishlists,
+      color: NewAppColor.skyPrimary,
       child: ListView.separated(
         itemCount: items.length,
         separatorBuilder: (context, index) => Divider(
           height: 1,
           thickness: 1,
-          color: NewAppColor.neutral200,
+          color: NewAppColor.borderHair,
         ),
         itemBuilder: (context, index) {
           return _buildItemCard(items[index]);
@@ -224,21 +226,21 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
         children: [
           Icon(
             Icons.favorite_border,
-            size: 64.sp,
-            color: NewAppColor.neutral300,
+            size: 56.sp,
+            color: NewAppColor.iconFaint,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 14.h),
           Text(
             emptyMessage,
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral500,
+            style: FigmaTextStyles().subtitle2.copyWith(
+                  color: NewAppColor.textSecondary,
                 ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             '관심있는 게시물을 찜해보세요',
-            style: FigmaTextStyles().caption3.copyWith(
-                  color: NewAppColor.neutral400,
+            style: FigmaTextStyles().caption1.copyWith(
+                  color: NewAppColor.textMuted,
                 ),
           ),
         ],
@@ -255,7 +257,7 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
       onTap: () => _navigateToDetail(item),
       child: Container(
         padding: EdgeInsets.all(16.w),
-        color: NewAppColor.neutral100,
+        color: Colors.white,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

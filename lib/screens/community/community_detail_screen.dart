@@ -388,7 +388,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: NewAppColor.neutral100,
+        backgroundColor: NewAppColor.canvasAlt,
         extendBodyBehindAppBar: true,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -401,20 +401,20 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: const Color(0xFF020817).withOpacity(0.10),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: IconButton(
-              icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+              icon: Icon(Icons.chevron_left,
+                  color: NewAppColor.textStrong, size: 24.sp),
               onPressed: () => Navigator.pop(context, _hasChanges),
               padding: EdgeInsets.zero,
             ),
           ),
           actions: [
-            // 모든 사용자에게 더보기 버튼 표시 (작성자: 수정/삭제, 타인: 신고하기)
             Container(
               margin: EdgeInsets.all(8.r),
               decoration: BoxDecoration(
@@ -422,14 +422,15 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: const Color(0xFF020817).withOpacity(0.10),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.black),
+                icon: Icon(Icons.more_vert,
+                    color: NewAppColor.textStrong, size: 22.sp),
                 onPressed: _showPostMenu,
                 padding: EdgeInsets.zero,
               ),
@@ -451,14 +452,13 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       if (_post != null)
                         Container(
                           decoration: BoxDecoration(
-                            color: NewAppColor.neutral100,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, -2),
+                            color: Colors.white,
+                            border: Border(
+                              top: BorderSide(
+                                color: NewAppColor.borderSoft,
+                                width: 1,
                               ),
-                            ],
+                            ),
                           ),
                           padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
                           child: SafeArea(
@@ -625,14 +625,14 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         children: [
           Icon(
             Icons.error_outline,
-            size: 64.sp,
-            color: NewAppColor.neutral400,
+            size: 56.sp,
+            color: NewAppColor.iconFaint,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 14.h),
           Text(
             '게시글을 불러올 수 없습니다',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral500,
+            style: FigmaTextStyles().body3.copyWith(
+                  color: NewAppColor.textMuted,
                 ),
           ),
         ],
@@ -761,7 +761,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               height: 400.h,
-                              color: NewAppColor.neutral100,
+                              color: Colors.white,
                               child: const Icon(
                                 Icons.image_not_supported,
                                 color: Colors.grey,
@@ -866,7 +866,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           else ...[
             // 작성자 정보 카드
             Container(
-              color: NewAppColor.neutral100,
+              color: Colors.white,
               padding: EdgeInsets.all(16.r),
               child: Column(
                 children: [
@@ -930,11 +930,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             Container(
               height: 8.h,
-              color: NewAppColor.neutral100,
+              color: Colors.white,
             ),
             // 제목 및 본문
             Container(
-              color: NewAppColor.neutral100,
+              color: Colors.white,
               width: double.infinity,
               padding: EdgeInsets.all(16.r),
               child: Column(
@@ -990,9 +990,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       width: 48.w,
       height: 48.w,
       decoration: BoxDecoration(
-        color: NewAppColor.neutral200,
+        color: NewAppColor.skyTint,
         shape: BoxShape.circle,
       ),
+      alignment: Alignment.center,
       child: fullUrl != null && fullUrl.isNotEmpty
           ? ClipOval(
               child: Image.network(
@@ -1003,16 +1004,16 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
                     Icons.person,
-                    color: NewAppColor.neutral500,
-                    size: 24.sp,
+                    color: NewAppColor.skyDeep,
+                    size: 22.sp,
                   );
                 },
               ),
             )
           : Icon(
               Icons.person,
-              color: NewAppColor.neutral500,
-              size: 24.sp,
+              color: NewAppColor.skyDeep,
+              size: 22.sp,
             ),
     );
   }
@@ -1045,28 +1046,30 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        padding: EdgeInsets.all(16.r),
+        padding: EdgeInsets.all(14.r),
         decoration: BoxDecoration(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: NewAppColor.neutral200,
+            color: NewAppColor.borderHair,
             width: 1,
           ),
         ),
         child: Row(
           children: [
+            // 1.2.0: 라운드 11 skyTint 타일 + skyDeep 아이콘
             Container(
-              width: 40.w,
-              height: 40.w,
+              width: 38.w,
+              height: 38.w,
               decoration: BoxDecoration(
-                color: NewAppColor.primary100,
-                shape: BoxShape.circle,
+                color: NewAppColor.skyTint,
+                borderRadius: BorderRadius.circular(11.r),
               ),
+              alignment: Alignment.center,
               child: Icon(
                 icon,
-                color: NewAppColor.primary600,
-                size: 20.sp,
+                color: NewAppColor.skyDeep,
+                size: 18.sp,
               ),
             ),
             SizedBox(width: 12.w),
@@ -1076,21 +1079,20 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      color: NewAppColor.neutral600,
-                      fontSize: 12.sp,
-                      fontFamily: 'Pretendard Variable',
-                    ),
+                    style: FigmaTextStyles().caption3.copyWith(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 11.5.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 2.h),
                   Text(
                     value,
-                    style: TextStyle(
-                      color: NewAppColor.neutral900,
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Pretendard Variable',
-                    ),
+                    style: FigmaTextStyles().body3.copyWith(
+                          color: NewAppColor.textBody,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                 ],
               ),
@@ -1098,8 +1100,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             if (onTap != null)
               Icon(
                 Icons.chevron_right,
-                color: NewAppColor.neutral400,
-                size: 24.sp,
+                color: NewAppColor.iconFaint,
+                size: 18.sp,
               ),
           ],
         ),
@@ -1555,7 +1557,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: NewAppColor.neutral100,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: NewAppColor.neutral300),
       ),
@@ -2626,65 +2628,70 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       builder: (context) {
         return Container(
           decoration: BoxDecoration(
-            color: NewAppColor.neutral100,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x2E020817),
+                blurRadius: 40,
+                offset: Offset(0, -10),
+              ),
+            ],
           ),
           child: SafeArea(
+            top: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // 핸들
                 Container(
-                  margin: EdgeInsets.only(top: 12.h),
-                  width: 40.w,
-                  height: 4.h,
+                  margin: EdgeInsets.only(top: 10.h),
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: NewAppColor.neutral300,
-                    borderRadius: BorderRadius.circular(2.r),
+                    color: NewAppColor.borderStrong,
+                    borderRadius: BorderRadius.circular(999),
                   ),
                 ),
 
-                SizedBox(height: 20.h),
+                SizedBox(height: 14.h),
 
                 // 제목
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  padding: EdgeInsets.symmetric(horizontal: 22.w),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       isAuthor ? '게시글 관리' : '게시글 신고',
                       style: FigmaTextStyles().subtitle1.copyWith(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            color: NewAppColor.neutral900,
+                            color: NewAppColor.textStrong,
+                            fontSize: 17.sp,
+                            fontWeight: FontWeight.w800,
                           ),
                     ),
                   ),
                 ),
 
-                SizedBox(height: 16.h),
+                SizedBox(height: 8.h),
 
                 // 작성자인 경우: 수정/삭제 옵션 표시
                 if (isAuthor) ...[
-                  // 수정
                   _buildMenuOption(
                     icon: Icons.edit_outlined,
-                    iconColor: NewAppColor.neutral700,
-                    iconBgColor: NewAppColor.neutral100,
+                    iconColor: NewAppColor.skyDeep,
+                    iconBgColor: NewAppColor.skyTint,
                     title: '수정',
                     onTap: () {
                       Navigator.pop(context);
                       _editPost();
                     },
                   ),
-
-                  // 삭제
                   _buildMenuOption(
-                    icon: LucideIcons.trash2,
-                    iconColor: NewAppColor.danger600,
-                    iconBgColor: NewAppColor.danger100,
+                    icon: Icons.delete_outline,
+                    iconColor: NewAppColor.danger700,
+                    iconBgColor: NewAppColor.dangerBg,
                     title: '삭제',
-                    titleColor: NewAppColor.danger600,
+                    titleColor: NewAppColor.danger700,
                     onTap: () {
                       Navigator.pop(context);
                       _deletePost();
@@ -2692,14 +2699,14 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   ),
                 ],
 
-                // 작성자가 아닌 경우: 신고하기 옵션만 표시
+                // 작성자가 아닌 경우: 신고하기
                 if (!isAuthor) ...[
                   _buildMenuOption(
-                    icon: Icons.report_outlined,
-                    iconColor: NewAppColor.danger600,
-                    iconBgColor: NewAppColor.danger100,
+                    icon: Icons.flag_outlined,
+                    iconColor: NewAppColor.danger700,
+                    iconBgColor: NewAppColor.dangerBg,
                     title: '신고하기',
-                    titleColor: NewAppColor.danger600,
+                    titleColor: NewAppColor.danger700,
                     onTap: () {
                       Navigator.pop(context);
                       _showReportDialog();
@@ -2707,7 +2714,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   ),
                 ],
 
-                SizedBox(height: 8.h),
+                SizedBox(height: 12.h),
               ],
             ),
           ),
@@ -2716,7 +2723,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     );
   }
 
-  /// 메뉴 옵션 위젯
+  /// 1.2.0: 메뉴 옵션 위젯 (라운드 10 타일 + 라벨)
   Widget _buildMenuOption({
     required IconData icon,
     required Color iconColor,
@@ -2728,32 +2735,33 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 11.h),
         child: Row(
           children: [
-            // 아이콘
             Container(
-              width: 40.w,
-              height: 40.w,
+              width: 42.w,
+              height: 42.w,
               decoration: BoxDecoration(
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(10.r),
               ),
+              alignment: Alignment.center,
               child: Icon(
                 icon,
                 size: 20.sp,
                 color: iconColor,
               ),
             ),
-            SizedBox(width: 16.w),
-            // 타이틀
-            Text(
-              title,
-              style: FigmaTextStyles().body1.copyWith(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w500,
-                    color: titleColor ?? NewAppColor.neutral900,
-                  ),
+            SizedBox(width: 13.w),
+            Expanded(
+              child: Text(
+                title,
+                style: FigmaTextStyles().body2.copyWith(
+                      color: titleColor ?? NewAppColor.neutral700,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
             ),
           ],
         ),
@@ -2918,7 +2926,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           builder: (context, setState) {
             return Container(
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
               ),
               padding: EdgeInsets.only(
@@ -3200,7 +3208,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       children: [
         // === 1. 프로필 정보 섹션 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           padding: EdgeInsets.all(20.r),
           child: GestureDetector(
             onTap: () => _showAuthorProfileDialog(
@@ -3256,11 +3264,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 1.h, color: NewAppColor.neutral200),
+        Container(height: 1.h, color: NewAppColor.borderSoft),
 
         // === 2. 상품 기본 정보 (제목, 가격, 카테고리, 시간) ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3325,7 +3333,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 3. 상품 설명 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3358,7 +3366,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 2. 상품 정보 카드 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3378,7 +3386,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Container(
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -3414,7 +3422,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
             (item.contactEmail != null && item.contactEmail!.isNotEmpty))
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -3481,23 +3489,33 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     Color? valueColor,
     FontWeight? valueWeight,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.neutral600,
-              ),
-        ),
-        Text(
-          value,
-          style: FigmaTextStyles().body2.copyWith(
-                color: valueColor ?? NewAppColor.neutral900,
-                fontWeight: valueWeight ?? FontWeight.w500,
-              ),
-        ),
-      ],
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: FigmaTextStyles().caption1.copyWith(
+                  color: NewAppColor.textTertiary,
+                  fontSize: 13.sp,
+                ),
+          ),
+          SizedBox(width: 12.w),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: FigmaTextStyles().body3.copyWith(
+                    color: valueColor ?? NewAppColor.textBody,
+                    fontSize: 14.sp,
+                    fontWeight: valueWeight ?? FontWeight.w600,
+                  ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -3553,7 +3571,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       children: [
         // === 1. 프로필 정보 섹션 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           padding: EdgeInsets.all(20.r),
           child: GestureDetector(
             onTap: () => _showAuthorProfileDialog(
@@ -3609,11 +3627,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 1.h, color: NewAppColor.neutral200),
+        Container(height: 1.h, color: NewAppColor.borderSoft),
 
         // === 2. 모집 기본 정보 (제목, 시간) ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3644,7 +3662,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 3. 상세 내용 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3664,7 +3682,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 4. 모집 정보 카드 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3673,7 +3691,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Container(
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -3717,7 +3735,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
             (item.contactEmail != null && item.contactEmail!.isNotEmpty))
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -3787,7 +3805,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       children: [
         // === 1. 프로필 정보 섹션 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           padding: EdgeInsets.all(20.r),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3838,11 +3856,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 1.h, color: NewAppColor.neutral200),
+        Container(height: 1.h, color: NewAppColor.borderSoft),
 
         // === 2. 요청 기본 정보 (제목, 우선순위, 카테고리, 시간) ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3906,7 +3924,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // Container(height: 8.h, color: NewAppColor.white),
         // === 3. 상세 설명 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3939,7 +3957,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 2. 요청 정보 카드 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -3958,7 +3976,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Container(
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -4010,7 +4028,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
             (item.contactEmail != null && item.contactEmail!.isNotEmpty))
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -4086,7 +4104,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       children: [
         // === 1. 프로필 (지원자 정보) ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           padding: EdgeInsets.all(20.r),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -4138,7 +4156,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 2. 제목 + 상태 섹션 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -4193,7 +4211,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // === 3. 상세 설명 (자기소개) ===
         if (item.introduction != null && item.introduction!.isNotEmpty) ...[
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -4215,7 +4233,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 4. 기본 정보 카드 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -4235,7 +4253,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Container(
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -4258,7 +4276,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 5. 활동 조건 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -4278,7 +4296,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Container(
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -4384,7 +4402,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // === 6. 팀 소개 ===
         if (item.experience.isNotEmpty) ...[
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -4417,7 +4435,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if ((item.portfolio.isNotEmpty) ||
             (item.portfolioFile != null && item.portfolioFile!.isNotEmpty)) ...[
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -4487,7 +4505,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       return Container(
                                         width: double.infinity,
                                         height: 180.h,
-                                        color: NewAppColor.neutral100,
+                                        color: Colors.white,
                                         child: Icon(
                                           Icons.video_library,
                                           size: 48.sp,
@@ -4594,7 +4612,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     child: Container(
                       padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
-                        color: NewAppColor.neutral100,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
                           color: NewAppColor.neutral200,
@@ -4660,7 +4678,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
             (item.contactEmail != null && item.contactEmail!.isNotEmpty))
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -4777,7 +4795,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       children: [
         // === 1. 프로필 정보 섹션 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           padding: EdgeInsets.all(20.r),
           child: GestureDetector(
             onTap: () => _showAuthorProfileDialog(
@@ -4833,11 +4851,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        Container(height: 1.h, color: NewAppColor.neutral200),
+        Container(height: 1.h, color: NewAppColor.borderSoft),
 
         // === 2. 모집 기본 정보 (제목, 시간) ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -4868,7 +4886,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 3. 상세 내용 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -4888,7 +4906,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 4. 모집 정보 카드 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -4897,7 +4915,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Container(
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -4928,7 +4946,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
             (item.contactEmail != null && item.contactEmail!.isNotEmpty))
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -5024,7 +5042,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   }
                 },
               ),
-              Divider(height: 1, color: NewAppColor.neutral200),
+              Divider(height: 1, color: NewAppColor.borderSoft),
               // 문자 보내기
               ListTile(
                 leading: Icon(Icons.message, color: NewAppColor.primary600),
@@ -5171,7 +5189,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       children: [
         // === 1. 프로필 (작성자 정보) ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           padding: EdgeInsets.all(20.r),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -5212,7 +5230,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 2. 제목 섹션 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -5265,7 +5283,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         // === 3. 행사 내용 ===
         if (item.content != null && item.content!.isNotEmpty) ...[
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -5286,7 +5304,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
 
         // === 4. 행사 정보 카드 ===
         Container(
-          color: NewAppColor.neutral100,
+          color: Colors.white,
           width: double.infinity,
           padding: EdgeInsets.all(20.r),
           child: Column(
@@ -5306,7 +5324,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Container(
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Column(
@@ -5337,7 +5355,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
             (item.contactEmail != null && item.contactEmail!.isNotEmpty)) ...[
           Container(
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             width: double.infinity,
             padding: EdgeInsets.all(20.r),
             child: Column(
@@ -5382,6 +5400,58 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  // 1.2.0 floating 다크 토스트 (정책 §3 바텀시트 톤)
+  void _showAppToast(String message, {bool isError = false}) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        padding: EdgeInsets.zero,
+        margin: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
+        duration: Duration(milliseconds: isError ? 2800 : 2000),
+        content: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: NewAppColor.textStrong,
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF020817).withOpacity(0.25),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isError ? Icons.error_outline : Icons.check_circle_outline,
+                color: isError
+                    ? NewAppColor.danger300
+                    : NewAppColor.success300,
+                size: 18.sp,
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  message,
+                  style: FigmaTextStyles().body3.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

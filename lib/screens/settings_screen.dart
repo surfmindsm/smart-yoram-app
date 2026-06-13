@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import '../components/index.dart';
+import '../components/index.dart' hide IconButton;
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../services/auth_service.dart';
@@ -89,28 +89,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        backgroundColor: NewAppColor.neutral100,
+        backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        // 커뮤니티 회원은 탭바 메뉴이므로 뒤로 가기 버튼 숨김
+        centerTitle: true,
         automaticallyImplyLeading: _currentUser?.isCommunityAdmin != true,
         leading: _currentUser?.isCommunityAdmin == true
             ? null
-            : Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => Navigator.pop(context),
-                  child: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral900),
-                ),
+            : IconButton(
+                icon: Icon(Icons.chevron_left,
+                    color: NewAppColor.textStrong, size: 24.sp),
+                onPressed: () => Navigator.pop(context),
               ),
         title: Text(
           '설정',
-          style: const FigmaTextStyles().headline4.copyWith(
-                color: NewAppColor.neutral900,
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
               ),
+        ),
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
         ),
       ),
       body: Column(
@@ -303,7 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // 그룹화된 섹션 위젯
+  // 1.2.0 그룹 섹션
   Widget _buildGroupedSection({
     required String title,
     required List<_GroupedSettingItem> items,
@@ -311,26 +313,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 섹션 헤더
+        // 섹션 헤더 — 12sp/700 textTertiary letter-spacing .03em
         Padding(
-          padding: EdgeInsets.only(bottom: 16.h, top: 24.h),
+          padding: EdgeInsets.only(left: 6.w, bottom: 8.h, top: 22.h),
           child: Text(
             title,
-            style: const FigmaTextStyles().title3.copyWith(
-                  color: NewAppColor.neutral900,
+            style: FigmaTextStyles().sectionHeader.copyWith(
+                  color: NewAppColor.textTertiary,
                 ),
           ),
         ),
         // 그룹화된 컨테이너
         Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 8.h),
-          decoration: ShapeDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
+            border: Border.all(color: NewAppColor.borderHair, width: 1),
+            borderRadius: BorderRadius.circular(14.r),
           ),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             children: items.asMap().entries.map((entry) {
               final index = entry.key;
@@ -350,45 +351,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // 그룹화된 설정 아이템 위젯
+  // 1.2.0 설정 아이템 행 (라운드 11 skyTint 아이콘 타일 + chevron)
   Widget _buildGroupedSettingItem({
     required _GroupedSettingItem item,
     required bool isFirst,
     required bool isLast,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: item.onTap,
       child: Container(
         width: double.infinity,
         constraints: BoxConstraints(minHeight: 58.h),
-        padding: EdgeInsets.symmetric(horizontal: 15.5.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: Colors.white,
           border: !isLast
               ? Border(
                   bottom: BorderSide(
                     width: 1,
-                    color: NewAppColor.neutral200,
+                    color: NewAppColor.borderHair,
                   ),
                 )
               : null,
         ),
         child: Row(
           children: [
-            // 아이콘
+            // 아이콘 — 라운드 11 skyTint + skyDeep
             Container(
-              width: 28.w,
-              height: 28.h,
-              decoration: ShapeDecoration(
-                color: NewAppColor.primary200,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100.r),
-                ),
+              width: 32.w,
+              height: 32.h,
+              decoration: BoxDecoration(
+                color: NewAppColor.skyTint,
+                borderRadius: BorderRadius.circular(10.r),
               ),
+              alignment: Alignment.center,
               child: Icon(
                 item.icon,
-                size: 16.sp,
-                color: NewAppColor.primary600,
+                size: 17.sp,
+                color: NewAppColor.skyDeep,
               ),
             ),
             SizedBox(width: 12.w),
@@ -402,50 +402,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     item.title,
                     style: TextStyle(
-                      color: NewAppColor.neutral900,
-                      fontSize: 14.sp,
-                      fontFamily: 'Pretendard Variable',
-                      fontWeight: FontWeight.w400,
-                      height: 1.43,
-                      letterSpacing: -0.35,
+                      color: NewAppColor.textStrong,
+                      fontSize: 14.5.sp,
+                      fontFamily: 'Pretendard',
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   if (item.subtitle != null) ...[
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 2.h),
                     Text(
                       item.subtitle!,
                       style: TextStyle(
-                        color: NewAppColor.neutral600,
-                        fontSize: 13.sp,
+                        color: NewAppColor.textTertiary,
+                        fontSize: 12.5.sp,
                         fontFamily: 'Pretendard',
                         fontWeight: FontWeight.w500,
-                        height: 1.38,
-                        letterSpacing: -0.33,
+                        height: 1.4,
+                        letterSpacing: -0.25,
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-            SizedBox(width: 19.w),
+            SizedBox(width: 12.w),
             // 트레일링 영역 (화살표 또는 스위치)
             if (item.trailing != null)
               item.trailing!
             else
-              Container(
-                width: 28.w,
-                height: 28.h,
-                decoration: ShapeDecoration(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(100.r),
-                  ),
-                ),
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16.sp,
-                  color: NewAppColor.neutral400,
-                ),
+              Icon(
+                Icons.chevron_right,
+                size: 18.sp,
+                color: NewAppColor.iconFaint,
               ),
           ],
         ),

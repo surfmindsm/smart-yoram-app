@@ -108,30 +108,32 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: NewAppColor.neutral100,
-        body: const Center(
-          child: CircularProgressIndicator(),
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: NewAppColor.skyPrimary,
+          ),
         ),
       );
     }
 
     if (_currentUser == null) {
       return Scaffold(
-        backgroundColor: NewAppColor.neutral100,
+        backgroundColor: Colors.white,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.error_outline,
-                size: 64.sp,
-                color: NewAppColor.neutral400,
+                size: 56.sp,
+                color: NewAppColor.iconFaint,
               ),
-              SizedBox(height: 16.h),
+              SizedBox(height: 14.h),
               Text(
                 '로그인이 필요합니다',
-                style: FigmaTextStyles().headline5.copyWith(
-                      color: NewAppColor.neutral600,
+                style: FigmaTextStyles().subtitle2.copyWith(
+                      color: NewAppColor.textSecondary,
                     ),
               ),
             ],
@@ -140,144 +142,127 @@ class _CommunityScreenState extends State<CommunityScreen> {
       );
     }
 
+    // 1.2.0 C 방향: 흰 배경 + 헤더 + 카테고리 리스트
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 상단 헤더
-            Container(
-              height: 56.h,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '커뮤니티',
-                    style: TextStyle(
-                      color: NewAppColor.neutral900,
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Pretendard Variable',
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      // 알림 (member와 community_admin만 표시)
-                      if (_currentUser!.role == 'member' ||
-                          _currentUser!.role == 'community_admin') ...[
-                        GestureDetector(
-                          onTap: _navigateToNotifications,
-                          child: Container(
-                            padding: EdgeInsets.all(8.w),
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Icon(
-                                  Icons.notifications_outlined,
-                                  size: 24.sp,
-                                  color: NewAppColor.neutral700,
-                                ),
-                                // 읽지 않은 알림 배지
-                                if (_unreadNotificationCount > 0)
-                                  Positioned(
-                                    right: -4,
-                                    top: -4,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: _unreadNotificationCount > 9
-                                            ? 4.w
-                                            : 5.w,
-                                        vertical: 2.h,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: NewAppColor.danger600,
-                                        borderRadius:
-                                            BorderRadius.circular(10.r),
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      constraints: BoxConstraints(
-                                        minWidth: 18.w,
-                                        minHeight: 18.w,
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          _unreadNotificationCount > 99
-                                              ? '99+'
-                                              : _unreadNotificationCount
-                                                  .toString(),
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10.sp,
-                                            fontWeight: FontWeight.w700,
-                                            fontFamily: 'Pretendard Variable',
-                                            height: 1.0,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                      ],
-                      // 내 글 관리
-                      TextButton.icon(
-                        onPressed: _navigateToMyPosts,
-                        icon: Icon(
-                          Icons.edit_note,
-                          size: 20.sp,
-                          color: NewAppColor.neutral700,
-                        ),
-                        label: Text(
-                          '내 글',
-                          style: TextStyle(
-                            color: NewAppColor.neutral700,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Pretendard Variable',
-                          ),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                      // 내가 찜한 글
-                      TextButton.icon(
-                        onPressed: _navigateToFavorites,
-                        icon: Icon(
-                          Icons.favorite_border,
-                          size: 20.sp,
-                          color: NewAppColor.neutral700,
-                        ),
-                        label: Text(
-                          '찜',
-                          style: TextStyle(
-                            color: NewAppColor.neutral700,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Pretendard Variable',
-                          ),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // 상단 헤더 (타이틀 + 알림/내글/찜 아이콘)
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(width: 1, color: NewAppColor.borderSoft),
               ),
             ),
-            // 카테고리 리스트
-            Expanded(
-              child: _buildCategoryList(),
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 6.h,
+              left: 18.w,
+              right: 18.w,
+              bottom: 14.h,
             ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 다른 화면과 동일하게 Padding(horizontal: 2.w) 적용
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 2.w),
+                  child: Text(
+                    '커뮤니티',
+                    style: FigmaTextStyles().pageTitle.copyWith(
+                          color: NewAppColor.textStrong,
+                          fontSize: 21.sp,
+                        ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    // 알림 아이콘
+                    if (_currentUser!.role == 'member' ||
+                        _currentUser!.role == 'community_admin')
+                      _headerIconButton(
+                        icon: Icons.notifications_outlined,
+                        onTap: _navigateToNotifications,
+                        badgeCount: _unreadNotificationCount,
+                      ),
+                    // 내 글
+                    _headerIconButton(
+                      icon: Icons.edit_outlined,
+                      onTap: _navigateToMyPosts,
+                    ),
+                    // 찜
+                    _headerIconButton(
+                      icon: Icons.favorite_border,
+                      onTap: _navigateToFavorites,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // 카테고리 리스트
+          Expanded(
+            child: _buildCategoryList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 1.2.0 헤더 아이콘 버튼 (벨/내글/찜) — 배지 옵션
+  Widget _headerIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    int? badgeCount,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        // 좌우는 터치 영역 유지, 상하는 타이틀과 baseline 정렬에 영향 안 가도록 최소화
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              icon,
+              size: 22.sp,
+              color: NewAppColor.textMuted,
+            ),
+            if (badgeCount != null && badgeCount > 0)
+              Positioned(
+                right: -4,
+                top: -3,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: badgeCount > 9 ? 4.w : 5.w,
+                    vertical: 1.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.danger700,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  constraints: BoxConstraints(
+                    minWidth: 16.w,
+                    minHeight: 16.h,
+                  ),
+                  child: Center(
+                    child: Text(
+                      badgeCount > 99 ? '99+' : badgeCount.toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -289,22 +274,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
     final categories = _getCategories();
 
     return Container(
-      color: NewAppColor.neutral100,
-      child: ListView.separated(
-        physics: const NeverScrollableScrollPhysics(),
+      color: Colors.white,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.zero,
         itemCount: categories.length,
-        separatorBuilder: (context, index) => Divider(
-          height: 1,
-          thickness: 1,
-          color: Colors.transparent,
-          indent: 20.w,
-          endIndent: 20.w,
-        ),
         itemBuilder: (context, index) {
           final category = categories[index];
+          final isLast = index == categories.length - 1;
           return _CategoryListItem(
             category: category,
+            isLast: isLast,
             onTap: () => _navigateToCategory(category),
           );
         },
@@ -314,9 +294,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   /// 권한에 따른 카테고리 목록 반환
   List<CommunityCategory> _getCategories() {
-    // 통일된 아이콘 컬러 (케이뱅크 스타일)
-    const iconColor = Color(0xFF4A90E2);
-    const iconBgColor = Color(0xFFE8F2FC);
+    // 1.2.0 C 방향: 스카이 단일 톤
+    const iconColor = NewAppColor.skyDeep;
+    const iconBgColor = NewAppColor.skyTint;
 
     final baseCategories = [
       CommunityCategory(
@@ -526,10 +506,12 @@ class CommunityCategory {
 /// 카테고리 리스트 아이템 (케이뱅크 스타일 - 구분선)
 class _CategoryListItem extends StatelessWidget {
   final CommunityCategory category;
+  final bool isLast;
   final VoidCallback onTap;
 
   const _CategoryListItem({
     required this.category,
+    required this.isLast,
     required this.onTap,
   });
 
@@ -538,11 +520,21 @@ class _CategoryListItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: NewAppColor.neutral100,
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                    width: 1,
+                    color: NewAppColor.borderHair,
+                  ),
+                ),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 15.h),
         child: Row(
           children: [
-            // 아이콘 컨테이너
+            // 아이콘 타일 — 48×48 라운드 14 skyTint
             Container(
               width: 48.w,
               height: 48.h,
@@ -550,41 +542,46 @@ class _CategoryListItem extends StatelessWidget {
                 color: category.backgroundColor,
                 borderRadius: BorderRadius.circular(14.r),
               ),
+              alignment: Alignment.center,
               child: Icon(
                 category.icon,
-                size: 24.sp,
+                size: 23.sp,
                 color: category.color,
               ),
             ),
-            SizedBox(width: 16.w),
-            // 텍스트 정보
+            SizedBox(width: 15.w),
+            // 제목 + 부제
             Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     category.title,
-                    style: TextStyle(
-                      color: const Color(0xFF000000),
-                      fontSize: 17.sp,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Pretendard Variable',
-                      height: 1.4,
-                    ),
+                    style: FigmaTextStyles().cardTitle.copyWith(
+                          color: NewAppColor.textStrong,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                   SizedBox(height: 2.h),
                   Text(
                     category.subtitle,
-                    style: TextStyle(
-                      color: const Color(0xFF999999),
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Pretendard Variable',
-                      height: 1.4,
-                    ),
+                    style: FigmaTextStyles().caption1.copyWith(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                 ],
               ),
+            ),
+            SizedBox(width: 8.w),
+            // chevron-right (목업의 게시글 수 칩은 실제 데이터 연결 안 되어 있으므로 일단 제외)
+            Icon(
+              Icons.chevron_right,
+              size: 18.sp,
+              color: NewAppColor.iconFaint,
             ),
           ],
         ),

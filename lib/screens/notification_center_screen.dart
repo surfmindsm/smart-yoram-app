@@ -730,18 +730,18 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         children: [
           // 뒤로가기 버튼
           Positioned(
-            left: 20.w,
-            top: 14.h,
+            left: 16.w,
+            top: 12.h,
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Container(
-                width: 28.w,
-                height: 28.h,
+                width: 32.w,
+                height: 32.h,
                 alignment: Alignment.center,
                 child: Icon(
-                  LucideIcons.chevronLeft,
-                  color: NewAppColor.neutral800,
-                  size: 20.w,
+                  Icons.chevron_left,
+                  color: NewAppColor.textStrong,
+                  size: 24.sp,
                 ),
               ),
             ),
@@ -751,9 +751,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           Center(
             child: Text(
               '알림',
-              style: const FigmaTextStyles()
-                  .headline4
-                  .copyWith(color: NewAppColor.neutral800),
+              style: FigmaTextStyles().subtitle1.copyWith(
+                    color: NewAppColor.textStrong,
+                    fontSize: 17.sp,
+                  ),
             ),
           ),
 
