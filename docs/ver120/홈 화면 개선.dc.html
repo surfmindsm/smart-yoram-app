@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#EEF2F6;color:#0F172A;-webkit-font-smoothing:antialiased}
+  i[data-lucide]{display:inline-block;vertical-align:middle;stroke-width:2}
+  .scrollarea::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:56px 48px 80px">
+  <div style="max-width:1720px;margin:0 auto 40px">
+    <div style="font-size:13px;font-weight:600;letter-spacing:.14em;color:#0EA5E0;text-transform:uppercase">Church Round · Smart Yoram App</div>
+    <h1 style="font-size:30px;font-weight:800;margin-top:8px;letter-spacing:-.02em">홈 화면 개선 — 현재 vs 개선</h1>
+    <p style="font-size:15px;color:#64748B;margin-top:8px;max-width:760px;line-height:1.6">실제 <b style="color:#0F172A">home_screen.dart</b> 구조(교회 소개·교회 소식·주요 기능·예배시간안내·바로가기)를 그대로 재현한 <b style="color:#0F172A">현재(Before)</b>와, 웹 Church Round 토큰으로 통일한 개선안입니다.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:22px">
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:#0EA5E0"></span><span style="font-size:12.5px;color:#475569"><b style="color:#0F172A">Primary</b> #0EA5E0</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:#0284C7"></span><span style="font-size:12.5px;color:#475569"><b style="color:#0F172A">Primary dark</b> #0284C7</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:#E0F2FE"></span><span style="font-size:12.5px;color:#475569"><b style="color:#0F172A">Sky tint</b> #E0F2FE</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:#0F172A"></span><span style="font-size:12.5px;color:#475569"><b style="color:#0F172A">Foreground</b> #0F172A</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:#64748B"></span><span style="font-size:12.5px;color:#475569"><b style="color:#0F172A">Muted</b> #64748B</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:#fff;border:1px solid #E2E8F0"></span><span style="font-size:12.5px;color:#475569"><b style="color:#0F172A">Border</b> #E2E8F0</span></div>
+    </div>
+  </div>
+
+  <div class="scrollarea" style="display:flex;gap:48px;align-items:flex-start;overflow-x:auto;padding-bottom:24px">
+
+    <!-- ===================== BEFORE (current code) ===================== -->
+    <div style="flex:0 0 auto">
+      <div style="margin-bottom:18px">
+        <div style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:7px;background:#94A3B8;color:#fff;display:flex;align-items:center;justify-content:center"><i data-lucide="history" style="width:15px;height:15px"></i></span><span style="font-size:17px;font-weight:700;color:#475569">현재 (Before)</span></div>
+        <p style="font-size:13px;color:#64748B;margin-top:6px;max-width:360px;line-height:1.5">로열블루 헤더 + 초록·주황 혼재 + 다크 예배카드. 섹션마다 색이 달라 통일감 없음.</p>
+      </div>
+      <div style="width:392px;border:10px solid#0B1220;border-radius:54px;overflow:hidden;background:#F1F2F4;box-shadow:0 30px 70px rgba(2,8,23,.20);position:relative">
+        <div style="position:absolute;top:62px;left:26px;z-index:9;background:rgba(15,23,42,.78);color:#fff;font-size:11px;font-weight:700;padding:5px 11px;border-radius:999px">BEFORE</div>
+        <!-- status -->
+        <div style="height:52px;background:#F1F2F4;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:relative">
+          <span style="font-size:15px;font-weight:700">9:41</span>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);top:13px;width:104px;height:26px;background:#0B1220;border-radius:14px"></div>
+          <div style="display:flex;align-items:center;gap:7px"><i data-lucide="signal" style="width:17px;height:17px"></i><i data-lucide="wifi" style="width:17px;height:17px"></i><i data-lucide="battery-full" style="width:22px;height:17px"></i></div>
+        </div>
+        <div class="scrollarea" style="padding:14px 16px 0">
+          <!-- header card (primary200 bg) -->
+          <div style="background:#D6E6FF;border-radius:12px;padding:14px;display:flex;align-items:center;gap:10px">
+            <span style="width:44px;height:44px;border-radius:50%;background:#C2CBD6;color:#64748B;display:flex;align-items:center;justify-content:center"><i data-lucide="user" style="width:24px;height:24px"></i></span>
+            <div style="flex:1">
+              <div style="font-size:12px;color:#5E6B7E">안녕하세요</div>
+              <div style="font-size:17px;font-weight:800;color:#1A1D21">김성은2 님</div>
+            </div>
+            <span style="position:relative;width:36px;height:36px;border-radius:50%;background:#0078FF;color:#fff;display:flex;align-items:center;justify-content:center"><i data-lucide="bell" style="width:19px;height:19px"></i><span style="position:absolute;right:1px;top:1px;width:10px;height:10px;background:#EF4444;border:2px solid #D6E6FF;border-radius:50%"></span></span>
+            <span style="width:36px;height:36px;border-radius:50%;background:#9AA0A8;color:#fff;display:flex;align-items:center;justify-content:center"><i data-lucide="settings" style="width:19px;height:19px"></i></span>
+          </div>
+
+          <!-- 교회 소개 -->
+          <div style="background:#fff;border-radius:16px;padding:16px;margin-top:18px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:40px;height:40px;border-radius:50%;background:#D6E6FF;color:#0078FF;display:flex;align-items:center;justify-content:center"><i data-lucide="home" style="width:20px;height:20px"></i></span>
+              <div style="flex:1"><div style="font-size:16px;font-weight:800;color:#1A1D21">성암교회</div><div style="font-size:12px;color:#6B7280">Community Church</div></div>
+              <i data-lucide="chevron-up" style="width:22px;height:22px;color:#9AA0A8"></i>
+            </div>
+            <div style="margin-top:14px;background:#F1F2F4;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px">
+              <span style="width:28px;height:28px;border-radius:7px;background:#B9D4FF;color:#0078FF;display:flex;align-items:center;justify-content:center"><i data-lucide="user" style="width:15px;height:15px"></i></span>
+              <div><div style="font-size:11.5px;color:#6B7280">담임목사</div><div style="font-size:14px;font-weight:700;color:#1A1D21">안영목 목사</div></div>
+            </div>
+            <div style="margin-top:10px;background:#F1F2F4;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px">
+              <span style="width:28px;height:28px;border-radius:7px;background:#DCFCE7;color:#16A34A;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span>
+              <div><div style="font-size:11.5px;color:#6B7280">전화</div><div style="font-size:13.5px;color:#1A1D21">031-563-5210</div></div>
+            </div>
+            <div style="margin-top:10px;background:#F1F2F4;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+              <span style="margin-top:1px;color:#0078FF"><i data-lucide="map-pin" style="width:16px;height:16px"></i></span>
+              <div><div style="font-size:11.5px;color:#6B7280">교회 주소</div><div style="font-size:13px;color:#1A1D21;line-height:1.4">경기도 구리시 검배로 136번길 32</div></div>
+            </div>
+            <div style="margin-top:10px;background:#F1F2F4;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+              <span style="margin-top:1px;color:#16A34A"><i data-lucide="landmark" style="width:16px;height:16px"></i></span>
+              <div style="flex:1"><div style="font-size:11.5px;color:#6B7280">교회 헌금 계좌</div><div style="font-size:13px;color:#1A1D21;line-height:1.4">국민은행 326-353703-02-001</div></div>
+              <span style="color:#9AA0A8"><i data-lucide="copy" style="width:16px;height:16px"></i></span>
+            </div>
+          </div>
+
+          <!-- 교회 소식 -->
+          <div style="background:#fff;border-radius:16px;padding:16px;margin-top:18px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:40px;height:40px;border-radius:50%;background:#D6E6FF;color:#0078FF;display:flex;align-items:center;justify-content:center"><i data-lucide="newspaper" style="width:20px;height:20px"></i></span>
+              <div style="flex:1"><div style="font-size:16px;font-weight:800;color:#1A1D21">교회 소식</div><div style="font-size:12px;color:#6B7280">Church News</div></div>
+              <span style="font-size:12px;color:#374151;border:1px solid #E5E7EB;border-radius:8px;padding:5px 12px">더보기</span>
+            </div>
+            <div style="margin-top:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 4px;border-bottom:1px solid #F1F2F4"><div><div style="font-size:13.5px;color:#1A1D21">2025 여름 수련회 안내</div><div style="font-size:12px;color:#6B7280;margin-top:3px">2일 전</div></div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#9AA0A8"></i></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 4px;border-bottom:1px solid #F1F2F4"><div><div style="font-size:13.5px;color:#1A1D21">주일 헌금 계좌 변경 안내</div><div style="font-size:12px;color:#6B7280;margin-top:3px">5일 전</div></div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#9AA0A8"></i></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 4px"><div><div style="font-size:13.5px;color:#1A1D21">새가족 환영 모임 안내</div><div style="font-size:12px;color:#6B7280;margin-top:3px">1주 전</div></div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#9AA0A8"></i></div>
+            </div>
+          </div>
+
+          <!-- 주요 기능 -->
+          <div style="background:#fff;border-radius:16px;padding:16px;margin-top:18px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+              <span style="width:40px;height:40px;border-radius:50%;background:#DCFCE7;color:#16A34A;display:flex;align-items:center;justify-content:center"><i data-lucide="folder-open" style="width:20px;height:20px"></i></span>
+              <div><div style="font-size:16px;font-weight:800;color:#1A1D21">주요 기능</div><div style="font-size:12px;color:#6B7280">Main Features</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:#F1F2F4;border-radius:12px;padding:16px"><span style="width:46px;height:46px;border-radius:50%;background:#fff;color:#4ADE80;display:flex;align-items:center;justify-content:center"><i data-lucide="home" style="width:22px;height:22px"></i></span><div style="font-size:14px;font-weight:700;color:#1A1D21;margin-top:18px">심방 신청</div><div style="font-size:12px;color:#6B7280;margin-top:3px">심방을 신청하세요</div></div>
+              <div style="background:#F1F2F4;border-radius:12px;padding:16px"><span style="width:46px;height:46px;border-radius:50%;background:#fff;color:#4ADE80;display:flex;align-items:center;justify-content:center"><i data-lucide="heart" style="width:22px;height:22px"></i></span><div style="font-size:14px;font-weight:700;color:#1A1D21;margin-top:18px">중보 기도</div><div style="font-size:12px;color:#6B7280;margin-top:3px">함께 기도하겠습니다</div></div>
+            </div>
+            <div style="background:#F1F2F4;border-radius:12px;padding:14px;margin-top:12px;display:flex;align-items:center;gap:14px"><span style="width:46px;height:46px;border-radius:50%;background:#fff;color:#FBBF24;display:flex;align-items:center;justify-content:center"><i data-lucide="wallet" style="width:22px;height:22px"></i></span><div style="flex:1"><div style="font-size:14px;font-weight:700;color:#1A1D21">내 헌금 내역</div><div style="font-size:12px;color:#6B7280;margin-top:3px">헌금 내역을 확인하세요</div></div><i data-lucide="chevron-right" style="width:18px;height:18px;color:#9AA0A8"></i></div>
+          </div>
+
+          <!-- 예배시간안내 (dark) -->
+          <div style="background:#3F4651;border-radius:12px;padding:16px;margin-top:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:16px;font-weight:800;color:#F1F2F4">예배시간안내</div><div style="font-size:12px;color:#B5BBC2;margin-top:2px">Worship</div></div><span style="width:28px;height:28px;border-radius:50%;background:#2B313B;color:#fff;display:flex;align-items:center;justify-content:center"><i data-lucide="chevron-up" style="width:20px;height:20px"></i></span></div>
+            <div style="margin-top:14px;border-top:1px solid #565E6B;padding-top:6px">
+              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #565E6B;font-size:13px;color:#fff"><span>주일 1부예배</span><span style="color:#CBD5E1">본당</span><span>일 09:00</span></div>
+              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #565E6B;font-size:13px;color:#fff"><span>주일 2부예배</span><span style="color:#CBD5E1">본당</span><span>일 11:00</span></div>
+              <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:13px;color:#fff"><span>수요예배</span><span style="color:#CBD5E1">본당</span><span>수 19:30</span></div>
+            </div>
+          </div>
+
+          <!-- 바로가기 -->
+          <div style="background:#fff;border-radius:16px;padding:16px;margin:18px 0">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><span style="width:40px;height:40px;border-radius:50%;background:#FEF3C7;color:#D97706;display:flex;align-items:center;justify-content:center"><i data-lucide="link" style="width:20px;height:20px"></i></span><div><div style="font-size:16px;font-weight:800;color:#1A1D21">바로가기</div><div style="font-size:12px;color:#6B7280">Quick Links</div></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:#F1F2F4;border-radius:12px;padding:16px"><span style="width:46px;height:46px;border-radius:50%;background:#fff;color:#3B82F6;display:flex;align-items:center;justify-content:center"><i data-lucide="globe" style="width:22px;height:22px"></i></span><div style="font-size:14px;font-weight:700;color:#1A1D21;margin-top:12px">교회</div><div style="font-size:12px;color:#6B7280;margin-top:2px">홈페이지</div></div>
+              <div style="background:#F1F2F4;border-radius:12px;padding:16px"><span style="width:46px;height:46px;border-radius:50%;background:#fff;color:#EF4444;display:flex;align-items:center;justify-content:center"><i data-lucide="play" style="width:22px;height:22px"></i></span><div style="font-size:14px;font-weight:700;color:#1A1D21;margin-top:12px">유튜브</div><div style="font-size:12px;color:#6B7280;margin-top:2px">채널</div></div>
+            </div>
+          </div>
+        </div>
+        <!-- bottom nav -->
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:11px 8px 22px;border-top:1px solid #E5E7EB;background:#fff">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#0078FF"><i data-lucide="home" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:700">홈</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9AA0A8"><i data-lucide="users" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:600">주소록</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9AA0A8"><i data-lucide="newspaper" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:600">교회소식</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9AA0A8"><i data-lucide="message-circle" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:600">채팅</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9AA0A8"><i data-lucide="users-round" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:600">커뮤니티</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== C : DASHBOARD ===================== -->
+    <div style="flex:0 0 auto">
+      <div style="margin-bottom:18px">
+        <div style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:7px;background:#0EA5E0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">C</span><span style="font-size:17px;font-weight:700">개선 (C 방향)</span></div>
+        <p style="font-size:13px;color:#64748B;margin-top:6px;max-width:360px;line-height:1.5">스카이 헤더 밴드 + 카드 오버랩 + 기능 칩 · 정보 집약형. 확정 방향.</p>
+      </div>
+      <div style="width:392px;border:10px solid#0B1220;border-radius:54px;overflow:hidden;background:#F1F5F9;box-shadow:0 30px 70px rgba(2,8,23,.20)">
+        <div style="background:linear-gradient(160deg,#0EA5E0,#0369A1);padding-bottom:44px">
+          <div style="height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:relative;color:#fff">
+            <span style="font-size:15px;font-weight:700">9:41</span>
+            <div style="position:absolute;left:50%;transform:translateX(-50%);top:13px;width:104px;height:26px;background:#0B1220;border-radius:14px"></div>
+            <div style="display:flex;align-items:center;gap:7px"><i data-lucide="signal" style="width:17px;height:17px"></i><i data-lucide="wifi" style="width:17px;height:17px"></i><i data-lucide="battery-full" style="width:22px;height:17px"></i></div>
+          </div>
+          <div style="padding:6px 20px 0;display:flex;align-items:center;gap:12px;color:#fff">
+            <span style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center"><i data-lucide="user" style="width:24px;height:24px"></i></span>
+            <div style="flex:1"><div style="font-size:12px;opacity:.85">안녕하세요 · 성암교회</div><div style="font-size:18px;font-weight:800">김성은2 님</div></div>
+            <span style="position:relative;color:#fff"><i data-lucide="bell" style="width:21px;height:21px"></i><span style="position:absolute;top:-3px;right:-3px;width:9px;height:9px;background:#EF4444;border:1.5px solid #0989C9;border-radius:50%"></span></span>
+            <i data-lucide="settings" style="width:21px;height:21px;color:#fff"></i>
+          </div>
+        </div>
+        <div class="scrollarea" style="margin-top:-32px;padding:0 14px">
+          <!-- 교회 소개 overlap card -->
+          <div style="background:#fff;border-radius:16px;padding:15px;box-shadow:0 10px 30px rgba(2,8,23,.10)">
+            <div style="display:flex;align-items:center;gap:11px">
+              <span style="width:40px;height:40px;border-radius:11px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="church" style="width:20px;height:20px"></i></span>
+              <div style="flex:1"><div style="font-size:15.5px;font-weight:800">성암교회</div><div style="font-size:11.5px;color:#94A3B8">안영목 목사 · 031-563-5210</div></div>
+              <i data-lucide="chevron-down" style="width:20px;height:20px;color:#CBD5E1"></i>
+            </div>
+            <div style="margin-top:11px;display:flex;align-items:flex-start;gap:8px;background:#F8FAFC;border-radius:11px;padding:10px 12px"><i data-lucide="map-pin" style="width:15px;height:15px;color:#0284C7;margin-top:1px"></i><span style="font-size:12.5px;color:#475569;line-height:1.45">경기도 구리시 검배로 136번길 32</span></div>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:8px;background:#F8FAFC;border-radius:11px;padding:10px 12px"><i data-lucide="landmark" style="width:15px;height:15px;color:#0284C7;flex:0 0 auto"></i><div style="flex:1;min-width:0"><div style="font-size:10.5px;color:#94A3B8;font-weight:600">교회 헌금 계좌</div><div style="font-size:12.5px;color:#334155;font-weight:600">국민은행 326-353703-02-001</div></div><i data-lucide="copy" style="width:15px;height:15px;color:#94A3B8;flex:0 0 auto"></i></div>
+          </div>
+
+          <!-- 기능 칩 row -->
+          <div class="scrollarea" style="display:flex;gap:9px;overflow-x:auto;margin-top:14px;padding-bottom:2px">
+            <div style="flex:0 0 auto;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #E2E8F0;border-radius:999px;padding:8px 14px"><i data-lucide="house-plus" style="width:16px;height:16px;color:#0284C7"></i><span style="font-size:12.5px;font-weight:600;color:#334155">심방 신청</span></div>
+            <div style="flex:0 0 auto;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #E2E8F0;border-radius:999px;padding:8px 14px"><i data-lucide="hand-heart" style="width:16px;height:16px;color:#0284C7"></i><span style="font-size:12.5px;font-weight:600;color:#334155">중보 기도</span></div>
+            <div style="flex:0 0 auto;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #E2E8F0;border-radius:999px;padding:8px 14px"><i data-lucide="wallet" style="width:16px;height:16px;color:#0284C7"></i><span style="font-size:12.5px;font-weight:600;color:#334155">헌금 내역</span></div>
+          </div>
+
+          <!-- 교회 소식 -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:18px 4px 10px"><span style="font-size:14.5px;font-weight:800">교회 소식</span><span style="font-size:12px;color:#0284C7;font-weight:600">더보기</span></div>
+          <div style="background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(2,8,23,.05);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid #F1F5F9"><span style="width:7px;height:7px;border-radius:50%;background:#0EA5E0;flex:0 0 auto"></span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1E293B">2025 여름 수련회 안내</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">2일 전</div></div><i data-lucide="chevron-right" style="width:16px;height:16px;color:#CBD5E1"></i></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid #F1F5F9"><span style="width:7px;height:7px;border-radius:50%;background:#0EA5E0;flex:0 0 auto"></span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1E293B">주일 헌금 계좌 변경 안내</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">5일 전</div></div><i data-lucide="chevron-right" style="width:16px;height:16px;color:#CBD5E1"></i></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:12px 14px"><span style="width:7px;height:7px;border-radius:50%;background:#E2E8F0;flex:0 0 auto"></span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1E293B">새가족 환영 모임 안내</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">1주 전</div></div><i data-lucide="chevron-right" style="width:16px;height:16px;color:#CBD5E1"></i></div>
+          </div>
+
+          <!-- 예배시간안내 -->
+          <div style="font-size:14.5px;font-weight:800;margin:18px 4px 10px">예배시간안내</div>
+          <div style="background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(2,8,23,.05);padding:4px 14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F1F5F9"><div style="display:flex;align-items:center;gap:9px"><span style="width:30px;height:30px;border-radius:9px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="sun" style="width:15px;height:15px"></i></span><span style="font-size:13px;font-weight:600;color:#334155">주일 1부예배</span></div><span style="font-size:13px;color:#0F172A;font-weight:700">일 09:00</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F1F5F9"><div style="display:flex;align-items:center;gap:9px"><span style="width:30px;height:30px;border-radius:9px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="sun" style="width:15px;height:15px"></i></span><span style="font-size:13px;font-weight:600;color:#334155">주일 2부예배</span></div><span style="font-size:13px;color:#0F172A;font-weight:700">일 11:00</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0"><div style="display:flex;align-items:center;gap:9px"><span style="width:30px;height:30px;border-radius:9px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="moon" style="width:15px;height:15px"></i></span><span style="font-size:13px;font-weight:600;color:#334155">수요예배</span></div><span style="font-size:13px;color:#0F172A;font-weight:700">수 19:30</span></div>
+          </div>
+
+          <!-- 바로가기 -->
+          <div style="font-size:14.5px;font-weight:800;margin:18px 4px 10px">바로가기</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:18px">
+            <div style="background:#fff;border-radius:14px;padding:13px;box-shadow:0 6px 20px rgba(2,8,23,.05);display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:10px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="globe" style="width:18px;height:18px"></i></span><div style="font-size:13px;font-weight:700;color:#334155">홈페이지</div></div>
+            <div style="background:#fff;border-radius:14px;padding:13px;box-shadow:0 6px 20px rgba(2,8,23,.05);display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:10px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="play" style="width:18px;height:18px"></i></span><div style="font-size:13px;font-weight:700;color:#334155">유튜브</div></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:11px 8px 22px;border-top:1px solid #E2E8F0;background:#fff">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#0EA5E0"><i data-lucide="home" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:700">홈</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#94A3B8"><i data-lucide="users" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:600">주소록</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#94A3B8"><i data-lucide="newspaper" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:600">교회소식</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#94A3B8"><i data-lucide="message-circle" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:600">채팅</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#94A3B8"><i data-lucide="users-round" style="width:22px;height:22px"></i><span style="font-size:10.5px;font-weight:600">커뮤니티</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    let tries = 0;
+    const draw = () => {
+      if (window.lucide && window.lucide.createIcons) {
+        window.lucide.createIcons();
+      } else if (tries++ < 60) {
+        setTimeout(draw, 80);
+      }
+    };
+    draw();
+  }
+}
+</script>
+</body>
+</html>

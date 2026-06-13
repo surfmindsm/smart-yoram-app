@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:#EEF2F6;color:#0F172A;-webkit-font-smoothing:antialiased}
+  i[data-lucide]{display:inline-block;vertical-align:middle;stroke-width:2}
+  .scrollarea::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:56px 48px 80px">
+  <div style="max-width:980px;margin:0 auto 40px">
+    <div style="font-size:13px;font-weight:600;letter-spacing:.14em;color:#0EA5E0;text-transform:uppercase">Church Round · Smart Yoram App</div>
+    <h1 style="font-size:30px;font-weight:800;margin-top:8px;letter-spacing:-.02em">주소록 화면 — 현재 vs 개선</h1>
+    <p style="font-size:15px;color:#64748B;margin-top:8px;max-width:740px;line-height:1.6">실제 <b style="color:#0F172A">members_screen.dart</b>(검색 · 직분/부서/조직 필터 · 교인 카드 · 통화/메시지 버튼)를 재현한 현재와, 확정된 <b style="color:#0F172A">C 방향</b>으로 통일한 개선안입니다. 통화(초록)·메시지(파랑) 버튼이 단일 스카이로 정리됩니다.</p>
+  </div>
+
+  <div class="scrollarea" style="display:flex;gap:56px;align-items:flex-start;justify-content:center;overflow-x:auto;padding-bottom:24px">
+
+    <!-- ============ BEFORE ============ -->
+    <div style="flex:0 0 auto">
+      <div style="margin-bottom:18px">
+        <div style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:7px;background:#94A3B8;color:#fff;display:flex;align-items:center;justify-content:center"><i data-lucide="history" style="width:15px;height:15px"></i></span><span style="font-size:17px;font-weight:700;color:#475569">현재 (Before)</span></div>
+        <p style="font-size:13px;color:#64748B;margin-top:6px;max-width:360px;line-height:1.5">제목 없이 검색부터 시작 · 통화(초록)+메시지(파랑) 버튼 혼재 · 직분 텍스트.</p>
+      </div>
+      <div style="width:392px;border:10px solid#0B1220;border-radius:54px;overflow:hidden;background:#F1F2F4;box-shadow:0 30px 70px rgba(2,8,23,.20);position:relative">
+        <div style="position:absolute;top:62px;left:26px;z-index:9;background:rgba(15,23,42,.78);color:#fff;font-size:11px;font-weight:700;padding:5px 11px;border-radius:999px">BEFORE</div>
+        <div style="height:52px;background:#F1F2F4;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:relative">
+          <span style="font-size:15px;font-weight:700">9:41</span>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);top:13px;width:104px;height:26px;background:#0B1220;border-radius:14px"></div>
+          <div style="display:flex;align-items:center;gap:7px"><i data-lucide="signal" style="width:17px;height:17px"></i><i data-lucide="wifi" style="width:17px;height:17px"></i><i data-lucide="battery-full" style="width:22px;height:17px"></i></div>
+        </div>
+        <div class="scrollarea" style="padding:14px 16px 0">
+          <!-- search -->
+          <div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:13px 14px;display:flex;align-items:center;gap:10px"><i data-lucide="search" style="width:18px;height:18px;color:#9AA0A8"></i><span style="font-size:13.5px;color:#9AA0A8">이름, 전화번호 검색 (초성 검색 가능)</span></div>
+          <!-- filters -->
+          <div style="display:flex;align-items:center;gap:7px;margin-top:12px">
+            <span style="display:flex;align-items:center;gap:4px;border:1px solid #D1D5DB;border-radius:999px;padding:7px 12px;font-size:12.5px;color:#374151">직분별 <i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+            <span style="display:flex;align-items:center;gap:4px;border:1px solid #D1D5DB;border-radius:999px;padding:7px 12px;font-size:12.5px;color:#374151">부서별 <i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+            <span style="display:flex;align-items:center;gap:4px;border:1px solid #D1D5DB;border-radius:999px;padding:7px 12px;font-size:12.5px;color:#374151">조직별 <i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+            <span style="margin-left:auto;width:34px;height:34px;border:1px solid #D1D5DB;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#6B7280"><i data-lucide="arrow-up-down" style="width:16px;height:16px"></i></span>
+          </div>
+          <!-- list -->
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;padding-bottom:16px">
+            <div style="background:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;border:1px solid #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:#1A1D21">강</span><div style="flex:1"><div style="font-size:15px;font-weight:500;color:#1A1D21">강은혜</div><div style="font-size:13px;color:#6B7280">010-2280-1866</div><div style="font-size:11px;color:#6B7280;margin-top:1px">권사</div></div><span style="width:28px;height:28px;border-radius:50%;background:#DCFCE7;color:#16A34A;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:28px;height:28px;border-radius:50%;background:#D6E6FF;color:#0078FF;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+            <div style="background:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;border:1px solid #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:#1A1D21">김</span><div style="flex:1"><div style="font-size:15px;font-weight:500;color:#1A1D21">김성은</div><div style="font-size:13px;color:#6B7280">010-3344-5566</div><div style="font-size:11px;color:#6B7280;margin-top:1px">집사</div></div><span style="width:28px;height:28px;border-radius:50%;background:#DCFCE7;color:#16A34A;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:28px;height:28px;border-radius:50%;background:#D6E6FF;color:#0078FF;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+            <div style="background:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;border:1px solid #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:#1A1D21">박</span><div style="flex:1"><div style="font-size:15px;font-weight:500;color:#1A1D21">박지훈</div><div style="font-size:13px;color:#6B7280">010-7788-9900</div><div style="font-size:11px;color:#6B7280;margin-top:1px">청년부</div></div><span style="width:28px;height:28px;border-radius:50%;background:#DCFCE7;color:#16A34A;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:28px;height:28px;border-radius:50%;background:#D6E6FF;color:#0078FF;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+            <div style="background:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;border:1px solid #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:#1A1D21">이</span><div style="flex:1"><div style="font-size:15px;font-weight:500;color:#1A1D21">이영자</div><div style="font-size:13px;color:#6B7280">010-1212-3434</div><div style="font-size:11px;color:#6B7280;margin-top:1px">권사</div></div><span style="width:28px;height:28px;border-radius:50%;background:#DCFCE7;color:#16A34A;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:28px;height:28px;border-radius:50%;background:#D6E6FF;color:#0078FF;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+            <div style="background:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:12px;border:1px solid #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:#1A1D21">정</span><div style="flex:1"><div style="font-size:15px;font-weight:500;color:#1A1D21">정민수</div><div style="font-size:13px;color:#6B7280">010-5566-7788</div><div style="font-size:11px;color:#6B7280;margin-top:1px">성도</div></div><span style="width:28px;height:28px;border-radius:50%;background:#DCFCE7;color:#16A34A;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:28px;height:28px;border-radius:50%;background:#D6E6FF;color:#0078FF;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:11px 6px 22px;border-top:1px solid #E5E7EB;background:#fff">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9AA0A8"><i data-lucide="house" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:600">홈</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#0078FF"><i data-lucide="users" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:700">주소록</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9AA0A8"><i data-lucide="newspaper" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:600">교회소식</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9AA0A8"><i data-lucide="message-circle" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:600">채팅</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#9AA0A8"><i data-lucide="users-round" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:600">커뮤니티</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 개선 (C) ============ -->
+    <div style="flex:0 0 auto">
+      <div style="margin-bottom:18px">
+        <div style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:7px;background:#0EA5E0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">C</span><span style="font-size:17px;font-weight:700">개선 (C 방향)</span></div>
+        <p style="font-size:13px;color:#64748B;margin-top:6px;max-width:360px;line-height:1.5">제목·인원수 · 초성 섹션 헤더 · 직분 배지 · 통화/메시지 모두 스카이 통일.</p>
+      </div>
+      <div style="width:392px;border:10px solid#0B1220;border-radius:54px;overflow:hidden;background:#F8FAFC;box-shadow:0 30px 70px rgba(2,8,23,.20)">
+        <div style="height:52px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:relative">
+          <span style="font-size:15px;font-weight:700">9:41</span>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);top:13px;width:104px;height:26px;background:#0B1220;border-radius:14px"></div>
+          <div style="display:flex;align-items:center;gap:7px"><i data-lucide="signal" style="width:17px;height:17px"></i><i data-lucide="wifi" style="width:17px;height:17px"></i><i data-lucide="battery-full" style="width:22px;height:17px"></i></div>
+        </div>
+        <!-- title -->
+        <div style="background:#fff;padding:6px 18px 14px;border-bottom:1px solid #F1F5F9">
+          <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:21px;font-weight:800;letter-spacing:-.02em">주소록</span><span style="font-size:13px;color:#94A3B8;font-weight:600">전체 128명</span></div>
+          <!-- search -->
+          <div style="background:#F1F5F9;border-radius:11px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-top:12px"><i data-lucide="search" style="width:18px;height:18px;color:#94A3B8"></i><span style="font-size:13.5px;color:#94A3B8">이름, 전화번호 검색 (초성 가능)</span></div>
+          <!-- filters -->
+          <div style="display:flex;align-items:center;gap:7px;margin-top:11px">
+            <span style="display:flex;align-items:center;gap:4px;background:#0EA5E0;color:#fff;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600">직분별 <i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+            <span style="display:flex;align-items:center;gap:4px;border:1px solid #E2E8F0;color:#475569;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600">부서별 <i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+            <span style="display:flex;align-items:center;gap:4px;border:1px solid #E2E8F0;color:#475569;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600">조직별 <i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+            <span style="margin-left:auto;width:34px;height:34px;border:1px solid #E2E8F0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#0284C7"><i data-lucide="arrow-up-down" style="width:16px;height:16px"></i></span>
+          </div>
+        </div>
+        <div class="scrollarea" style="padding:8px 14px 0">
+          <!-- section ㄱ -->
+          <div style="font-size:12px;font-weight:800;color:#0284C7;padding:10px 6px 6px">ㄱ</div>
+          <div style="background:#fff;border:1px solid #EEF2F6;border-radius:14px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:13px;padding:12px 14px;border-bottom:1px solid #F4F7FA"><span style="width:44px;height:44px;border-radius:13px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700">강</span><div style="flex:1"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px;font-weight:700;color:#0F172A">강은혜</span><span style="font-size:10.5px;font-weight:700;color:#0284C7;background:#E0F2FE;padding:1px 8px;border-radius:999px">권사</span></div><div style="font-size:12.5px;color:#94A3B8;margin-top:2px">010-2280-1866</div></div><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+            <div style="display:flex;align-items:center;gap:13px;padding:12px 14px"><span style="width:44px;height:44px;border-radius:13px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700">김</span><div style="flex:1"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px;font-weight:700;color:#0F172A">김성은</span><span style="font-size:10.5px;font-weight:700;color:#0284C7;background:#E0F2FE;padding:1px 8px;border-radius:999px">집사</span></div><div style="font-size:12.5px;color:#94A3B8;margin-top:2px">010-3344-5566</div></div><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+          </div>
+          <!-- section ㅂ -->
+          <div style="font-size:12px;font-weight:800;color:#0284C7;padding:14px 6px 6px">ㅂ</div>
+          <div style="background:#fff;border:1px solid #EEF2F6;border-radius:14px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:13px;padding:12px 14px"><span style="width:44px;height:44px;border-radius:13px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700">박</span><div style="flex:1"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px;font-weight:700;color:#0F172A">박지훈</span><span style="font-size:10.5px;font-weight:700;color:#0284C7;background:#E0F2FE;padding:1px 8px;border-radius:999px">청년부</span></div><div style="font-size:12.5px;color:#94A3B8;margin-top:2px">010-7788-9900</div></div><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+          </div>
+          <!-- section ㅇ -->
+          <div style="font-size:12px;font-weight:800;color:#0284C7;padding:14px 6px 6px">ㅇ</div>
+          <div style="background:#fff;border:1px solid #EEF2F6;border-radius:14px;overflow:hidden;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:13px;padding:12px 14px;border-bottom:1px solid #F4F7FA"><span style="width:44px;height:44px;border-radius:13px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700">이</span><div style="flex:1"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px;font-weight:700;color:#0F172A">이영자</span><span style="font-size:10.5px;font-weight:700;color:#0284C7;background:#E0F2FE;padding:1px 8px;border-radius:999px">권사</span></div><div style="font-size:12.5px;color:#94A3B8;margin-top:2px">010-1212-3434</div></div><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+            <div style="display:flex;align-items:center;gap:13px;padding:12px 14px"><span style="width:44px;height:44px;border-radius:13px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700">정</span><div style="flex:1"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px;font-weight:700;color:#0F172A">정민수</span><span style="font-size:10.5px;font-weight:700;color:#475569;background:#F1F5F9;padding:1px 8px;border-radius:999px">성도</span></div><div style="font-size:12.5px;color:#94A3B8;margin-top:2px">010-5566-7788</div></div><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="phone" style="width:15px;height:15px"></i></span><span style="width:30px;height:30px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:11px 6px 22px;border-top:1px solid #F1F5F9;background:#fff">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#94A3B8"><i data-lucide="house" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:600">홈</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#0EA5E0"><i data-lucide="users" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:700">주소록</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#94A3B8"><i data-lucide="newspaper" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:600">교회소식</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#94A3B8"><i data-lucide="message-circle" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:600">채팅</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#94A3B8"><i data-lucide="users-round" style="width:21px;height:21px"></i><span style="font-size:10px;font-weight:600">커뮤니티</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== 교인 상세 모달 (개선) ===================== -->
+  <div style="max-width:980px;margin:50px auto 22px;display:flex;align-items:center;gap:12px"><span style="font-size:13px;font-weight:800;color:#0284C7;background:#E0F2FE;padding:6px 14px;border-radius:999px">교인 선택 → 상세 모달 (개선)</span><span style="flex:1;height:1px;background:#E2E8F0"></span></div>
+  <div class="scrollarea" style="display:flex;justify-content:center;padding-bottom:24px">
+    <div style="width:392px;border:10px solid#0B1220;border-radius:54px;overflow:hidden;background:#8B9097;box-shadow:0 30px 70px rgba(2,8,23,.20)">
+      <div style="height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:relative;color:#fff">
+        <span style="font-size:15px;font-weight:700">9:41</span>
+        <div style="position:absolute;left:50%;transform:translateX(-50%);top:13px;width:104px;height:26px;background:#0B1220;border-radius:14px"></div>
+        <div style="display:flex;align-items:center;gap:7px"><i data-lucide="signal" style="width:17px;height:17px"></i><i data-lucide="wifi" style="width:17px;height:17px"></i><i data-lucide="battery-full" style="width:22px;height:17px"></i></div>
+      </div>
+      <!-- modal sheet -->
+      <div style="margin:10px 10px 14px;background:#fff;border-radius:26px;padding:22px 22px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:18px;font-weight:800;color:#0F172A">교인 정보</span>
+          <span style="width:34px;height:34px;border-radius:10px;background:#F1F5F9;color:#64748B;display:flex;align-items:center;justify-content:center"><i data-lucide="x" style="width:19px;height:19px"></i></span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;margin-top:18px">
+          <span style="width:104px;height:104px;border-radius:50%;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800">김</span>
+          <div style="font-size:23px;font-weight:800;color:#0F172A;margin-top:14px">김소연</div>
+          <span style="font-size:13px;font-weight:700;color:#0284C7;background:#E0F2FE;padding:4px 16px;border-radius:999px;margin-top:10px;white-space:nowrap">성도</span>
+        </div>
+        <div style="margin-top:22px">
+          <div style="display:flex;align-items:center;padding:13px 0;border-bottom:1px solid #F1F5F9"><span style="font-size:13.5px;color:#94A3B8;width:88px;flex:0 0 auto">전화번호</span><span style="font-size:14.5px;color:#1E293B;font-weight:600">010-1412-5125</span></div>
+          <div style="display:flex;align-items:center;padding:13px 0;border-bottom:1px solid #F1F5F9"><span style="font-size:13.5px;color:#94A3B8;width:88px;flex:0 0 auto">이메일</span><span style="font-size:14.5px;color:#1E293B;font-weight:600">soyeon@haodk.com</span></div>
+          <div style="display:flex;align-items:center;padding:13px 0;border-bottom:1px solid #F1F5F9"><span style="font-size:13.5px;color:#94A3B8;width:88px;flex:0 0 auto">성별</span><span style="font-size:14.5px;color:#1E293B;font-weight:600">여성</span></div>
+          <div style="display:flex;align-items:center;padding:13px 0;border-bottom:1px solid #F1F5F9"><span style="font-size:13.5px;color:#94A3B8;width:88px;flex:0 0 auto">부서</span><span style="font-size:14.5px;color:#1E293B;font-weight:600">갈릴리선교회</span></div>
+          <div style="display:flex;align-items:center;padding:13px 0"><span style="font-size:13.5px;color:#94A3B8;width:88px;flex:0 0 auto">조직</span><span style="font-size:14.5px;color:#1E293B;font-weight:600">1교구 &gt; 1구역 &gt; 2셀</span></div>
+        </div>
+        <div style="display:flex;gap:11px;margin-top:24px">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid #BAE6FD;color:#0284C7;font-size:15px;font-weight:700;padding:14px 0;border-radius:13px"><i data-lucide="phone" style="width:18px;height:18px"></i>전화</div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:#0EA5E0;color:#fff;font-size:15px;font-weight:700;padding:14px 0;border-radius:13px;box-shadow:0 8px 18px rgba(14,165,224,.28)"><i data-lucide="message-circle" style="width:18px;height:18px"></i>메시지</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 직분별 필터 바텀시트 (개선) ===================== -->
+  <div style="max-width:980px;margin:38px auto 22px;display:flex;align-items:center;gap:12px"><span style="font-size:13px;font-weight:800;color:#0284C7;background:#E0F2FE;padding:6px 14px;border-radius:999px">필터 누름 → 바텀시트 (개선)</span><span style="flex:1;height:1px;background:#E2E8F0"></span></div>
+  <div class="scrollarea" style="display:flex;justify-content:center;padding-bottom:24px">
+    <div style="width:392px;border:10px solid#0B1220;border-radius:54px;overflow:hidden;background:#fff;box-shadow:0 30px 70px rgba(2,8,23,.20);position:relative">
+      <!-- dimmed 주소록 behind -->
+      <div style="height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:relative">
+        <span style="font-size:15px;font-weight:700">9:41</span>
+        <div style="position:absolute;left:50%;transform:translateX(-50%);top:13px;width:104px;height:26px;background:#0B1220;border-radius:14px"></div>
+        <div style="display:flex;align-items:center;gap:7px"><i data-lucide="signal" style="width:17px;height:17px"></i><i data-lucide="wifi" style="width:17px;height:17px"></i><i data-lucide="battery-full" style="width:22px;height:17px"></i></div>
+      </div>
+      <div style="position:relative">
+        <div style="padding:6px 16px 0">
+          <div style="font-size:21px;font-weight:800;letter-spacing:-.02em;padding:0 2px 12px">주소록</div>
+          <div style="background:#F1F5F9;border-radius:11px;padding:12px 14px;display:flex;align-items:center;gap:10px"><i data-lucide="search" style="width:18px;height:18px;color:#94A3B8"></i><span style="font-size:13.5px;color:#94A3B8">이름, 전화번호 검색 (초성 가능)</span></div>
+          <div style="display:flex;align-items:center;gap:7px;margin-top:11px">
+            <span style="display:flex;align-items:center;gap:4px;background:#0EA5E0;color:#fff;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600">직분별 <i data-lucide="chevron-up" style="width:14px;height:14px"></i></span>
+            <span style="display:flex;align-items:center;gap:4px;border:1px solid #E2E8F0;color:#475569;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600">부서별 <i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+            <span style="display:flex;align-items:center;gap:4px;border:1px solid #E2E8F0;color:#475569;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600">조직별 <i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:13px;padding:16px 4px"><span style="width:44px;height:44px;border-radius:13px;background:#E0F2FE;color:#0284C7;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700">고</span><div style="flex:1"><div style="font-size:15px;font-weight:700;color:#0F172A">고준희</div><div style="font-size:12.5px;color:#94A3B8;margin-top:2px">010-0019-1091</div></div></div>
+        </div>
+        <!-- scrim -->
+        <div style="position:absolute;inset:0;background:rgba(15,23,42,.42);z-index:1"></div>
+        <!-- bottom sheet -->
+        <div style="position:relative;z-index:2;margin-top:-40px;background:#fff;border-radius:24px 24px 0 0;padding:10px 16px 26px;box-shadow:0 -10px 40px rgba(2,8,23,.18)">
+          <div style="width:40px;height:4px;border-radius:999px;background:#E2E8F0;margin:0 auto 14px"></div>
+          <div style="font-size:16px;font-weight:800;color:#0F172A;padding:2px 6px 12px">직분별 필터</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#E0F2FE;border-radius:12px;padding:14px 16px"><span style="font-size:15px;font-weight:700;color:#0284C7">전체</span><i data-lucide="check" style="width:19px;height:19px;color:#0284C7"></i></div>
+          <div style="display:flex;align-items:center;padding:14px 16px"><span style="font-size:15px;font-weight:500;color:#334155">교역자</span></div>
+          <div style="display:flex;align-items:center;padding:14px 16px"><span style="font-size:15px;font-weight:500;color:#334155">장로</span></div>
+          <div style="display:flex;align-items:center;padding:14px 16px"><span style="font-size:15px;font-weight:500;color:#334155">권사</span></div>
+          <div style="display:flex;align-items:center;padding:14px 16px"><span style="font-size:15px;font-weight:500;color:#334155">집사</span></div>
+          <div style="display:flex;align-items:center;padding:14px 16px"><span style="font-size:15px;font-weight:500;color:#334155">교회학교</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    let tries = 0;
+    const draw = () => {
+      if (window.lucide && window.lucide.createIcons) {
+        window.lucide.createIcons();
+      } else if (tries++ < 60) {
+        setTimeout(draw, 80);
+      }
+    };
+    draw();
+  }
+}
+</script>
+</body>
+</html>
