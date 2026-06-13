@@ -173,24 +173,23 @@ class _BulletinScreenState extends State<BulletinScreen> {
     });
   }
 
+  // 1.2.0 C 방향: 연도 칩 row + 날짜 칩 카드
+  // ⚠️ Scaffold를 쓰지 않는 이유: 부모(BulletinNoticesIntegratedScreen)가 이미 Scaffold라
+  // 중첩되면 TabBarView 자식의 hit-test가 막힘. Container로 단순화한다.
   @override
   Widget build(BuildContext context) {
     final availableYears = _getAvailableYears();
 
-    return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
-      body: Column(
+    return Container(
+      color: NewAppColor.canvasAlt,
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // 상단 패딩 - showTopPadding이 true일 때만 적용
+          // 직접 진입 시 상단 패딩만 적용 (통합 화면 안에서는 이미 흰 헤더가 있음)
           if (widget.showTopPadding)
             SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
-
-          SizedBox(height: 12.h),
-
-          // 연도 필터
-          if (availableYears.isNotEmpty) _buildYearFilter(availableYears),
-
+          // 연도 칩 row
+          if (availableYears.isNotEmpty) _buildYearChipRow(availableYears),
           // 주보 목록
           Expanded(
             child: isLoading
@@ -200,13 +199,13 @@ class _BulletinScreenState extends State<BulletinScreen> {
                       children: [
                         CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                              NewAppColor.primary500),
+                              NewAppColor.skyPrimary),
                         ),
                         SizedBox(height: 16.h),
                         Text(
                           '주보를 불러오는 중...',
-                          style: const FigmaTextStyles().body1.copyWith(
-                                color: NewAppColor.neutral600,
+                          style: FigmaTextStyles().body2.copyWith(
+                                color: NewAppColor.textMuted,
                               ),
                         ),
                       ],
@@ -218,22 +217,22 @@ class _BulletinScreenState extends State<BulletinScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.description,
-                              size: 64.sp,
-                              color: NewAppColor.neutral400,
+                              Icons.menu_book_outlined,
+                              size: 56.sp,
+                              color: NewAppColor.iconFaint,
                             ),
-                            SizedBox(height: 16.h),
+                            SizedBox(height: 14.h),
                             Text(
                               '주보가 없습니다',
-                              style: const FigmaTextStyles().title3.copyWith(
-                                    color: NewAppColor.neutral600,
+                              style: FigmaTextStyles().subtitle2.copyWith(
+                                    color: NewAppColor.textSecondary,
                                   ),
                             ),
-                            SizedBox(height: 8.h),
+                            SizedBox(height: 6.h),
                             Text(
                               '아직 등록된 주보가 없습니다',
-                              style: const FigmaTextStyles().caption1.copyWith(
-                                    color: NewAppColor.neutral600,
+                              style: FigmaTextStyles().caption1.copyWith(
+                                    color: NewAppColor.textMuted,
                                   ),
                             ),
                           ],
@@ -241,13 +240,19 @@ class _BulletinScreenState extends State<BulletinScreen> {
                       )
                     : RefreshIndicator(
                         onRefresh: _loadBulletins,
-                        color: NewAppColor.primary500,
-                        child: ListView.builder(
-                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        color: NewAppColor.skyPrimary,
+                        child: ListView.separated(
+                          padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 18.h),
                           itemCount: filteredBulletins.length,
+                          separatorBuilder: (_, __) => SizedBox(height: 10.h),
                           itemBuilder: (context, index) {
                             final bulletin = filteredBulletins[index];
-                            return _buildBulletinCard(bulletin);
+                            // 첫 번째(가장 최근) 주보에 '이번 주' 배지 — 단, 연도/검색 필터 미적용 상태에서만
+                            final isThisWeek = index == 0 &&
+                                selectedYear == null &&
+                                _searchController.text.isEmpty;
+                            return _buildBulletinCard(bulletin,
+                                isThisWeek: isThisWeek);
                           },
                         ),
                       ),
@@ -257,98 +262,178 @@ class _BulletinScreenState extends State<BulletinScreen> {
     );
   }
 
-  Widget _buildYearFilter(List<String> years) {
+  // 1.2.0: 가로 스크롤 연도 칩 (전체/2025년/2024년)
+  Widget _buildYearChipRow(List<String> years) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String?>(
-                value: selectedYear,
-                icon: Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 20.sp,
-                  color: NewAppColor.neutral700,
-                ),
-                isDense: true,
-                items: [
-                  DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text(
-                      '전체',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        color: NewAppColor.neutral900,
-                        fontFamily: 'Pretendard Variable',
-                      ),
-                    ),
-                  ),
-                  ...years.map((year) {
-                    return DropdownMenuItem<String?>(
-                      value: year,
-                      child: Text(
-                        '${year}년',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: NewAppColor.neutral900,
-                          fontFamily: 'Pretendard Variable',
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    selectedYear = value;
-                    _filterBulletins();
-                  });
-                },
-              ),
-            ),
-          ),
-        ],
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 2.h),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _yearChip(label: '전체', value: null),
+            ...years.map((year) => _yearChip(label: '$year년', value: year)),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildBulletinCard(Bulletin bulletin) {
-    return GestureDetector(
+  Widget _yearChip({required String label, required String? value}) {
+    final isSelected = selectedYear == value;
+    return Padding(
+      padding: EdgeInsets.only(right: 7.w),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              selectedYear = value;
+              _filterBullettinsWithoutSetState();
+            });
+          },
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 6.h),
+            decoration: BoxDecoration(
+              color: isSelected ? NewAppColor.skyPrimary : Colors.white,
+              border: isSelected
+                  ? null
+                  : Border.all(color: NewAppColor.borderStrong, width: 1),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: FigmaTextStyles().caption2.copyWith(
+                    color: isSelected
+                        ? Colors.white
+                        : NewAppColor.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.5.sp,
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 1.2.0: 46×46 스카이 날짜 칩 + 절기/예배명 + '이번 주' 배지 + chevron
+  Widget _buildBulletinCard(Bulletin bulletin, {required bool isThisWeek}) {
+    final year = bulletin.date.year;
+    return InkWell(
       onTap: () => _navigateToFullscreen(bulletin),
+      borderRadius: BorderRadius.circular(14.r),
       child: Container(
-        margin: EdgeInsets.only(bottom: 8.h),
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(14.r),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: NewAppColor.borderHair, width: 1),
+          borderRadius: BorderRadius.circular(14.r),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 제목
-            Expanded(
-              child: Text(
-                bulletin.title,
-                style: const FigmaTextStyles().title3.copyWith(
-                      color: NewAppColor.neutral900,
+            // 날짜 칩 — 46×46 라운드 13 skyTint
+            Container(
+              width: 46.w,
+              height: 46.h,
+              decoration: BoxDecoration(
+                color: NewAppColor.skyTint,
+                borderRadius: BorderRadius.circular(13.r),
+              ),
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${bulletin.date.month}월',
+                    style: TextStyle(
+                      color: NewAppColor.skyDeep,
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                      fontFamily: 'Pretendard',
                     ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    '${bulletin.date.day}',
+                    style: TextStyle(
+                      color: NewAppColor.skyDeep,
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(width: 12.w),
-            // 오른쪽 화살표 아이콘
+            SizedBox(width: 13.w),
+            // 제목 + 부제
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          bulletin.title,
+                          style: FigmaTextStyles().cardTitleSm.copyWith(
+                                color: NewAppColor.textStrong,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isThisWeek) ...[
+                        SizedBox(width: 7.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 7.w, vertical: 1.h),
+                          decoration: BoxDecoration(
+                            color: NewAppColor.skyTint,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '이번 주',
+                            style: FigmaTextStyles().badgeSm.copyWith(
+                                  color: NewAppColor.skyDeep,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  SizedBox(height: 3.h),
+                  Text(
+                    // 설명(content) 있으면 우선, 없으면 기본 부제
+                    (bulletin.description != null &&
+                            bulletin.description!.isNotEmpty)
+                        ? '${bulletin.description} · $year'
+                        : '주보 · $year',
+                    style: FigmaTextStyles().caption2.copyWith(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 8.w),
             Icon(
               Icons.chevron_right,
-              size: 24.sp,
-              color: NewAppColor.neutral400,
+              size: 18.sp,
+              color: NewAppColor.iconFaint,
             ),
           ],
         ),

@@ -146,148 +146,126 @@ class _NoticesScreenState extends State<NoticesScreen>
     }
   }
 
+  // 1.2.0 C 방향: 검색(#F1F5F9 채움) + 카테고리 칩 + 카드 리스트
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       body: Column(
         children: [
-          // 상단 안전 영역
-          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
-
-          // 검색창 (연락처 스타일) - 모든 경로에서 표시
+          // 상단 흰 영역 (검색 + 카테고리 칩). 통합 화면 안에서는 검색만 노출되도록 padding 조절.
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: Row(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(width: 1, color: NewAppColor.borderSoft),
+              ),
+            ),
+            padding: EdgeInsets.only(
+              // 통합 화면 안에 들어오면 상단에 이미 흰 헤더가 있으니 상단 여유만 조금
+              top: widget.showAppBar
+                  ? MediaQuery.of(context).padding.top + 6.h
+                  : 12.h,
+              left: 18.w,
+              right: 18.w,
+              bottom: 12.h,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 홈에서 들어왔을 때만 뒤로가기 버튼
                 if (widget.showAppBar) ...[
-                  IconButton(
-                    icon: Icon(Icons.arrow_back,
-                        color: Colors.black, size: 24.sp),
-                    onPressed: () => Navigator.pop(context),
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(),
-                  ),
-                  SizedBox(width: 8.w),
-                ],
-                // 검색창
-                Expanded(
-                  child: Container(
-                    height: 48.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12.r),
-                      gradient: LinearGradient(
-                        colors: [
-                          NewAppColor.primary600,
-                          NewAppColor.primary600.withValues(alpha: 0.7),
-                          NewAppColor.primary600,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Container(
-                      margin: EdgeInsets.all(1.r),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(11.r),
-                        color: Colors.white,
-                      ),
-                      child: Row(
-                        children: [
-                          SizedBox(width: 16.w),
-                          Icon(
-                            Icons.search,
-                            size: 20.r,
-                            color: NewAppColor.neutral500,
+                  // 직접 진입 시 뒤로가기 + 타이틀
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () => Navigator.pop(context),
+                        borderRadius: BorderRadius.circular(8.r),
+                        child: Padding(
+                          padding: EdgeInsets.all(4.r),
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: NewAppColor.textStrong,
+                            size: 22.sp,
                           ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: '교회 소식 검색',
-                                hintStyle:
-                                    const FigmaTextStyles().body2.copyWith(
-                                          color: NewAppColor.neutral500,
-                                        ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              style: const FigmaTextStyles().body2.copyWith(
-                                    color: NewAppColor.neutral900,
-                                  ),
+                        ),
+                      ),
+                      SizedBox(width: 6.w),
+                      Text(
+                        '교회소식',
+                        style: FigmaTextStyles().subtitle1.copyWith(
+                              color: NewAppColor.textStrong,
                             ),
-                          ),
-                        ],
                       ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                ],
+                // 검색바 — #F1F5F9 채움형 무테
+                Container(
+                  decoration: BoxDecoration(
+                    color: NewAppColor.borderSoft,
+                    borderRadius: BorderRadius.circular(11.r),
+                  ),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search,
+                        size: 18.sp,
+                        color: NewAppColor.textTertiary,
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: '교회 소식 검색',
+                            hintStyle: FigmaTextStyles().body3.copyWith(
+                                  color: NewAppColor.textTertiary,
+                                ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            isDense: true,
+                          ),
+                          style: FigmaTextStyles().body3.copyWith(
+                                color: NewAppColor.textStrong,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                // 카테고리 칩 row (가로 스크롤)
+                SizedBox(
+                  height: 30.h,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: List.generate(tabCategories.length, (index) {
+                        final category = tabCategories[index];
+                        final isSelected = _tabController.index == index;
+                        return Padding(
+                          padding: EdgeInsets.only(right: 7.w),
+                          child: _buildCategoryChip(
+                            label: category['label']!,
+                            isSelected: isSelected,
+                            onTap: () {
+                              setState(() {
+                                _tabController.animateTo(index);
+                              });
+                            },
+                          ),
+                        );
+                      }),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-
-
-          // 탭바
-          Container(
-            height: 56.h,
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.transparent,
-                  width: 2.0,
-                ),
-              ),
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 22.w),
-              child: Row(
-                children: List.generate(tabCategories.length, (index) {
-                  final category = tabCategories[index];
-                  final isSelected = _tabController.index == index;
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _tabController.animateTo(index);
-                      });
-                    },
-                    child: Container(
-                      height: 56.h,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      decoration: BoxDecoration(
-                        border: isSelected
-                            ? Border(
-                                bottom: BorderSide(
-                                  color: NewAppColor.primary600,
-                                  width: 2.0,
-                                ),
-                              )
-                            : null,
-                      ),
-                      child: Center(
-                        child: Text(
-                          category['label']!,
-                          style: const FigmaTextStyles().title4.copyWith(
-                                color: isSelected
-                                    ? NewAppColor.primary600
-                                    : NewAppColor.neutral400,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ),
-
-          // 고정 여백
-          SizedBox(height: 16.h),
-
           // 공지사항 목록
           Expanded(
             child: TabBarView(
@@ -295,13 +273,43 @@ class _NoticesScreenState extends State<NoticesScreen>
               children: tabCategories.map((category) {
                 return RefreshIndicator(
                   onRefresh: _loadAnnouncements,
-                  color: NewAppColor.primary500,
+                  color: NewAppColor.skyPrimary,
                   child: _buildAnnouncementList(),
                 );
               }).toList(),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // 1.2.0 카테고리 칩 (활성=skyPrimary/흰글자, 비활성=흰배경+borderStrong+textSecondary)
+  Widget _buildCategoryChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: isSelected ? NewAppColor.skyPrimary : Colors.white,
+          border: isSelected
+              ? null
+              : Border.all(color: NewAppColor.borderStrong, width: 1),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: FigmaTextStyles().caption2.copyWith(
+                color: isSelected ? Colors.white : NewAppColor.textSecondary,
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5.sp,
+              ),
+        ),
       ),
     );
   }
@@ -313,13 +321,13 @@ class _NoticesScreenState extends State<NoticesScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(NewAppColor.primary500),
+              valueColor: AlwaysStoppedAnimation<Color>(NewAppColor.skyPrimary),
             ),
             SizedBox(height: 16.h),
             Text(
               '교회 소식을 불러오는 중...',
-              style: const FigmaTextStyles().body1.copyWith(
-                    color: NewAppColor.neutral600,
+              style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.textMuted,
                   ),
             ),
           ],
@@ -333,22 +341,22 @@ class _NoticesScreenState extends State<NoticesScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.campaign,
-              size: 64.sp,
-              color: NewAppColor.neutral400,
+              Icons.campaign_outlined,
+              size: 56.sp,
+              color: NewAppColor.iconFaint,
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 14.h),
             Text(
               '교회 소식이 없습니다',
-              style: const FigmaTextStyles().title3.copyWith(
-                    color: NewAppColor.neutral600,
+              style: FigmaTextStyles().subtitle2.copyWith(
+                    color: NewAppColor.textSecondary,
                   ),
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 6.h),
             Text(
               '새로운 소식이 등록되는 대로 알려드릴게요',
-              style: const FigmaTextStyles().caption1.copyWith(
-                    color: NewAppColor.neutral600,
+              style: FigmaTextStyles().caption1.copyWith(
+                    color: NewAppColor.textMuted,
                   ),
             ),
           ],
@@ -356,9 +364,10 @@ class _NoticesScreenState extends State<NoticesScreen>
       );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+    return ListView.separated(
+      padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 18.h),
       itemCount: _filteredAnnouncementsCache.length,
+      separatorBuilder: (_, __) => SizedBox(height: 10.h),
       itemBuilder: (context, index) {
         final announcement = _filteredAnnouncementsCache[index];
         return _buildAnnouncementCard(announcement);
@@ -366,184 +375,115 @@ class _NoticesScreenState extends State<NoticesScreen>
     );
   }
 
+  // 1.2.0 C 방향: Flex Row 카드 (라운드 14 + 1px borderHair + chevron-right)
   Widget _buildAnnouncementCard(Announcement announcement) {
-    return GestureDetector(
+    return InkWell(
       onTap: () => _viewNoticeDetail(announcement),
+      borderRadius: BorderRadius.circular(14.r),
       child: Container(
         width: double.infinity,
-        height: 154.h,
-        margin: EdgeInsets.only(bottom: 8.h),
-        clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
+        padding: EdgeInsets.all(15.r),
+        decoration: BoxDecoration(
           color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
+          border: Border.all(color: NewAppColor.borderHair, width: 1),
+          borderRadius: BorderRadius.circular(14.r),
         ),
-        child: Stack(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Positioned(
-              left: 16.w,
-              top: 16.h,
-              child: SizedBox(
-                width: 318.w,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 상단 영역 (태그 + 제목/내용)
-                    SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 태그 영역
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildCategoryTag(
-                                AnnouncementCategories.getCategoryLabel(
-                                  announcement.category,
-                                ),
-                              ),
-                              if (announcement.subcategory != null &&
-                                  announcement.subcategory!.isNotEmpty) ...[
-                                SizedBox(width: 4.w),
-                                _buildSubcategoryTag(
-                                  AnnouncementCategories.getSubcategoryLabel(
-                                    announcement.category,
-                                    announcement.subcategory,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          SizedBox(height: 12.h),
-                          // 제목과 내용
-                          SizedBox(
-                            width: double.infinity,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 318.w,
-                                  child: Text(
-                                    announcement.title,
-                                    style: TextStyle(
-                                      color: NewAppColor.neutral800,
-                                      fontSize: 18.sp,
-                                      fontFamily: 'Pretendard',
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.44,
-                                      letterSpacing: -0.45,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                SizedBox(
-                                  width: 318.w,
-                                  child: Text(
-                                    announcement.content,
-                                    style: TextStyle(
-                                      color: NewAppColor.neutral400,
-                                      fontSize: 14.sp,
-                                      fontFamily: 'Pretendard Variable',
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.43,
-                                      letterSpacing: -0.35,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                    // 하단 정보 (작성자, 날짜)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 16.w,
-                              height: 16.h,
-                              clipBehavior: Clip.antiAlias,
-                              decoration: const BoxDecoration(),
-                              child: Icon(
-                                Icons.person_outline,
-                                size: 16.sp,
-                                color: NewAppColor.neutral400,
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              announcement.authorName ?? '관리자',
-                              style: TextStyle(
-                                color: NewAppColor.neutral400,
-                                fontSize: 11.sp,
-                                fontFamily: 'Pretendard Variable',
-                                fontWeight: FontWeight.w400,
-                                height: 1.45,
-                                letterSpacing: -0.28,
-                              ),
-                            ),
-                          ],
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 카테고리 태그(들)
+                  Row(
+                    children: [
+                      _buildCategoryTag(
+                        AnnouncementCategories.getCategoryLabel(
+                          announcement.category,
                         ),
-                        SizedBox(width: 8.w),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 16.w,
-                              height: 16.h,
-                              clipBehavior: Clip.antiAlias,
-                              decoration: const BoxDecoration(),
-                              child: Icon(
-                                Icons.access_time,
-                                size: 16.sp,
-                                color: NewAppColor.neutral400,
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              _formatDate(announcement.createdAt),
-                              style: TextStyle(
-                                color: NewAppColor.neutral400,
-                                fontSize: 11.sp,
-                                fontFamily: 'Pretendard Variable',
-                                fontWeight: FontWeight.w400,
-                                height: 1.45,
-                                letterSpacing: -0.28,
-                              ),
-                            ),
-                          ],
+                      ),
+                      if (announcement.subcategory != null &&
+                          announcement.subcategory!.isNotEmpty) ...[
+                        SizedBox(width: 6.w),
+                        _buildSubcategoryTag(
+                          AnnouncementCategories.getSubcategoryLabel(
+                            announcement.category,
+                            announcement.subcategory,
+                          ),
                         ),
                       ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                  SizedBox(height: 10.h),
+                  // 제목
+                  Text(
+                    announcement.title,
+                    style: FigmaTextStyles().cardTitleSm.copyWith(
+                          color: NewAppColor.textStrong,
+                          fontSize: 15.5.sp,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4.h),
+                  // 내용 한 줄 미리보기
+                  Text(
+                    announcement.content,
+                    style: FigmaTextStyles().body3.copyWith(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 13.sp,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 14.h),
+                  // 메타 행 (user/clock + textTertiary)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.person_outline,
+                        size: 13.sp,
+                        color: NewAppColor.textTertiary,
+                      ),
+                      SizedBox(width: 4.w),
+                      Flexible(
+                        child: Text(
+                          announcement.authorName ?? '관리자',
+                          style: FigmaTextStyles().caption2.copyWith(
+                                color: NewAppColor.textTertiary,
+                                fontSize: 11.5.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Icon(
+                        Icons.access_time,
+                        size: 13.sp,
+                        color: NewAppColor.textTertiary,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        _formatDate(announcement.createdAt),
+                        style: FigmaTextStyles().caption2.copyWith(
+                              color: NewAppColor.textTertiary,
+                              fontSize: 11.5.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
+            ),
+            SizedBox(width: 12.w),
+            Icon(
+              Icons.chevron_right,
+              size: 18.sp,
+              color: NewAppColor.iconFaint,
             ),
           ],
         ),
@@ -551,60 +491,40 @@ class _NoticesScreenState extends State<NoticesScreen>
     );
   }
 
+  // 1.2.0: skyTint/skyDeep + 라운드 999px
   Widget _buildCategoryTag(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      clipBehavior: Clip.antiAlias,
+      padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 2.h),
       decoration: BoxDecoration(
-        color: const Color(0xFF0078FF), // Primary_600
-        borderRadius: BorderRadius.circular(4.r),
+        color: NewAppColor.skyTint,
+        borderRadius: BorderRadius.circular(999),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            text,
-            style: TextStyle(
-              color: NewAppColor.neutral100,
+      child: Text(
+        text,
+        style: FigmaTextStyles().badgeSm.copyWith(
+              color: NewAppColor.skyDeep,
               fontSize: 11.sp,
-              fontFamily: 'Pretendard Variable',
-              fontWeight: FontWeight.w400,
-              height: 1.45,
-              letterSpacing: -0.28,
+              fontWeight: FontWeight.w700,
             ),
-          ),
-        ],
       ),
     );
   }
 
+  // 1.2.0: 보조 태그 — 회색 톤
   Widget _buildSubcategoryTag(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      clipBehavior: Clip.antiAlias,
+      padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 2.h),
       decoration: BoxDecoration(
-        color: NewAppColor.neutral100,
-        borderRadius: BorderRadius.circular(4.r),
+        color: NewAppColor.borderSoft,
+        borderRadius: BorderRadius.circular(999),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            text,
-            style: TextStyle(
-              color: NewAppColor.neutral800,
+      child: Text(
+        text,
+        style: FigmaTextStyles().badgeSm.copyWith(
+              color: NewAppColor.textSecondary,
               fontSize: 11.sp,
-              fontFamily: 'Pretendard Variable',
-              fontWeight: FontWeight.w400,
-              height: 1.45,
-              letterSpacing: -0.28,
+              fontWeight: FontWeight.w700,
             ),
-          ),
-        ],
       ),
     );
   }

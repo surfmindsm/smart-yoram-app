@@ -206,78 +206,100 @@ class _MembersScreenState extends State<MembersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       body: Column(
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
-          // 검색창
+          // 1.2.0 C 방향: 상단 타이틀 + 검색 + 필터 영역 (흰 배경 카드처럼)
           Container(
-            padding: EdgeInsets.all(16.r),
-            color: Colors.transparent,
-            child: Container(
-              width: 350.w,
-              height: 48.h,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12.r),
-                gradient: LinearGradient(
-                  colors: [
-                    NewAppColor.primary600,
-                    NewAppColor.primary600.withValues(alpha: 0.7),
-                    NewAppColor.primary600,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Container(
-                margin: EdgeInsets.all(1.r), // 그라디언트 보더 두께
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(11.r),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(width: 16.w),
-                    Icon(
-                      Icons.search,
-                      size: 20.r,
-                      color: NewAppColor.neutral500,
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: '이름, 전화번호 검색 (초성 검색 가능)',
-                          hintStyle: const FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral500,
-                              ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 6.h,
+              left: 18.w,
+              right: 18.w,
+              bottom: 14.h,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(width: 1, color: NewAppColor.borderSoft),
               ),
             ),
-          ),
-
-          // 필터 바와 정렬 버튼
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _buildFilterBar()),
-                SizedBox(width: 8.w),
-                _buildSortButton(),
+                // 타이틀 + 전체 인원수
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 2.w),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '주소록',
+                        style: FigmaTextStyles().pageTitle.copyWith(
+                              color: NewAppColor.textStrong,
+                              fontSize: 21.sp,
+                            ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '전체 ${filteredMembers.length}명',
+                        style: FigmaTextStyles().caption1.copyWith(
+                              color: NewAppColor.textTertiary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                // 검색바 — #F1F5F9 채움형 무테
+                Container(
+                  decoration: BoxDecoration(
+                    color: NewAppColor.borderSoft, // #F1F5F9
+                    borderRadius: BorderRadius.circular(11.r),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search,
+                        size: 18.sp,
+                        color: NewAppColor.textTertiary,
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: '이름, 전화번호 검색 (초성 가능)',
+                            hintStyle: FigmaTextStyles().body3.copyWith(
+                                  color: NewAppColor.textTertiary,
+                                ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            isDense: true,
+                          ),
+                          style: FigmaTextStyles().body3.copyWith(
+                                color: NewAppColor.textStrong,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 11.h),
+                // 필터 칩 + 정렬 버튼
+                Row(
+                  children: [
+                    Expanded(child: _buildFilterBar()),
+                    SizedBox(width: 8.w),
+                    _buildSortButton(),
+                  ],
+                ),
               ],
             ),
           ),
-
           // 교인 목록
           Expanded(
             child: _buildMemberList(),
@@ -287,79 +309,66 @@ class _MembersScreenState extends State<MembersScreen> {
     );
   }
 
+  // 1.2.0 C 방향: 가로 스크롤 필터 칩 row
   Widget _buildFilterBar() {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 12.h),
-      color: Colors.transparent,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            // 직분별 필터
-            _buildDropdownButton(
-              label: selectedPositionCategory != null
-                  ? positionCategories[selectedPositionCategory]!
-                  : '직분별',
-              isSelected: selectedPositionCategory != null,
-              onTap: _showPositionFilter,
-            ),
-            SizedBox(width: 8.w),
-
-            // 부서별 필터
-            _buildDropdownButton(
-              label: selectedDepartment != null
-                  ? MemberDepartmentOptions.getLabel(selectedDepartment) ??
-                      selectedDepartment!
-                  : '부서별',
-              isSelected: selectedDepartment != null,
-              onTap: _showDepartmentFilter,
-            ),
-            SizedBox(width: 8.w),
-
-            // 조직별 필터 (구역)
-            _buildDropdownButton(
-              label: selectedDistrictName ?? '조직별',
-              isSelected: selectedDistrict != null,
-              onTap: _showDistrictFilter,
-            ),
-          ],
-        ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          // 직분별 필터
+          _buildDropdownButton(
+            label: selectedPositionCategory != null
+                ? positionCategories[selectedPositionCategory]!
+                : '직분별',
+            isSelected: selectedPositionCategory != null,
+            onTap: _showPositionFilter,
+          ),
+          SizedBox(width: 7.w),
+          // 부서별 필터
+          _buildDropdownButton(
+            label: selectedDepartment != null
+                ? MemberDepartmentOptions.getLabel(selectedDepartment) ??
+                    selectedDepartment!
+                : '부서별',
+            isSelected: selectedDepartment != null,
+            onTap: _showDepartmentFilter,
+          ),
+          SizedBox(width: 7.w),
+          // 조직별 필터 (구역)
+          _buildDropdownButton(
+            label: selectedDistrictName ?? '조직별',
+            isSelected: selectedDistrict != null,
+            onTap: _showDistrictFilter,
+          ),
+        ],
       ),
     );
   }
 
+  // 1.2.0 C 방향: 정렬 버튼 (라운드 10px + skyDeep 아이콘)
   Widget _buildSortButton() {
     return GestureDetector(
       onTap: _toggleSort,
       child: Container(
-        height: 36.h,
-        padding: EdgeInsets.symmetric(horizontal: 12.w),
+        width: 34.w,
+        height: 34.h,
         decoration: BoxDecoration(
-          color: NewAppColor.transparent,
-          borderRadius: BorderRadius.circular(8.r),
+          color: Colors.white,
+          border: Border.all(color: NewAppColor.borderStrong, width: 1),
+          borderRadius: BorderRadius.circular(10.r),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '이름순',
-              style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral700,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-            SizedBox(width: 4.w),
-            Icon(
-              sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-              size: 16.sp,
-              color: NewAppColor.neutral700,
-            ),
-          ],
+        alignment: Alignment.center,
+        child: Icon(
+          // 목업: 양방향 정렬 아이콘. 오름/내림차순 상태 그대로 보존
+          sortAscending ? Icons.swap_vert : Icons.swap_vert,
+          size: 16.sp,
+          color: NewAppColor.skyDeep,
         ),
       ),
     );
   }
 
+  // 1.2.0 C 방향: 필터 칩 (활성=skyPrimary 채움/흰글자, 비활성=흰배경 + borderStrong + textSecondary)
   Widget _buildDropdownButton({
     required String label,
     required bool isSelected,
@@ -368,27 +377,30 @@ class _MembersScreenState extends State<MembersScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 36.h,
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 7.h),
         decoration: BoxDecoration(
-          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral200,
-          borderRadius: BorderRadius.circular(18.r),
+          color: isSelected ? NewAppColor.skyPrimary : Colors.white,
+          border: isSelected
+              ? null
+              : Border.all(color: NewAppColor.borderStrong, width: 1),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               label,
-              style: FigmaTextStyles().body2.copyWith(
-                    color: isSelected ? Colors.white : NewAppColor.neutral700,
-                    fontWeight: FontWeight.w500,
+              style: FigmaTextStyles().caption2.copyWith(
+                    color: isSelected ? Colors.white : NewAppColor.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.5.sp,
                   ),
             ),
             SizedBox(width: 4.w),
             Icon(
               Icons.keyboard_arrow_down,
-              size: 16.sp,
-              color: isSelected ? Colors.white : NewAppColor.neutral700,
+              size: 14.sp,
+              color: isSelected ? Colors.white : NewAppColor.textSecondary,
             ),
           ],
         ),
@@ -403,89 +415,148 @@ class _MembersScreenState extends State<MembersScreen> {
     _filterMembers();
   }
 
+  // 1.2.0 C 방향: 공용 필터 바텀시트 컨테이너 (핸들바 + 제목 + 항목 리스트)
+  Widget _filterSheetContainer({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(
+        // iPhone safe area + 14px 여유
+        bottom: MediaQuery.of(context).padding.bottom + 14.h,
+      ),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 핸들바
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: EdgeInsets.only(bottom: 14.h),
+                decoration: BoxDecoration(
+                  color: NewAppColor.borderStrong,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(6.w, 2.h, 6.w, 12.h),
+              child: Text(
+                title,
+                style: FigmaTextStyles().cardTitle.copyWith(
+                      color: NewAppColor.textStrong,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: children,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 1.2.0 C 방향: 필터 시트 행 (선택=skyTint+skyDeep+체크, 비선택=일반)
+  Widget _filterSheetRow({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 2.h),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12.r),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              color: isSelected ? NewAppColor.skyTint : Colors.transparent,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: isSelected
+                              ? NewAppColor.skyDeep
+                              : NewAppColor.neutral700,
+                          fontSize: 15.sp,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.skyDeep,
+                    size: 19.sp,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showPositionFilter() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '직분별 필터',
-                style: FigmaTextStyles().headline6.copyWith(
-                      color: NewAppColor.neutral900,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // 전체 옵션
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: selectedPositionCategory == null
-                              ? NewAppColor.primary100
-                              : null,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: ListTile(
-                          title: const Text('전체'),
-                          trailing: selectedPositionCategory == null
-                              ? Icon(Icons.check, color: NewAppColor.primary600)
-                              : null,
-                          onTap: () {
-                            setState(() {
-                              selectedPositionCategory = null;
-                            });
-                            _filterMembers();
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                      ...positionCategories.entries.map((entry) {
-                        final isSelected =
-                            selectedPositionCategory == entry.key;
-                        return Container(
-                          margin: EdgeInsets.symmetric(vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: isSelected ? NewAppColor.primary100 : null,
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: ListTile(
-                            title: Text(entry.value),
-                            trailing: isSelected
-                                ? Icon(Icons.check,
-                                    color: NewAppColor.primary600)
-                                : null,
-                            onTap: () {
-                              setState(() {
-                                selectedPositionCategory = entry.key;
-                              });
-                              _filterMembers();
-                              Navigator.pop(context);
-                            },
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-            ],
-          ),
+        return _filterSheetContainer(
+          title: '직분별 필터',
+          children: [
+            _filterSheetRow(
+              label: '전체',
+              isSelected: selectedPositionCategory == null,
+              onTap: () {
+                setState(() {
+                  selectedPositionCategory = null;
+                });
+                _filterMembers();
+                Navigator.pop(context);
+              },
+            ),
+            ...positionCategories.entries.map((entry) {
+              final isSelected = selectedPositionCategory == entry.key;
+              return _filterSheetRow(
+                label: entry.value,
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    selectedPositionCategory = entry.key;
+                  });
+                  _filterMembers();
+                  Navigator.pop(context);
+                },
+              );
+            }),
+          ],
         );
       },
     );
@@ -497,86 +568,41 @@ class _MembersScreenState extends State<MembersScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '부서별 필터',
-                style: FigmaTextStyles().headline6.copyWith(
-                      color: NewAppColor.neutral900,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // 전체 옵션
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: selectedDepartment == null
-                              ? NewAppColor.primary100
-                              : null,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: ListTile(
-                          title: const Text('전체'),
-                          trailing: selectedDepartment == null
-                              ? Icon(Icons.check, color: NewAppColor.primary600)
-                              : null,
-                          onTap: () {
-                            setState(() {
-                              selectedDepartment = null;
-                            });
-                            _filterMembers();
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                      ...departments.map((dept) {
-                        final label =
-                            MemberDepartmentOptions.getLabel(dept) ?? dept;
-                        final isSelected = selectedDepartment == dept;
-                        return Container(
-                          margin: EdgeInsets.symmetric(vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: isSelected ? NewAppColor.primary100 : null,
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: ListTile(
-                            title: Text(label),
-                            trailing: isSelected
-                                ? Icon(Icons.check,
-                                    color: NewAppColor.primary600)
-                                : null,
-                            onTap: () {
-                              setState(() {
-                                selectedDepartment = dept;
-                              });
-                              _filterMembers();
-                              Navigator.pop(context);
-                            },
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-            ],
-          ),
+        return _filterSheetContainer(
+          title: '부서별 필터',
+          children: [
+            _filterSheetRow(
+              label: '전체',
+              isSelected: selectedDepartment == null,
+              onTap: () {
+                setState(() {
+                  selectedDepartment = null;
+                });
+                _filterMembers();
+                Navigator.pop(context);
+              },
+            ),
+            ...departments.map((dept) {
+              final label = MemberDepartmentOptions.getLabel(dept) ?? dept;
+              final isSelected = selectedDepartment == dept;
+              return _filterSheetRow(
+                label: label,
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    selectedDepartment = dept;
+                  });
+                  _filterMembers();
+                  Navigator.pop(context);
+                },
+              );
+            }),
+          ],
         );
       },
     );
@@ -588,8 +614,9 @@ class _MembersScreenState extends State<MembersScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       builder: (context) {
         return _DistrictFilterSheet(
@@ -693,206 +720,221 @@ class _MembersScreenState extends State<MembersScreen> {
       );
     }
 
+    // 1.2.0 C 방향: 초성별 그룹화 — 섹션 헤더 + 흰 카드 묶음
+    final grouped = _groupMembersByInitial(filteredMembers);
+
     return RefreshIndicator(
       onRefresh: () => _loadMembers(),
-      color: NewAppColor.primary600,
-      child: ListView.separated(
-        padding: EdgeInsets.all(20.w),
+      color: NewAppColor.skyPrimary,
+      child: ListView.builder(
+        padding: EdgeInsets.fromLTRB(14.w, 8.h, 14.w, 18.h),
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: filteredMembers.length,
-        separatorBuilder: (context, index) => SizedBox(height: 8.h),
-        itemBuilder: (context, index) {
-          // 안전한 인덱스 체크 추가
-          if (index >= filteredMembers.length) {
-            return const SizedBox.shrink();
-          }
-          final member = filteredMembers[index];
-          return _buildMemberCard(member);
+        itemCount: grouped.length,
+        itemBuilder: (context, sectionIndex) {
+          final group = grouped[sectionIndex];
+          final initial = group.$1;
+          final members = group.$2;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 섹션 헤더 (초성)
+              Padding(
+                padding: EdgeInsets.fromLTRB(6.w, 10.h, 6.w, 6.h),
+                child: Text(
+                  initial,
+                  style: FigmaTextStyles().sectionHeader.copyWith(
+                        color: NewAppColor.skyDeep,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0,
+                      ),
+                ),
+              ),
+              // 카드 그룹 (흰 배경 + 1px borderSoft + 라운드 14)
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: NewAppColor.borderHair, width: 1),
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: List.generate(members.length, (i) {
+                    final isLast = i == members.length - 1;
+                    return _buildMemberRow(members[i], isLast: isLast);
+                  }),
+                ),
+              ),
+            ],
+          );
         },
       ),
     );
   }
 
-  Widget _buildMemberCard(Member member) {
-    return GestureDetector(
+  // 초성별로 그룹화. 정렬 결과는 _filterMembers의 sortAscending을 그대로 따라간다.
+  List<(String, List<Member>)> _groupMembersByInitial(List<Member> members) {
+    final order = <String>[];
+    final map = <String, List<Member>>{};
+    for (final m in members) {
+      final initial = _initialOf(m.name);
+      if (!map.containsKey(initial)) {
+        order.add(initial);
+        map[initial] = [];
+      }
+      map[initial]!.add(m);
+    }
+    return order.map((k) => (k, map[k]!)).toList();
+  }
+
+  String _initialOf(String name) {
+    if (name.isEmpty) return '#';
+    final first = name[0];
+    final chosung = KoreanSearchUtil.getChosung(first);
+    if (chosung != null) return chosung;
+    // 영문은 대문자, 그 외(숫자/기호)는 #
+    final code = first.codeUnitAt(0);
+    final isAlpha = (code >= 0x41 && code <= 0x5A) || (code >= 0x61 && code <= 0x7A);
+    return isAlpha ? first.toUpperCase() : '#';
+  }
+
+  // 1.2.0 C 방향: 교인 행 (라운드 13 skyTint 아바타 + 이름 + 직분 배지 + 전화 + 통화/메시지 30원형)
+  Widget _buildMemberRow(Member member, {required bool isLast}) {
+    return InkWell(
       onTap: () => _showMemberDetail(member),
       child: Container(
-        width: double.infinity,
-        height: 76.h,
-        clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              left: 16.w,
-              top: 7.h,
-              child: SizedBox(
-                width: 253.w,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 42.w,
-                      height: 42.h,
-                      decoration: ShapeDecoration(
-                        image: member.fullProfilePhotoUrl != null &&
-                                member.fullProfilePhotoUrl!.isNotEmpty
-                            ? DecorationImage(
-                                image:
-                                    NetworkImage(member.fullProfilePhotoUrl!),
-                                fit: BoxFit.fill,
-                              )
-                            : null,
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                            color: NewAppColor.neutral300,
-                          ),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                      ),
-                      child: member.fullProfilePhotoUrl == null ||
-                              member.fullProfilePhotoUrl!.isEmpty
-                          ? Center(
-                              child: Text(
-                                member.name.isNotEmpty ? member.name[0] : '?',
-                                style: TextStyle(
-                                  color: NewAppColor.neutral900,
-                                  fontSize: 16.sp,
-                                  fontFamily: 'Pretendard',
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            )
-                          : null,
-                    ),
-                    SizedBox(width: 16.w),
-                    SizedBox(
-                      width: 195.w,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 195.w,
-                                  child: Text(
-                                    member.name,
-                                    style: TextStyle(
-                                      color: NewAppColor.neutral900,
-                                      fontSize: 16.sp,
-                                      fontFamily: 'Pretendard',
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.50,
-                                      letterSpacing: -0.40,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 195.w,
-                                  child: Text(
-                                    member.phone,
-                                    style: TextStyle(
-                                      color: NewAppColor.neutral600,
-                                      fontSize: 13.sp,
-                                      fontFamily: 'Pretendard Variable',
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.38,
-                                      letterSpacing: -0.33,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          SizedBox(
-                            width: 195.w,
-                            child: Text(
-                              member.positionLabel,
-                              style: TextStyle(
-                                color: NewAppColor.neutral600,
-                                fontSize: 11.sp,
-                                fontFamily: 'Pretendard Variable',
-                                fontWeight: FontWeight.w400,
-                                height: 1.45,
-                                letterSpacing: -0.28,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        decoration: isLast
+            ? null
+            : BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(width: 1, color: NewAppColor.borderHair),
                 ),
               ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 아바타 — 라운드 13 skyTint
+            Container(
+              width: 44.w,
+              height: 44.h,
+              decoration: BoxDecoration(
+                color: NewAppColor.skyTint,
+                borderRadius: BorderRadius.circular(13.r),
+                image: (member.fullProfilePhotoUrl != null &&
+                        member.fullProfilePhotoUrl!.isNotEmpty)
+                    ? DecorationImage(
+                        image: NetworkImage(member.fullProfilePhotoUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: (member.fullProfilePhotoUrl == null ||
+                      member.fullProfilePhotoUrl!.isEmpty)
+                  ? Text(
+                      member.name.isNotEmpty ? member.name[0] : '?',
+                      style: TextStyle(
+                        color: NewAppColor.skyDeep,
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard',
+                      ),
+                    )
+                  : null,
             ),
-            Positioned(
-              left: 269.w,
-              top: 24.h,
-              child: Row(
+            SizedBox(width: 13.w),
+            // 이름 + 직분 배지 + 전화번호
+            Expanded(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 28.w,
-                    height: 28.h,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: ShapeDecoration(
-                      color: NewAppColor.success200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100.r),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          member.name,
+                          style: FigmaTextStyles().cardTitleSm.copyWith(
+                                color: NewAppColor.textStrong,
+                              ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.phone,
-                        color: NewAppColor.success600,
-                        size: 16.sp,
-                      ),
-                      onPressed: () => _makePhoneCall(member.phone),
-                      padding: EdgeInsets.zero,
-                    ),
+                      if (member.positionLabel.isNotEmpty) ...[
+                        SizedBox(width: 7.w),
+                        _buildPositionBadge(member.positionLabel),
+                      ],
+                    ],
                   ),
-                  SizedBox(width: 9.w),
-                  Container(
-                    width: 28.w,
-                    height: 28.h,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: ShapeDecoration(
-                      color: NewAppColor.primary200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100.r),
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.chat_bubble,
-                        color: NewAppColor.primary600,
-                        size: 16.sp,
-                      ),
-                      onPressed: () => _sendMessage(member.phone),
-                      padding: EdgeInsets.zero,
-                    ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    member.phone,
+                    style: FigmaTextStyles().caption2.copyWith(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                 ],
               ),
             ),
+            SizedBox(width: 8.w),
+            // 통화 — 30원형 skyTint + skyDeep
+            _buildMemberActionButton(
+              icon: Icons.phone,
+              onTap: () => _makePhoneCall(member.phone),
+            ),
+            SizedBox(width: 8.w),
+            _buildMemberActionButton(
+              icon: Icons.chat_bubble_outline,
+              onTap: () => _sendMessage(member.phone),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // 직분 배지 — 일반 직분은 skyTint/skyDeep, '성도'는 회색 톤 (목업 §113)
+  Widget _buildPositionBadge(String label) {
+    final isPlain = label == '성도' || label == '교인';
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 1.h),
+      decoration: BoxDecoration(
+        color: isPlain ? NewAppColor.borderSoft : NewAppColor.skyTint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: FigmaTextStyles().badgeSm.copyWith(
+              color: isPlain ? NewAppColor.textSecondary : NewAppColor.skyDeep,
+              fontSize: 10.5.sp,
+            ),
+      ),
+    );
+  }
+
+  // 통화/메시지 30원형 액션 (skyTint + skyDeep)
+  Widget _buildMemberActionButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkResponse(
+      onTap: onTap,
+      radius: 22,
+      child: Container(
+        width: 30.w,
+        height: 30.h,
+        decoration: BoxDecoration(
+          color: NewAppColor.skyTint,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          color: NewAppColor.skyDeep,
+          size: 15.sp,
         ),
       ),
     );
@@ -1106,89 +1148,136 @@ class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
     return sorted;
   }
 
+  // 1.2.0 C 방향: 시트 행 (members_screen의 _filterSheetRow와 동일 사양)
+  Widget _row({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 2.h),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12.r),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              color: isSelected ? NewAppColor.skyTint : Colors.transparent,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: FigmaTextStyles().body2.copyWith(
+                          color: isSelected
+                              ? NewAppColor.skyDeep
+                              : NewAppColor.neutral700,
+                          fontSize: 15.sp,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check,
+                    color: NewAppColor.skyDeep,
+                    size: 19.sp,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(20.w),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.6,
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom + 14.h,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '조직별 필터',
-            style: FigmaTextStyles().headline6.copyWith(
-                  color: NewAppColor.neutral900,
-                ),
-          ),
-          SizedBox(height: 16.h),
-          if (isLoading)
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 핸들바
             Center(
-              child: Padding(
-                padding: EdgeInsets.all(20.h),
-                child: CircularProgressIndicator(
-                  color: NewAppColor.primary600,
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: EdgeInsets.only(bottom: 14.h),
+                decoration: BoxDecoration(
+                  color: NewAppColor.borderStrong,
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
-            )
-          else
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // 전체 옵션
-                    Container(
-                      margin: EdgeInsets.symmetric(vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: widget.selectedDistrictId == null
-                            ? NewAppColor.primary100
-                            : null,
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: ListTile(
-                        title: const Text('전체'),
-                        trailing: widget.selectedDistrictId == null
-                            ? Icon(Icons.check, color: NewAppColor.primary600)
-                            : null,
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(6.w, 2.h, 6.w, 12.h),
+              child: Text(
+                '조직별 필터',
+                style: FigmaTextStyles().cardTitle.copyWith(
+                      color: NewAppColor.textStrong,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ),
+            if (isLoading)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 28.h),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: NewAppColor.skyPrimary,
+                  ),
+                ),
+              )
+            else
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _row(
+                        label: '전체',
+                        isSelected: widget.selectedDistrictId == null,
                         onTap: () {
                           widget.onDistrictSelected(null, null);
                           Navigator.pop(context);
                         },
                       ),
-                    ),
-                    // 조직 목록 (정렬됨)
-                    ..._sortOrganizationPaths(widget.districtIds)
-                        .map((districtId) {
-                      final isSelected =
-                          widget.selectedDistrictId == districtId;
-                      final displayName =
-                          organizationNames[districtId] ?? districtId;
-                      return Container(
-                        margin: EdgeInsets.symmetric(vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: isSelected ? NewAppColor.primary100 : null,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: ListTile(
-                          title: Text(displayName),
-                          trailing: isSelected
-                              ? Icon(Icons.check, color: NewAppColor.primary600)
-                              : null,
+                      ..._sortOrganizationPaths(widget.districtIds)
+                          .map((districtId) {
+                        final isSelected =
+                            widget.selectedDistrictId == districtId;
+                        final displayName =
+                            organizationNames[districtId] ?? districtId;
+                        return _row(
+                          label: displayName,
+                          isSelected: isSelected,
                           onTap: () {
                             widget.onDistrictSelected(districtId, displayName);
                             Navigator.pop(context);
                           },
-                        ),
-                      );
-                    }),
-                  ],
+                        );
+                      }),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          SizedBox(height: 16.h),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../utils/announcement_categories.dart';
 
+// 1.2.0 C 방향: 공지 상세 — 흰 탑바 + 흰 카드(라운드 18) + 칩/제목/메타/본문
 class AnnouncementDetailScreen extends StatelessWidget {
   final Announcement announcement;
 
@@ -15,7 +16,8 @@ class AnnouncementDetailScreen extends StatelessWidget {
   }) : super(key: key);
 
   String _formatDate(DateTime date) {
-    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} '
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   void _copyContent(BuildContext context) {
@@ -29,12 +31,58 @@ ${announcement.content}
     ''';
 
     Clipboard.setData(ClipboardData(text: text));
+    _showAppToast(context, '내용이 복사되었습니다');
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
+  // 1.2.0 floating 다크 토스트 (home_screen의 _showAppToast와 동일 사양)
+  void _showAppToast(BuildContext context, String message,
+      {bool isError = false}) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       SnackBar(
-        content: Text('내용이 복사되었습니다'),
-        duration: Duration(seconds: 2),
-        backgroundColor: NewAppColor.success600,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        padding: EdgeInsets.zero,
+        margin: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
+        duration: Duration(milliseconds: isError ? 2800 : 2000),
+        content: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: NewAppColor.textStrong,
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF020817).withOpacity(0.25),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isError ? Icons.error_outline : Icons.check_circle_outline,
+                color: isError
+                    ? NewAppColor.danger300
+                    : NewAppColor.success300,
+                size: 18.sp,
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  message,
+                  style: FigmaTextStyles().body3.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -42,248 +90,203 @@ ${announcement.content}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
+        centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: NewAppColor.textStrong, size: 23.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          '교회 소식',
-          style: FigmaTextStyles().headline4.copyWith(
-                color: NewAppColor.neutral900,
+          '교회소식',
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
               ),
         ),
         actions: [
-          // 내용 복사 버튼
           IconButton(
-            icon: Icon(Icons.content_copy, color: NewAppColor.neutral700),
+            icon: Icon(Icons.content_copy_outlined,
+                color: NewAppColor.textMuted, size: 21.sp),
             onPressed: () => _copyContent(context),
           ),
         ],
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 메인 컨텐츠 카드
-            Container(
-              width: double.infinity,
-              margin: EdgeInsets.all(16.w),
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 카테고리 태그들
-                  Row(
-                    children: [
-                      // 고정 공지 배지
-                      if (announcement.isPinned)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 4.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: NewAppColor.danger100,
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.push_pin,
-                                size: 12.sp,
-                                color: NewAppColor.danger600,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                '고정',
-                                style: TextStyle(
-                                  color: NewAppColor.danger600,
-                                  fontSize: 11.sp,
-                                  fontFamily: 'Pretendard Variable',
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (announcement.isPinned) SizedBox(width: 6.w),
-
-                      // 카테고리 배지
-                      _buildCategoryTag(
-                        AnnouncementCategories.getCategoryLabel(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 28.h),
+          child: Container(
+            width: double.infinity,
+            constraints: BoxConstraints(minHeight: 360.h),
+            padding: EdgeInsets.all(20.r),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: NewAppColor.borderHair, width: 1),
+              borderRadius: BorderRadius.circular(18.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 카테고리 태그들
+                Wrap(
+                  spacing: 6.w,
+                  runSpacing: 6.h,
+                  children: [
+                    if (announcement.isPinned) _buildPinnedTag(),
+                    _buildCategoryTag(
+                      AnnouncementCategories.getCategoryLabel(
+                        announcement.category,
+                      ),
+                    ),
+                    if (announcement.subcategory != null &&
+                        announcement.subcategory!.isNotEmpty)
+                      _buildSubcategoryTag(
+                        AnnouncementCategories.getSubcategoryLabel(
                           announcement.category,
+                          announcement.subcategory,
                         ),
                       ),
-
-                      // 서브카테고리 배지
-                      if (announcement.subcategory != null &&
-                          announcement.subcategory!.isNotEmpty) ...[
-                        SizedBox(width: 6.w),
-                        _buildSubcategoryTag(
-                          AnnouncementCategories.getSubcategoryLabel(
-                            announcement.category,
-                            announcement.subcategory,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-
-                  SizedBox(height: 16.h),
-
-                  // 제목
-                  Text(
-                    announcement.title,
-                    style: TextStyle(
-                      color: NewAppColor.neutral900,
-                      fontSize: 22.sp,
-                      fontFamily: 'Pretendard',
-                      fontWeight: FontWeight.w600,
-                      height: 1.4,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-
-                  SizedBox(height: 16.h),
-
-                  // 작성자 & 날짜 정보
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(
-                          color: NewAppColor.neutral200,
-                          width: 1,
-                        ),
-                        bottom: BorderSide(
-                          color: NewAppColor.neutral200,
-                          width: 1,
-                        ),
+                  ],
+                ),
+                SizedBox(height: 14.h),
+                // 제목 — 21/800
+                Text(
+                  announcement.title,
+                  style: FigmaTextStyles().pageTitle.copyWith(
+                        color: NewAppColor.textStrong,
+                        fontSize: 21.sp,
+                        height: 1.35,
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        // 작성자 정보
-                        Icon(
-                          Icons.person_outline,
-                          size: 16.sp,
-                          color: NewAppColor.neutral500,
-                        ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          announcement.authorName ?? '관리자',
-                          style: TextStyle(
-                            color: NewAppColor.neutral700,
-                            fontSize: 13.sp,
-                            fontFamily: 'Pretendard Variable',
+                ),
+                SizedBox(height: 16.h),
+                Container(height: 1, color: NewAppColor.borderSoft),
+                SizedBox(height: 12.h),
+                // 메타: 작성자 · 작성일
+                Row(
+                  children: [
+                    Icon(Icons.person_outline,
+                        size: 15.sp, color: NewAppColor.textTertiary),
+                    SizedBox(width: 5.w),
+                    Text(
+                      announcement.authorName ?? '관리자',
+                      style: FigmaTextStyles().caption2.copyWith(
+                            color: NewAppColor.textTertiary,
+                            fontSize: 12.5.sp,
                             fontWeight: FontWeight.w500,
                           ),
-                        ),
-
-                        SizedBox(width: 16.w),
-
-                        // 구분선
-                        Container(
-                          width: 1,
-                          height: 12.h,
-                          color: NewAppColor.neutral300,
-                        ),
-
-                        SizedBox(width: 16.w),
-
-                        // 작성일
-                        Icon(
-                          Icons.access_time,
-                          size: 16.sp,
-                          color: NewAppColor.neutral500,
-                        ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          _formatDate(announcement.createdAt),
-                          style: TextStyle(
-                            color: NewAppColor.neutral700,
-                            fontSize: 13.sp,
-                            fontFamily: 'Pretendard Variable',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-
-                  SizedBox(height: 24.h),
-
-                  // 내용
-                  Container(
-                    constraints: BoxConstraints(
-                      minHeight: 200.h, // 최소 높이 설정
+                    SizedBox(width: 12.w),
+                    Container(
+                      width: 1,
+                      height: 11.h,
+                      color: NewAppColor.borderStrong,
                     ),
-                    child: Text(
-                      announcement.content,
-                      style: TextStyle(
-                        color: NewAppColor.neutral800,
-                        fontSize: 15.sp,
-                        fontFamily: 'Pretendard Variable',
-                        fontWeight: FontWeight.w400,
-                        height: 1.6,
-                        letterSpacing: -0.3,
+                    SizedBox(width: 12.w),
+                    Icon(Icons.access_time,
+                        size: 15.sp, color: NewAppColor.textTertiary),
+                    SizedBox(width: 5.w),
+                    Flexible(
+                      child: Text(
+                        _formatDate(announcement.createdAt),
+                        style: FigmaTextStyles().caption2.copyWith(
+                              color: NewAppColor.textTertiary,
+                              fontSize: 12.5.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                Container(height: 1, color: NewAppColor.borderSoft),
+                SizedBox(height: 16.h),
+                // 본문
+                Text(
+                  announcement.content,
+                  style: FigmaTextStyles().body2.copyWith(
+                        color: NewAppColor.neutral700,
+                        fontSize: 14.5.sp,
+                        fontWeight: FontWeight.w500,
+                        height: 1.7,
+                      ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  // 1.2.0: 고정 배지 — danger 톤
+  Widget _buildPinnedTag() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.dangerBg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.push_pin,
+              size: 11.sp, color: NewAppColor.danger700),
+          SizedBox(width: 4.w),
+          Text(
+            '고정',
+            style: FigmaTextStyles().badgeSm.copyWith(
+                  color: NewAppColor.danger700,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 1.2.0: 카테고리 칩 — skyTint + skyDeep + 라운드 999
   Widget _buildCategoryTag(String text) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: NewAppColor.primary600,
-        borderRadius: BorderRadius.circular(4.r),
+        color: NewAppColor.skyTint,
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 11.sp,
-          fontFamily: 'Pretendard Variable',
-          fontWeight: FontWeight.w600,
-        ),
+        style: FigmaTextStyles().badge.copyWith(
+              color: NewAppColor.skyDeep,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w700,
+            ),
       ),
     );
   }
 
+  // 1.2.0: 보조 태그 — 회색 톤
   Widget _buildSubcategoryTag(String text) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: NewAppColor.neutral200,
-        borderRadius: BorderRadius.circular(4.r),
+        color: NewAppColor.borderSoft,
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: NewAppColor.neutral700,
-          fontSize: 11.sp,
-          fontFamily: 'Pretendard Variable',
-          fontWeight: FontWeight.w500,
-        ),
+        style: FigmaTextStyles().badge.copyWith(
+              color: NewAppColor.textSecondary,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w700,
+            ),
       ),
     );
   }

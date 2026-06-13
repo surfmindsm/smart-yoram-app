@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Map<String, dynamic>? userStats;
   bool isLoading = true;
   bool _isChurchCardExpanded = true; // 교회 카드 펼침 상태 (초기값: 펼침)
-  bool _isWorshipScheduleExpanded = false; // 예배시간 카드 펼침 상태 (초기값: 닫힘)
+  bool _isWorshipScheduleExpanded = false; // 1.2.0: 카드는 항상 보이고, 이 플래그는 4개 이상일 때 '더보기' 확장 여부만 제어
   final ScrollController _scrollController = ScrollController(); // 스크롤 컨트롤러
   final GlobalKey _worshipKey = GlobalKey(); // 예배시간안내 위젯 키
   final GlobalKey<_ProfileAlertState> _profileAlertKey = GlobalKey<_ProfileAlertState>(); // ProfileAlert 위젯 키
@@ -81,6 +81,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    // 1.2.0: 다크 그라데이션 헤더 위에 상태바 아이콘이 흰색으로 보이도록 명시 설정
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // Android: 라이트(흰) 아이콘
+        statusBarBrightness: Brightness.dark, // iOS: 다크 배경 가정 → 흰 아이콘
+      ),
+    );
 
     // 초기에 샘플 말씀을 즉시 표시 (로딩 대기 시간 제거)
     _setInitialSampleVerse();
@@ -554,12 +563,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // 헤더 위젯 빌드
+  // 1.2.0 C 방향: 스카이 그라데이션 헤더 밴드 (SafeArea 위까지 확장)
   Widget _buildHeader() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 10.h,
+        left: 16.w,
+        right: 16.w,
+        // 본문이 -32px 위로 올라오므로 그라데이션 바닥 여유분
+        bottom: 44.h,
+      ),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            NewAppColor.skyPrimary,
+            NewAppColor.primary800,
+          ],
+        ),
+      ),
       child: ProfileAlert(
-        key: _profileAlertKey,  // GlobalKey 사용
+        key: _profileAlertKey,
         userName: currentMember?.name ?? currentUser?.fullName,
+        // 1.2.0: "안녕하세요 · {교회명}" 부제 표시용
+        churchName: currentChurch?.name,
         profileImageUrl: currentMember?.fullProfilePhotoUrl ??
             currentMember?.profilePhotoUrl,
         onNotificationTap: () async {
@@ -606,8 +635,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // 1.2.0: 다크 그라데이션 헤더 위에 상태바 아이콘이 흰색으로 그려지도록
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // Android
+        statusBarBrightness: Brightness.dark, // iOS — 다크 배경에 라이트 아이콘
+      ),
+      child: Scaffold(
+      // 1.2.0 C 방향: 그라데이션 헤더가 상단 SafeArea까지 차오르도록 extendBodyBehindAppBar 효과
+      backgroundColor: NewAppColor.canvas,
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
@@ -616,43 +653,132 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 상단 안전 영역 추가
-              SizedBox(height: MediaQuery.of(context).padding.top + 10.h),
-
-              // 헤더 영역
+              // 헤더 영역 (그라데이션 밴드, SafeArea + 하단 여유 포함)
               _buildHeader(),
-              const SizedBox(height: 24),
 
-              // 본문 내용
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1. 교회 소개
-                    _buildChurchInfoCard(),
-                    const SizedBox(height: 24),
+              // 본문 — 그라데이션 위로 -32px 오버랩
+              Transform.translate(
+                offset: const Offset(0, -32),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1. 교회 소개
+                      _buildChurchInfoCard(),
+                      const SizedBox(height: 14),
 
-                    // 2. 교회 소식 (공지사항)
-                    _buildRecentAnnouncements(),
-                    const SizedBox(height: 24),
+                      // 2. 주요 기능 (심방신청, 중보기도, 헌금내역) — 목업 §180 기준 교회 카드 바로 아래
+                      _buildQuickActions(),
+                      const SizedBox(height: 18),
 
-                    // 3. 주요 기능 (심방신청, 중보기도)
-                    _buildQuickActions(),
-                    const SizedBox(height: 24),
+                      // 3. 교회 소식 (공지사항)
+                      _buildRecentAnnouncements(),
+                      const SizedBox(height: 18),
 
-                    // 4. 예배시간 안내
-                    Container(
-                      key: _worshipKey,
-                      child: _buildWorshipSchedule(),
-                    ),
-                    const SizedBox(height: 24),
+                      // 4. 예배시간 안내
+                      Container(
+                        key: _worshipKey,
+                        child: _buildWorshipSchedule(),
+                      ),
+                      const SizedBox(height: 18),
 
-                    // 5. 바로가기 (홈페이지, 유튜브)
-                    _buildQuickLinks(),
-                    const SizedBox(height: 24),
-                  ],
+                      // 5. 바로가기 (홈페이지, 유튜브)
+                      _buildQuickLinks(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      ),
+    );
+  }
+
+  // 1.2.0 C 방향: 가로 스크롤 칩 row (심방 신청 · 중보 기도 · 헌금 내역)
+  Widget _buildQuickActions() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      // 카드/그라데이션 영역과 시각적으로 살짝 들여쓰기
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Row(
+        children: [
+          _buildQuickActionChip(
+            icon: Icons.home_outlined,
+            label: '심방 신청',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PastoralCareRequestScreen(),
+                ),
+              );
+            },
+          ),
+          SizedBox(width: 9.w),
+          _buildQuickActionChip(
+            icon: Icons.favorite_outline,
+            label: '중보 기도',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PrayerRequestScreen(),
+                ),
+              );
+            },
+          ),
+          SizedBox(width: 9.w),
+          _buildQuickActionChip(
+            icon: Icons.account_balance_wallet_outlined,
+            label: '헌금 내역',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OfferingHistoryScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 흰 배경 · 1px borderStrong · 라운드 999px · skyDeep 아이콘 (목업 §181-183)
+  Widget _buildQuickActionChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: NewAppColor.borderStrong, width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: NewAppColor.skyDeep, size: 16.sp),
+              SizedBox(width: 7.w),
+              Text(
+                label,
+                style: FigmaTextStyles().caption1.copyWith(
+                      color: NewAppColor.neutral700,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12.5.sp,
+                    ),
               ),
             ],
           ),
@@ -661,278 +787,91 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildQuickActions() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      child: AppCard(
-        backgroundColor: Colors.white,
-        borderRadius: 16.r,
-        variant: CardVariant.filled,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40.w,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: NewAppColor.success200,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.folder_open_outlined,
-                    color: NewAppColor.success600,
-                    size: 20.sp,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '주요 기능',
-                        style: const FigmaTextStyles().headline4.copyWith(
-                              color: NewAppColor.neutral900,
-                            ),
-                      ),
-                      Text(
-                        'Main Features',
-                        style: const FigmaTextStyles().body3.copyWith(
-                              color: NewAppColor.neutral600,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const PastoralCareRequestScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(16.r),
-                      decoration: BoxDecoration(
-                        color: NewAppColor.neutral100,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 48.w,
-                            height: 48.h,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.home_outlined,
-                              color: NewAppColor.success400,
-                              size: 24.sp,
-                            ),
-                          ),
-                          SizedBox(height: 24.h),
-                          Text(
-                            '심방 신청',
-                            style: const FigmaTextStyles().headline5.copyWith(
-                                  color: NewAppColor.neutral900,
-                                ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            '심방을 신청하세요',
-                            style: const FigmaTextStyles().body1.copyWith(
-                                  color: NewAppColor.neutral600,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PrayerRequestScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(16.r),
-                      decoration: BoxDecoration(
-                        color: NewAppColor.neutral100,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 48.w,
-                            height: 48.h,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.favorite_outline,
-                              color: NewAppColor.success400,
-                              size: 24.sp,
-                            ),
-                          ),
-                          SizedBox(height: 24.h),
-                          Text(
-                            '중보 기도',
-                            style: const FigmaTextStyles().headline5.copyWith(
-                                  color: NewAppColor.neutral900,
-                                ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            '함께 기도하겠습니다',
-                            style: const FigmaTextStyles().body1.copyWith(
-                                  color: NewAppColor.neutral600,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.w),
-            // 헌금 내역 버튼 (전체 폭)
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const OfferingHistoryScreen(),
-                  ),
-                );
-              },
-              child: Container(
-                padding: EdgeInsets.all(16.r),
-                decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48.w,
-                      height: 48.h,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: NewAppColor.warning400,
-                        size: 24.sp,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '내 헌금 내역',
-                            style: const FigmaTextStyles().headline5.copyWith(
-                                  color: NewAppColor.neutral900,
-                                ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            '헌금 내역을 확인하세요',
-                            style: const FigmaTextStyles().body1.copyWith(
-                                  color: NewAppColor.neutral600,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: NewAppColor.neutral400,
-                      size: 16.sp,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  // 1.2.0 C 방향: 헤더(교회명 + 담임/전화 부제) + 주소·계좌 2행 압축 카드
   Widget _buildChurchInfoCard() {
+    final pastorName = currentChurch?.pastorName ?? '안영목 목사';
+    final phone = currentChurch?.phone ?? '031-563-5210';
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       child: AppCard(
         backgroundColor: Colors.white,
         borderRadius: 16.r,
         variant: CardVariant.filled,
+        // 카드 패딩을 목업(15px)에 맞춰 자체 Padding으로 제어
+        padding: EdgeInsets.all(15.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 헤더: 교회 아이콘과 교회명 + 화살표 버튼
+            // 헤더: 교회 아이콘 + 교회명 + (담임 · 전화 부제) + 펼침 화살표
             GestureDetector(
               onTap: () {
                 setState(() {
                   _isChurchCardExpanded = !_isChurchCardExpanded;
                 });
               },
+              behavior: HitTestBehavior.opaque,
               child: Row(
                 children: [
+                  // 사각 라운드 11px 스카이 타일
                   Container(
                     width: 40.w,
                     height: 40.h,
                     decoration: BoxDecoration(
-                      color: NewAppColor.primary200,
-                      shape: BoxShape.circle,
+                      color: NewAppColor.skyTint,
+                      borderRadius: BorderRadius.circular(11.r),
                     ),
                     child: Icon(
-                      Icons.home_outlined,
-                      color: NewAppColor.primary600,
+                      Icons.church_outlined,
+                      color: NewAppColor.skyDeep,
                       size: 20.sp,
                     ),
                   ),
-                  SizedBox(width: 12.w),
+                  SizedBox(width: 11.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           currentChurch?.name ?? '성암교회',
-                          style: const FigmaTextStyles().headline4.copyWith(
-                                color: NewAppColor.neutral900,
+                          style: FigmaTextStyles().cardTitleSm.copyWith(
+                                color: NewAppColor.textStrong,
                               ),
                         ),
-                        Text(
-                          currentChurch?.englishName ?? 'Community Church',
-                          style: const FigmaTextStyles().body3.copyWith(
-                                color: NewAppColor.neutral600,
+                        SizedBox(height: 2.h),
+                        // 담임목사 · 전화 통합 부제. 전화번호는 InkWell로 감싸 전화걸기 유지
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                pastorName,
+                                style: FigmaTextStyles().caption2.copyWith(
+                                      color: NewAppColor.textTertiary,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
                               ),
+                            ),
+                            Text(
+                              ' · ',
+                              style: FigmaTextStyles().caption2.copyWith(
+                                    color: NewAppColor.textTertiary,
+                                  ),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                String p = phone;
+                                if (p.replaceAll(RegExp(r'[^\d]'), '').length < 9) {
+                                  p = '031-563-5210';
+                                }
+                                _makePhoneCall(p);
+                              },
+                              child: Text(
+                                phone,
+                                style: FigmaTextStyles().caption2.copyWith(
+                                      color: NewAppColor.textTertiary,
+                                    ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -942,14 +881,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     turns: _isChurchCardExpanded ? 0.5 : 0,
                     child: Icon(
                       Icons.keyboard_arrow_down,
-                      color: NewAppColor.neutral500,
-                      size: 24.sp,
+                      color: NewAppColor.iconFaint,
+                      size: 20.sp,
                     ),
                   ),
                 ],
               ),
             ),
-            // 교회 세부 정보 (접고 펼치기 가능)
+            // 펼침 영역: 주소 + 계좌 2행만
             AnimatedCrossFade(
               duration: const Duration(milliseconds: 300),
               crossFadeState: _isChurchCardExpanded
@@ -957,237 +896,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   : CrossFadeState.showSecond,
               firstChild: Column(
                 children: [
-                  SizedBox(height: 16.h),
-                  // 담임목사 정보
-                  Container(
-                    padding: EdgeInsets.all(12.r),
-                    decoration: BoxDecoration(
-                      color: NewAppColor.neutral100,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(6.r),
-                          decoration: BoxDecoration(
-                            color: NewAppColor.primary300,
-                            borderRadius: BorderRadius.circular(6.r),
-                          ),
-                          child: Icon(
-                            Icons.person,
-                            color: NewAppColor.primary600,
-                            size: 16,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '담임목사',
-                                style: const FigmaTextStyles().body3.copyWith(
-                                      color: NewAppColor.neutral600,
-                                    ),
-                              ),
-                              Text(
-                                currentChurch?.pastorName ?? '안영목 목사',
-                                style: const FigmaTextStyles().title4.copyWith(
-                                      color: NewAppColor.neutral900,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  // 전화번호
-                  InkWell(
-                    onTap: () {
-                      print('📞 HOME: 전화 섹션 클릭됨!');
-                      // 전화번호 유효성 검사 (최소 9자리 이상, 숫자와 하이픈만 포함)
-                      String phone = currentChurch?.phone ?? '031-563-5210';
-                      if (phone.replaceAll(RegExp(r'[^\d]'), '').length < 9) {
-                        print('⚠️ HOME: 유효하지 않은 전화번호, fallback 사용');
-                        phone = '031-563-5210';
-                      }
-                      _makePhoneCall(phone);
-                    },
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: Container(
-                      padding: EdgeInsets.all(12.r),
-                      decoration: BoxDecoration(
-                        color: NewAppColor.neutral100,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(6.r),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.success200,
-                              borderRadius: BorderRadius.circular(6.r),
-                            ),
-                            child: Icon(
-                              Icons.phone,
-                              color: NewAppColor.success600,
-                              size: 16,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '전화',
-                                  style: const FigmaTextStyles()
-                                      .body3
-                                      .copyWith(
-                                        color: NewAppColor.neutral600,
-                                      ),
-                                ),
-                                Text(
-                                  currentChurch?.phone ?? '031-563-5210',
-                                  style: const FigmaTextStyles()
-                                      .body2
-                                      .copyWith(
-                                        color: NewAppColor.neutral900,
-                                      ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  // 교회 주소 (파란색 배경)
-                  GestureDetector(
+                  SizedBox(height: 11.h),
+                  // 교회 주소
+                  _buildChurchInfoRow(
+                    icon: Icons.location_on_outlined,
+                    text: () {
+                      final addr = currentChurch?.address ?? '경기도 구리시 검배로 136번길 32';
+                      final district = currentChurch?.district;
+                      return district != null && district.isNotEmpty
+                          ? '$addr ($district)'
+                          : addr;
+                    }(),
                     onTap: () {
                       final address = currentChurch?.address ?? '경기도 구리시 검배로 136번길 32';
                       _openNaverMap(address);
                     },
-                    child: Container(
-                      padding: EdgeInsets.all(12.r),
-                      decoration: BoxDecoration(
-                        color: NewAppColor.neutral100,
-                        borderRadius: BorderRadius.circular(12.r),
-                        // border: Border.all(
-                        //   color: NewAppColor.primary300,
-                        //   width: 1,
-                        // ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 2.h),
-                            child: Icon(
-                              Icons.location_on,
-                              color: NewAppColor.primary600,
-                              size: 16,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '교회 주소',
-                                  style: const FigmaTextStyles().body3.copyWith(
-                                        color: NewAppColor.neutral600,
-                                      ),
-                                ),
-                                SizedBox(height: 4.h),
-                                RichText(
-                                  text: TextSpan(
-                                    style: const FigmaTextStyles().body2.copyWith(
-                                          color: NewAppColor.neutral900,
-                                        ),
-                                    children: [
-                                      TextSpan(
-                                        text: currentChurch?.address ??
-                                            '경기도 구리시 검배로 136번길 32\n',
-                                      ),
-                                      if (currentChurch?.district != null)
-                                        TextSpan(
-                                          text: '(${currentChurch!.district})',
-                                          style: const FigmaTextStyles()
-                                              .body2
-                                              .copyWith(
-                                                color: NewAppColor.neutral900,
-                                              ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
-                  // 교회 헌금 계좌 (account가 있을 경우에만 표시)
+                  // 교회 헌금 계좌
                   if (currentChurch?.account != null && currentChurch!.account!.isNotEmpty) ...[
-                    SizedBox(height: 12.h),
-                    GestureDetector(
+                    SizedBox(height: 8.h),
+                    _buildChurchInfoRow(
+                      icon: Icons.account_balance_outlined,
+                      label: '교회 헌금 계좌',
+                      text: currentChurch!.account!,
+                      trailingIcon: Icons.copy_outlined,
                       onTap: () => _copyToClipboard(currentChurch!.account!),
-                      child: Container(
-                        padding: EdgeInsets.all(12.r),
-                        decoration: BoxDecoration(
-                          color: NewAppColor.neutral100,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(top: 2.h),
-                              child: Icon(
-                                Icons.account_balance,
-                                color: NewAppColor.success600,
-                                size: 16,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '교회 헌금 계좌',
-                                    style: const FigmaTextStyles().body3.copyWith(
-                                          color: NewAppColor.neutral600,
-                                        ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    currentChurch!.account!,
-                                    style: const FigmaTextStyles().body2.copyWith(
-                                          color: NewAppColor.neutral900,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 2.h),
-                              child: Icon(
-                                Icons.copy,
-                                color: NewAppColor.neutral500,
-                                size: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ],
                 ],
@@ -1197,6 +930,85 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
       ),
+    );
+  }
+
+  // 1.2.0 C 방향: 주소/계좌 등 정보 행 (#F8FAFC 배경, skyDeep 아이콘)
+  Widget _buildChurchInfoRow({
+    required IconData icon,
+    required String text,
+    String? label,
+    IconData? trailingIcon,
+    VoidCallback? onTap,
+  }) {
+    // leading 아이콘은 텍스트 상단에 자연스럽게 붙고, trailing(복사 등)은 행 전체 가운데 정렬
+    final row = Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(11.r),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            // 본문이 2줄(label+text)일 때 leading 아이콘은 첫 줄에 맞춰 살짝 위로
+            padding: EdgeInsets.only(top: label != null ? 2.h : 1.h),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Icon(
+                icon,
+                color: NewAppColor.skyDeep,
+                size: 15.sp,
+              ),
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (label != null) ...[
+                  Text(
+                    label,
+                    style: FigmaTextStyles().caption3.copyWith(
+                          color: NewAppColor.textTertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  SizedBox(height: 2.h),
+                ],
+                Text(
+                  text,
+                  style: FigmaTextStyles().caption1.copyWith(
+                        color: label != null
+                            ? NewAppColor.neutral700
+                            : NewAppColor.textSecondary,
+                        fontWeight:
+                            label != null ? FontWeight.w600 : FontWeight.w500,
+                        height: 1.45,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          if (trailingIcon != null) ...[
+            SizedBox(width: 8.w),
+            Icon(
+              trailingIcon,
+              color: NewAppColor.textTertiary,
+              size: 15.sp,
+            ),
+          ],
+        ],
+      ),
+    );
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(11.r),
+      child: row,
     );
   }
 
@@ -1475,234 +1287,182 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 최근 공지사항 위젯
+  // 1.2.0 C 방향: 외부 섹션 헤더 + 흰 카드 + dot bullet 행 (목업 §186-192)
   Widget _buildRecentAnnouncements() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      child: AppCard(
-        backgroundColor: Colors.white,
-        borderRadius: 16.r,
-        variant: CardVariant.filled,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 헤더
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40.w,
-                        height: 40.h,
-                        decoration: BoxDecoration(
-                          color: NewAppColor.primary200,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.article_outlined,
-                          color: NewAppColor.primary600,
-                          size: 20.sp,
-                        ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 섹션 헤더 — 카드 외부
+        Padding(
+          padding: EdgeInsets.fromLTRB(4.w, 0, 4.w, 10.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                '교회 소식',
+                style: FigmaTextStyles().cardTitleSm.copyWith(
+                      color: NewAppColor.textStrong,
+                      fontSize: 14.5.sp,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NoticesScreen(showAppBar: true),
+                    ),
+                  );
+                },
+                child: Text(
+                  '더보기',
+                  style: FigmaTextStyles().caption2.copyWith(
+                        color: NewAppColor.skyDeep,
+                        fontWeight: FontWeight.w600,
                       ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '교회 소식',
-                              style: const FigmaTextStyles().headline4.copyWith(
-                                    color: NewAppColor.neutral900,
-                                  ),
-                            ),
-                            Text(
-                              'Church News',
-                              style: const FigmaTextStyles().body3.copyWith(
-                                    color: NewAppColor.neutral600,
-                                  ),
-                            ),
-                          ],
-                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 카드
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 4.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14.r),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF020817).withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: _isLoadingAnnouncements
+              ? Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  child: Column(
+                    children: [
+                      AppListItemSkeleton(
+                        showLeading: false,
+                        titleLines: 1,
+                        subtitleLines: 1,
+                      ),
+                      SizedBox(height: 8.h),
+                      AppListItemSkeleton(
+                        showLeading: false,
+                        titleLines: 1,
+                        subtitleLines: 1,
+                      ),
+                      SizedBox(height: 8.h),
+                      AppListItemSkeleton(
+                        showLeading: false,
+                        titleLines: 1,
+                        subtitleLines: 1,
                       ),
                     ],
                   ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NoticesScreen(showAppBar: true),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 80.w,
-                    height: 32.h,
-                    decoration: ShapeDecoration(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          width: 1,
-                          color: NewAppColor.neutral200,
-                        ),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 34.w,
-                          child: Text(
-                            '더보기',
-                            textAlign: TextAlign.center,
-                            style: FigmaTextStyles().caption1.copyWith(
-                                  color: NewAppColor.neutral800,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // 컨텐츠
-            Padding(
-              padding: EdgeInsets.fromLTRB(0.w, 16.h, 0.w, 0),
-              child: _isLoadingAnnouncements
-                  ? Column(
-                      children: [
-                        AppListItemSkeleton(
-                          showLeading: false,
-                          titleLines: 1,
-                          subtitleLines: 1,
-                        ),
-                        SizedBox(height: 8.h),
-                        AppListItemSkeleton(
-                          showLeading: false,
-                          titleLines: 1,
-                          subtitleLines: 1,
-                        ),
-                        SizedBox(height: 8.h),
-                        AppListItemSkeleton(
-                          showLeading: false,
-                          titleLines: 1,
-                          subtitleLines: 1,
-                        ),
-                      ],
-                    )
-                  : recentAnnouncements.isEmpty
-                      ? Container(
-                          height: 100.h,
-                          child: Center(
-                            child: Text(
-                              '공지사항이 없습니다',
-                              style: const FigmaTextStyles().bodyText2.copyWith(
-                                    color: Colors.grey[600]!,
-                                  ),
+                )
+              : recentAnnouncements.isEmpty
+                  ? Container(
+                      height: 100.h,
+                      alignment: Alignment.center,
+                      child: Text(
+                        '공지사항이 없습니다',
+                        style: FigmaTextStyles().body2.copyWith(
+                              color: NewAppColor.textMuted,
                             ),
-                          ),
-                        )
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: recentAnnouncements
-                              .map(
-                                (announcement) => GestureDetector(
-                                  onTap: () {
-                                    _navigateToAnnouncementDetail(announcement);
-                                  },
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 66.h,
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 12.w),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          width: 1,
-                                          color: NewAppColor.neutral100,
-                                        ),
+                      ),
+                    )
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: recentAnnouncements
+                          .asMap()
+                          .entries
+                          .map((entry) {
+                        final i = entry.key;
+                        final a = entry.value;
+                        final isLast = i == recentAnnouncements.length - 1;
+                        // 마지막 행 dot은 회색 처리 (목업 §191)
+                        final dotColor = isLast
+                            ? NewAppColor.borderStrong
+                            : NewAppColor.skyPrimary;
+                        return InkWell(
+                          onTap: () => _navigateToAnnouncementDetail(a),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 14.w,
+                              vertical: 12.h,
+                            ),
+                            decoration: BoxDecoration(
+                              border: isLast
+                                  ? null
+                                  : Border(
+                                      bottom: BorderSide(
+                                        width: 1,
+                                        color: NewAppColor.borderSoft,
                                       ),
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                announcement.title,
-                                                style: TextStyle(
-                                                  color: NewAppColor.neutral900,
-                                                  fontSize: 14.sp,
-                                                  fontFamily:
-                                                      'Pretendard Variable',
-                                                  fontWeight: FontWeight.w400,
-                                                  height: 1.43,
-                                                  letterSpacing: -0.35,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              SizedBox(height: 4.h),
-                                              Text(
-                                                _formatDate(announcement.createdAt),
-                                                style: TextStyle(
-                                                  color: NewAppColor.neutral600,
-                                                  fontSize: 13.sp,
-                                                  fontFamily: 'Pretendard',
-                                                  fontWeight: FontWeight.w500,
-                                                  height: 1.38,
-                                                  letterSpacing: -0.33,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Container(
-                                          width: 28.w,
-                                          height: 28.h,
-                                          decoration: ShapeDecoration(
-                                            color: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(100.r),
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            Icons.keyboard_arrow_right,
-                                            size: 24.sp,
-                                            color: NewAppColor.neutral500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(
+                                    color: dotColor,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
-                              )
-                              .toList(),
-                        ),
-            ),
-          ],
+                                SizedBox(width: 11.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        a.title,
+                                        style: FigmaTextStyles()
+                                            .body3
+                                            .copyWith(
+                                              color: NewAppColor.textBody,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        _formatDate(a.createdAt),
+                                        style: FigmaTextStyles()
+                                            .caption3
+                                            .copyWith(
+                                              color:
+                                                  NewAppColor.textTertiary,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  size: 16.sp,
+                                  color: NewAppColor.iconFaint,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
         ),
-      ),
+      ],
     );
   }
 
@@ -1718,129 +1478,59 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 예배안내 위젯
+  // 1.2.0 C 방향: 외부 섹션 헤더 + 흰 카드 + sun/moon 타일 행 (목업 §195-200)
   Widget _buildWorshipSchedule() {
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      decoration: ShapeDecoration(
-        color: NewAppColor.neutral700,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-            16.w, 16.h, 16.w, _isWorshipScheduleExpanded ? 16.h : 12.h),
-        child: Column(
-          children: [
-            // Header
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isWorshipScheduleExpanded = !_isWorshipScheduleExpanded;
-                });
-
-                // 펼쳤을 때만 스크롤 포커싱
-                if (_isWorshipScheduleExpanded) {
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    _scrollToWorshipSchedule();
-                  });
-                }
-              },
-              child: Container(
-                padding: EdgeInsets.only(
-                    bottom: _isWorshipScheduleExpanded ? 12.h : 0.h),
-                decoration: _isWorshipScheduleExpanded
-                    ? BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            width: 1,
-                            color: NewAppColor.neutral100,
-                          ),
-                        ),
-                      )
-                    : null,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '예배시간안내',
-                            style: FigmaTextStyles().headline4.copyWith(
-                                  color: NewAppColor.neutral100,
-                                ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'Worship',
-                            style: FigmaTextStyles().body3.copyWith(
-                                  color: NewAppColor.neutral400,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    AnimatedRotation(
-                      duration: const Duration(milliseconds: 200),
-                      turns: _isWorshipScheduleExpanded ? 0.5 : 0,
-                      child: Container(
-                        width: 28.w,
-                        height: 28.h,
-                        decoration: ShapeDecoration(
-                          color: NewAppColor.neutral700,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100.r),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Colors.white,
-                          size: 24.sp,
-                        ),
-                      ),
-                    ),
-                  ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 섹션 헤더 — 단순 라벨 (펼침/접힘은 카드 마지막 행 더보기로 제어)
+        Padding(
+          padding: EdgeInsets.fromLTRB(4.w, 0, 4.w, 10.h),
+          child: Text(
+            '예배시간안내',
+            style: FigmaTextStyles().cardTitleSm.copyWith(
+                  color: NewAppColor.textStrong,
+                  fontSize: 14.5.sp,
+                  fontWeight: FontWeight.w800,
                 ),
-              ),
-            ),
-            // Service List with Animation
-            AnimatedCrossFade(
-              duration: const Duration(milliseconds: 300),
-              crossFadeState: _isWorshipScheduleExpanded
-                  ? CrossFadeState.showFirst
-                  : CrossFadeState.showSecond,
-              firstChild: Padding(
-                padding: EdgeInsets.only(top: 16.h),
-                child: _isLoadingWorshipServices
-                    ? Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24.h),
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              NewAppColor.neutral400,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Column(
-                        children: _buildWorshipServiceRows(),
-                      ),
-              ),
-              secondChild: const SizedBox(),
-            ),
-          ],
+          ),
         ),
-      ),
+        // 카드 — 항상 노출, 4개 이상이면 카드 마지막 행에 '더보기/접기' 행 표시
+        Container(
+          width: double.infinity,
+          margin: EdgeInsets.symmetric(horizontal: 4.w),
+          padding: EdgeInsets.symmetric(horizontal: 14.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14.r),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF020817).withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: _isLoadingWorshipServices
+              ? Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.h),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        NewAppColor.skyPrimary,
+                      ),
+                    ),
+                  ),
+                )
+              : Column(
+                  children: _buildWorshipServiceRows(),
+                ),
+        ),
+      ],
     );
   }
 
   List<Widget> _buildWorshipServiceRows() {
-    // API에서 가져온 실제 예배 서비스 데이터 사용
     if (worshipServices.isEmpty) {
       return [
         Container(
@@ -1849,246 +1539,245 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Text(
               '등록된 예배 시간이 없습니다',
               style: FigmaTextStyles().body3.copyWith(
-                color: NewAppColor.neutral400,
-              ),
+                    color: NewAppColor.textTertiary,
+                  ),
             ),
           ),
         ),
       ];
     }
 
-    return worshipServices.asMap().entries.map((entry) {
-      final index = entry.key;
-      final service = entry.value;
-      final isLast = index == worshipServices.length - 1;
+    const previewCount = 3;
+    final total = worshipServices.length;
+    final hasMore = total > previewCount;
+    final visible = (hasMore && !_isWorshipScheduleExpanded)
+        ? worshipServices.take(previewCount).toList()
+        : worshipServices;
 
-      return Container(
+    final rows = <Widget>[];
+    for (var i = 0; i < visible.length; i++) {
+      final service = visible[i];
+      // 행 구분선: 다음 요소(더보기 행 포함)가 있으면 표시
+      final hasNextRow = i < visible.length - 1 || hasMore;
+      // 수요예배·저녁예배 등 야간 예배는 moon 아이콘, 그 외 sun
+      final isEvening = service.name.contains('수요') ||
+          service.name.contains('저녁') ||
+          service.name.contains('밤');
+      rows.add(Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 8.h),
-        decoration: isLast
-            ? null
-            : BoxDecoration(
+        padding: EdgeInsets.symmetric(vertical: 11.h),
+        decoration: hasNextRow
+            ? BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
                     width: 1,
-                    color: NewAppColor.neutral600,
+                    color: NewAppColor.borderSoft,
                   ),
                 ),
-              ),
+              )
+            : null,
         child: Row(
           children: [
+            // sun/moon 라운드 9px 타일
+            Container(
+              width: 30.w,
+              height: 30.h,
+              decoration: BoxDecoration(
+                color: NewAppColor.skyTint,
+                borderRadius: BorderRadius.circular(9.r),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                isEvening ? Icons.nightlight_round : Icons.wb_sunny_outlined,
+                color: NewAppColor.skyDeep,
+                size: 15.sp,
+              ),
+            ),
+            SizedBox(width: 9.w),
             Expanded(
-              flex: 3,
               child: Text(
                 service.name,
                 style: FigmaTextStyles().body3.copyWith(
-                      color: Colors.white,
+                      color: NewAppColor.neutral700,
+                      fontWeight: FontWeight.w600,
                     ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            SizedBox(width: 12.w),
-            Expanded(
-              flex: 2,
-              child: Text(
-                service.location,
-                textAlign: TextAlign.center,
-                style: FigmaTextStyles().body3.copyWith(
-                      color: Colors.white,
-                    ),
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    service.dayOfWeekShort,
-                    textAlign: TextAlign.right,
-                    style: FigmaTextStyles().caption3.copyWith(
-                          color: Colors.white,
-                        ),
+            SizedBox(width: 8.w),
+            Text(
+              '${service.dayOfWeekShort} ${service.formattedStartTime}',
+              style: FigmaTextStyles().body3.copyWith(
+                    color: NewAppColor.textStrong,
+                    fontWeight: FontWeight.w700,
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    service.formattedStartTime,
-                    textAlign: TextAlign.right,
-                    style: FigmaTextStyles().subtitle4.copyWith(
-                          color: Colors.white,
-                        ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
+      ));
+    }
+
+    // 4개 이상일 때만 더보기/접기 행 표시
+    if (hasMore) {
+      final hiddenCount = total - previewCount;
+      rows.add(
+        InkWell(
+          onTap: () {
+            setState(() {
+              _isWorshipScheduleExpanded = !_isWorshipScheduleExpanded;
+            });
+          },
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 12.h),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _isWorshipScheduleExpanded
+                      ? '접기'
+                      : '더보기 (+$hiddenCount)',
+                  style: FigmaTextStyles().caption2.copyWith(
+                        color: NewAppColor.skyDeep,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                SizedBox(width: 4.w),
+                AnimatedRotation(
+                  duration: const Duration(milliseconds: 200),
+                  turns: _isWorshipScheduleExpanded ? 0.5 : 0,
+                  child: Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 16.sp,
+                    color: NewAppColor.skyDeep,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
-    }).toList();
+    }
+
+    return rows;
   }
 
-  // 교회 홈페이지 & 유튜브 채널 바로가기
+  // 1.2.0 C 방향: 외부 섹션 헤더 + 2열 흰 카드 (목업 §203-207)
   Widget _buildQuickLinks() {
-    // 둘 다 없으면 위젯을 표시하지 않음
-    if ((currentChurch?.homepageUrl == null || currentChurch!.homepageUrl!.isEmpty) &&
-        (currentChurch?.youtubeChannel == null || currentChurch!.youtubeChannel!.isEmpty)) {
+    final hasHomepage =
+        currentChurch?.homepageUrl != null && currentChurch!.homepageUrl!.isNotEmpty;
+    final hasYoutube =
+        currentChurch?.youtubeChannel != null && currentChurch!.youtubeChannel!.isNotEmpty;
+
+    if (!hasHomepage && !hasYoutube) {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      child: AppCard(
-        backgroundColor: Colors.white,
-        borderRadius: 16.r,
-        variant: CardVariant.filled,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 헤더
-            Row(
-              children: [
-                Container(
-                  width: 40.w,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: NewAppColor.warning200,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.link,
-                    color: NewAppColor.warning600,
-                    size: 20.sp,
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 섹션 헤더
+        Padding(
+          padding: EdgeInsets.fromLTRB(4.w, 0, 4.w, 10.h),
+          child: Text(
+            '바로가기',
+            style: FigmaTextStyles().cardTitleSm.copyWith(
+                  color: NewAppColor.textStrong,
+                  fontSize: 14.5.sp,
+                  fontWeight: FontWeight.w800,
                 ),
-                SizedBox(width: 12.w),
+          ),
+        ),
+        // 2열 그리드 (둘 중 하나만 있어도 동일한 폭 유지)
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.w),
+          child: Row(
+            children: [
+              if (hasHomepage)
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '바로가기',
-                        style: const FigmaTextStyles().headline4.copyWith(
-                              color: NewAppColor.neutral900,
-                            ),
-                      ),
-                      Text(
-                        'Quick Links',
-                        style: const FigmaTextStyles().body3.copyWith(
-                              color: NewAppColor.neutral600,
-                            ),
-                      ),
-                    ],
+                  child: _buildQuickLinkCard(
+                    icon: Icons.language,
+                    label: '홈페이지',
+                    onTap: () => _launchUrl(currentChurch!.homepageUrl!),
                   ),
                 ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            // 버튼들
-            Row(
-              children: [
-                // 교회 홈페이지 버튼
-                if (currentChurch?.homepageUrl != null && currentChurch!.homepageUrl!.isNotEmpty)
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _launchUrl(currentChurch!.homepageUrl!),
-                      child: Container(
-                        padding: EdgeInsets.all(16.r),
-                        decoration: BoxDecoration(
-                          color: NewAppColor.neutral100,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 48.w,
-                              height: 48.h,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.language,
-                                color: NewAppColor.primary400,
-                                size: 24.sp,
-                              ),
-                            ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              '교회',
-                              style: const FigmaTextStyles().headline5.copyWith(
-                                    color: NewAppColor.neutral900,
-                                  ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              '홈페이지',
-                              style: const FigmaTextStyles().body1.copyWith(
-                                    color: NewAppColor.neutral600,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+              if (hasHomepage && hasYoutube) SizedBox(width: 10.w),
+              if (hasYoutube)
+                Expanded(
+                  child: _buildQuickLinkCard(
+                    icon: Icons.play_arrow,
+                    label: '유튜브',
+                    onTap: () => _launchUrl(currentChurch!.youtubeChannel!),
                   ),
-
-                // 간격
-                if (currentChurch?.homepageUrl != null &&
-                    currentChurch!.homepageUrl!.isNotEmpty &&
-                    currentChurch?.youtubeChannel != null &&
-                    currentChurch!.youtubeChannel!.isNotEmpty)
-                  SizedBox(width: 12.w),
-
-                // 유튜브 채널 버튼
-                if (currentChurch?.youtubeChannel != null && currentChurch!.youtubeChannel!.isNotEmpty)
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _launchUrl(currentChurch!.youtubeChannel!),
-                      child: Container(
-                        padding: EdgeInsets.all(16.r),
-                        decoration: BoxDecoration(
-                          color: NewAppColor.neutral100,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 48.w,
-                              height: 48.h,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.play_arrow,
-                                color: const Color(0xFFFF0000),
-                                size: 24.sp,
-                              ),
-                            ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              '유튜브',
-                              style: const FigmaTextStyles().headline5.copyWith(
-                                    color: NewAppColor.neutral900,
-                                  ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              '채널',
-                              style: const FigmaTextStyles().body1.copyWith(
-                                    color: NewAppColor.neutral600,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                ),
+              // 한쪽만 있을 때 카드가 너무 넓어지지 않도록 빈 공간 채움
+              if (hasHomepage ^ hasYoutube) ...[
+                SizedBox(width: 10.w),
+                const Expanded(child: SizedBox.shrink()),
               ],
-            ),
-          ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 바로가기 카드 (흰 배경, skyTint 라운드 10px 타일 + skyDeep 아이콘 + 라벨)
+  Widget _buildQuickLinkCard({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14.r),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14.r),
+        child: Container(
+          padding: EdgeInsets.all(13.r),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14.r),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF020817).withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36.w,
+                height: 36.h,
+                decoration: BoxDecoration(
+                  color: NewAppColor.skyTint,
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  icon,
+                  color: NewAppColor.skyDeep,
+                  size: 18.sp,
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  label,
+                  style: FigmaTextStyles().body3.copyWith(
+                        color: NewAppColor.neutral700,
+                        fontWeight: FontWeight.w700,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2240,24 +1929,73 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       await Clipboard.setData(ClipboardData(text: text));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('계좌번호가 복사되었습니다'),
-            backgroundColor: NewAppColor.success600,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        _showAppToast('계좌번호가 복사되었습니다');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('복사 실패: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showAppToast('복사 실패: $e', isError: true);
       }
     }
+  }
+
+  // 1.2.0 C 방향: floating 다크 토스트 (디자인 정책 §3 바텀시트 톤)
+  void _showAppToast(String message, {bool isError = false}) {
+    final messenger = ScaffoldMessenger.of(context);
+    // 직전 토스트가 남아있으면 즉시 제거 (겹치지 않게)
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        padding: EdgeInsets.zero,
+        margin: EdgeInsets.only(
+          left: 16.w,
+          right: 16.w,
+          // 하단 탭바와 자연스럽게 떨어지도록
+          bottom: 16.h,
+        ),
+        duration: Duration(milliseconds: isError ? 2800 : 2000),
+        content: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: NewAppColor.textStrong, // #0F172A 다크
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF020817).withOpacity(0.25),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isError
+                    ? Icons.error_outline
+                    : Icons.check_circle_outline,
+                color: isError
+                    ? NewAppColor.danger300
+                    : NewAppColor.success300,
+                size: 18.sp,
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  message,
+                  style: FigmaTextStyles().body3.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -2269,6 +2007,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
 class ProfileAlert extends StatefulWidget {
   final String? userName;
+  final String? churchName; // 1.2.0: 헤더 부제에 표시
   final String? profileImageUrl;
   final Future<void> Function()? onNotificationTap;
   final VoidCallback? onSettingsTap;
@@ -2276,6 +2015,7 @@ class ProfileAlert extends StatefulWidget {
   const ProfileAlert({
     super.key,
     this.userName,
+    this.churchName,
     this.profileImageUrl,
     this.onNotificationTap,
     this.onSettingsTap,
@@ -2415,135 +2155,128 @@ class _ProfileAlertState extends State<ProfileAlert> {
     print('🎨 PROFILE_ALERT: profileImageUrl = ${widget.profileImageUrl}');
     print('🔔 PROFILE_ALERT: 현재 unreadCount = $unreadCount');
 
+    // 1.2.0 C 방향: 그라데이션 헤더 밴드 위에 올라가는 투명 컨테이너 + 흰색 텍스트
     return Container(
       width: double.infinity,
-      height: 84,
-      padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-        color: NewAppColor.primary200, // Primary_200
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 21.54,
-            backgroundImage:
-                widget.profileImageUrl != null && widget.profileImageUrl!.isNotEmpty
-                    ? (() {
-                        print(
-                            '🖼️ CIRCLE_AVATAR: NetworkImage 생성 - URL: ${widget.profileImageUrl}');
-                        return NetworkImage(widget.profileImageUrl!) as ImageProvider;
-                      })()
-                    : (() {
-                        print('🖼️ CIRCLE_AVATAR: 이미지 없음 - 기본 아이콘 표시');
-                        return null;
-                      })(),
-            backgroundColor: Colors.grey[300],
-            child: (widget.profileImageUrl == null || widget.profileImageUrl!.isEmpty)
-                ? Icon(
-                    Icons.person,
-                    size: 24,
-                    color: Colors.grey[600],
-                  )
-                : null,
-          ),
-          const SizedBox(width: 8),
+          // 프로필 아바타 — 라운드 사각 (목업 §161). 사진이 있으면 풀-사이즈, 없으면 흰 반투명 플레이스홀더
+          (widget.profileImageUrl != null && widget.profileImageUrl!.isNotEmpty)
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.network(
+                    widget.profileImageUrl!,
+                    width: 46,
+                    height: 46,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _avatarPlaceholder(),
+                  ),
+                )
+              : _avatarPlaceholder(),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 1.2.0: "안녕하세요 · {교회명}" 형식 (교회명 없으면 "안녕하세요"만)
                 Text(
-                  '안녕하세요',
+                  widget.churchName != null && widget.churchName!.isNotEmpty
+                      ? '안녕하세요 · ${widget.churchName}'
+                      : '안녕하세요',
                   style: FigmaTextStyles().caption1.copyWith(
-                        color: NewAppColor.neutral600, // Neutral_600
+                        color: Colors.white.withOpacity(0.85),
                       ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2),
                 Text(
                   '${widget.userName ?? '사용자'} 님',
-                  style: FigmaTextStyles().headline5.copyWith(
-                        color: NewAppColor.neutral900, // Neutral_900
+                  style: FigmaTextStyles().subtitle1.copyWith(
+                        color: Colors.white,
                       ),
                 ),
               ],
             ),
           ),
-          // 알림 버튼 (배지 포함)
+          // 알림 버튼 (배지 포함) — 흰색 아이콘
           InkWell(
             onTap: () async {
-              // 알림 화면으로 이동
               await widget.onNotificationTap?.call();
-              // 알림 화면에서 돌아왔을 때 카운트 새로고침
               if (mounted) {
                 _loadUnreadCount();
               }
             },
             borderRadius: BorderRadius.circular(100),
-            child: Stack(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF0078FF), // Primary_600
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.notifications,
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(
+                    Icons.notifications_none_rounded,
                     color: Colors.white,
-                    size: 20,
+                    size: 24,
                   ),
-                ),
-                // 미확인 알림 배지 (작은 동그라미)
-                if (unreadCount > 0)
-                  Positioned(
-                    right: 2,
-                    top: 2,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: NewAppColor.danger600,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: NewAppColor.primary200,
-                          width: 2,
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: NewAppColor.danger700,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: NewAppColor.skyDeep,
+                            width: 1.5,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           InkWell(
             onTap: widget.onSettingsTap,
             borderRadius: BorderRadius.circular(100),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: ShapeDecoration(
-                color: NewAppColor.neutral500,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
-                ),
-              ),
-              child: const Icon(
-                Icons.settings,
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Icon(
+                Icons.settings_outlined,
                 color: Colors.white,
-                size: 20,
+                size: 24,
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // 사진 없거나 로드 실패 시 흰 반투명 라운드 사각 플레이스홀더
+  Widget _avatarPlaceholder() {
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.person,
+        size: 24,
+        color: Colors.white.withOpacity(0.85),
       ),
     );
   }

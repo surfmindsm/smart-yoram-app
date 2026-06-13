@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/member.dart';
-import '../resource/color_style.dart';
-import '../resource/text_style.dart';
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
 import '../services/member_service.dart';
 
 class MemberDetailModal extends StatefulWidget {
@@ -23,7 +21,6 @@ class MemberDetailModal extends StatefulWidget {
 class _MemberDetailModalState extends State<MemberDetailModal> {
   final MemberService _memberService = MemberService();
   String? _organizationName;
-  bool _isLoadingOrganization = false;
 
   @override
   void initState() {
@@ -41,10 +38,6 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
       return;
     }
 
-    setState(() {
-      _isLoadingOrganization = true;
-    });
-
     try {
       print('🔍 조직 정보 조회 시작 - ID: ${widget.member.organizationId}');
 
@@ -54,34 +47,32 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
       if (mounted) {
         setState(() {
           _organizationName = organizationPath;
-          _isLoadingOrganization = false;
         });
         print('✅ 조직 정보 로드 성공: $_organizationName');
       }
     } catch (e) {
       print('❌ 조직 정보 로드 실패: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingOrganization = false;
-        });
-      }
     }
   }
 
+  // 1.2.0 C 방향: 큰 아바타 + 직분 칩 + 라벨/값 리스트 + 전화 보조 / 메시지 주 버튼
   @override
   Widget build(BuildContext context) {
+    final isPlainPosition = widget.member.positionLabel == '성도' ||
+        widget.member.positionLabel == '교인' ||
+        widget.member.positionLabel.isEmpty;
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(22.r),
       ),
       insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 40.h),
       child: Container(
         width: double.infinity,
-        constraints: BoxConstraints(maxHeight: 800.h),
-        padding: EdgeInsets.all(20.r),
+        constraints: BoxConstraints(maxHeight: 720.h),
+        padding: EdgeInsets.fromLTRB(22.w, 22.h, 22.w, 20.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(22.r),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -92,46 +83,43 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
               children: [
                 Text(
                   '교인 정보',
-                  style:
-                      AppTextStyle(color: AppColor.secondary07).h2().copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                  style: FigmaTextStyles().subtitle1.copyWith(
+                        color: NewAppColor.textStrong,
+                      ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   child: Container(
-                    width: 32.w,
-                    height: 32.h,
+                    width: 34.w,
+                    height: 34.h,
                     decoration: BoxDecoration(
-                      color: AppColor.secondary03.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8.r),
+                      color: NewAppColor.borderSoft,
+                      borderRadius: BorderRadius.circular(10.r),
                     ),
+                    alignment: Alignment.center,
                     child: Icon(
                       Icons.close,
-                      size: 20.sp,
-                      color: AppColor.secondary04,
+                      size: 19.sp,
+                      color: NewAppColor.textMuted,
                     ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 18.h),
 
             // 프로필 영역
-            _buildProfileSection(),
-            SizedBox(height: 24.h),
+            _buildProfileSection(isPlainPosition: isPlainPosition),
+            SizedBox(height: 22.h),
 
             // 상세 정보
             Expanded(
               child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildInfoSection(),
-                  ],
-                ),
+                child: _buildInfoSection(),
               ),
             ),
 
+            SizedBox(height: 24.h),
             // 하단 버튼
             _buildActionButtons(context),
           ],
@@ -140,52 +128,63 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
     );
   }
 
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection({required bool isPlainPosition}) {
+    final hasPhoto = widget.member.profilePhotoUrl != null &&
+        widget.member.profilePhotoUrl!.isNotEmpty;
     return Column(
       children: [
-        // 프로필 이미지
+        // 큰 원형 아바타 — skyTint 배경 + skyDeep 글자 (목업 §144)
         Container(
-          width: 80.w,
-          height: 80.h,
+          width: 104.w,
+          height: 104.h,
           decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.circular(40.r),
+            color: NewAppColor.skyTint,
+            shape: BoxShape.circle,
           ),
-          child: widget.member.profilePhotoUrl != null &&
-                  widget.member.profilePhotoUrl!.isNotEmpty
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(40.r),
+          alignment: Alignment.center,
+          child: hasPhoto
+              ? ClipOval(
                   child: Image.network(
                     widget.member.profilePhotoUrl!,
+                    width: 104.w,
+                    height: 104.h,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildDefaultAvatar(),
+                    errorBuilder: (_, __, ___) => _buildDefaultAvatar(),
                   ),
                 )
               : _buildDefaultAvatar(),
         ),
-        SizedBox(height: 12.h),
+        SizedBox(height: 14.h),
 
-        // 이름
+        // 이름 — 23/800
         Text(
           widget.member.name,
-          style: AppTextStyle(color: AppColor.secondary07).h1().copyWith(
-                fontWeight: FontWeight.w600,
+          style: FigmaTextStyles().pageTitle.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 23.sp,
               ),
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 10.h),
 
-        // 직분
+        // 직분 칩 — '성도'는 회색, 그 외는 skyTint
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: _getPositionColor().withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12.r),
+            color: isPlainPosition
+                ? NewAppColor.borderSoft
+                : NewAppColor.skyTint,
+            borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            widget.member.positionLabel,
-            style: AppTextStyle(color: _getPositionColor()).b3().copyWith(
-                  fontWeight: FontWeight.w500,
+            widget.member.positionLabel.isEmpty
+                ? '성도'
+                : widget.member.positionLabel,
+            style: FigmaTextStyles().badge.copyWith(
+                  color: isPlainPosition
+                      ? NewAppColor.textSecondary
+                      : NewAppColor.skyDeep,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w700,
                 ),
           ),
         ),
@@ -194,20 +193,13 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
   }
 
   Widget _buildDefaultAvatar() {
-    return Container(
-      width: 80.w,
-      height: 80.h,
-      decoration: BoxDecoration(
-        color: Colors.blue,
-        borderRadius: BorderRadius.circular(40.r),
-      ),
-      child: Center(
-        child: Text(
-          widget.member.name.isNotEmpty ? widget.member.name[0] : '?',
-          style: AppTextStyle(color: Colors.white).h1().copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-        ),
+    return Text(
+      widget.member.name.isNotEmpty ? widget.member.name[0] : '?',
+      style: TextStyle(
+        color: NewAppColor.skyDeep,
+        fontSize: 42.sp,
+        fontWeight: FontWeight.w800,
+        fontFamily: 'Pretendard',
       ),
     );
   }
@@ -220,52 +212,59 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
           _buildInfoItem('이메일', widget.member.email!),
         _buildInfoItem('성별', _getGenderDisplay(widget.member.gender)),
         if (widget.member.birthdate != null)
-          _buildInfoItem('생년월일', '${_formatDate(widget.member.birthdate!)} (${widget.member.birthdateType ?? '양력'})'),
-        if (widget.member.department != null && widget.member.department!.isNotEmpty)
+          _buildInfoItem(
+              '생년월일',
+              '${_formatDate(widget.member.birthdate!)} (${widget.member.birthdateType ?? '양력'})'),
+        if (widget.member.department != null &&
+            widget.member.department!.isNotEmpty)
           _buildInfoItem('부서', _getDepartmentDisplay(widget.member.department!)),
-        // 조직 정보는 organizationId가 있고, 조직명을 성공적으로 로드한 경우에만 표시
         if (_organizationName != null && _organizationName!.isNotEmpty)
-          _buildInfoItem('조직', _organizationName!),
-        if (widget.member.district != null && widget.member.district!.isNotEmpty)
-          _buildInfoItem('구역', widget.member.district!),
+          _buildInfoItem('조직', _organizationName!, isLast: true),
+        if ((_organizationName == null || _organizationName!.isEmpty) &&
+            widget.member.district != null &&
+            widget.member.district!.isNotEmpty)
+          _buildInfoItem('구역', widget.member.district!, isLast: true),
       ],
     );
   }
 
-  Widget _buildInfoItem(String label, String value,
-      {bool isMultiline = false}) {
+  // 라벨/값 행 — 라벨 88px 폭, 행 사이 1px borderSoft 구분선
+  Widget _buildInfoItem(String label, String value, {bool isLast = false}) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10.h),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: AppColor.secondary02,
-            width: 0.5,
-          ),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment:
-            isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 60.w,
-            child: Text(
-              label,
-              style: AppTextStyle(color: AppColor.secondary04).b4().copyWith(
-                fontSize: 12.sp,
+      padding: EdgeInsets.symmetric(vertical: 13.h),
+      decoration: isLast
+          ? null
+          : BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: NewAppColor.borderSoft,
+                  width: 1,
+                ),
               ),
             ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 88.w,
+            child: Text(
+              label,
+              style: FigmaTextStyles().caption1.copyWith(
+                    color: NewAppColor.textTertiary,
+                    fontSize: 13.5.sp,
+                  ),
+            ),
           ),
-          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               value,
-              style: AppTextStyle(color: AppColor.secondary07).b3().copyWith(
-                fontSize: 13.sp,
-              ),
-              maxLines: isMultiline ? null : 1,
-              overflow: isMultiline ? null : TextOverflow.ellipsis,
+              style: FigmaTextStyles().body2.copyWith(
+                    color: NewAppColor.textBody,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14.5.sp,
+                  ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -273,100 +272,82 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
     );
   }
 
+  // 전화(보조) / 메시지(주) — 단일 스카이 톤
   Widget _buildActionButtons(BuildContext context) {
     return Row(
       children: [
+        // 전화 — 보조 버튼 (흰배경 + 1.5px #BAE6FD 테두리 + skyDeep 텍스트)
         Expanded(
-          child: Container(
-            height: 48.h,
-            child: OutlinedButton.icon(
-              onPressed: () => _makePhoneCall(context, widget.member.phone),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.green),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
+          child: InkWell(
+            onTap: () => _makePhoneCall(context, widget.member.phone),
+            borderRadius: BorderRadius.circular(13.r),
+            child: Container(
+              height: 50.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: NewAppColor.primary300, width: 1.5),
+                borderRadius: BorderRadius.circular(13.r),
               ),
-              icon: Icon(
-                Icons.phone,
-                color: Colors.green,
-                size: 20.sp,
-              ),
-              label: Text(
-                '전화',
-                style: AppTextStyle(color: Colors.green).b2().copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.phone, color: NewAppColor.skyDeep, size: 18.sp),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '전화',
+                    style: FigmaTextStyles().button2.copyWith(
+                          color: NewAppColor.skyDeep,
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 11.w),
+        // 메시지 — 주 버튼 (skyPrimary + 흰글자 + 섀도)
         Expanded(
-          child: Container(
-            height: 48.h,
-            child: ElevatedButton.icon(
-              onPressed: () => _sendMessage(context, widget.member.phone),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
+          child: InkWell(
+            onTap: () => _sendMessage(context, widget.member.phone),
+            borderRadius: BorderRadius.circular(13.r),
+            child: Container(
+              height: 50.h,
+              decoration: BoxDecoration(
+                color: NewAppColor.skyPrimary,
+                borderRadius: BorderRadius.circular(13.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: NewAppColor.skyPrimary.withOpacity(0.28),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              icon: Icon(
-                Icons.chat,
-                color: Colors.white,
-                size: 20.sp,
-              ),
-              label: Text(
-                '메시지',
-                style: AppTextStyle(color: Colors.white).b2().copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.chat_bubble_outline,
+                      color: Colors.white, size: 18.sp),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '메시지',
+                    style: FigmaTextStyles().button2.copyWith(
+                          color: Colors.white,
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ],
     );
-  }
-
-  Color _getPositionColor() {
-    final positionLabel = widget.member.positionLabel.toLowerCase();
-
-    // 교역자 계열
-    if (positionLabel.contains('목사') || positionLabel.contains('전도사') || positionLabel == '교역자') {
-      return Colors.purple;
-    }
-    // 장로 계열
-    else if (positionLabel.contains('장로')) {
-      return Colors.indigo;
-    }
-    // 권사 계열
-    else if (positionLabel.contains('권사')) {
-      return Colors.pink;
-    }
-    // 집사 계열
-    else if (positionLabel.contains('집사')) {
-      return Colors.orange;
-    }
-    // 기타 (교사, 학생, 성도)
-    else {
-      return Colors.blue;
-    }
-  }
-
-  String _getMemberStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return '활동중';
-      case 'inactive':
-        return '비활동';
-      case 'transferred':
-        return '전출';
-      default:
-        return status;
-    }
   }
 
   String _formatDate(DateTime date) {

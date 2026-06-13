@@ -50,6 +50,66 @@ success          #059669   거래확정 / bg #D1FAE5
 
 > **Flutter 적용 팁:** `lib/resource/color_style_new.dart`의 `NewAppColor.primary*` 계열을 위 sky 값으로 재정의하면 대부분의 화면이 자동으로 따라온다. 현재 `primary600 ≈ #0078FF`를 `#0EA5E0`로 교체하는 것이 1차 작업.
 
+#### 2.1.1 컬러 토큰 ↔ `NewAppColor` 매핑
+
+`lib/resource/color_style_new.dart`에 정의된 실제 Flutter 상수와 정책 토큰의 1:1 매핑.
+기존 슬롯(`primary*`/`neutral*` 등)을 그대로 사용해도 새 값이 적용되며, 의미가 명확한 곳에서는 우측의 **시맨틱 별칭**을 우선 사용한다.
+
+**Sky (Primary)**
+
+| 정책 토큰 | HEX | 슬롯 상수 | 시맨틱 별칭 | 용도 |
+|----------|-----|-----------|------------|------|
+| `sky/wash` | `#F0F9FF` | `NewAppColor.primary100` | `NewAppColor.skyWash` | 인포 박스 배경 |
+| `sky/tint` | `#E0F2FE` | `NewAppColor.primary200` | `NewAppColor.skyTint` | 아이콘 타일 / 칩 배경 |
+| — | `#BAE6FD` | `NewAppColor.primary300` | — | 보조 버튼 테두리 |
+| `sky/primary` | `#0EA5E0` | `NewAppColor.primary600` | `NewAppColor.skyPrimary` | 주 버튼·활성 아이콘·토글 ON·포커스 |
+| `sky/deep` | `#0284C7` | `NewAppColor.primary700` | `NewAppColor.skyDeep` | 강조 텍스트·선택 칩 텍스트·아이콘 |
+
+**Slate (Neutral / Text / Border)**
+
+| 정책 토큰 | HEX | 슬롯 상수 | 시맨틱 별칭 | 용도 |
+|----------|-----|-----------|------------|------|
+| `border/soft` | `#F1F5F9` | `NewAppColor.neutral100` | `NewAppColor.borderSoft` | 카드 구분 |
+| `border/strong` | `#E2E8F0` | `NewAppColor.neutral200` | `NewAppColor.borderStrong` | 입력 테두리 |
+| `icon/faint` | `#CBD5E1` | `NewAppColor.neutral300` | `NewAppColor.iconFaint` | chevron · 비활성 아이콘 |
+| `text/tertiary` | `#94A3B8` | `NewAppColor.neutral400` | `NewAppColor.textTertiary` | 플레이스홀더 · 섹션 헤더 |
+| `text/muted` | `#64748B` | `NewAppColor.neutral500` | `NewAppColor.textMuted` | 설명문 |
+| `text/secondary` | `#475569` | `NewAppColor.neutral600` | `NewAppColor.textSecondary` | 보조 텍스트 · 메뉴 라벨 |
+| `text/body` | `#1E293B` | `NewAppColor.neutral800` | `NewAppColor.textBody` | 본문 |
+| `text/strong` | `#0F172A` | `NewAppColor.neutral900` | `NewAppColor.textStrong` | 제목 · 본문 강조 |
+
+**별도 토큰 (시맨틱 별칭 전용)**
+
+| 정책 토큰 | HEX | 시맨틱 별칭 | 용도 |
+|----------|-----|------------|------|
+| `border/hair` | `#F4F7FA` | `NewAppColor.borderHair` | 리스트 행 구분선 |
+| `surface` | `#FFFFFF` | `NewAppColor.surface` / `.white` | 카드·시트 배경 |
+| `canvas` | `#EEF2F6` | `NewAppColor.canvas` | 화면 배경(메인) |
+| `canvas alt` | `#F1F5F9` | `NewAppColor.canvasAlt` | 화면 배경(보조) |
+
+**Status — Danger / Warning / Success**
+
+| 정책 토큰 | HEX | 슬롯 상수 | 시맨틱 별칭 | 용도 |
+|----------|-----|-----------|------------|------|
+| `danger` | `#E11D48` | `NewAppColor.danger700` | — | 로그아웃·신고 텍스트/배경 |
+| `danger/bg` | `#FFE4E6` | `NewAppColor.danger200` | `NewAppColor.dangerBg` | 위험 영역 배경 |
+| `danger/border` | `#FECDD3` | `NewAppColor.danger300` | `NewAppColor.dangerBorder` | 위험 영역 테두리 |
+| `warning` | `#D97706` | `NewAppColor.warning700` | — | 예약중 텍스트 |
+| `warning/bg` | `#FEF3C7` | `NewAppColor.warning200` | `NewAppColor.warningBg` | 예약중 배경 |
+| `success` | `#059669` | `NewAppColor.success700` | — | 거래확정 텍스트 |
+| `success/bg` | `#D1FAE5` | `NewAppColor.success200` | `NewAppColor.successBg` | 거래확정 배경 |
+
+**Shadow / Focus 틴트 (opacity는 사용처에서 적용)**
+
+| 정책 토큰 | 시맨틱 별칭 | 권장 사용 |
+|----------|------------|----------|
+| 주 버튼 섀도 | `NewAppColor.buttonShadowTint` | `rgba(14,165,224,.32)` — `.withOpacity(0.32)` |
+| 플로팅 섀도 | `NewAppColor.floatingShadowTint` | `rgba(14,165,224,.42)` — `.withOpacity(0.42)` |
+| 바텀시트 섀도 | `NewAppColor.sheetShadowTint` | `rgba(2,8,23,.25)` — `.withOpacity(0.25)` |
+| 포커스 링 | `NewAppColor.focusRing` | `rgba(14,165,224,.12)` — `.withOpacity(0.12)` |
+
+> **하위호환:** 기존 화면에서 사용하던 `primary*`/`neutral*` 슬롯명을 그대로 두어도 자동으로 새 값이 반영된다. 다만 가독성을 위해 **신규 작업은 시맨틱 별칭 우선**(예: `NewAppColor.textStrong` ⟵ `NewAppColor.neutral900`).
+
 ### 2.2 타이포그래피 (Pretendard)
 
 | 역할 | 크기 / 굵기 | 비고 |
@@ -63,6 +123,46 @@ success          #059669   거래확정 / bg #D1FAE5
 | 배지/칩 | 11–12px / 700–800 | |
 
 > 모바일 최소 가독 크기 12px. 본문은 14px 이상 유지.
+
+#### 2.2.1 타이포 토큰 ↔ `FigmaTextStyles` 매핑
+
+`lib/resource/text_style_new.dart`의 실제 Flutter 스타일과 정책 역할의 매핑.
+역할 기반 **시맨틱 스타일**을 우선 사용하고, 기존 슬롯(`subtitle1`, `body2`, `button1` 등)은 호환 유지용으로 같은 값이 자동 반영된다.
+
+**역할 ↔ 시맨틱 스타일 (권장)**
+
+| 정책 역할 | 크기 / 굵기 / letter-spacing | 시맨틱 getter | 비고 |
+|-----------|------------------------------|----------------|------|
+| 화면 타이틀(앱바) | 18 / 800 / -0.01em | `FigmaTextStyles().appBarTitle` | |
+| 큰 제목(온보딩·상세) | 22 / 800 / -0.01em | `FigmaTextStyles().pageTitle` | 23px가 필요하면 `.copyWith(fontSize: 23)` |
+| 카드/행 제목 (16) | 16 / 700 / -0.01em | `FigmaTextStyles().cardTitle` | |
+| 카드/행 제목 (15) | 15 / 700 / -0.01em | `FigmaTextStyles().cardTitleSm` | |
+| 섹션 헤더 | 12 / 700 / 0.03em | `FigmaTextStyles().sectionHeader` | 색은 `textTertiary` |
+| 배지/칩 (12) | 12 / 800 | `FigmaTextStyles().badge` | |
+| 배지/칩 (11) | 11 / 800 | `FigmaTextStyles().badgeSm` | |
+| 탭바 라벨 | 10 / 700 | `FigmaTextStyles().tabLabel` | 활성 색은 `skyPrimary` |
+| 본문 (15) | 15 / 500 / line-height 1.6 | `FigmaTextStyles().body1` | |
+| 본문 (14) | 14 / 500 / line-height 1.57 | `FigmaTextStyles().body2` | |
+| 보조/설명 (13) | 13 / 500 | `FigmaTextStyles().body3` 또는 `.caption1` | |
+| 보조/설명 (12) | 12 / 500 | `FigmaTextStyles().caption2` | |
+| 주 버튼 텍스트 | 15 / 800 | `FigmaTextStyles().button2` | §3 주 버튼 규격 |
+
+**기존 슬롯 ↔ 정책 역할 (하위호환)**
+
+| 슬롯 getter | 크기 / 굵기 | 매핑된 정책 역할 |
+|-------------|------------|------------------|
+| `subtitle1` | 18 / 800 | 앱바 타이틀 |
+| `subtitle2` | 16 / 700 | 카드 제목 |
+| `subtitle3` | 14 / 700 | 작은 카드 제목 |
+| `subtitle4` | 12 / 700 | 섹션 헤더(굵게) |
+| `bodyText1` / `body1` | 16 / 500 · 15 / 500 | 본문 |
+| `bodyText2` / `body2` | 14 / 500 | 본문(기본) |
+| `captionText1` / `caption2` | 12 / 500 | 보조/설명 |
+| `button1` | 16 / 800 | 주 버튼(큰) |
+| `button2` | 15 / 800 | 주 버튼(기본) |
+| `button3` | 14 / 700 | 보조/고스트 버튼 |
+
+> **글자색은 별도로 지정:** `FigmaTextStyles().cardTitle.copyWith(color: NewAppColor.textStrong)` 처럼 §2.1.1의 의미 토큰과 조합한다. 기본 색은 의도적으로 비워두었다.
 
 ### 2.3 스페이싱 · 라운드 · 섀도
 
