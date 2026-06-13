@@ -87,94 +87,99 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  /// 프로필 이미지
+  /// 1.2.0 C 방향: 32px 라운드 이니셜 아바타 (skyTint + skyDeep)
   Widget _buildProfileImage() {
     if (!showProfile) {
-      return SizedBox(width: 40.w); // 빈 공간 유지
+      return SizedBox(width: 32.w); // 빈 공간 유지
     }
 
+    final initial = message.senderName.isNotEmpty ? message.senderName[0] : '?';
     final profileWidget = Container(
-      width: 40.w,
-      height: 40.w,
+      width: 32.w,
+      height: 32.w,
       decoration: BoxDecoration(
-        color: NewAppColor.neutral200,
+        color: NewAppColor.skyTint,
         shape: BoxShape.circle,
       ),
+      alignment: Alignment.center,
       child: otherUserPhotoUrl != null && otherUserPhotoUrl!.isNotEmpty
           ? ClipOval(
               child: CachedNetworkImage(
                 imageUrl: otherUserPhotoUrl!,
-                width: 40.w,
-                height: 40.w,
+                width: 32.w,
+                height: 32.w,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Icon(
-                  Icons.person,
-                  color: NewAppColor.neutral500,
-                  size: 20.sp,
-                ),
-                errorWidget: (context, url, error) => Icon(
-                  Icons.person,
-                  color: NewAppColor.neutral500,
-                  size: 20.sp,
-                ),
+                placeholder: (_, __) => _initialText(initial),
+                errorWidget: (_, __, ___) => _initialText(initial),
               ),
             )
-          : Icon(
-              Icons.person,
-              color: NewAppColor.neutral500,
-              size: 20.sp,
-            ),
+          : _initialText(initial),
     );
 
-    // 프로필 클릭 콜백이 있으면 GestureDetector로 감싸기
     if (onProfileTap != null) {
-      return GestureDetector(
-        onTap: onProfileTap,
-        child: profileWidget,
-      );
+      return GestureDetector(onTap: onProfileTap, child: profileWidget);
     }
-
     return profileWidget;
+  }
+
+  Widget _initialText(String initial) {
+    return Text(
+      initial,
+      style: TextStyle(
+        color: NewAppColor.skyDeep,
+        fontSize: 13.sp,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Pretendard',
+      ),
+    );
   }
 
   /// 발신자 이름
   Widget _buildSenderName() {
     return Padding(
-      padding: EdgeInsets.only(left: 4.w, bottom: 4.h),
+      padding: EdgeInsets.only(left: 4.w, bottom: 3.h),
       child: Text(
         message.senderName,
-        style: FigmaTextStyles().caption1.copyWith(
-              color: NewAppColor.neutral600,
-              fontSize: 12.sp,
+        style: FigmaTextStyles().caption3.copyWith(
+              color: NewAppColor.textTertiary,
+              fontSize: 11.5.sp,
+              fontWeight: FontWeight.w500,
             ),
       ),
     );
   }
 
-  /// 메시지 말풍선
+  /// 1.2.0 C 방향: 비대칭 라운드 말풍선
+  /// - 상대: 흰 배경 + 1px #EAEFF4 + 라운드 4/16/16/16
+  /// - 나: skyPrimary 채움 + 흰 글자 + 라운드 16/16/4/16
   Widget _buildMessageBubble() {
     if (message.messageType == 'image') {
       return _buildImageMessage();
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: isMe ? NewAppColor.primary600 : NewAppColor.neutral100,
+        color: isMe ? NewAppColor.skyPrimary : Colors.white,
+        border: isMe
+            ? null
+            : Border.all(color: const Color(0xFFEAEFF4), width: 1),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(isMe ? 16.r : 4.r),
-          topRight: Radius.circular(isMe ? 4.r : 16.r),
+          topRight: Radius.circular(isMe ? 16.r : 16.r),
           bottomLeft: Radius.circular(16.r),
-          bottomRight: Radius.circular(16.r),
+          bottomRight: Radius.circular(isMe ? 4.r : 16.r),
         ),
       ),
       child: Text(
         message.message,
-        style: FigmaTextStyles().body2.copyWith(
-              color: isMe ? Colors.white : NewAppColor.neutral900,
-              fontSize: 15.sp,
-              height: 1.4,
-            ),
+        style: TextStyle(
+          color: isMe ? Colors.white : NewAppColor.textBody,
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w500,
+          height: 1.5,
+          fontFamily: 'Pretendard',
+        ),
       ),
     );
   }
@@ -183,39 +188,50 @@ class MessageBubble extends StatelessWidget {
   Widget _buildImageMessage() {
     return Container(
       constraints: BoxConstraints(
-        maxWidth: 200.w,
-        maxHeight: 200.h,
+        maxWidth: 220.w,
+        maxHeight: 220.h,
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(isMe ? 16.r : 4.r),
+          topRight: Radius.circular(16.r),
+          bottomLeft: Radius.circular(16.r),
+          bottomRight: Radius.circular(isMe ? 4.r : 16.r),
+        ),
         border: Border.all(
-          color: isMe ? NewAppColor.primary600 : NewAppColor.neutral200,
-          width: 2,
+          color: isMe ? NewAppColor.skyPrimary : const Color(0xFFEAEFF4),
+          width: 1,
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10.r),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(isMe ? 16.r : 4.r),
+          topRight: Radius.circular(16.r),
+          bottomLeft: Radius.circular(16.r),
+          bottomRight: Radius.circular(isMe ? 4.r : 16.r),
+        ),
         child: CachedNetworkImage(
           imageUrl: message.imageUrl ?? '',
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
-            width: 200.w,
-            height: 200.h,
-            color: NewAppColor.neutral100,
+            width: 220.w,
+            height: 220.h,
+            color: NewAppColor.borderSoft,
             child: Center(
               child: CircularProgressIndicator(
-                color: isMe ? NewAppColor.primary600 : NewAppColor.neutral400,
+                color: NewAppColor.skyPrimary,
+                strokeWidth: 2,
               ),
             ),
           ),
           errorWidget: (context, url, error) => Container(
-            width: 200.w,
-            height: 200.h,
-            color: NewAppColor.neutral100,
+            width: 220.w,
+            height: 220.h,
+            color: NewAppColor.borderSoft,
             child: Icon(
               Icons.broken_image,
-              color: NewAppColor.neutral400,
-              size: 48.sp,
+              color: NewAppColor.iconFaint,
+              size: 40.sp,
             ),
           ),
         ),
@@ -223,32 +239,35 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  /// 시간 텍스트
+  /// 시간 텍스트 — 10.5sp #B6C0CC
   Widget _buildTimeText() {
     return Text(
       message.formattedTime,
-      style: FigmaTextStyles().caption2.copyWith(
-            color: NewAppColor.neutral500,
-            fontSize: 11.sp,
-          ),
+      style: TextStyle(
+        color: const Color(0xFFB6C0CC),
+        fontSize: 10.5.sp,
+        fontWeight: FontWeight.w500,
+        fontFamily: 'Pretendard',
+      ),
     );
   }
 
-  /// 시스템 메시지 (예: "채팅방이 생성되었습니다")
+  /// 시스템 메시지 (날짜 칩 등): borderStrong + textMuted 라운드 999
   Widget _buildSystemMessage() {
     return Center(
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 8.h),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+        margin: EdgeInsets.symmetric(vertical: 6.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 3.h),
         decoration: BoxDecoration(
-          color: NewAppColor.neutral200,
-          borderRadius: BorderRadius.circular(12.r),
+          color: NewAppColor.borderStrong,
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           message.message,
-          style: FigmaTextStyles().caption2.copyWith(
-                color: NewAppColor.neutral600,
-                fontSize: 12.sp,
+          style: FigmaTextStyles().caption3.copyWith(
+                color: NewAppColor.textMuted,
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
               ),
           textAlign: TextAlign.center,
         ),

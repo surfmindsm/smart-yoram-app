@@ -167,62 +167,69 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   @override
+  // 1.2.0 C 방향: 흰 헤더(타이틀 + 스카이 필터 칩) + 흰 목록
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: NewAppColor.skyPrimary,
+              ),
+            )
           : Column(
               children: [
-                // 고정된 AppBar
+                // 흰 헤더 영역 (타이틀 + 필터 칩) — 주소록/교회소식과 100% 동일 패턴
                 Container(
-                  color: NewAppColor.transparent,
-                  child: SafeArea(
-                    bottom: false,
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 56.h,
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: Row(
-                            children: [
-                              Text(
-                                '채팅',
-                                style: FigmaTextStyles().header1.copyWith(
-                                      color: NewAppColor.neutral900,
-                                      fontSize: 20.sp,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                  width: double.infinity,
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 6.h,
+                    left: 18.w,
+                    right: 18.w,
+                    bottom: 14.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      bottom:
+                          BorderSide(width: 1, color: NewAppColor.borderSoft),
                     ),
                   ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 2.w),
+                        child: Text(
+                          '채팅',
+                          style: FigmaTextStyles().pageTitle.copyWith(
+                                color: NewAppColor.textStrong,
+                                fontSize: 21.sp,
+                              ),
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      _buildFilterChips(),
+                    ],
+                  ),
                 ),
-                // 스크롤 가능한 영역
+                // 채팅 목록
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: _loadChatRooms,
+                    color: NewAppColor.skyPrimary,
                     child: SlidableAutoCloseBehavior(
                       child: CustomScrollView(
                         slivers: [
-                          // 필터 칩 (항상 표시)
-                          SliverToBoxAdapter(
-                            child: _buildFilterChips(),
-                          ),
-                          // 채팅방이 아예 없을 때
                           if (_chatRooms.isEmpty)
                             SliverFillRemaining(
                               child: _buildEmptyState(),
                             )
-                          // 채팅방은 있지만 필터 결과가 없을 때
                           else if (_filteredChatRooms.isEmpty)
                             SliverFillRemaining(
                               child: _buildFilteredEmptyState(),
                             )
-                          // 채팅방 리스트
                           else
                             SliverList(
                               delegate: SliverChildBuilderDelegate(
@@ -243,72 +250,61 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
-  /// 필터 칩
+  // 1.2.0 C 방향: 스카이 필터 칩 (활성=skyPrimary 채움, 비활성=라인)
+  // 부모 컨테이너가 좌우 18.w 패딩을 처리하므로 여기서는 추가 좌우 패딩 없음
   Widget _buildFilterChips() {
     final filters = ['전체', '판매', '구매', '안 읽은 채팅방'];
 
-    return Container(
-      color: NewAppColor.transparent,
-      child: Column(
-        children: [
-          Container(
-            height: 56.h,
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: filters.length,
-              separatorBuilder: (context, index) => SizedBox(width: 8.w),
-              itemBuilder: (context, index) {
-                final filter = filters[index];
-                final isSelected = _selectedFilter == filter;
-
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedFilter = filter;
-                      // 캐시된 currentUserId 사용 (불필요한 API 호출 제거)
-                      if (_currentUserId != null) {
-                        _applyFilter(_currentUserId!);
-                      }
-                    });
-                  },
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    decoration: BoxDecoration(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.zero,
+      child: Row(
+        children: List.generate(filters.length, (index) {
+            final filter = filters[index];
+            final isSelected = _selectedFilter == filter;
+            return Padding(
+              padding: EdgeInsets.only(right: index < filters.length - 1 ? 8.w : 0),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedFilter = filter;
+                    if (_currentUserId != null) {
+                      _applyFilter(_currentUserId!);
+                    }
+                  });
+                },
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 15.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: isSelected ? NewAppColor.skyPrimary : Colors.white,
+                    border: isSelected
+                        ? null
+                        : Border.all(
+                            color: NewAppColor.borderStrong, width: 1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    filter,
+                    // height: 1 로 line-height 영향 제거 (잘림 방지)
+                    style: TextStyle(
                       color: isSelected
-                          ? NewAppColor.primary600
-                          : NewAppColor.neutral200,
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: isSelected
-                            ? NewAppColor.primary600
-                            : Colors.transparent,
-                        width: 1,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        filter,
-                        style: FigmaTextStyles().body2.copyWith(
-                              color: isSelected
-                                  ? Colors.white
-                                  : NewAppColor.neutral700,
-                              fontSize: 14.sp,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                            ),
-                      ),
+                          ? Colors.white
+                          : NewAppColor.textSecondary,
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                      letterSpacing: -0.2,
+                      fontFamily: 'Pretendard',
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+                ),
+              ),
+            );
+          }),
+        ),
+      );
   }
 
   /// 빈 상태 (채팅방 없음)
@@ -319,24 +315,21 @@ class _ChatListScreenState extends State<ChatListScreen>
         children: [
           Icon(
             Icons.chat_bubble_outline,
-            size: 80.sp,
-            color: NewAppColor.neutral300,
+            size: 56.sp,
+            color: NewAppColor.iconFaint,
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 14.h),
           Text(
             '아직 채팅이 없습니다',
-            style: FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.neutral600,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+            style: FigmaTextStyles().subtitle2.copyWith(
+                  color: NewAppColor.textSecondary,
                 ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             '커뮤니티 게시글에서 문의하기를 눌러\n채팅을 시작해보세요',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral500,
-                  fontSize: 14.sp,
+            style: FigmaTextStyles().caption1.copyWith(
+                  color: NewAppColor.textMuted,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -368,24 +361,21 @@ class _ChatListScreenState extends State<ChatListScreen>
         children: [
           Icon(
             Icons.search_off,
-            size: 80.sp,
-            color: NewAppColor.neutral300,
+            size: 56.sp,
+            color: NewAppColor.iconFaint,
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 14.h),
           Text(
             message,
-            style: FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.neutral600,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
+            style: FigmaTextStyles().subtitle2.copyWith(
+                  color: NewAppColor.textSecondary,
                 ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             '다른 필터를 선택해보세요',
-            style: FigmaTextStyles().body2.copyWith(
-                  color: NewAppColor.neutral500,
-                  fontSize: 14.sp,
+            style: FigmaTextStyles().caption1.copyWith(
+                  color: NewAppColor.textMuted,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -493,75 +483,67 @@ class _ChatListScreenState extends State<ChatListScreen>
       ),
       child: InkWell(
         onTap: () async {
-          // 채팅방으로 이동
           await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => ChatRoomScreen(chatRoom: chatRoom),
             ),
           );
-
-          // 돌아왔을 때 목록 새로고침
           _loadChatRooms();
         },
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(width: 1, color: NewAppColor.borderHair),
+            ),
+          ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 프로필 이미지
+              // 이니셜 아바타 — 54×54 skyTint + skyDeep
               Stack(
+                clipBehavior: Clip.none,
                 children: [
                   Container(
-                    width: 56.w,
-                    height: 56.w,
+                    width: 54.w,
+                    height: 54.w,
                     decoration: BoxDecoration(
-                      color: NewAppColor.neutral200,
+                      color: NewAppColor.skyTint,
                       shape: BoxShape.circle,
                     ),
+                    alignment: Alignment.center,
                     child: chatRoom.otherUserPhotoUrl != null
                         ? ClipOval(
                             child: CachedNetworkImage(
                               imageUrl: chatRoom.otherUserPhotoUrl!,
-                              width: 56.w,
-                              height: 56.w,
+                              width: 54.w,
+                              height: 54.w,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) => Icon(
-                                Icons.person,
-                                color: NewAppColor.neutral500,
-                                size: 28.sp,
-                              ),
-                              errorWidget: (context, url, error) => Icon(
-                                Icons.person,
-                                color: NewAppColor.neutral500,
-                                size: 28.sp,
-                              ),
+                              placeholder: (_, __) =>
+                                  _avatarInitial(chatRoom.otherUserName),
+                              errorWidget: (_, __, ___) =>
+                                  _avatarInitial(chatRoom.otherUserName),
                             ),
                           )
-                        : Icon(
-                            Icons.person,
-                            color: NewAppColor.neutral500,
-                            size: 28.sp,
-                          ),
+                        : _avatarInitial(chatRoom.otherUserName),
                   ),
                   // 안 읽은 메시지 배지
                   if (chatRoom.unreadCount > 0)
                     Positioned(
-                      right: 0,
-                      top: 0,
+                      right: -2,
+                      top: -2,
                       child: Container(
-                        padding: EdgeInsets.all(4.r),
+                        padding: EdgeInsets.symmetric(horizontal: 5.w),
                         decoration: BoxDecoration(
-                          color: NewAppColor.danger600,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
+                          color: NewAppColor.danger700,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
                         constraints: BoxConstraints(
                           minWidth: 20.w,
-                          minHeight: 20.w,
+                          minHeight: 20.h,
                         ),
                         child: Center(
                           child: Text(
@@ -571,8 +553,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 10.sp,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Pretendard Variable',
+                              fontWeight: FontWeight.w800,
+                              fontFamily: 'Pretendard',
                             ),
                           ),
                         ),
@@ -580,71 +562,93 @@ class _ChatListScreenState extends State<ChatListScreen>
                     ),
                 ],
               ),
-
-              SizedBox(width: 12.w),
-
+              SizedBox(width: 13.w),
               // 채팅방 정보
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 상대방 이름 + 시간
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Text(
                             chatRoom.otherUserName ?? '알 수 없음',
-                            style: FigmaTextStyles().body1.copyWith(
-                                  color: NewAppColor.neutral900,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
+                            style: FigmaTextStyles().cardTitleSm.copyWith(
+                                  color: NewAppColor.textStrong,
+                                  fontSize: 15.5.sp,
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         SizedBox(width: 8.w),
+                        // 안 읽은 채팅방은 시간도 skyDeep + 600 강조
                         Text(
                           chatRoom.formattedTime,
                           style: FigmaTextStyles().caption2.copyWith(
-                                color: NewAppColor.neutral500,
-                                fontSize: 12.sp,
+                                color: chatRoom.unreadCount > 0
+                                    ? NewAppColor.skyDeep
+                                    : NewAppColor.textTertiary,
+                                fontSize: 11.5.sp,
+                                fontWeight: chatRoom.unreadCount > 0
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
                               ),
                         ),
                       ],
                     ),
-
-                    SizedBox(height: 4.h),
-
-                    // 게시글 제목 (작은 글씨)
+                    // 게시글 태그 칩
                     if (chatRoom.postTitle != null &&
                         chatRoom.postTitle!.isNotEmpty) ...[
-                      Text(
-                        chatRoom.postTitle!,
-                        style: FigmaTextStyles().caption2.copyWith(
-                              color: NewAppColor.neutral600,
-                              fontSize: 12.sp,
+                      SizedBox(height: 5.h),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: NewAppColor.borderSoft,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.local_offer_outlined,
+                              size: 11.sp,
+                              color: NewAppColor.textMuted,
                             ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                            SizedBox(width: 4.w),
+                            Flexible(
+                              child: Text(
+                                chatRoom.postTitle!,
+                                style: FigmaTextStyles().badgeSm.copyWith(
+                                      color: NewAppColor.textMuted,
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      SizedBox(height: 4.h),
                     ],
-
-                    // 마지막 메시지
+                    SizedBox(height: 5.h),
+                    // 마지막 메시지 — 안 읽은 경우 textBody/600 강조
                     Text(
                       chatRoom.lastMessage ?? '새 채팅방',
-                      style: FigmaTextStyles().body2.copyWith(
+                      style: FigmaTextStyles().body3.copyWith(
                             color: chatRoom.unreadCount > 0
-                                ? NewAppColor.neutral900
-                                : NewAppColor.neutral600,
-                            fontSize: 14.sp,
+                                ? NewAppColor.textBody
+                                : NewAppColor.textTertiary,
+                            fontSize: 13.5.sp,
                             fontWeight: chatRoom.unreadCount > 0
-                                ? FontWeight.w500
-                                : FontWeight.w400,
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                           ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -653,6 +657,20 @@ class _ChatListScreenState extends State<ChatListScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // 1.2.0: 이름 첫 글자 이니셜 아바타 (skyDeep 글자)
+  Widget _avatarInitial(String? name) {
+    final initial = (name != null && name.isNotEmpty) ? name[0] : '?';
+    return Text(
+      initial,
+      style: TextStyle(
+        color: NewAppColor.skyDeep,
+        fontSize: 19.sp,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Pretendard',
       ),
     );
   }
