@@ -303,10 +303,10 @@ dart run flutter_launcher_icons
 
 ## Version & Release Management
 
-현재 버전: 1.1.1+46 (pubspec.yaml)
+현재 버전: 1.2.0+47 (pubspec.yaml)
 - 버전 형식: `major.minor.patch+buildNumber`
 - 브랜치 전략: `release/x.x.x` 브랜치에서 릴리스 빌드
-- Git 브랜치: `main` (메인), `release/1.1.1` (현재 릴리스)
+- Git 브랜치: `main` (메인), `release/1.2.0` (현재 작업 중), `release/1.1.1` (이전 릴리스)
 
 ## Documentation
 
