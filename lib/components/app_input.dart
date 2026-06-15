@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 // import.*lucide_icons.*;
 import '../resource/color_style.dart';
+import '../resource/color_style_new.dart';
 
 enum InputSize {
   sm,
@@ -127,9 +128,9 @@ class _AppInputState extends State<AppInput> {
               color: hasError 
                   ? AppColor.error
                   : _isFocused 
-                      ? AppColor.primary7
+                      ? NewAppColor.skyPrimary
                       : AppColor.border1,
-              width: _isFocused ? 2 : 1,
+              width: _isFocused ? 1.5 : 1,
             ),
             color: widget.disabled 
                 ? AppColor.secondary00
@@ -165,7 +166,7 @@ class _AppInputState extends State<AppInput> {
                   ? Icon(
                       widget.prefixIcon,
                       color: _isFocused 
-                          ? AppColor.primary7
+                          ? NewAppColor.skyPrimary
                           : AppColor.secondary04,
                       size: sizeTheme.iconSize,
                     )
@@ -176,7 +177,7 @@ class _AppInputState extends State<AppInput> {
                       child: Icon(
                         widget.suffixIcon,
                         color: _isFocused 
-                            ? AppColor.primary7
+                            ? NewAppColor.skyPrimary
                             : AppColor.secondary04,
                         size: sizeTheme.iconSize,
                       ),

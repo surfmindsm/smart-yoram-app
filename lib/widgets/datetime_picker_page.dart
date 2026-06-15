@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter/material.dart' hide IconButton;
+import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../resource/color_style.dart';
-import '../resource/text_style.dart';
-import '../components/index.dart';
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
 
+/// 날짜·시간 선택 화면 — 1.2.0 C 방향
 class DateTimePickerPage extends StatefulWidget {
   final DateTime? initialDate;
   final String? initialTime;
@@ -25,28 +25,15 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
   String? selectedTime;
 
   // 시간대 목록 (30분 단위)
-  final List<String> timeSlots = [
-    '10:00',
-    '10:30',
-    '11:00',
-    '11:30',
-    '12:00',
-    '12:30',
-    '13:00',
-    '13:30',
-    '14:00',
-    '14:30',
-    '15:00',
-    '15:30',
-    '16:00',
-    '16:30',
-    '17:00',
-    '17:30',
-    '18:00',
-    '18:30',
-    '19:00',
-    '19:30',
+  final List<String> timeSlots = const [
+    '10:00', '10:30', '11:00', '11:30',
+    '12:00', '12:30', '13:00', '13:30',
+    '14:00', '14:30', '15:00', '15:30',
+    '16:00', '16:30', '17:00', '17:30',
+    '18:00', '18:30', '19:00', '19:30',
   ];
+
+  static const _weekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
 
   @override
   void initState() {
@@ -60,232 +47,186 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        title: Text(
-          '날짜/시간 선택',
-          style: AppTextStyle(
-            color: AppColor.secondary07,
-          ).h2(),
-        ),
-        backgroundColor: AppColor.background,
+        backgroundColor: Colors.white,
         elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: Container(
-            padding: EdgeInsets.all(12.w),
-            child: Icon(
-              LucideIcons.chevronLeft,
-              color: AppColor.secondary05,
-              size: 20.w,
-            ),
-          ),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        leading: material.IconButton(
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 26.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '날짜·시간 선택',
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
       ),
       body: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20.w),
+              padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 16.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 월 달력 뷰
-                  _buildMonthCalendar(),
-
-                  SizedBox(height: 16.h),
-
-                  // 시간 선택 섹션
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '시간 선택',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColor.secondary07,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        '방문 희망 시간을 선택해주세요',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppColor.secondary04,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // 시간대 그리드
-                  _buildTimeGrid(),
-
-                  SizedBox(height: 16.h),
-
-                  // 주의사항
-                  Container(
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF4E6),
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: const Color(0xFFFFE0B2)),
-                    ),
-                    child: Row(
+                  // 달력 카드
+                  _buildCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.info,
-                          size: 16.w,
-                          color: const Color(0xFFFF8A00),
-                        ),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: Text(
-                            '안내된 심방 시간은 확정된 일정이 아니며, 교회 사정에 따라 조정될 수 있습니다.',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: const Color(0xFFE65100),
-                              height: 1.3,
-                            ),
-                          ),
-                        ),
+                        _buildMonthHeader(),
+                        SizedBox(height: 14.h),
+                        _buildWeekdayHeader(),
+                        SizedBox(height: 4.h),
+                        _buildCalendarGrid(),
                       ],
                     ),
                   ),
-
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 16.h),
+                  // 시간 선택 카드
+                  _buildCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionLabel('시간 선택'),
+                        SizedBox(height: 4.h),
+                        Text(
+                          '방문 희망 시간을 선택해주세요',
+                          style: TextStyle(
+                            color: NewAppColor.textTertiary,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Pretendard',
+                          ),
+                        ),
+                        SizedBox(height: 14.h),
+                        _buildTimeGrid(),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 14.h),
+                  // 주의사항
+                  _buildHint(),
                 ],
               ),
             ),
           ),
+          _buildBottomBar(),
+        ],
+      ),
+    );
+  }
 
-          // 하단 고정 버튼
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  onPressed: selectedTime != null ? _handleConfirm : null,
-                  variant: ButtonVariant.primary,
-                  size: ButtonSize.lg,
-                  child: const Text('선택하기'),
-                ),
+  // 공용 카드 (white + borderHair + radius 14)
+  Widget _buildCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildSectionLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: NewAppColor.textStrong,
+        fontSize: 15.5.sp,
+        fontWeight: FontWeight.w800,
+        fontFamily: 'Pretendard',
+      ),
+    );
+  }
+
+  // 월 헤더 (좌측 < + 가운데 "YYYY년 M월" + 우측 >)
+  Widget _buildMonthHeader() {
+    return Row(
+      children: [
+        _buildArrowButton(
+          icon: Icons.chevron_left,
+          onTap: () => setState(() {
+            currentMonth =
+                DateTime(currentMonth.year, currentMonth.month - 1, 1);
+          }),
+        ),
+        Expanded(
+          child: Center(
+            child: Text(
+              '${currentMonth.year}년 ${currentMonth.month}월',
+              style: TextStyle(
+                color: NewAppColor.textStrong,
+                fontSize: 15.5.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMonthCalendar() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        children: [
-          // 월 헤더 (이전/다음 버튼 포함)
-          _buildMonthHeader(),
-          SizedBox(height: 20.h),
-
-          // 요일 헤더
-          _buildWeekdayHeader(),
-          SizedBox(height: 12.h),
-
-          // 달력 그리드
-          _buildCalendarGrid(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMonthHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              currentMonth =
-                  DateTime(currentMonth.year, currentMonth.month - 1, 1);
-            });
-          },
-          child: Container(
-            width: 40.w,
-            height: 40.w,
-            decoration: BoxDecoration(
-              color: AppColor.transparent,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Icon(
-              Icons.keyboard_arrow_left,
-              color: AppColor.secondary05,
-              size: 20.w,
-            ),
-          ),
         ),
-        Text(
-          '${currentMonth.year}년 ${currentMonth.month}월',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColor.secondary07,
-          ),
-        ),
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              currentMonth =
-                  DateTime(currentMonth.year, currentMonth.month + 1, 1);
-            });
-          },
-          child: Container(
-            width: 40.w,
-            height: 40.w,
-            decoration: BoxDecoration(
-              color: AppColor.transparent,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Icon(
-              Icons.keyboard_arrow_right,
-              color: AppColor.secondary05,
-              size: 20.w,
-            ),
-          ),
+        _buildArrowButton(
+          icon: Icons.chevron_right,
+          onTap: () => setState(() {
+            currentMonth =
+                DateTime(currentMonth.year, currentMonth.month + 1, 1);
+          }),
         ),
       ],
     );
   }
 
-  Widget _buildWeekdayHeader() {
-    final weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  Widget _buildArrowButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 36.w,
+        height: 36.w,
+        decoration: BoxDecoration(
+          color: NewAppColor.borderSoft,
+          borderRadius: BorderRadius.circular(10.r),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: NewAppColor.textSecondary, size: 20.sp),
+      ),
+    );
+  }
 
+  Widget _buildWeekdayHeader() {
     return Row(
-      children: weekdays.map((weekday) {
+      children: List.generate(_weekdayLabels.length, (i) {
+        final label = _weekdayLabels[i];
+        final color = i == 0
+            ? NewAppColor.danger700
+            : (i == 6 ? NewAppColor.skyDeep : NewAppColor.textTertiary);
         return Expanded(
-          child: Center(
+          child: Container(
+            height: 32.h,
+            alignment: Alignment.center,
             child: Text(
-              weekday,
+              label,
               style: TextStyle(
+                color: color,
                 fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
-                color: AppColor.secondary04,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Pretendard',
               ),
             ),
           ),
         );
-      }).toList(),
+      }),
     );
   }
 
@@ -295,32 +236,32 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
         DateTime(currentMonth.year, currentMonth.month + 1, 0);
     final firstDayWeekday =
         firstDayOfMonth.weekday == 7 ? 0 : firstDayOfMonth.weekday;
-
-    // 전월 마지막 날들
     final prevMonth = DateTime(currentMonth.year, currentMonth.month - 1, 0);
-    List<Widget> calendarDays = [];
+    final List<Widget> calendarDays = [];
 
-    // 이전 달 날짜들 (회색으로 표시)
+    // 이전 달 회색 날짜
     for (int i = firstDayWeekday - 1; i >= 0; i--) {
       final day = prevMonth.day - i;
       calendarDays.add(_buildCalendarDay(
         day: day,
         isCurrentMonth: false,
         date: DateTime(prevMonth.year, prevMonth.month, day),
+        weekdayIndex: calendarDays.length % 7,
       ));
     }
 
-    // 현재 달 날짜들
+    // 현재 달 날짜
     for (int day = 1; day <= lastDayOfMonth.day; day++) {
       final date = DateTime(currentMonth.year, currentMonth.month, day);
       calendarDays.add(_buildCalendarDay(
         day: day,
         isCurrentMonth: true,
         date: date,
+        weekdayIndex: calendarDays.length % 7,
       ));
     }
 
-    // 다음 달 날짜들로 6주 채우기
+    // 다음 달로 6주 채우기
     final remainingCells = 42 - calendarDays.length;
     for (int day = 1; day <= remainingCells; day++) {
       final nextMonth =
@@ -329,6 +270,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
         day: day,
         isCurrentMonth: false,
         date: nextMonth,
+        weekdayIndex: calendarDays.length % 7,
       ));
     }
 
@@ -336,6 +278,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 7,
+      childAspectRatio: 1.0,
       children: calendarDays,
     );
   }
@@ -344,45 +287,56 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
     required int day,
     required bool isCurrentMonth,
     required DateTime date,
+    required int weekdayIndex,
   }) {
     final now = DateTime.now();
-    final isSelected = date.day == selectedDate.day &&
+    final isSelected = date.year == selectedDate.year &&
         date.month == selectedDate.month &&
-        date.year == selectedDate.year;
+        date.day == selectedDate.day;
     final isPast = date.isBefore(DateTime(now.year, now.month, now.day));
     final isToday =
-        date.day == now.day && date.month == now.month && date.year == now.year;
+        date.year == now.year && date.month == now.month && date.day == now.day;
+    final disabled = isPast || !isCurrentMonth;
+
+    Color textColor;
+    if (!isCurrentMonth) {
+      textColor = NewAppColor.borderStrong;
+    } else if (isPast) {
+      textColor = NewAppColor.textMuted;
+    } else if (isSelected) {
+      textColor = Colors.white;
+    } else if (weekdayIndex == 0) {
+      textColor = NewAppColor.danger700;
+    } else if (weekdayIndex == 6) {
+      textColor = NewAppColor.skyDeep;
+    } else {
+      textColor = NewAppColor.textStrong;
+    }
 
     return GestureDetector(
-      onTap: (isPast || !isCurrentMonth)
+      onTap: disabled
           ? null
-          : () {
-              setState(() {
-                selectedDate = date;
-              });
-            },
+          : () => setState(() => selectedDate = date),
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        margin: EdgeInsets.all(2.w),
+        margin: EdgeInsets.all(3.w),
         decoration: BoxDecoration(
-          color: isSelected ? AppColor.primary600 : Colors.transparent,
-          borderRadius: BorderRadius.circular(8.r),
+          color: isSelected ? NewAppColor.skyPrimary : Colors.transparent,
+          borderRadius: BorderRadius.circular(10.r),
+          border: (isToday && !isSelected)
+              ? Border.all(color: NewAppColor.skyPrimary, width: 1.2)
+              : null,
         ),
-        child: Center(
-          child: Text(
-            '$day',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
-              color: !isCurrentMonth
-                  ? AppColor.secondary03
-                  : isPast
-                      ? AppColor.secondary03
-                      : isSelected
-                          ? Colors.white
-                          : isToday
-                              ? AppColor.primary600
-                              : AppColor.secondary07,
-            ),
+        alignment: Alignment.center,
+        child: Text(
+          '$day',
+          style: TextStyle(
+            color: textColor,
+            fontSize: 13.5.sp,
+            fontWeight: (isSelected || isToday)
+                ? FontWeight.w800
+                : FontWeight.w600,
+            fontFamily: 'Pretendard',
           ),
         ),
       ),
@@ -390,51 +344,125 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
   }
 
   Widget _buildTimeGrid() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          crossAxisSpacing: 8.w,
-          mainAxisSpacing: 8.h,
-          childAspectRatio: 2.2,
-        ),
-        itemCount: timeSlots.length,
-        itemBuilder: (context, index) {
-          final time = timeSlots[index];
-          final isSelected = selectedTime == time;
-
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedTime = time;
-              });
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: isSelected ? AppColor.primary600 : Colors.white,
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(
-                  color:
-                      isSelected ? AppColor.primary600 : AppColor.secondary02,
-                  width: 1,
-                ),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 8.w,
+        mainAxisSpacing: 8.h,
+        childAspectRatio: 2.2,
+      ),
+      itemCount: timeSlots.length,
+      itemBuilder: (context, index) {
+        final time = timeSlots[index];
+        final isSelected = selectedTime == time;
+        return GestureDetector(
+          onTap: () => setState(() => selectedTime = time),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isSelected ? NewAppColor.skyPrimary : Colors.white,
+              borderRadius: BorderRadius.circular(11.r),
+              border: Border.all(
+                color: isSelected
+                    ? NewAppColor.skyPrimary
+                    : NewAppColor.borderHair,
+                width: 1,
               ),
-              child: Center(
-                child: Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColor.secondary07,
-                  ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              time,
+              style: TextStyle(
+                color: isSelected ? Colors.white : NewAppColor.textBody,
+                fontSize: 13.5.sp,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHint() {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: NewAppColor.warningBg,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline,
+              size: 15.sp, color: NewAppColor.warning700),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              '안내된 심방 시간은 확정된 일정이 아니며, 교회 사정에 따라 조정될 수 있습니다.',
+              style: TextStyle(
+                color: NewAppColor.warning700,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Pretendard',
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    final enabled = selectedTime != null;
+    return Container(
+      padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 14.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.canvasAlt,
+        border: Border(
+          top: BorderSide(color: NewAppColor.borderHair, width: 1),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: GestureDetector(
+          onTap: enabled ? _handleConfirm : null,
+          behavior: HitTestBehavior.opaque,
+          child: Opacity(
+            opacity: enabled ? 1.0 : 0.4,
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 15.h),
+              decoration: BoxDecoration(
+                color: NewAppColor.skyPrimary,
+                borderRadius: BorderRadius.circular(13.r),
+                boxShadow: enabled
+                    ? [
+                        BoxShadow(
+                          color: NewAppColor.skyPrimary.withOpacity(0.30),
+                          blurRadius: 22,
+                          offset: const Offset(0, 10),
+                        ),
+                      ]
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                enabled ? '선택하기' : '시간을 선택해 주세요',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Pretendard',
                 ),
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

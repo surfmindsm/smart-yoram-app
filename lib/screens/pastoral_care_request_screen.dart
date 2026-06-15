@@ -1,6 +1,7 @@
 import 'dart:async';
 // import.*lucide_icons.*;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide IconButton;
+import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -325,133 +326,192 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        leading: material.IconButton(
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 26.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           '심방 신청',
-          style: const FigmaTextStyles().headline4.copyWith(
-                color: Colors.white,
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
               ),
         ),
-        backgroundColor: NewAppColor.success600,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(52.h),
-          child: Container(
-            width: double.infinity,
-            height: 52.h,
+      ),
+      body: Column(
+        children: [
+          // 1.2.0 탭바 — 새신청 / 신청 내역 (밑줄 강조)
+          Container(
             color: Colors.white,
-            child: Stack(
+            child: Row(
               children: [
-                // 신청 내역 탭 (오른쪽)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: GestureDetector(
-                    onTap: () {
-                      _tabController.animateTo(1);
-                      setState(() {
-                        _currentTabIndex = 1;
-                      });
-                    },
-                    child: Container(
-                      width: 195.w,
-                      height: 52.h,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            width: _currentTabIndex == 1 ? 2.0 : 1,
-                            color: _currentTabIndex == 1
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral200,
-                          ),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '신청 내역',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _currentTabIndex == 1
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral500,
-                            fontSize: 16.sp,
-                            fontFamily: 'Pretendard Variable',
-                            fontWeight: _currentTabIndex == 1
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            height: 1.50,
-                            letterSpacing: _currentTabIndex == 1 ? 0 : -0.40,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // 새신청 탭 (왼쪽)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: GestureDetector(
-                    onTap: () {
-                      _tabController.animateTo(0);
-                      setState(() {
-                        _currentTabIndex = 0;
-                      });
-                    },
-                    child: Container(
-                      width: 195.w,
-                      height: 52.h,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            width: _currentTabIndex == 0 ? 2.0 : 1,
-                            color: _currentTabIndex == 0
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral200,
-                          ),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '새신청',
-                          textAlign: TextAlign.center,
-                          style: FigmaTextStyles().title4.copyWith(
-                                color: _currentTabIndex == 0
-                                    ? NewAppColor.success600
-                                    : NewAppColor.neutral500,
-                                fontWeight: _currentTabIndex == 0
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                letterSpacing:
-                                    _currentTabIndex == 0 ? 0 : -0.40,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                _buildTab('새신청', 0),
+                _buildTab('신청 내역', 1),
               ],
             ),
           ),
+          Container(height: 1, color: NewAppColor.borderSoft),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildRequestForm(),
+                _buildRequestList(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 시안: 필드 라벨 (textStrong 13sp/700)
+  Widget _buildFieldLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: NewAppColor.textStrong,
+        fontSize: 13.sp,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Pretendard',
+      ),
+    );
+  }
+
+  // 시안: 희망 일시 통합 필드 — event 아이콘 + "M월 D일(요) 오전/오후 H시" + chevron
+  Widget _buildScheduleField() {
+    final display = _composeScheduleDisplay();
+    final hasValue = display != null;
+    return GestureDetector(
+      onTap: _selectDateTime,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: NewAppColor.borderHair, width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.event_outlined,
+                size: 18.sp, color: NewAppColor.textTertiary),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Text(
+                display ?? '날짜·시간 선택',
+                style: TextStyle(
+                  color: hasValue
+                      ? NewAppColor.textStrong
+                      : NewAppColor.textMuted,
+                  fontSize: 14.sp,
+                  fontWeight: hasValue ? FontWeight.w700 : FontWeight.w500,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
+            ),
+            Icon(Icons.expand_more,
+                size: 20.sp, color: NewAppColor.iconFaint),
+          ],
         ),
       ),
-      backgroundColor: NewAppColor.neutral100,
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildRequestForm(),
-          _buildRequestList(),
-        ],
+    );
+  }
+
+  // 통합 표시 텍스트 — "6월 18일(목) 오후 2시" 시안과 동일
+  String? _composeScheduleDisplay() {
+    final dateText = _preferredDateController.text.trim();
+    final timeText = _preferredTimeController.text.trim();
+    if (dateText.isEmpty && timeText.isEmpty) return null;
+
+    String datePart = '';
+    if (dateText.isNotEmpty) {
+      try {
+        final parts = dateText.split('-');
+        if (parts.length == 3) {
+          final d = DateTime(
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+            int.parse(parts[2]),
+          );
+          const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+          final w = weekdays[d.weekday - 1];
+          datePart = '${d.month}월 ${d.day}일($w)';
+        }
+      } catch (_) {
+        datePart = dateText;
+      }
+    }
+
+    String timePart = '';
+    if (timeText.isNotEmpty) {
+      try {
+        final hm = timeText.split(':');
+        if (hm.length >= 1) {
+          final h = int.parse(hm[0]);
+          final m = hm.length >= 2 ? int.parse(hm[1]) : 0;
+          final period = h < 12 ? '오전' : '오후';
+          final h12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+          timePart =
+              m == 0 ? '$period $h12시' : '$period $h12시 ${m.toString().padLeft(2, '0')}분';
+        }
+      } catch (_) {
+        timePart = timeText;
+      }
+    }
+
+    if (datePart.isEmpty) return timePart;
+    if (timePart.isEmpty) return datePart;
+    return '$datePart $timePart';
+  }
+
+  // 1.2.0 탭바 항목 — 활성 = skyPrimary 텍스트 + 2.5px 밑줄
+  Widget _buildTab(String label, int index) {
+    final selected = _currentTabIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _tabController.animateTo(index);
+          setState(() => _currentTabIndex = index);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 13.h),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: selected ? NewAppColor.skyPrimary : Colors.transparent,
+                width: 2.5,
+              ),
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              color:
+                  selected ? NewAppColor.skyPrimary : NewAppColor.textTertiary,
+              fontSize: 14.sp,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildRequestForm() {
     return Container(
-      color: NewAppColor.neutral100,
+      color: NewAppColor.canvasAlt,
       child: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -462,15 +522,16 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(color: NewAppColor.borderHair, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '신청 상세정보',
-                    style: const FigmaTextStyles().headline5.copyWith(
-                          color: NewAppColor.neutral900,
+                    style: TextStyle(fontFamily: 'Pretendard', fontSize: 15.5.sp, fontWeight: FontWeight.w800,
+                          color: NewAppColor.textStrong,
                         ),
                   ),
                   SizedBox(height: 16.h),
@@ -483,7 +544,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       Text(
                         '상세 내용*',
                         style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
+                              color: NewAppColor.textStrong,
                               fontWeight: FontWeight.w500,
                             ),
                       ),
@@ -492,7 +553,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       Container(
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: NewAppColor.neutral200,
+                            color: NewAppColor.borderHair,
                             width: 1,
                           ),
                           borderRadius: BorderRadius.circular(8.r),
@@ -511,7 +572,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                                     '자녀가 군 입대를 앞두고 있습니다. 건강하게 갔다 올 수 있도록 심방 요청드립니다.',
                                 hintStyle:
                                     const FigmaTextStyles().body2.copyWith(
-                                          color: NewAppColor.neutral400,
+                                          color: NewAppColor.textMuted,
                                         ),
                                 border: InputBorder.none,
                                 contentPadding:
@@ -519,7 +580,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                                 counterText: '', // 기본 카운터 숨기기
                               ),
                               style: const FigmaTextStyles().body2.copyWith(
-                                    color: NewAppColor.neutral900,
+                                    color: NewAppColor.textStrong,
                                   ),
                             ),
                             // 커스텀 글자 수 카운터
@@ -530,7 +591,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                                 '${_descriptionController.text.length}/200',
                                 style:
                                     const FigmaTextStyles().caption3.copyWith(
-                                          color: NewAppColor.neutral400,
+                                          color: NewAppColor.textMuted,
                                         ),
                               ),
                             ),
@@ -549,79 +610,34 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(color: NewAppColor.borderHair, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '희망 일정(선택사항)',
-                    style: const FigmaTextStyles().headline5.copyWith(
-                          color: NewAppColor.neutral900,
+                    style: TextStyle(fontFamily: 'Pretendard', fontSize: 15.5.sp, fontWeight: FontWeight.w800,
+                          color: NewAppColor.textStrong,
                         ),
                   ),
                   SizedBox(height: 16.h),
 
-                  // 희망 날짜
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '날짜',
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      SizedBox(height: 8.h),
-                      AppInput(
-                        controller: _preferredDateController,
-                        placeholder: 'YYYY-MM-DD',
-                        readOnly: true,
-                        suffixIcon: Icons.calendar_today,
-                        onTap: _selectDateTime,
-                      ),
-                    ],
-                  ),
+                  // 시안: 희망 일시 — 통합 박스 (날짜 + 시간 한 줄, event 아이콘 prefix + chevron suffix)
+                  _buildFieldLabel('희망 일시'),
+                  SizedBox(height: 8.h),
+                  _buildScheduleField(),
                   SizedBox(height: 16.h),
 
-                  // 희망 시작 시간
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '시간',
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      SizedBox(height: 8.h),
-                      AppInput(
-                        controller: _preferredTimeController,
-                        placeholder: 'HH:MM (예: 14:00)',
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // 연락처
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '연락처',
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      SizedBox(height: 8.h),
-                      AppInput(
-                        controller: _contactController,
-                        placeholder: '연락 가능한 번호를 입력해주세요',
-                      ),
-                    ],
+                  // 연락처 (phone 아이콘 prefix)
+                  _buildFieldLabel('연락처'),
+                  SizedBox(height: 8.h),
+                  AppInput(
+                    controller: _contactController,
+                    placeholder: '연락 가능한 번호를 입력해주세요',
+                    prefixIcon: Icons.phone_outlined,
+                    keyboardType: TextInputType.phone,
                   ),
                 ],
               ),
@@ -633,59 +649,38 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(color: NewAppColor.borderHair, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '방문 위치 (선택사항)',
-                    style: FigmaTextStyles().headline5.copyWith(
-                          color: NewAppColor.neutral900,
+                    style: TextStyle(fontFamily: 'Pretendard', fontSize: 15.5.sp, fontWeight: FontWeight.w800,
+                          color: NewAppColor.textStrong,
                         ),
                   ),
                   SizedBox(height: 16.h),
 
-                  // 주소 입력
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '주소',
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      SizedBox(height: 8.h),
-                      AppInput(
-                        controller: _addressController,
-                        placeholder: '방문 주소를 입력하세요',
-                        suffixIcon: Icons.search,
-                        onSuffixIconTap: _onSearchAddress,
-                        onSubmitted: (_) => _onSearchAddress(),
-                      ),
-                    ],
+                  // 장소 (location 아이콘 prefix)
+                  _buildFieldLabel('장소'),
+                  SizedBox(height: 8.h),
+                  AppInput(
+                    controller: _addressController,
+                    placeholder: '방문 주소를 입력하세요',
+                    prefixIcon: Icons.location_on_outlined,
+                    suffixIcon: Icons.search,
+                    onSuffixIconTap: _onSearchAddress,
+                    onSubmitted: (_) => _onSearchAddress(),
                   ),
                   SizedBox(height: 16.h),
 
-                  // 상세주소 입력
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '상세주소(선택사항)',
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      SizedBox(height: 8.h),
-                      AppInput(
-                        controller: _detailAddressController,
-                        placeholder: '동/호수, 건물명 등을 입력하세요',
-                      ),
-                    ],
+                  _buildFieldLabel('상세주소(선택사항)'),
+                  SizedBox(height: 8.h),
+                  AppInput(
+                    controller: _detailAddressController,
+                    placeholder: '동/호수, 건물명 등을 입력하세요',
                   ),
                   SizedBox(height: 16.h),
 
@@ -694,7 +689,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     Container(
                       height: 200.h,
                       decoration: BoxDecoration(
-                        border: Border.all(color: NewAppColor.neutral200),
+                        border: Border.all(color: NewAppColor.borderHair),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: _buildMapWidget(),
@@ -707,16 +702,24 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
             GestureDetector(
               onTap: _isLoading ? null : _submitRequest,
-              child: Container(
-                width: double.infinity,
-                height: 56.h,
-                decoration: BoxDecoration(
-                  color: _isLoading
-                      ? NewAppColor.success300
-                      : NewAppColor.success600,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Center(
+              behavior: HitTestBehavior.opaque,
+              child: Opacity(
+                opacity: _isLoading ? 0.6 : 1.0,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 15.h),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.skyPrimary,
+                    borderRadius: BorderRadius.circular(13.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: NewAppColor.skyPrimary.withOpacity(0.30),
+                        blurRadius: 22,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
                   child: _isLoading
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -725,25 +728,31 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                               width: 16.w,
                               height: 16.w,
                               child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                strokeWidth: 2.4,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
                               ),
                             ),
-                            SizedBox(width: 8.w),
+                            SizedBox(width: 9.w),
                             Text(
-                              '신청 중...',
-                              style: const FigmaTextStyles().title4.copyWith(
-                                    color: Colors.white,
-                                  ),
+                              '신청 중…',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Pretendard',
+                              ),
                             ),
                           ],
                         )
                       : Text(
                           '신청하기',
-                          style: const FigmaTextStyles().button1.copyWith(
-                                color: Colors.white,
-                              ),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Pretendard',
+                          ),
                         ),
                 ),
               ),
@@ -902,7 +911,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
       );
     } catch (e) {
       return Container(
-        color: NewAppColor.neutral100,
+        color: NewAppColor.canvasAlt,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -910,14 +919,14 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               Icon(
                 Icons.map,
                 size: 48.w,
-                color: NewAppColor.neutral400,
+                color: NewAppColor.textMuted,
               ),
               SizedBox(height: 8.h),
               Text(
                 '지도 로딩 중...',
                 style: TextStyle(
                   fontSize: 14.sp,
-                  color: NewAppColor.neutral500,
+                  color: NewAppColor.textTertiary,
                 ),
               ),
             ],
@@ -962,33 +971,37 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             Container(
               width: 80.w,
               height: 80.h,
-              decoration: ShapeDecoration(
-                color: NewAppColor.neutral100,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
+              decoration: BoxDecoration(
+                color: NewAppColor.skyTint,
+                borderRadius: BorderRadius.circular(20.r),
               ),
               child: Icon(
                 Icons.home_outlined,
-                size: 40.sp,
-                color: NewAppColor.neutral400,
+                size: 36.sp,
+                color: NewAppColor.skyDeep,
+              ),
+            ),
+            SizedBox(height: 22.h),
+            Text(
+              '신청 내역이 없습니다',
+              style: TextStyle(
+                color: NewAppColor.textStrong,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              '첫 번째 심방 신청서를 작성해보세요',
+              style: TextStyle(
+                color: NewAppColor.textTertiary,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Pretendard',
               ),
             ),
             SizedBox(height: 24.h),
-            Text(
-              '신청 내역이 없습니다',
-              style: const FigmaTextStyles().title3.copyWith(
-                    color: NewAppColor.neutral700,
-                  ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '첫 번째 심방 신청서를 작성해보세요',
-              style: const FigmaTextStyles().body1.copyWith(
-                    color: NewAppColor.neutral500,
-                  ),
-            ),
-            SizedBox(height: 32.h),
             GestureDetector(
               onTap: () {
                 _tabController.animateTo(0);
@@ -996,29 +1009,33 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   _currentTabIndex = 0;
                 });
               },
+              behavior: HitTestBehavior.opaque,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                decoration: ShapeDecoration(
-                  color: NewAppColor.success600,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
+                padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 13.h),
+                decoration: BoxDecoration(
+                  color: NewAppColor.skyPrimary,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: NewAppColor.skyPrimary.withOpacity(0.30),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.add,
-                      size: 18.sp,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 8.w),
+                    Icon(Icons.add, size: 17.sp, color: Colors.white),
+                    SizedBox(width: 7.w),
                     Text(
                       '새 신청 작성하기',
-                      style: const FigmaTextStyles().body1.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                      ),
                     ),
                   ],
                 ),
@@ -1040,81 +1057,73 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   }
 
   Widget _buildRequestCard(PastoralCareRequest request) {
+    final statusTone = _getStatusTone(request.status);
     return GestureDetector(
       onTap: () => _showRequestDetailDialog(request),
+      behavior: HitTestBehavior.opaque,
       child: Container(
         width: double.infinity,
-        margin: EdgeInsets.only(bottom: 12.h),
+        margin: EdgeInsets.only(bottom: 10.h),
         clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: NewAppColor.borderHair, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 상단 헤더 영역
             Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
               child: Row(
                 children: [
-                  // 아이콘
                   Container(
-                    width: 40.w,
-                    height: 40.h,
-                    decoration: ShapeDecoration(
-                      color: NewAppColor.success200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
+                    width: 38.w,
+                    height: 38.w,
+                    decoration: BoxDecoration(
+                      color: NewAppColor.skyTint,
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
+                    alignment: Alignment.center,
                     child: Icon(
                       Icons.home_outlined,
-                      size: 20.sp,
-                      color: NewAppColor.success600,
+                      size: 18.sp,
+                      color: NewAppColor.skyDeep,
                     ),
                   ),
-                  SizedBox(width: 12.w),
-                  // 제목과 정보
+                  SizedBox(width: 11.w),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                request.title,
-                                style: const FigmaTextStyles().title4.copyWith(
-                                      color: NewAppColor.neutral900,
-                                    ),
-                              ),
-                            ),
-                            // 상태 배지
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w, vertical: 4.h),
-                              decoration: ShapeDecoration(
-                                color: _getStatusColor(request.status),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6.r),
-                                ),
-                              ),
-                              child: Text(
-                                request.statusDisplayName,
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontFamily: 'Pretendard',
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    child: Text(
+                      request.title.isNotEmpty
+                          ? request.title
+                          : request.requestTypeDisplayName,
+                      style: TextStyle(
+                        color: NewAppColor.textStrong,
+                        fontSize: 14.5.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 9.w, vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: statusTone.bg,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      request.statusDisplayName,
+                      style: TextStyle(
+                        color: statusTone.fg,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                      ),
                     ),
                   ),
                 ],
@@ -1123,61 +1132,56 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
             // 내용 영역
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 신청 내용 미리보기
                   if (request.description.isNotEmpty) ...[
                     Text(
                       request.description,
-                      style: const FigmaTextStyles().body2.copyWith(
-                            color: NewAppColor.neutral800,
-                            height: 1.4,
-                          ),
+                      style: TextStyle(
+                        color: NewAppColor.textBody,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Pretendard',
+                        height: 1.5,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 12.h),
+                    SizedBox(height: 10.h),
                   ],
-
-                  // 부가 정보들
                   Row(
                     children: [
-                      // 신청일
-                      Icon(
-                        Icons.access_time,
-                        size: 14.sp,
-                        color: NewAppColor.neutral500,
-                      ),
+                      Icon(Icons.access_time,
+                          size: 13.sp, color: NewAppColor.textTertiary),
                       SizedBox(width: 4.w),
                       Text(
                         _formatDate(request.createdAt),
                         style: TextStyle(
+                          color: NewAppColor.textTertiary,
                           fontSize: 12.sp,
-                          color: NewAppColor.neutral500,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Pretendard',
                         ),
                       ),
                     ],
                   ),
-
-                  // 위치 정보
                   if (request.address != null) ...[
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 6.h),
                     Row(
                       children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 14.sp,
-                          color: NewAppColor.neutral500,
-                        ),
+                        Icon(Icons.location_on_outlined,
+                            size: 13.sp, color: NewAppColor.textTertiary),
                         SizedBox(width: 4.w),
                         Expanded(
                           child: Text(
                             request.address!,
                             style: TextStyle(
+                              color: NewAppColor.textTertiary,
                               fontSize: 12.sp,
-                              color: NewAppColor.neutral500,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Pretendard',
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1190,16 +1194,15 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               ),
             ),
 
-            // 액션 버튼들
             if (request.canEdit || request.canCancel) ...[
-              SizedBox(height: 16.h),
+              SizedBox(height: 14.h),
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
-                decoration: const BoxDecoration(
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+                decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(
-                      color: NewAppColor.neutral200,
+                      color: NewAppColor.borderHair,
                       width: 1,
                     ),
                   ),
@@ -1210,26 +1213,21 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       Expanded(
                         child: GestureDetector(
                           onTap: () => _editRequest(request),
+                          behavior: HitTestBehavior.opaque,
                           child: Container(
-                            height: 36.h,
-                            decoration: ShapeDecoration(
-                              color: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6.r),
-                                side: const BorderSide(
-                                  color: NewAppColor.neutral300,
-                                  width: 1,
-                                ),
-                              ),
+                            padding: EdgeInsets.symmetric(vertical: 10.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.borderSoft,
+                              borderRadius: BorderRadius.circular(11.r),
                             ),
-                            child: Center(
-                              child: Text(
-                                '수정',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: NewAppColor.neutral700,
-                                ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '수정',
+                              style: TextStyle(
+                                color: NewAppColor.textSecondary,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Pretendard',
                               ),
                             ),
                           ),
@@ -1242,26 +1240,21 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                       Expanded(
                         child: GestureDetector(
                           onTap: () => _cancelRequest(request),
+                          behavior: HitTestBehavior.opaque,
                           child: Container(
-                            height: 36.h,
-                            decoration: ShapeDecoration(
-                              color: NewAppColor.danger100,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6.r),
-                                side: const BorderSide(
-                                  color: NewAppColor.danger200,
-                                  width: 1,
-                                ),
-                              ),
+                            padding: EdgeInsets.symmetric(vertical: 10.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.dangerBg,
+                              borderRadius: BorderRadius.circular(11.r),
                             ),
-                            child: Center(
-                              child: Text(
-                                '취소',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: NewAppColor.danger600,
-                                ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '취소',
+                              style: TextStyle(
+                                color: NewAppColor.danger700,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Pretendard',
                               ),
                             ),
                           ),
@@ -1272,7 +1265,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 ),
               ),
             ] else ...[
-              SizedBox(height: 20.h),
+              SizedBox(height: 16.h),
             ],
           ],
         ),
@@ -1280,22 +1273,21 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
     );
   }
 
-  Color _getStatusColor(String status) {
+  // 1.2.0: 상태별 톤 (bg + fg) — 관리자 화면과 동일 매핑
+  ({Color bg, Color fg}) _getStatusTone(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return NewAppColor.warning600;
+        return (bg: NewAppColor.warningBg, fg: NewAppColor.warning700);
       case 'approved':
-        return NewAppColor.primary600;
       case 'scheduled':
-        return NewAppColor.primary700;
       case 'in_progress':
-        return NewAppColor.success600;
+        return (bg: NewAppColor.skyTint, fg: NewAppColor.skyDeep);
       case 'completed':
-        return NewAppColor.success700;
+        return (bg: NewAppColor.successBg, fg: NewAppColor.success700);
       case 'cancelled':
-        return NewAppColor.neutral500;
+        return (bg: NewAppColor.dangerBg, fg: NewAppColor.danger700);
       default:
-        return NewAppColor.neutral500;
+        return (bg: NewAppColor.borderSoft, fg: NewAppColor.textSecondary);
     }
   }
 
@@ -1411,7 +1403,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
-                  color: NewAppColor.neutral900,
+                  color: NewAppColor.textStrong,
                 ),
               ),
               SizedBox(height: 8.h),
@@ -1419,15 +1411,15 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 width: double.infinity,
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: NewAppColor.canvasAlt,
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: NewAppColor.neutral300),
+                  border: Border.all(color: NewAppColor.borderStrong),
                 ),
                 child: Text(
                   request.description,
                   style: TextStyle(
                     fontSize: 14.sp,
-                    color: NewAppColor.neutral600,
+                    color: NewAppColor.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -1574,7 +1566,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w500,
-                color: NewAppColor.neutral400,
+                color: NewAppColor.textMuted,
               ),
             ),
           ),
@@ -1583,7 +1575,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
               value,
               style: TextStyle(
                 fontSize: 12.sp,
-                color: NewAppColor.neutral900,
+                color: NewAppColor.textStrong,
               ),
             ),
           ),
