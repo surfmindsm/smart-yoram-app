@@ -9,7 +9,6 @@ import '../services/auth_service.dart';
 import '../services/fcm_service.dart';
 import '../services/font_settings_service.dart';
 import '../services/church_service.dart';
-import '../services/bug_report_service.dart';
 import '../services/member_service.dart';
 import '../models/church.dart';
 import '../models/user.dart';
@@ -20,6 +19,8 @@ import 'terms_of_service_screen.dart';
 import 'profile_edit_screen.dart';
 import 'member_info_edit_screen.dart';
 import 'settings/profile_image_setup_screen.dart';
+import 'settings/password_change_screen.dart';
+import 'settings/bug_report_screen.dart';
 
 class _GroupedSettingItem {
   final IconData icon;
@@ -47,7 +48,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
   final ChurchService _churchService = ChurchService();
-  final BugReportService _bugReportService = BugReportService();
   final MemberService _memberService = MemberService();
 
   // 설정 값들
@@ -828,162 +828,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // 1.2.0: 다이얼로그 → 풀스크린 페이지로 교체
   void _changePassword() {
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AppDialog(
-        title: '비밀번호 변경',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppInput(
-              controller: currentPasswordController,
-              placeholder: '현재 비밀번호',
-              obscureText: true,
-            ),
-            SizedBox(height: 16.h),
-            AppInput(
-              controller: newPasswordController,
-              placeholder: '새 비밀번호',
-              obscureText: true,
-            ),
-            SizedBox(height: 16.h),
-            AppInput(
-              controller: confirmPasswordController,
-              placeholder: '새 비밀번호 확인',
-              obscureText: true,
-            ),
-          ],
-        ),
-        actions: [
-          AppButton(
-            onPressed: () {
-              currentPasswordController.dispose();
-              newPasswordController.dispose();
-              confirmPasswordController.dispose();
-              Navigator.pop(context);
-            },
-            variant: ButtonVariant.ghost,
-            child: const Text('취소'),
-          ),
-          AppButton(
-            onPressed: () => _handlePasswordChange(
-              currentPasswordController.text,
-              newPasswordController.text,
-              confirmPasswordController.text,
-              currentPasswordController,
-              newPasswordController,
-              confirmPasswordController,
-            ),
-            child: const Text('변경'),
-          ),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PasswordChangeScreen(),
       ),
     );
-  }
-
-  Future<void> _handlePasswordChange(
-    String currentPassword,
-    String newPassword,
-    String confirmPassword,
-    TextEditingController currentController,
-    TextEditingController newController,
-    TextEditingController confirmController,
-  ) async {
-    // 입력값 검증
-    if (currentPassword.isEmpty) {
-      AppToast.show(
-        context,
-        '현재 비밀번호를 입력해주세요.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    if (newPassword.isEmpty) {
-      AppToast.show(
-        context,
-        '새 비밀번호를 입력해주세요.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      AppToast.show(
-        context,
-        '새 비밀번호는 6자 이상이어야 합니다.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    if (newPassword != confirmPassword) {
-      AppToast.show(
-        context,
-        '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    if (currentPassword == newPassword) {
-      AppToast.show(
-        context,
-        '현재 비밀번호와 새 비밀번호가 동일합니다.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    // 다이얼로그 닫기
-    Navigator.pop(context);
-
-    try {
-      // 비밀번호 변경 요청
-      final response = await _authService.changePassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-      );
-
-      // 컨트롤러 정리
-      currentController.dispose();
-      newController.dispose();
-      confirmController.dispose();
-
-      if (mounted) {
-        if (response.success) {
-          AppToast.show(
-            context,
-            '비밀번호가 성공적으로 변경되었습니다.',
-            type: ToastType.success,
-          );
-        } else {
-          AppToast.show(
-            context,
-            response.message.isNotEmpty ? response.message : '비밀번호 변경에 실패했습니다.',
-            type: ToastType.error,
-          );
-        }
-      }
-    } catch (e) {
-      // 컨트롤러 정리
-      currentController.dispose();
-      newController.dispose();
-      confirmController.dispose();
-
-      if (mounted) {
-        AppToast.show(
-          context,
-          '비밀번호 변경 중 오류가 발생했습니다: $e',
-          type: ToastType.error,
-        );
-      }
-    }
   }
 
   void _showFontSizeOptions() {
@@ -1242,146 +1094,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _reportBug() {
-    final issueTypeController = TextEditingController();
-    final descriptionController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AppDialog(
-        title: '문제 신고',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppInput(
-              controller: issueTypeController,
-              placeholder: '문제 유형 (예: 로그인 오류, 화면 표시 문제)',
-            ),
-            SizedBox(height: 16.h),
-            AppInput(
-              controller: descriptionController,
-              placeholder: '문제 설명을 자세히 입력해주세요',
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          AppButton(
-            onPressed: () {
-              issueTypeController.dispose();
-              descriptionController.dispose();
-              Navigator.pop(context);
-            },
-            variant: ButtonVariant.ghost,
-            child: const Text('취소'),
-          ),
-          AppButton(
-            onPressed: () => _handleBugReport(
-              issueTypeController.text,
-              descriptionController.text,
-              issueTypeController,
-              descriptionController,
-            ),
-            child: const Text('전송'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _handleBugReport(
-    String issueType,
-    String description,
-    TextEditingController issueTypeController,
-    TextEditingController descriptionController,
-  ) async {
-    // 입력값 검증
-    if (issueType.trim().isEmpty) {
-      AppToast.show(
-        context,
-        '문제 유형을 입력해주세요.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    if (description.trim().isEmpty) {
-      AppToast.show(
-        context,
-        '문제 설명을 입력해주세요.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    // 사용자 정보 확인
     if (_currentUser == null) {
-      AppToast.show(
-        context,
-        '사용자 정보를 찾을 수 없습니다.',
-        type: ToastType.error,
-      );
+      AppToast.error(context, '사용자 정보를 찾을 수 없습니다.');
       return;
     }
-
-    // 다이얼로그 닫기
-    Navigator.pop(context);
-
-    // 로딩 표시
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BugReportScreen(currentUser: _currentUser!),
       ),
     );
-
-    try {
-      // 문제 신고 제출
-      final response = await _bugReportService.submitBugReport(
-        userId: _currentUser!.id,
-        churchId: _currentUser!.churchId,
-        issueType: issueType.trim(),
-        description: description.trim(),
-      );
-
-      // 컨트롤러 정리
-      issueTypeController.dispose();
-      descriptionController.dispose();
-
-      if (mounted) {
-        // 로딩 다이얼로그 닫기
-        Navigator.pop(context);
-
-        if (response.success) {
-          AppToast.show(
-            context,
-            '문제가 성공적으로 신고되었습니다.\n빠른 시일 내에 확인하겠습니다.',
-            type: ToastType.success,
-          );
-        } else {
-          AppToast.show(
-            context,
-            response.message.isNotEmpty ? response.message : '문제 신고에 실패했습니다.',
-            type: ToastType.error,
-          );
-        }
-      }
-    } catch (e) {
-      // 컨트롤러 정리
-      issueTypeController.dispose();
-      descriptionController.dispose();
-
-      if (mounted) {
-        // 로딩 다이얼로그 닫기
-        Navigator.pop(context);
-
-        AppToast.show(
-          context,
-          '문제 신고 중 오류가 발생했습니다: $e',
-          type: ToastType.error,
-        );
-      }
-    }
   }
 
   void _showPrivacyPolicy() {
@@ -1428,72 +1150,193 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // 1.2.0 C 방향: 로그아웃 확인 바텀시트 (시안 §213-242)
   void _logout() {
-    // Settings screen의 context를 저장 (dialog context와 분리)
     final settingsContext = context;
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (dialogContext) => AppDialog(
-        title: '로그아웃',
-        content: const Text('정말 로그아웃하시겠습니까?'),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            variant: ButtonVariant.ghost,
-            child: const Text('취소'),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x40020817),
+                blurRadius: 40,
+                offset: Offset(0, -16),
+              ),
+            ],
           ),
-          AppButton(
-            onPressed: () async {
-              // 다이얼로그 먼저 닫기
-              Navigator.pop(dialogContext);
-
-              // 다음 프레임에서 로그아웃 처리 (UI 안정화)
-              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                try {
-                  // 1. FCM 토큰 비활성화 (로그아웃 전에 실행)
-                  try {
-                    await FCMService.instance.deactivateToken();
-                    print('✅ SETTINGS: FCM 토큰 비활성화 완료');
-                  } catch (fcmError) {
-                    print('⚠️ SETTINGS: FCM 토큰 비활성화 실패 (계속 진행): $fcmError');
-                    // FCM 토큰 비활성화 실패해도 로그아웃은 계속 진행
-                  }
-
-                  // 2. 로그아웃 처리
-                  await _authService.logout();
-                  print('✅ SETTINGS: 로그아웃 처리 완료');
-
-                  // 3. 로그인 화면으로 이동 (mounted 체크)
-                  if (mounted) {
-                    Navigator.of(settingsContext).pushNamedAndRemoveUntil(
-                      '/login',
-                      (route) => false,
-                    );
-                    print('✅ SETTINGS: 로그인 화면으로 이동 완료');
-                  }
-                } catch (e) {
-                  print('❌ SETTINGS: 로그아웃 오류: $e');
-
-                  // 에러가 발생해도 로그인 화면으로 이동 시도
-                  if (mounted) {
-                    try {
-                      Navigator.of(settingsContext).pushNamedAndRemoveUntil(
-                        '/login',
-                        (route) => false,
-                      );
-                    } catch (navError) {
-                      print('❌ SETTINGS: 네비게이션 오류: $navError');
-                    }
-                  }
-                }
-              });
-            },
-            variant: ButtonVariant.destructive,
-            child: const Text('로그아웃'),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 22.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 핸들바 (44×5)
+                  Container(
+                    width: 44,
+                    height: 5,
+                    margin: EdgeInsets.only(bottom: 18.h),
+                    decoration: BoxDecoration(
+                      color: NewAppColor.borderStrong,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  // 아이콘 박스 (54×54 라운드 16 dangerBg + danger700 logout)
+                  Container(
+                    width: 54.w,
+                    height: 54.w,
+                    decoration: BoxDecoration(
+                      color: NewAppColor.dangerBg,
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.logout,
+                      color: NewAppColor.danger700,
+                      size: 26.sp,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  // 제목
+                  Text(
+                    '로그아웃 하시겠어요?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: NewAppColor.textStrong,
+                      fontSize: 19.sp,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Pretendard',
+                      letterSpacing: -0.19,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  // 안내문
+                  Text(
+                    '다시 로그인하려면 이메일과\n비밀번호가 필요해요.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: NewAppColor.textMuted,
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                      height: 1.55,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  // 버튼 2개
+                  Row(
+                    children: [
+                      // 취소 — borderSoft + textSecondary
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(sheetContext),
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 15.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.borderSoft,
+                              borderRadius: BorderRadius.circular(13.r),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '취소',
+                              style: TextStyle(
+                                color: NewAppColor.textSecondary,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 11.w),
+                      // 로그아웃 — danger700 + 섀도
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _performLogout(settingsContext);
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 15.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.danger700,
+                              borderRadius: BorderRadius.circular(13.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      NewAppColor.danger700.withOpacity(0.30),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '로그아웃',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  /// 1.2.0: 실제 로그아웃 처리 — FCM 비활성화 → AuthService.logout → 로그인 화면 이동
+  void _performLogout(BuildContext settingsContext) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        try {
+          await FCMService.instance.deactivateToken();
+          print('✅ SETTINGS: FCM 토큰 비활성화 완료');
+        } catch (fcmError) {
+          print('⚠️ SETTINGS: FCM 토큰 비활성화 실패 (계속 진행): $fcmError');
+        }
+
+        await _authService.logout();
+        print('✅ SETTINGS: 로그아웃 처리 완료');
+
+        if (mounted) {
+          Navigator.of(settingsContext).pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        print('❌ SETTINGS: 로그아웃 오류: $e');
+        if (mounted) {
+          try {
+            Navigator.of(settingsContext).pushNamedAndRemoveUntil(
+              '/login',
+              (route) => false,
+            );
+          } catch (navError) {
+            print('❌ SETTINGS: 네비게이션 오류: $navError');
+          }
+        }
+      }
+    });
   }
 }

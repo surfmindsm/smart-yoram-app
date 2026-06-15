@@ -171,90 +171,106 @@ class _AdminMemberManagementScreenState
   }
 
   @override
+  // 1.2.0 C 방향: 주소록 화면(members_screen)과 동일한 패턴 + 우측 user-plus 액션
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        title: const Text('교인 관리'),
-        backgroundColor: NewAppColor.neutral100,
-        foregroundColor: NewAppColor.neutral900,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToCreate,
-        backgroundColor: NewAppColor.primary600,
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '교인 관리',
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person_add_alt_1,
+                color: NewAppColor.skyDeep, size: 22.sp),
+            onPressed: _navigateToCreate,
+          ),
+        ],
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
       ),
       body: Column(
         children: [
-          SizedBox(height: 10.h),
-          // 검색창
+          // 상단 흰 영역 (검색 + 필터)
           Container(
-            padding: EdgeInsets.all(16.r),
-            color: Colors.transparent,
-            child: Container(
-              width: 350.w,
-              height: 48.h,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12.r),
-                gradient: LinearGradient(
-                  colors: [
-                    NewAppColor.primary600,
-                    NewAppColor.primary600.withValues(alpha: 0.7),
-                    NewAppColor.primary600,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Container(
-                margin: EdgeInsets.all(1.r), // 그라디언트 보더 두께
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(11.r),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(width: 16.w),
-                    Icon(
-                      Icons.search,
-                      size: 20.r,
-                      color: NewAppColor.neutral500,
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: '이름, 전화번호 검색 (초성 검색 가능)',
-                          hintStyle: const FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral500,
-                              ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        style: const FigmaTextStyles().body2.copyWith(
-                              color: NewAppColor.neutral900,
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: 12.h,
+              left: 18.w,
+              right: 18.w,
+              bottom: 14.h,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(width: 1, color: NewAppColor.borderSoft),
               ),
             ),
-          ),
-
-          // 필터 바와 정렬 버튼
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _buildFilterBar()),
-                SizedBox(width: 8.w),
-                _buildSortButton(),
+                // 검색바 — borderSoft 채움형 무테
+                Container(
+                  decoration: BoxDecoration(
+                    color: NewAppColor.borderSoft,
+                    borderRadius: BorderRadius.circular(11.r),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search,
+                        size: 18.sp,
+                        color: NewAppColor.textTertiary,
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: '이름·연락처 검색',
+                            hintStyle: FigmaTextStyles().body3.copyWith(
+                                  color: NewAppColor.textTertiary,
+                                ),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            isDense: true,
+                          ),
+                          style: FigmaTextStyles().body3.copyWith(
+                                color: NewAppColor.textStrong,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 11.h),
+                // 필터 칩 + 정렬 버튼
+                Row(
+                  children: [
+                    Expanded(child: _buildFilterBar()),
+                    SizedBox(width: 8.w),
+                    _buildSortButton(),
+                  ],
+                ),
               ],
             ),
           ),
-
           // 교인 목록
           Expanded(
             child: _buildMemberList(),
@@ -266,36 +282,50 @@ class _AdminMemberManagementScreenState
 
   Widget _buildFilterBar() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 12.h),
-      color: Colors.transparent,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
+            // '전체 N' 칩 — 시안 §267 (총 인원 표시 + 활성 색)
+            _buildDropdownButton(
+              label: '전체 ${filteredMembers.length}',
+              isSelected: true,
+              hideChevron: true,
+              onTap: () {
+                // 모든 필터 해제 + 검색 초기화
+                setState(() {
+                  selectedPositionCategory = null;
+                  selectedDepartment = null;
+                  selectedDistrict = null;
+                  selectedDistrictName = null;
+                  _searchController.clear();
+                });
+                _filterMembers();
+              },
+            ),
+            SizedBox(width: 7.w),
             // 직분별 필터
             _buildDropdownButton(
               label: selectedPositionCategory != null
                   ? positionCategories[selectedPositionCategory]!
-                  : '직분별',
+                  : '직분',
               isSelected: selectedPositionCategory != null,
               onTap: _showPositionFilter,
             ),
-            SizedBox(width: 8.w),
-
+            SizedBox(width: 7.w),
             // 부서별 필터
             _buildDropdownButton(
               label: selectedDepartment != null
                   ? MemberDepartmentOptions.getLabel(selectedDepartment) ??
                       selectedDepartment!
-                  : '부서별',
+                  : '부서',
               isSelected: selectedDepartment != null,
               onTap: _showDepartmentFilter,
             ),
-            SizedBox(width: 8.w),
-
-            // 조직별 필터 (구역)
+            SizedBox(width: 7.w),
+            // 구역 필터
             _buildDropdownButton(
-              label: selectedDistrictName ?? '조직별',
+              label: selectedDistrictName ?? '구역',
               isSelected: selectedDistrict != null,
               onTap: _showDistrictFilter,
             ),
@@ -305,68 +335,66 @@ class _AdminMemberManagementScreenState
     );
   }
 
+  // 1.2.0 C 방향: 정렬 버튼 (라운드 10 + skyDeep 아이콘)
   Widget _buildSortButton() {
     return GestureDetector(
       onTap: _toggleSort,
       child: Container(
-        height: 36.h,
-        padding: EdgeInsets.symmetric(horizontal: 12.w),
+        width: 34.w,
+        height: 34.h,
         decoration: BoxDecoration(
-          color: NewAppColor.transparent,
-          borderRadius: BorderRadius.circular(8.r),
+          color: Colors.white,
+          border: Border.all(color: NewAppColor.borderStrong, width: 1),
+          borderRadius: BorderRadius.circular(10.r),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '이름순',
-              style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral700,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-            SizedBox(width: 4.w),
-            Icon(
-              sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-              size: 16.sp,
-              color: NewAppColor.neutral700,
-            ),
-          ],
+        alignment: Alignment.center,
+        child: Icon(
+          Icons.swap_vert,
+          size: 16.sp,
+          color: NewAppColor.skyDeep,
         ),
       ),
     );
   }
 
+  // 1.2.0 C 방향: 필터 칩 (활성=skyPrimary 채움/흰글자, 비활성=흰배경 + borderStrong + textSecondary)
   Widget _buildDropdownButton({
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
+    bool hideChevron = false,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 36.h,
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 7.h),
         decoration: BoxDecoration(
-          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral200,
-          borderRadius: BorderRadius.circular(18.r),
+          color: isSelected ? NewAppColor.skyPrimary : Colors.white,
+          border: isSelected
+              ? null
+              : Border.all(color: NewAppColor.borderStrong, width: 1),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               label,
-              style: FigmaTextStyles().body2.copyWith(
-                    color: isSelected ? Colors.white : NewAppColor.neutral700,
-                    fontWeight: FontWeight.w500,
+              style: FigmaTextStyles().caption2.copyWith(
+                    color:
+                        isSelected ? Colors.white : NewAppColor.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.5.sp,
                   ),
             ),
-            SizedBox(width: 4.w),
-            Icon(
-              Icons.keyboard_arrow_down,
-              size: 16.sp,
-              color: isSelected ? Colors.white : NewAppColor.neutral700,
-            ),
+            if (!hideChevron) ...[
+              SizedBox(width: 4.w),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 14.sp,
+                color: isSelected ? Colors.white : NewAppColor.textSecondary,
+              ),
+            ],
           ],
         ),
       ),
@@ -585,18 +613,19 @@ class _AdminMemberManagementScreenState
     );
   }
 
+  // 1.2.0 C 방향: 초성 섹션 + 흰 카드 그룹 (주소록과 통일)
   Widget _buildMemberList() {
     if (isLoading) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: NewAppColor.primary600),
+            CircularProgressIndicator(color: NewAppColor.skyPrimary),
             SizedBox(height: 16.h),
             Text(
               '교인 정보를 불러오는 중...',
-              style: const FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral500,
+              style: FigmaTextStyles().body3.copyWith(
+                    color: NewAppColor.textMuted,
                   ),
             ),
           ],
@@ -607,62 +636,35 @@ class _AdminMemberManagementScreenState
     if (filteredMembers.isEmpty) {
       return RefreshIndicator(
         onRefresh: () => _loadMembers(),
-        color: NewAppColor.primary600,
+        color: NewAppColor.skyPrimary,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: SizedBox(
             height: MediaQuery.of(context).size.height - 300.h,
             child: Center(
-              child: SizedBox(
-                width: 272.w,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 48.w,
-                      height: 48.h,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: const BoxDecoration(),
-                      child: SvgPicture.asset(
-                        'assets/icons/members_empty.svg',
-                        width: 48.w,
-                        height: 48.h,
-                        colorFilter: ColorFilter.mode(
-                          NewAppColor.neutral800,
-                          BlendMode.srcIn,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.people_outline,
+                    size: 56.sp,
+                    color: NewAppColor.iconFaint,
+                  ),
+                  SizedBox(height: 14.h),
+                  Text(
+                    '교인 정보가 없습니다',
+                    style: FigmaTextStyles().subtitle2.copyWith(
+                          color: NewAppColor.textSecondary,
                         ),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            '교인 정보가 없습니다',
-                            textAlign: TextAlign.center,
-                            style: FigmaTextStyles().title3.copyWith(
-                                  color: NewAppColor.neutral800,
-                                ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            '다른 카테고리를 선택하거나 검색어를 변경해보세요',
-                            textAlign: TextAlign.center,
-                            style: FigmaTextStyles().body2.copyWith(
-                                  color: NewAppColor.neutral500,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    '다른 카테고리를 선택하거나 검색어를 변경해보세요',
+                    style: FigmaTextStyles().caption1.copyWith(
+                          color: NewAppColor.textMuted,
+                        ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -670,208 +672,212 @@ class _AdminMemberManagementScreenState
       );
     }
 
+    final grouped = _groupMembersByInitial(filteredMembers);
+
     return RefreshIndicator(
       onRefresh: () => _loadMembers(),
-      color: NewAppColor.primary600,
-      child: ListView.separated(
-        padding: EdgeInsets.all(20.w),
+      color: NewAppColor.skyPrimary,
+      child: ListView.builder(
+        padding: EdgeInsets.fromLTRB(14.w, 8.h, 14.w, 18.h),
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: filteredMembers.length,
-        separatorBuilder: (context, index) => SizedBox(height: 8.h),
-        itemBuilder: (context, index) {
-          if (index >= filteredMembers.length) {
-            return const SizedBox.shrink();
-          }
-          final member = filteredMembers[index];
-          return _buildMemberCard(member);
+        itemCount: grouped.length,
+        itemBuilder: (context, sectionIndex) {
+          final group = grouped[sectionIndex];
+          final initial = group.$1;
+          final members = group.$2;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 섹션 헤더 (초성)
+              Padding(
+                padding: EdgeInsets.fromLTRB(6.w, 10.h, 6.w, 6.h),
+                child: Text(
+                  initial,
+                  style: FigmaTextStyles().sectionHeader.copyWith(
+                        color: NewAppColor.skyDeep,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0,
+                      ),
+                ),
+              ),
+              // 카드 그룹
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: NewAppColor.borderHair, width: 1),
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: List.generate(members.length, (i) {
+                    final isLast = i == members.length - 1;
+                    return _buildMemberRow(members[i], isLast: isLast);
+                  }),
+                ),
+              ),
+            ],
+          );
         },
       ),
     );
   }
 
-  Widget _buildMemberCard(Member member) {
-    return GestureDetector(
+  // 초성별로 그룹화 (members_screen과 동일)
+  List<(String, List<Member>)> _groupMembersByInitial(List<Member> members) {
+    final order = <String>[];
+    final map = <String, List<Member>>{};
+    for (final m in members) {
+      final initial = _initialOf(m.name);
+      if (!map.containsKey(initial)) {
+        order.add(initial);
+        map[initial] = [];
+      }
+      map[initial]!.add(m);
+    }
+    return order.map((k) => (k, map[k]!)).toList();
+  }
+
+  String _initialOf(String name) {
+    if (name.isEmpty) return '#';
+    final first = name[0];
+    final chosung = KoreanSearchUtil.getChosung(first);
+    if (chosung != null) return chosung;
+    final code = first.codeUnitAt(0);
+    final isAlpha = (code >= 0x41 && code <= 0x5A) || (code >= 0x61 && code <= 0x7A);
+    return isAlpha ? first.toUpperCase() : '#';
+  }
+
+  // 1.2.0 C 방향: 교인 행 (라운드 13 skyTint 아바타 + 이름 + 직분 배지 + 부서·구역 + chevron)
+  // 시안 §273-276 — 우측 상태 배지(활동/새가족/장결) 제거 후 chevron만 표시
+  Widget _buildMemberRow(Member member, {required bool isLast}) {
+    final isPlain = member.positionLabel == '성도' || member.positionLabel == '교인';
+    return InkWell(
       onTap: () => _navigateToDetail(member),
       child: Container(
-        width: double.infinity,
-        height: 76.h,
-        clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              left: 16.w,
-              top: 7.h,
-              child: SizedBox(
-                width: 253.w,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 42.w,
-                      height: 42.h,
-                      decoration: ShapeDecoration(
-                        image: member.fullProfilePhotoUrl != null &&
-                                member.fullProfilePhotoUrl!.isNotEmpty
-                            ? DecorationImage(
-                                image:
-                                    NetworkImage(member.fullProfilePhotoUrl!),
-                                fit: BoxFit.fill,
-                              )
-                            : null,
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                            color: NewAppColor.neutral300,
-                          ),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                      ),
-                      child: member.fullProfilePhotoUrl == null ||
-                              member.fullProfilePhotoUrl!.isEmpty
-                          ? Center(
-                              child: Text(
-                                member.name.isNotEmpty ? member.name[0] : '?',
-                                style: TextStyle(
-                                  color: NewAppColor.neutral900,
-                                  fontSize: 16.sp,
-                                  fontFamily: 'Pretendard',
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            )
-                          : null,
-                    ),
-                    SizedBox(width: 16.w),
-                    SizedBox(
-                      width: 195.w,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 195.w,
-                                  child: Text(
-                                    member.name,
-                                    style: TextStyle(
-                                      color: NewAppColor.neutral900,
-                                      fontSize: 16.sp,
-                                      fontFamily: 'Pretendard',
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.50,
-                                      letterSpacing: -0.40,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 195.w,
-                                  child: Text(
-                                    member.phone,
-                                    style: TextStyle(
-                                      color: NewAppColor.neutral600,
-                                      fontSize: 13.sp,
-                                      fontFamily: 'Pretendard Variable',
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.38,
-                                      letterSpacing: -0.33,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          SizedBox(
-                            width: 195.w,
-                            child: Text(
-                              member.positionLabel,
-                              style: TextStyle(
-                                color: NewAppColor.neutral600,
-                                fontSize: 11.sp,
-                                fontFamily: 'Pretendard Variable',
-                                fontWeight: FontWeight.w400,
-                                height: 1.45,
-                                letterSpacing: -0.28,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        decoration: isLast
+            ? null
+            : BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(width: 1, color: NewAppColor.borderHair),
                 ),
               ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 아바타 — 라운드 13 skyTint
+            Container(
+              width: 46.w,
+              height: 46.h,
+              decoration: BoxDecoration(
+                color: NewAppColor.skyTint,
+                borderRadius: BorderRadius.circular(13.r),
+                image: (member.fullProfilePhotoUrl != null &&
+                        member.fullProfilePhotoUrl!.isNotEmpty)
+                    ? DecorationImage(
+                        image: NetworkImage(member.fullProfilePhotoUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: (member.fullProfilePhotoUrl == null ||
+                      member.fullProfilePhotoUrl!.isEmpty)
+                  ? Text(
+                      member.name.isNotEmpty ? member.name[0] : '?',
+                      style: TextStyle(
+                        color: NewAppColor.skyDeep,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard',
+                      ),
+                    )
+                  : null,
             ),
-            Positioned(
-              left: 269.w,
-              top: 24.h,
-              child: Row(
+            SizedBox(width: 13.w),
+            // 이름 + 직분 배지 + 부서·구역
+            Expanded(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 28.w,
-                    height: 28.h,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: ShapeDecoration(
-                      color: NewAppColor.success200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100.r),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          member.name,
+                          style: FigmaTextStyles().cardTitleSm.copyWith(
+                                color: NewAppColor.textStrong,
+                                fontSize: 15.5.sp,
+                              ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.phone,
-                        color: NewAppColor.success600,
-                        size: 16.sp,
-                      ),
-                      onPressed: () => _makePhoneCall(member.phone),
-                      padding: EdgeInsets.zero,
-                    ),
+                      if (member.positionLabel.isNotEmpty) ...[
+                        SizedBox(width: 7.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 1.h),
+                          decoration: BoxDecoration(
+                            color: isPlain
+                                ? NewAppColor.borderSoft
+                                : NewAppColor.skyTint,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            member.positionLabel,
+                            style: TextStyle(
+                              color: isPlain
+                                  ? NewAppColor.textSecondary
+                                  : NewAppColor.skyDeep,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  SizedBox(width: 9.w),
-                  Container(
-                    width: 28.w,
-                    height: 28.h,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: ShapeDecoration(
-                      color: NewAppColor.primary200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100.r),
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.chat_bubble,
-                        color: NewAppColor.primary600,
-                        size: 16.sp,
-                      ),
-                      onPressed: () => _sendMessage(member.phone),
-                      padding: EdgeInsets.zero,
-                    ),
+                  SizedBox(height: 3.h),
+                  Text(
+                    _buildSubLine(member),
+                    style: FigmaTextStyles().caption2.copyWith(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
+            ),
+            SizedBox(width: 8.w),
+            Icon(
+              Icons.chevron_right,
+              size: 18.sp,
+              color: NewAppColor.iconFaint,
             ),
           ],
         ),
       ),
     );
+  }
+
+  // 부서 · 구역 (시안 §273)
+  String _buildSubLine(Member member) {
+    final parts = <String>[];
+    final dept = member.department;
+    if (dept != null && dept.isNotEmpty) {
+      parts.add(MemberDepartmentOptions.getLabel(dept) ?? dept);
+    }
+    final district = member.district;
+    if (district != null && district.isNotEmpty) {
+      parts.add(district);
+    }
+    return parts.isEmpty ? member.phone : parts.join(' · ');
   }
 
   Future<void> _makePhoneCall(String? phone) async {

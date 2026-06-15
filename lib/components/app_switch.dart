@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../resource/color_style.dart';
+import '../resource/color_style_new.dart';
 
 enum SwitchSize {
   sm,
@@ -78,7 +79,7 @@ class AppSwitch extends StatelessWidget {
             height: sizeConfig.trackHeight,
             decoration: BoxDecoration(
               color: value
-                ? (isDisabled ? AppColor.secondary02 : AppColor.primary600)
+                ? (isDisabled ? AppColor.secondary02 : NewAppColor.skyPrimary)
                 : (isDisabled ? AppColor.secondary02 : AppColor.secondary03),
               borderRadius: BorderRadius.circular(sizeConfig.trackHeight / 2),
             ),

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart' hide IconButton;
 import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../components/index.dart';
-import '../../components/admin/status_badge.dart';
 import '../../models/pastoral_care_request.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
@@ -36,26 +33,6 @@ class _AdminPastoralCareDetailScreenState
   void initState() {
     super.initState();
     _request = widget.request;
-  }
-
-  Future<void> _makePhoneCall() async {
-    final phoneNumber = _request.requesterPhone.isNotEmpty
-        ? _request.requesterPhone
-        : (_request.member?.phone ?? '');
-    if (phoneNumber.isEmpty) return;
-
-    final uri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      if (mounted) {
-        AppToast.show(
-          context,
-          '전화를 걸 수 없습니다',
-          type: ToastType.error,
-        );
-      }
-    }
   }
 
   Future<void> _changeStatus(String newStatus) async {
@@ -135,409 +112,608 @@ class _AdminPastoralCareDetailScreenState
   }
 
   @override
+  // 1.2.0 C 방향: 시안 — 헤더카드(아바타+이름+성도칩+부서·구역+상태칩+전화/문자 CTA) /
+  // 신청 내용 카드 / 하단 고정 액션 푸터 (반려 + 승인하기)
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        backgroundColor: NewAppColor.neutral100,
+        backgroundColor: NewAppColor.canvasAlt,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: material.IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '심방 신청 상세',
-          style: const FigmaTextStyles().title2.copyWith(
-            color: NewAppColor.neutral900,
-          ),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 신청자 정보 섹션
-                  _buildRequesterSection(),
-                  SizedBox(height: 16.h),
-                  // 신청 내용 섹션
-                  _buildRequestInfoSection(),
-                  SizedBox(height: 16.h),
-                  // 위치 정보 섹션
-                  if (_request.address != null &&
-                      _request.address!.isNotEmpty)
-                    _buildLocationSection(),
-                  if (_request.address != null && _request.address!.isNotEmpty)
-                    SizedBox(height: 16.h),
-                  // 상태 관리 섹션
-                  _buildStatusManagementSection(),
-                  SizedBox(height: 32.h),
-                ],
+          ? Center(
+              child: CircularProgressIndicator(
+                color: NewAppColor.skyPrimary,
               ),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(14.w, 4.h, 14.w, 24.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildRequesterSection(),
+                        SizedBox(height: 12.h),
+                        _buildRequestInfoSection(),
+                      ],
+                    ),
+                  ),
+                ),
+                _buildBottomActionBar(),
+              ],
             ),
     );
   }
 
   Widget _buildRequesterSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '신청자 정보',
-                  style: const FigmaTextStyles().title3.copyWith(
-                    color: NewAppColor.neutral900,
-                  ),
-                ),
-              ),
-              StatusBadge(
-                status: _request.status,
-                label: _getStatusLabel(_request.status),
-                isUrgent: _request.isUrgent,
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          _buildInfoRow(
-            icon: Icons.person_outline,
-            label: '이름',
-            value: _request.requesterName.isNotEmpty
-                ? _request.requesterName
-                : (_request.member?.name ?? '알 수 없음'),
-          ),
-          if (_request.requesterPhone.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.phone_outlined,
-              label: '전화번호',
-              value: _request.requesterPhone,
-              onTap: _makePhoneCall,
-            ),
-          ] else if (_request.member?.phone.isNotEmpty ?? false) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.phone_outlined,
-              label: '전화번호',
-              value: _request.member!.phone,
-              onTap: _makePhoneCall,
-            ),
-          ],
-          if (_request.contactInfo != null &&
-              _request.contactInfo!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.contact_phone_outlined,
-              label: '연락처 정보',
-              value: _request.contactInfo!,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+    final name = _request.requesterName.isNotEmpty
+        ? _request.requesterName
+        : (_request.member?.name ?? '요청자');
+    final initial = name.isNotEmpty ? name[0] : '?';
+    final phone = _request.requesterPhone.isNotEmpty
+        ? _request.requesterPhone
+        : (_request.member?.phone ?? '');
+    final position = _request.member?.positionLabel ?? '';
+    final dept = _request.department ?? _request.member?.department ?? '';
+    final district = _request.member?.district ?? '';
+    final metaParts = [
+      if (dept.isNotEmpty) dept,
+      if (district.isNotEmpty) district,
+      if (phone.isNotEmpty) phone,
+    ];
 
-  Widget _buildRequestInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '신청 내용',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          // 신청 유형
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: NewAppColor.primary100,
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Text(
-                  _request.requestType,
-                  style: const FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.primary600,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: _getPriorityColor(_request.priority),
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Text(
-                  _getPriorityLabel(_request.priority),
-                  style: const FigmaTextStyles().body2.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          // 제목
-          if (_request.title.isNotEmpty) ...[
-            Text(
-              _request.title,
-              style: const FigmaTextStyles().title3.copyWith(
-                color: NewAppColor.neutral900,
-              ),
-            ),
-            SizedBox(height: 12.h),
-          ],
-          // 내용
-          Text(
-            _request.description,
-            style: const FigmaTextStyles().body1.copyWith(
-              color: NewAppColor.neutral700,
-              height: 1.5,
-            ),
-          ),
-          if (_request.preferredDate != null) ...[
-            SizedBox(height: 16.h),
-            Divider(color: NewAppColor.neutral200),
-            SizedBox(height: 16.h),
-            _buildInfoRow(
-              icon: Icons.calendar_today_outlined,
-              label: '희망 날짜',
-              value: _formatDate(_request.preferredDate!),
-            ),
-          ],
-          if (_request.preferredTime != null &&
-              _request.preferredTime!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.access_time_outlined,
-              label: '희망 시간',
-              value: _request.preferredTime!,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocationSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '방문 위치',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          _buildInfoRow(
-            icon: Icons.location_on_outlined,
-            label: '주소',
-            value: _request.address!,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusManagementSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '상태 관리',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          // 상태별 액션 버튼들
-          if (_request.status == 'pending') ...[
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                onPressed: () => _changeStatus('approved'),
-                child: const Text('승인'),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                onPressed: () => _changeStatus('cancelled'),
-                variant: ButtonVariant.destructive,
-                child: const Text('거절'),
-              ),
-            ),
-          ],
-          if (_request.status == 'approved') ...[
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                onPressed: () => _changeStatus('in_progress'),
-                child: const Text('진행 시작'),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                onPressed: () => _changeStatus('cancelled'),
-                variant: ButtonVariant.secondary,
-                child: const Text('취소'),
-              ),
-            ),
-          ],
-          if (_request.status == 'in_progress') ...[
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                onPressed: () => _changeStatus('completed'),
-                child: const Text('완료 처리'),
-              ),
-            ),
-          ],
-          if (_request.status == 'completed') ...[
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: const Color(0xFF2E7D32),
-                    size: 24.sp,
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Text(
-                      '완료된 심방 신청입니다',
-                      style: const FigmaTextStyles().body1.copyWith(
-                        color: const Color(0xFF2E7D32),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (_request.status == 'cancelled') ...[
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFEBEE),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.cancel,
-                    color: const Color(0xFFC62828),
-                    size: 24.sp,
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Text(
-                      '취소된 심방 신청입니다',
-                      style: const FigmaTextStyles().body1.copyWith(
-                        color: const Color(0xFFC62828),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8.h),
-        child: Row(
+    return _sectionCard(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 32.w,
-              height: 32.h,
+              width: 54.w,
+              height: 54.w,
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.skyTint,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 18.sp,
-                color: NewAppColor.neutral700,
+              alignment: Alignment.center,
+              child: Text(
+                initial,
+                style: TextStyle(
+                  color: NewAppColor.skyDeep,
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Pretendard',
+                ),
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    label,
-                    style: const FigmaTextStyles().caption1.copyWith(
-                      color: NewAppColor.neutral600,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            color: NewAppColor.textStrong,
+                            fontSize: 17.sp,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Pretendard',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (position.isNotEmpty) ...[
+                        SizedBox(width: 6.w),
+                        _buildPositionChip(position),
+                      ],
+                    ],
                   ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    value,
-                    style: const FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
+                  if (metaParts.isNotEmpty) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      metaParts.join(' · '),
+                      style: TextStyle(
+                        color: NewAppColor.textTertiary,
+                        fontSize: 12.5.sp,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Pretendard',
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
-            if (onTap != null)
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16.sp,
-                color: NewAppColor.neutral400,
-              ),
+            SizedBox(width: 8.w),
+            _buildStatusChip(_request.status),
           ],
         ),
+      ],
+    );
+  }
+
+  // 시안: 성도/직분 칩 (skyTint + skyDeep, 라운드 999)
+  Widget _buildPositionChip(String label) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.skyTint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: NewAppColor.skyDeep,
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'Pretendard',
+        ),
+      ),
+    );
+  }
+
+  // 1.2.0: 상태 칩 (목록 카드와 동일)
+  Widget _buildStatusChip(String status) {
+    final ({Color bg, Color fg, String label}) style;
+    switch (status) {
+      case 'pending':
+        style = (
+          bg: NewAppColor.warningBg,
+          fg: NewAppColor.warning700,
+          label: '대기',
+        );
+        break;
+      case 'approved':
+        style = (
+          bg: NewAppColor.skyTint,
+          fg: NewAppColor.skyDeep,
+          label: '승인',
+        );
+        break;
+      case 'in_progress':
+        style = (
+          bg: NewAppColor.skyTint,
+          fg: NewAppColor.skyDeep,
+          label: '진행중',
+        );
+        break;
+      case 'completed':
+        style = (
+          bg: NewAppColor.successBg,
+          fg: NewAppColor.success700,
+          label: '완료',
+        );
+        break;
+      case 'cancelled':
+        style = (
+          bg: NewAppColor.dangerBg,
+          fg: NewAppColor.danger700,
+          label: '취소',
+        );
+        break;
+      case 'scheduled':
+        style = (
+          bg: NewAppColor.skyTint,
+          fg: NewAppColor.skyDeep,
+          label: '예정',
+        );
+        break;
+      default:
+        style = (
+          bg: NewAppColor.borderSoft,
+          fg: NewAppColor.textSecondary,
+          label: status,
+        );
+    }
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+      decoration: BoxDecoration(
+        color: style.bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        style.label,
+        style: TextStyle(
+          color: style.fg,
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w800,
+          fontFamily: 'Pretendard',
+        ),
+      ),
+    );
+  }
+
+  // 시안: 신청 내용 카드 — 라벨/값 라인 정렬 + 종류 칩 + 요청 사항 본문 + 메타
+  Widget _buildRequestInfoSection() {
+    final preferredText = _formatPreferredSchedule();
+    final body = _request.description;
+    final metaParts = <String>[
+      '신청일 ${_formatRequestDate(_request.createdAt)}',
+      if (_request.requesterName.isNotEmpty || _request.member?.name != null)
+        '신청자 ${_request.requesterName.isNotEmpty ? _request.requesterName : _request.member!.name}',
+    ];
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(18.w, 16.h, 18.w, 6.h),
+            child: Text(
+              '신청 내용',
+              style: TextStyle(
+                color: NewAppColor.textTertiary,
+                fontSize: 12.5.sp,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ),
+          // 라벨/값 라인업
+          _buildLabelValueRow(
+            icon: Icons.medical_services_outlined,
+            label: '심방 종류',
+            valueWidget: _buildTypeChip(
+              _request.requestTypeDisplayName,
+            ),
+          ),
+          if (preferredText.isNotEmpty)
+            _buildLabelValueRow(
+              icon: Icons.event_outlined,
+              label: '희망 일시',
+              value: preferredText,
+            ),
+          if (_request.address != null && _request.address!.isNotEmpty)
+            _buildLabelValueRow(
+              icon: Icons.location_on_outlined,
+              label: '장소',
+              value: _request.address!,
+            ),
+          SizedBox(height: 8.h),
+          // 요청 사항 본문
+          if (body.isNotEmpty) ...[
+            Container(height: 1, color: NewAppColor.borderHair),
+            Padding(
+              padding: EdgeInsets.fromLTRB(18.w, 14.h, 18.w, 0.h),
+              child: Text(
+                '요청 사항',
+                style: TextStyle(
+                  color: NewAppColor.textTertiary,
+                  fontSize: 12.5.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(18.w, 8.h, 18.w, 14.h),
+              child: Text(
+                body,
+                style: TextStyle(
+                  color: NewAppColor.textBody,
+                  fontSize: 13.5.sp,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Pretendard',
+                  height: 1.55,
+                ),
+              ),
+            ),
+          ] else
+            SizedBox(height: 8.h),
+          // 메타 (신청일·신청자)
+          if (metaParts.isNotEmpty) ...[
+            Container(height: 1, color: NewAppColor.borderHair),
+            Padding(
+              padding: EdgeInsets.fromLTRB(18.w, 12.h, 18.w, 14.h),
+              child: Text(
+                metaParts.join(' · '),
+                style: TextStyle(
+                  color: NewAppColor.textTertiary,
+                  fontSize: 11.5.sp,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // 시안: 라벨(좌, 회색 아이콘+텍스트) / 값(우, 진한 텍스트 또는 칩)
+  Widget _buildLabelValueRow({
+    required IconData icon,
+    required String label,
+    String? value,
+    Widget? valueWidget,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 9.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16.sp, color: NewAppColor.textTertiary),
+          SizedBox(width: 8.w),
+          Text(
+            label,
+            style: TextStyle(
+              color: NewAppColor.textTertiary,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          const Spacer(),
+          if (valueWidget != null)
+            valueWidget
+          else
+            Flexible(
+              child: Text(
+                value ?? '',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: NewAppColor.textStrong,
+                  fontSize: 13.5.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 시안: 신청 종류 칩 (skyPrimary fill + 흰 글씨)
+  Widget _buildTypeChip(String label) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.skyPrimary,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 11.5.sp,
+          fontWeight: FontWeight.w800,
+          fontFamily: 'Pretendard',
+        ),
+      ),
+    );
+  }
+
+  // 시안 하단 고정 액션 바 — 반려(연한 빨강 fill) + 승인하기(skyPrimary, 우측 확장)
+  Widget _buildBottomActionBar() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 16.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.canvasAlt,
+        border: Border(
+          top: BorderSide(color: NewAppColor.borderHair, width: 1),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: _buildStatusActions(),
+      ),
+    );
+  }
+
+  Widget _buildStatusActions() {
+    switch (_request.status) {
+      case 'pending':
+        return Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: _buildActionButton(
+                label: '반려',
+                onTap: () => _changeStatus('cancelled'),
+                background: NewAppColor.dangerBg,
+                foreground: NewAppColor.danger700,
+              ),
+            ),
+            SizedBox(width: 9.w),
+            Expanded(
+              flex: 2,
+              child: _buildActionButton(
+                label: '승인하기',
+                onTap: () => _changeStatus('approved'),
+                background: NewAppColor.skyPrimary,
+                foreground: Colors.white,
+                shadow: true,
+              ),
+            ),
+          ],
+        );
+      case 'approved':
+        return Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: _buildActionButton(
+                label: '취소',
+                onTap: () => _changeStatus('cancelled'),
+                background: NewAppColor.borderSoft,
+                foreground: NewAppColor.textSecondary,
+              ),
+            ),
+            SizedBox(width: 9.w),
+            Expanded(
+              flex: 2,
+              child: _buildActionButton(
+                label: '진행 시작',
+                onTap: () => _changeStatus('in_progress'),
+                background: NewAppColor.skyPrimary,
+                foreground: Colors.white,
+                shadow: true,
+              ),
+            ),
+          ],
+        );
+      case 'in_progress':
+        return _buildActionButton(
+          label: '완료 처리',
+          onTap: () => _changeStatus('completed'),
+          background: NewAppColor.skyPrimary,
+          foreground: Colors.white,
+          shadow: true,
+        );
+      case 'completed':
+        return _buildStatusBanner(
+          icon: Icons.check_circle_outline,
+          label: '완료된 심방 신청입니다',
+          bg: NewAppColor.successBg,
+          fg: NewAppColor.success700,
+        );
+      case 'cancelled':
+        return _buildStatusBanner(
+          icon: Icons.cancel_outlined,
+          label: '취소/반려된 심방 신청입니다',
+          bg: NewAppColor.dangerBg,
+          fg: NewAppColor.danger700,
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required VoidCallback onTap,
+    required Color background,
+    required Color foreground,
+    bool shadow = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 14.h),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(13.r),
+          boxShadow: shadow
+              ? [
+                  BoxShadow(
+                    color: background.withOpacity(0.30),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: foreground,
+            fontSize: 14.5.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBanner({
+    required IconData icon,
+    required String label,
+    required Color bg,
+    required Color fg,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(13.r),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: fg, size: 18.sp),
+          SizedBox(width: 9.w),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: fg,
+                fontSize: 13.5.sp,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 희망 일시 포맷팅 — 시안: "6/18(목) 오후"
+  String _formatPreferredSchedule() {
+    final date = _request.preferredDate;
+    if (date == null) return '';
+    const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+    final weekday = weekdays[date.weekday - 1];
+    final timeStart = _request.preferredTimeStart;
+    String periodOrTime;
+    if (timeStart != null && timeStart.isNotEmpty) {
+      periodOrTime = timeStart;
+    } else {
+      periodOrTime = date.hour < 12 ? '오전' : '오후';
+    }
+    return '${date.month}/${date.day}($weekday) $periodOrTime';
+  }
+
+  // 신청일 메타 — 시안: "6월 14일"
+  String _formatRequestDate(DateTime date) {
+    return '${date.month}월 ${date.day}일';
+  }
+
+  // 1.2.0 공용 카드 — 흰 배경 + borderHair 1px + 라운드 14
+  Widget _sectionCard({required List<Widget> children}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(18.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
       ),
     );
   }
@@ -556,36 +732,6 @@ class _AdminPastoralCareDetailScreenState
         return '취소';
       default:
         return status;
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
-  }
-
-  String _getPriorityLabel(String priority) {
-    switch (priority) {
-      case 'high':
-        return '높음';
-      case 'medium':
-        return '보통';
-      case 'low':
-        return '낮음';
-      default:
-        return priority;
-    }
-  }
-
-  Color _getPriorityColor(String priority) {
-    switch (priority) {
-      case 'high':
-        return const Color(0xFFC62828);
-      case 'medium':
-        return const Color(0xFFF57F17);
-      case 'low':
-        return const Color(0xFF2E7D32);
-      default:
-        return NewAppColor.neutral600;
     }
   }
 

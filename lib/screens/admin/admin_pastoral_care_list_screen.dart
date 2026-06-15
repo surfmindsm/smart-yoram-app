@@ -26,7 +26,7 @@ class _AdminPastoralCareListScreenState
   List<PastoralCareRequest> _requests = [];
   List<PastoralCareRequest> _filteredRequests = [];
   bool _isLoading = false;
-  String _selectedStatus = 'all'; // all, pending, approved, in_progress, completed, cancelled
+  String _selectedStatus = 'pending'; // pending(대기) / approved(+in_progress) / completed
 
   @override
   void initState() {
@@ -73,8 +73,12 @@ class _AdminPastoralCareListScreenState
   void _applyFilters() {
     List<PastoralCareRequest> filtered = _requests;
 
-    // 상태 필터
-    if (_selectedStatus != 'all') {
+    // 상태 필터 — '승인' 탭은 approved + in_progress 묶음
+    if (_selectedStatus == 'approved') {
+      filtered = filtered
+          .where((r) => r.status == 'approved' || r.status == 'in_progress')
+          .toList();
+    } else if (_selectedStatus != 'all') {
       filtered = filtered.where((r) => r.status == _selectedStatus).toList();
     }
 
@@ -107,116 +111,96 @@ class _AdminPastoralCareListScreenState
     ).then((_) => _loadRequests()); // 돌아올 때 목록 새로고침
   }
 
+  // 1.2.0 C 방향: AppBar + 탭바(대기/승인/완료) + 카드 + 카드 사이 8px 구분선
+  int _countByStatus(String status) =>
+      _requests.where((r) => r.status == status).length;
+
   @override
   Widget build(BuildContext context) {
+    final pendingCount = _countByStatus('pending');
+    final approvedCount = _countByStatus('approved') + _countByStatus('in_progress');
+    final completedCount = _countByStatus('completed');
+
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        backgroundColor: NewAppColor.neutral100,
+        backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
+        centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '심방 신청 관리',
-          style: const FigmaTextStyles().title2.copyWith(
-            color: NewAppColor.neutral900,
-          ),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
       ),
       body: Column(
         children: [
-          // 상태 필터 칩
+          // 탭바 — 대기 / 승인 / 완료 (밑줄 강조)
           Container(
-            padding: EdgeInsets.all(16.w),
-            color: NewAppColor.neutral100,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip('전체', 'all'),
-                  SizedBox(width: 8.w),
-                  _buildFilterChip('대기', 'pending'),
-                  SizedBox(width: 8.w),
-                  _buildFilterChip('승인', 'approved'),
-                  SizedBox(width: 8.w),
-                  _buildFilterChip('진행중', 'in_progress'),
-                  SizedBox(width: 8.w),
-                  _buildFilterChip('완료', 'completed'),
-                  SizedBox(width: 8.w),
-                  _buildFilterChip('취소', 'cancelled'),
-                ],
-              ),
-            ),
-          ),
-          // 결과 카운트
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-            color: NewAppColor.neutral100,
+            color: Colors.white,
             child: Row(
               children: [
-                Text(
-                  '총 ${_filteredRequests.length}건',
-                  style: const FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral700,
-                  ),
-                ),
-                if (_filteredRequests
-                    .where((r) => r.isUrgent)
-                    .isNotEmpty) ...[
-                  SizedBox(width: 12.w),
-                  Container(
-                    width: 1,
-                    height: 12.h,
-                    color: NewAppColor.neutral300,
-                  ),
-                  SizedBox(width: 12.w),
-                  Icon(
-                    Icons.error,
-                    size: 16.sp,
-                    color: Colors.red,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '긴급 ${_filteredRequests.where((r) => r.isUrgent).length}건',
-                    style: const FigmaTextStyles().body2.copyWith(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+                _buildTab('대기', pendingCount, 'pending'),
+                _buildTab('승인', approvedCount, 'approved'),
+                _buildTab('완료', completedCount, 'completed'),
               ],
             ),
           ),
+          Container(height: 1, color: NewAppColor.borderSoft),
           // 심방 신청 목록
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: NewAppColor.skyPrimary,
+                    ),
+                  )
                 : _filteredRequests.isEmpty
                     ? Center(
-                        child: Text(
-                          '심방 신청이 없습니다',
-                          style: const FigmaTextStyles().body1.copyWith(
-                            color: NewAppColor.neutral600,
-                          ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inbox_outlined,
+                              size: 56.sp,
+                              color: NewAppColor.iconFaint,
+                            ),
+                            SizedBox(height: 14.h),
+                            Text(
+                              '심방 신청이 없습니다',
+                              style: FigmaTextStyles().subtitle2.copyWith(
+                                    color: NewAppColor.textSecondary,
+                                  ),
+                            ),
+                          ],
                         ),
                       )
                     : RefreshIndicator(
                         onRefresh: _loadRequests,
-                        child: ListView.builder(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20.w,
-                            vertical: 16.h,
-                          ),
+                        color: NewAppColor.skyPrimary,
+                        child: ListView.separated(
+                          padding: EdgeInsets.zero,
                           itemCount: _filteredRequests.length,
+                          separatorBuilder: (_, __) => Container(
+                            height: 8,
+                            color: NewAppColor.borderSoft,
+                          ),
                           itemBuilder: (context, index) {
                             final request = _filteredRequests[index];
                             return PastoralCareCard(
                               request: request,
                               onTap: () => _navigateToDetail(request),
+                              onAssign: () => _navigateToDetail(request),
+                              onApprove: () => _approveRequest(request),
                             );
                           },
                         ),
@@ -227,26 +211,68 @@ class _AdminPastoralCareListScreenState
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
-    final isSelected = _selectedStatus == value;
-
-    return GestureDetector(
-      onTap: () => _onStatusFilterChanged(value),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral200,
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected ? Colors.white : NewAppColor.neutral700,
+  // 1.2.0: 탭바 항목 (활성 = skyPrimary 텍스트 + 2.5px 밑줄)
+  Widget _buildTab(String label, int count, String status) {
+    // '승인' 탭은 approved + in_progress 두 상태를 묶음
+    final isSelected = status == 'approved'
+        ? (_selectedStatus == 'approved' || _selectedStatus == 'in_progress')
+        : _selectedStatus == status;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onStatusFilterChanged(status),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 13.h),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isSelected
+                    ? NewAppColor.skyPrimary
+                    : Colors.transparent,
+                width: 2.5,
+              ),
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            '$label $count',
+            style: TextStyle(
+              color: isSelected
+                  ? NewAppColor.skyPrimary
+                  : NewAppColor.textTertiary,
+              fontSize: 13.5.sp,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              fontFamily: 'Pretendard',
+            ),
           ),
         ),
       ),
     );
+  }
+
+  // 카드 안 승인 버튼 — 상세 화면 거치지 않고 바로 승인
+  Future<void> _approveRequest(PastoralCareRequest request) async {
+    try {
+      final response = await _pastoralCareService.updateRequestStatus(
+        requestId: request.id,
+        status: 'approved',
+      );
+      if (!mounted) return;
+      if (response.success) {
+        AppToast.success(context, '심방 신청을 승인했습니다');
+        _loadRequests();
+      } else {
+        AppToast.error(
+          context,
+          response.message.isNotEmpty
+              ? response.message
+              : '승인에 실패했습니다',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.error(context, '오류가 발생했습니다: $e');
+      }
+    }
   }
 }

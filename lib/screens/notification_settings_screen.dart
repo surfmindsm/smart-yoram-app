@@ -271,13 +271,13 @@ class _NotificationSettingsScreenState
             ),
           ),
           SizedBox(width: 16.w),
-          Switch(
+          Switch.adaptive(
             value: value,
             onChanged: onChanged,
-            activeColor: NewAppColor.primary600,
-            activeTrackColor: NewAppColor.primary200,
-            inactiveThumbColor: NewAppColor.neutral400,
-            inactiveTrackColor: NewAppColor.neutral200,
+            activeColor: NewAppColor.skyPrimary,
+            activeTrackColor: NewAppColor.skyTint,
+            inactiveThumbColor: Colors.white,
+            inactiveTrackColor: NewAppColor.borderStrong,
           ),
         ],
       ),

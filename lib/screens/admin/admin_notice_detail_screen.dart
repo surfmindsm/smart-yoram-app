@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart' hide IconButton;
 import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../components/index.dart';
 import '../../models/announcement.dart';
 import '../../resource/color_style_new.dart';
@@ -9,7 +8,7 @@ import '../../resource/text_style_new.dart';
 import '../../services/announcement_service.dart';
 import 'admin_notice_editor_screen.dart';
 
-/// 관리자용 공지사항 상세 화면
+/// 관리자용 공지사항 상세 화면 — 1.2.0 C 방향
 class AdminNoticeDetailScreen extends StatefulWidget {
   final Announcement announcement;
 
@@ -34,116 +33,211 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
     _announcement = widget.announcement;
   }
 
-  Future<void> _togglePinStatus() async {
-    showDialog(
-      context: context,
-      builder: (context) => AppDialog(
-        title: '중요 공지 상태 변경',
-        content: Text(_announcement.isPinned
-            ? '중요 공지를 해제하시겠습니까?'
-            : '중요 공지로 설정하시겠습니까?'),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: const Text('취소'),
-          ),
-          AppButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _performTogglePinned();
-            },
-            child: const Text('변경'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _performTogglePinned() async {
     setState(() => _isLoading = true);
-
     try {
-      final updatedAnnouncement = await _announcementService.updateAnnouncement(
+      final updated = await _announcementService.updateAnnouncement(
         _announcement.id,
-        {
-          'is_pinned': !_announcement.isPinned,
-        },
+        {'is_pinned': !_announcement.isPinned},
       );
-
-      setState(() {
-        _announcement = updatedAnnouncement;
-      });
-
+      setState(() => _announcement = updated);
       if (mounted) {
-        AppToast.show(
+        AppToast.success(
           context,
-          '중요 공지 상태가 변경되었습니다',
-          type: ToastType.success,
+          updated.isPinned ? '상단 고정으로 설정했습니다' : '상단 고정을 해제했습니다',
         );
       }
     } catch (e) {
-      if (mounted) {
-        AppToast.show(
-          context,
-          '상태 변경 중 오류가 발생했습니다: $e',
-          type: ToastType.error,
-        );
-      }
+      if (mounted) AppToast.error(context, '상태 변경 중 오류가 발생했습니다');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _deleteAnnouncement() async {
-    showDialog(
+  // 1.2.0 삭제 확인 시트 (미리보기 박스 포함)
+  void _confirmDelete() {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AppDialog(
-        title: '공지사항 삭제',
-        content: const Text('이 공지사항을 삭제하시겠습니까?\n삭제된 공지사항은 복구할 수 없습니다.'),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: const Text('취소'),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
           ),
-          AppButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _performDelete();
-            },
-            variant: ButtonVariant.destructive,
-            child: const Text('삭제'),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 22.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 5,
+                    margin: EdgeInsets.only(bottom: 18.h),
+                    decoration: BoxDecoration(
+                      color: NewAppColor.borderStrong,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  Container(
+                    width: 54.w,
+                    height: 54.w,
+                    decoration: BoxDecoration(
+                      color: NewAppColor.dangerBg,
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.delete_outline,
+                        color: NewAppColor.danger700, size: 26.sp),
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    '공지사항을 삭제할까요?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: NewAppColor.textStrong,
+                      fontSize: 19.sp,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '삭제하면 교인 화면에서도 사라지며,\n되돌릴 수 없어요.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: NewAppColor.textMuted,
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                      height: 1.55,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(14.w),
+                    decoration: BoxDecoration(
+                      color: NewAppColor.dangerBg,
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(
+                        color: NewAppColor.danger700.withOpacity(0.18),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 6.w,
+                          runSpacing: 6.h,
+                          children: [
+                            _buildPreviewChip(_categoryLabel(_announcement.category)),
+                            if (_announcement.isPinned) _buildPreviewChip('고정'),
+                          ],
+                        ),
+                        SizedBox(height: 7.h),
+                        Text(
+                          _announcement.title,
+                          style: TextStyle(
+                            color: NewAppColor.textStrong,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Pretendard',
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 18.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(sheetContext),
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 15.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.borderSoft,
+                              borderRadius: BorderRadius.circular(13.r),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '취소',
+                              style: TextStyle(
+                                color: NewAppColor.textSecondary,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 11.w),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _performDelete();
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 15.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.danger700,
+                              borderRadius: BorderRadius.circular(13.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: NewAppColor.danger700.withOpacity(0.30),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '삭제',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Future<void> _performDelete() async {
     setState(() => _isLoading = true);
-
     try {
       await _announcementService.deleteAnnouncement(_announcement.id);
-
       if (mounted) {
-        AppToast.show(
-          context,
-          '공지사항이 삭제되었습니다',
-          type: ToastType.success,
-        );
-        Navigator.pop(context, true); // true를 반환하여 목록 새로고침
+        AppToast.success(context, '공지를 삭제했습니다');
+        Navigator.pop(context, true);
       }
     } catch (e) {
-      if (mounted) {
-        AppToast.show(
-          context,
-          '삭제 중 오류가 발생했습니다: $e',
-          type: ToastType.error,
-        );
-      }
+      if (mounted) AppToast.error(context, '삭제 중 오류가 발생했습니다');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -156,322 +250,352 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
         ),
       ),
     );
-
-    // 수정이 있었으면 공지사항 다시 로드
-    if (result == true) {
-      if (mounted) {
-        // 상세 화면에서는 수정된 공지사항을 다시 로드할 방법이 없으므로
-        // 목록 화면으로 돌아가서 새로고침하도록 함
-        Navigator.pop(context, true);
-      }
+    if (result == true && mounted) {
+      Navigator.pop(context, true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '공지사항 상세',
-          style: const FigmaTextStyles().title2.copyWith(
-                color: NewAppColor.neutral900,
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
               ),
         ),
-        actions: [
-          material.IconButton(
-            icon: const Icon(Icons.edit, color: Colors.black),
-            onPressed: _navigateToEdit,
-          ),
-          material.IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: _deleteAnnouncement,
-          ),
-        ],
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 제목 및 상태 섹션
-                  _buildHeaderSection(),
-                  SizedBox(height: 16.h),
-                  // 내용 섹션
-                  _buildContentSection(),
-                  SizedBox(height: 16.h),
-                  // 작성자 및 날짜 섹션
-                  _buildMetaSection(),
-                  SizedBox(height: 16.h),
-                  // 액션 버튼 섹션
-                  _buildActionSection(),
-                  SizedBox(height: 32.h),
-                ],
-              ),
+          ? Center(
+              child: CircularProgressIndicator(color: NewAppColor.skyPrimary),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(14.w, 16.h, 14.w, 24.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeaderCard(),
+                        SizedBox(height: 12.h),
+                        _buildBodyCard(),
+                      ],
+                    ),
+                  ),
+                ),
+                _buildBottomActionBar(),
+              ],
             ),
     );
   }
 
-  Widget _buildHeaderSection() {
+  // 헤더 카드: 칩 라인 + 제목 + 메타(작성자 · 작성일)
+  Widget _buildHeaderCard() {
+    final categoryLabel = _categoryLabel(_announcement.category);
+    final author = (_announcement.authorName?.isNotEmpty ?? false)
+        ? _announcement.authorName!
+        : '관리자';
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+      padding: EdgeInsets.all(18.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 6.w,
+            runSpacing: 6.h,
             children: [
-              if (_announcement.isPinned) ...[
-                Icon(
-                  Icons.star,
-                  size: 20.sp,
-                  color: const Color(0xFFFFA000),
-                ),
-                SizedBox(width: 8.w),
-              ],
-              Expanded(
-                child: Text(
-                  _announcement.title,
-                  style: const FigmaTextStyles().title2.copyWith(
-                        color: NewAppColor.neutral900,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
+              if (_announcement.isPinned) _buildChip('고정', _ChipTone.sky),
+              _buildChip(categoryLabel, _categoryTone(_announcement.category)),
+              _buildChip(
+                _announcement.isActive ? '게시중' : '숨김',
+                _announcement.isActive ? _ChipTone.success : _ChipTone.neutral,
               ),
             ],
           ),
-          if (_announcement.isPinned) ...[
-            SizedBox(height: 8.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
-                borderRadius: BorderRadius.circular(6.r),
-              ),
-              child: Text(
-                '중요 공지',
-                style: const FigmaTextStyles().body2.copyWith(
-                      color: const Color(0xFFFFA000),
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
+          SizedBox(height: 12.h),
+          Text(
+            _announcement.title,
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Pretendard',
+              height: 1.4,
             ),
-          ],
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '$author · ${_formatDate(_announcement.createdAt)}',
+            style: TextStyle(
+              color: NewAppColor.textTertiary,
+              fontSize: 12.5.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildContentSection() {
+  // 본문 카드
+  Widget _buildBodyCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+      padding: EdgeInsets.all(18.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '내용',
-            style: const FigmaTextStyles().title3.copyWith(
-                  color: NewAppColor.neutral900,
-                ),
+            style: TextStyle(
+              color: NewAppColor.textTertiary,
+              fontSize: 12.5.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Pretendard',
+            ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 10.h),
           Text(
             _announcement.content,
-            style: const FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.neutral700,
-                  height: 1.6,
-                ),
+            style: TextStyle(
+              color: NewAppColor.textBody,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
+              height: 1.65,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetaSection() {
+  // 하단 액션 바: 고정 토글(보조) + 수정(주) + 삭제(아이콘 위험)
+  Widget _buildBottomActionBar() {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildInfoRow(
-            icon: Icons.category_outlined,
-            label: '카테고리',
-            value: _getCategoryLabel(_announcement.category),
-          ),
-          if (_announcement.subcategory != null &&
-              _announcement.subcategory!.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            _buildInfoRow(
-              icon: Icons.label_outline,
-              label: '서브카테고리',
-              value: _getSubcategoryLabel(_announcement.subcategory!),
+      padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 16.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.canvasAlt,
+        border: Border(
+          top: BorderSide(color: NewAppColor.borderHair, width: 1),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            _buildIconAction(
+              icon: _announcement.isPinned
+                  ? Icons.push_pin
+                  : Icons.push_pin_outlined,
+              tone: _announcement.isPinned
+                  ? _IconActionTone.sky
+                  : _IconActionTone.neutral,
+              onTap: _performTogglePinned,
+            ),
+            SizedBox(width: 9.w),
+            _buildIconAction(
+              icon: Icons.delete_outline,
+              tone: _IconActionTone.danger,
+              onTap: _confirmDelete,
+            ),
+            SizedBox(width: 9.w),
+            Expanded(
+              child: GestureDetector(
+                onTap: _navigateToEdit,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.skyPrimary,
+                    borderRadius: BorderRadius.circular(13.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: NewAppColor.skyPrimary.withOpacity(0.30),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.edit_outlined,
+                          color: Colors.white, size: 16.sp),
+                      SizedBox(width: 7.w),
+                      Text(
+                        '수정',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14.5.sp,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
-          SizedBox(height: 12.h),
-          _buildInfoRow(
-            icon: Icons.person_outline,
-            label: '작성자',
-            value: _announcement.authorName ?? '관리자',
-          ),
-          SizedBox(height: 12.h),
-          _buildInfoRow(
-            icon: Icons.calendar_today_outlined,
-            label: '작성일',
-            value: _formatDate(_announcement.createdAt),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildActionSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '관리',
-            style: const FigmaTextStyles().title3.copyWith(
-                  color: NewAppColor.neutral900,
-                ),
-          ),
-          SizedBox(height: 16.h),
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              onPressed: _togglePinStatus,
-              variant: _announcement.isPinned
-                  ? ButtonVariant.secondary
-                  : ButtonVariant.primary,
-              child: Text(_announcement.isPinned ? '중요 공지 해제' : '중요 공지로 설정'),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              onPressed: _deleteAnnouncement,
-              variant: ButtonVariant.destructive,
-              child: const Text('공지사항 삭제'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
+  Widget _buildIconAction({
     required IconData icon,
-    required String label,
-    required String value,
+    required _IconActionTone tone,
+    required VoidCallback onTap,
   }) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: Row(
-        children: [
-          Container(
-            width: 32.w,
-            height: 32.h,
-            decoration: BoxDecoration(
-              color: NewAppColor.neutral100,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 18.sp,
-              color: NewAppColor.neutral700,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const FigmaTextStyles().caption1.copyWith(
-                        color: NewAppColor.neutral600,
-                      ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  value,
-                  style: const FigmaTextStyles().body1.copyWith(
-                        color: NewAppColor.neutral900,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    final ({Color bg, Color fg}) c;
+    switch (tone) {
+      case _IconActionTone.sky:
+        c = (bg: NewAppColor.skyTint, fg: NewAppColor.skyDeep);
+        break;
+      case _IconActionTone.danger:
+        c = (bg: NewAppColor.dangerBg, fg: NewAppColor.danger700);
+        break;
+      case _IconActionTone.neutral:
+        c = (bg: NewAppColor.borderSoft, fg: NewAppColor.textSecondary);
+        break;
+    }
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 48.w,
+        height: 48.w,
+        decoration: BoxDecoration(
+          color: c.bg,
+          borderRadius: BorderRadius.circular(13.r),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: c.fg, size: 19.sp),
       ),
     );
+  }
+
+  Widget _buildChip(String label, _ChipTone tone) {
+    final ({Color bg, Color fg}) c;
+    switch (tone) {
+      case _ChipTone.sky:
+        c = (bg: NewAppColor.skyTint, fg: NewAppColor.skyDeep);
+        break;
+      case _ChipTone.success:
+        c = (bg: NewAppColor.successBg, fg: NewAppColor.success700);
+        break;
+      case _ChipTone.warning:
+        c = (bg: NewAppColor.warningBg, fg: NewAppColor.warning700);
+        break;
+      case _ChipTone.neutral:
+        c = (bg: NewAppColor.borderSoft, fg: NewAppColor.textSecondary);
+        break;
+    }
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+      decoration: BoxDecoration(
+        color: c.bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: c.fg,
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w800,
+          fontFamily: 'Pretendard',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPreviewChip(String label) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: NewAppColor.danger700.withOpacity(0.25),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: NewAppColor.danger700,
+          fontSize: 10.5.sp,
+          fontWeight: FontWeight.w800,
+          fontFamily: 'Pretendard',
+        ),
+      ),
+    );
+  }
+
+  String _categoryLabel(String category) {
+    switch (category) {
+      case 'worship':
+        return '예배';
+      case 'member_news':
+        return '교우';
+      case 'event':
+        return '행사';
+      default:
+        return '일반';
+    }
+  }
+
+  _ChipTone _categoryTone(String category) {
+    switch (category) {
+      case 'worship':
+        return _ChipTone.sky;
+      case 'event':
+        return _ChipTone.warning;
+      case 'member_news':
+        return _ChipTone.sky;
+      default:
+        return _ChipTone.neutral;
+    }
   }
 
   String _formatDate(DateTime date) {
-    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
-  String _getCategoryLabel(String category) {
-    switch (category) {
-      case 'general':
-        return '일반';
-      case 'worship':
-        return '예배';
-      case 'event':
-        return '행사';
-      case 'member_news':
-        return '교인 소식';
-      case 'announcement':
-        return '공지';
-      case 'education':
-        return '교육';
-      default:
-        return category;
-    }
-  }
-
-  String _getSubcategoryLabel(String subcategory) {
-    switch (subcategory) {
-      case 'sunday':
-        return '주일예배';
-      case 'wednesday':
-        return '수요예배';
-      case 'friday':
-        return '금요예배';
-      case 'special':
-        return '특별예배';
-      case 'church':
-        return '교회행사';
-      case 'community':
-        return '지역행사';
-      case 'mission':
-        return '선교';
-      case 'bible_study':
-        return '성경공부';
-      case 'seminary':
-        return '신학강좌';
-      case 'youth':
-        return '청소년부';
-      case 'children':
-        return '어린이부';
-      default:
-        return subcategory;
-    }
+    return '${date.month}월 ${date.day}일 '
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
+
+enum _ChipTone { sky, success, warning, neutral }
+
+enum _IconActionTone { sky, danger, neutral }

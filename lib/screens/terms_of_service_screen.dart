@@ -1,103 +1,152 @@
-import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:flutter/material.dart' hide IconButton;
+import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
-import '../resource/color_style.dart';
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
 
+/// 서비스 이용약관 — 1.2.0 C 방향
 class TermsOfServiceScreen extends StatelessWidget {
   const TermsOfServiceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        leading: material.IconButton(
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           '서비스 이용약관',
-          style: TextStyle(
-            color: AppColor.secondary07,
-            fontWeight: FontWeight.w600,
-            fontSize: 20.sp,
-          ),
-        ),
-        backgroundColor: AppColor.background,
-        elevation: 0,
-        iconTheme: IconThemeData(color: AppColor.secondary07),
-        actions: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20.r),
-              onTap: () {
-                Clipboard.setData(
-                    ClipboardData(text: _getTermsOfServiceText()));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('서비스 이용약관이 클립보드에 복사되었습니다'),
-                    backgroundColor: AppColor.primary600,
-                  ),
-                );
-              },
-              child: Padding(
-                padding: EdgeInsets.all(12.w),
-                child:
-                    Icon(Icons.copy, color: AppColor.secondary07, size: 24.sp),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
               ),
-            ),
+        ),
+        actions: [
+          material.IconButton(
+            icon: Icon(Icons.copy_outlined,
+                color: NewAppColor.textSecondary, size: 21.sp),
+            onPressed: () {
+              Clipboard.setData(
+                  ClipboardData(text: _getTermsOfServiceText()));
+              AppToast.success(context, '서비스 이용약관이 클립보드에 복사되었습니다');
+            },
           ),
         ],
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.fromLTRB(14.w, 16.h, 14.w, 32.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 본문 내용
-            AppCard(
-              child: Text(
-                _getTermsOfServiceText(),
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  height: 1.6,
-                  color: AppColor.secondary07,
-                ),
-              ),
-            ),
-
-            SizedBox(height: 24.h),
-
-            // 연락처 정보
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '문의 및 연락처',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColor.secondary07,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    '서프마인드\n'
-                    '주소: 서울시 강남구\n'
-                    '전화: 02-123-4567\n'
-                    '이메일: surfmind.sm@gmail.com',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      height: 1.5,
-                      color: AppColor.secondary05,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildBodyCard(),
+            SizedBox(height: 12.h),
+            _buildContactCard(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildBodyCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(18.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
+      child: Text(
+        _getTermsOfServiceText(),
+        style: TextStyle(
+          color: NewAppColor.textBody,
+          fontSize: 13.5.sp,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'Pretendard',
+          height: 1.7,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(18.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '문의 및 연락처',
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          SizedBox(height: 12.h),
+          _buildContactRow(Icons.business_outlined, '회사', '서프마인드'),
+          SizedBox(height: 8.h),
+          _buildContactRow(Icons.location_on_outlined, '주소', '서울시 강남구'),
+          SizedBox(height: 8.h),
+          _buildContactRow(Icons.phone_outlined, '전화', '02-123-4567'),
+          SizedBox(height: 8.h),
+          _buildContactRow(Icons.mail_outline, '이메일', 'surfmind.sm@gmail.com'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 15.sp, color: NewAppColor.textTertiary),
+        SizedBox(width: 9.w),
+        SizedBox(
+          width: 56.w,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: NewAppColor.textTertiary,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: NewAppColor.textBody,
+              fontSize: 13.5.sp,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+        ),
+      ],
     );
   }
 
