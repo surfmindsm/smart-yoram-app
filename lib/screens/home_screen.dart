@@ -1929,73 +1929,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     try {
       await Clipboard.setData(ClipboardData(text: text));
       if (mounted) {
-        _showAppToast('계좌번호가 복사되었습니다');
+        AppToast.success(context, '계좌번호가 복사되었습니다');
       }
     } catch (e) {
       if (mounted) {
-        _showAppToast('복사 실패: $e', isError: true);
+        AppToast.error(context, '복사 실패: $e');
       }
     }
-  }
-
-  // 1.2.0 C 방향: floating 다크 토스트 (디자인 정책 §3 바텀시트 톤)
-  void _showAppToast(String message, {bool isError = false}) {
-    final messenger = ScaffoldMessenger.of(context);
-    // 직전 토스트가 남아있으면 즉시 제거 (겹치지 않게)
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        padding: EdgeInsets.zero,
-        margin: EdgeInsets.only(
-          left: 16.w,
-          right: 16.w,
-          // 하단 탭바와 자연스럽게 떨어지도록
-          bottom: 16.h,
-        ),
-        duration: Duration(milliseconds: isError ? 2800 : 2000),
-        content: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-          decoration: BoxDecoration(
-            color: NewAppColor.textStrong, // #0F172A 다크
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF020817).withOpacity(0.25),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isError
-                    ? Icons.error_outline
-                    : Icons.check_circle_outline,
-                color: isError
-                    ? NewAppColor.danger300
-                    : NewAppColor.success300,
-                size: 18.sp,
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  message,
-                  style: FigmaTextStyles().body3.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   @override

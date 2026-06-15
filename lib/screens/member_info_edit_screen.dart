@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../components/index.dart';
+import '../components/index.dart' hide IconButton;
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../services/member_service.dart';
@@ -277,91 +277,95 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        backgroundColor: NewAppColor.neutral100,
+        backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            padding: EdgeInsets.all(8.w),
-            child: Icon(
-              LucideIcons.chevronLeft,
-              color: NewAppColor.neutral900,
-              size: 20.sp,
-            ),
-          ),
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '개인정보 수정',
-          style: const FigmaTextStyles().title2.copyWith(
-                color: NewAppColor.neutral900,
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
               ),
         ),
-        centerTitle: true,
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _saveMemberInfo,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+            ),
             child: Text(
               '저장',
-              style: const FigmaTextStyles().body1.copyWith(
-                    color: _isSaving
-                        ? NewAppColor.neutral400
-                        : NewAppColor.primary600,
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: TextStyle(
+                color: _isSaving
+                    ? NewAppColor.iconFaint
+                    : NewAppColor.skyDeep,
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Pretendard',
+              ),
             ),
           ),
         ],
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: NewAppColor.skyPrimary,
+              ),
+            )
           : SingleChildScrollView(
-              padding: EdgeInsets.all(20.w),
+              padding: EdgeInsets.all(18.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 안내 문구
+                  // 안내 문구 — skyWash 박스 + shield 아이콘
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(16.w),
+                    padding: EdgeInsets.all(14.w),
                     decoration: BoxDecoration(
-                      color: NewAppColor.primary100,
-                      borderRadius: BorderRadius.circular(8.r),
+                      color: NewAppColor.skyWash,
+                      border: Border.all(
+                          color: NewAppColor.skyTint, width: 1),
+                      borderRadius: BorderRadius.circular(13.r),
                     ),
-                    child: Column(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              size: 16.sp,
-                              color: NewAppColor.primary600,
-                            ),
-                            SizedBox(width: 8.w),
-                            Text(
-                              '수정 불가 항목',
-                              style: const FigmaTextStyles().body2.copyWith(
-                                    color: NewAppColor.primary600,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ],
+                        Icon(
+                          Icons.info_outline,
+                          size: 19.sp,
+                          color: NewAppColor.skyDeep,
                         ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          '이름, 이메일, 직분은 수정할 수 없습니다.\n수정이 필요한 경우 교회 관리자에게 문의하세요.',
-                          style: const FigmaTextStyles().caption1.copyWith(
-                                color: NewAppColor.primary600,
-                              ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: Text(
+                            '잠긴 항목은 교회 관리자에게 문의해 변경할 수 있어요.',
+                            style: TextStyle(
+                              color: NewAppColor.textSecondary,
+                              fontSize: 12.5.sp,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Pretendard',
+                              height: 1.55,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
 
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 18.h),
 
                   // 수정 불가 필드 표시
                   _buildSection(
@@ -396,21 +400,34 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                         placeholder: '영문명을 입력하세요',
                       ),
                       SizedBox(height: 16.h),
-                      _buildDropdownField(
-                        label: '성별',
-                        value: _selectedGender,
-                        items: const ['남', '여'],
-                        onChanged: (value) => setState(() => _selectedGender = value),
-                      ),
-                      SizedBox(height: 16.h),
-                      _buildDateField(
-                        label: '생년월일',
-                        date: _selectedBirthdate,
-                        onTap: () => _selectDate(
-                          context,
-                          _selectedBirthdate,
-                          (date) => setState(() => _selectedBirthdate = date),
-                        ),
+                      // 1.2.0: 생년월일(2/3) + 성별 토글(1/3) 가로 배치
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: _buildDateField(
+                              label: '생년월일',
+                              date: _selectedBirthdate,
+                              prefixIcon: Icons.cake_outlined,
+                              onTap: () => _selectDate(
+                                context,
+                                _selectedBirthdate,
+                                (date) => setState(
+                                    () => _selectedBirthdate = date),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            flex: 1,
+                            child: _buildGenderToggle(
+                              value: _selectedGender,
+                              onChanged: (v) =>
+                                  setState(() => _selectedGender = v),
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 16.h),
                       _buildInputField(
@@ -418,6 +435,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                         controller: _phoneController,
                         placeholder: '전화번호를 입력하세요',
                         keyboardType: TextInputType.phone,
+                        prefixIcon: Icons.phone_outlined,
                       ),
                     ],
                   ),
@@ -475,6 +493,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                           controller: _detailAddressController,
                           placeholder: '상세주소를 입력하세요 (예: 101동 203호)',
                           maxLines: 2,
+                          prefixIcon: Icons.location_on_outlined,
                         ),
                       ],
                     ],
@@ -589,6 +608,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                         controller: _workplacePhoneController,
                         placeholder: '직장 전화번호를 입력하세요',
                         keyboardType: TextInputType.phone,
+                        prefixIcon: Icons.phone_outlined,
                       ),
                     ],
                   ),
@@ -615,35 +635,36 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
     );
   }
 
+  // 1.2.0 C 방향: 흰 카드 + borderHair 1px + 섹션 헤더 sectionHeader
   Widget _buildSection({
     required String title,
     required List<Widget> children,
   }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: ShapeDecoration(
+      padding: EdgeInsets.fromLTRB(18.w, 18.h, 18.w, 18.h),
+      decoration: BoxDecoration(
         color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+        borderRadius: BorderRadius.circular(14.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const FigmaTextStyles().title3.copyWith(
-                  color: NewAppColor.neutral900,
+            style: FigmaTextStyles().sectionHeader.copyWith(
+                  color: NewAppColor.textTertiary,
                 ),
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 14.h),
           ...children,
         ],
       ),
     );
   }
 
+  // 1.2.0: 라벨 + 입력박스 (좌측 아이콘 옵션) — borderStrong 1px 라운드 11
   Widget _buildInputField({
     required String label,
     required TextEditingController controller,
@@ -651,29 +672,79 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
     TextInputType? keyboardType,
     int maxLines = 1,
     void Function(String)? onChanged,
+    IconData? prefixIcon,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const FigmaTextStyles().body1.copyWith(
-                color: NewAppColor.neutral900,
-                fontWeight: FontWeight.w500,
-              ),
+          style: TextStyle(
+            color: NewAppColor.textSecondary,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
         ),
         SizedBox(height: 8.h),
-        AppInput(
-          controller: controller,
-          placeholder: placeholder,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          onChanged: onChanged,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border:
+                Border.all(color: NewAppColor.borderStrong, width: 1),
+            borderRadius: BorderRadius.circular(11.r),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 14.w),
+          child: Row(
+            crossAxisAlignment: maxLines > 1
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
+            children: [
+              if (prefixIcon != null) ...[
+                Padding(
+                  padding: EdgeInsets.only(top: maxLines > 1 ? 14.h : 0),
+                  child: Icon(
+                    prefixIcon,
+                    size: 18.sp,
+                    color: NewAppColor.textTertiary,
+                  ),
+                ),
+                SizedBox(width: 10.w),
+              ],
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  keyboardType: keyboardType,
+                  maxLines: maxLines,
+                  onChanged: onChanged,
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 14.5.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Pretendard',
+                  ),
+                  decoration: InputDecoration(
+                    hintText: placeholder,
+                    hintStyle: TextStyle(
+                      color: NewAppColor.textTertiary,
+                      fontSize: 14.5.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 14.h),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
+  // 1.2.0: 잠금 필드 — borderSoft 배경 + 우측 자물쇠
   Widget _buildReadOnlyField({
     required String label,
     required String value,
@@ -681,42 +752,51 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: const FigmaTextStyles().body1.copyWith(
-                    color: NewAppColor.neutral900,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-            SizedBox(width: 6.w),
-            Icon(
-              Icons.lock_outline,
-              size: 14.sp,
-              color: NewAppColor.neutral400,
-            ),
-          ],
+        Text(
+          label,
+          style: TextStyle(
+            color: NewAppColor.textTertiary,
+            fontSize: 12.5.sp,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Pretendard',
+          ),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 6.h),
         Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          padding:
+              EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
           decoration: BoxDecoration(
-            color: NewAppColor.neutral200,
-            borderRadius: BorderRadius.circular(8.r),
+            color: NewAppColor.borderSoft,
+            borderRadius: BorderRadius.circular(11.r),
           ),
-          child: Text(
-            value,
-            style: const FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.neutral500,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value.isEmpty ? '-' : value,
+                  style: TextStyle(
+                    color: NewAppColor.textBody,
+                    fontSize: 14.5.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Pretendard',
+                  ),
                 ),
+              ),
+              SizedBox(width: 8.w),
+              Icon(
+                Icons.lock_outline,
+                size: 15.sp,
+                color: NewAppColor.iconFaint,
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
+  // 1.2.0: 드롭다운 필드 — borderStrong 1px 라운드 11
   Widget _buildDropdownField({
     required String label,
     required String? value,
@@ -728,43 +808,51 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
       children: [
         Text(
           label,
-          style: const FigmaTextStyles().body1.copyWith(
-                color: NewAppColor.neutral900,
-                fontWeight: FontWeight.w500,
-              ),
+          style: TextStyle(
+            color: NewAppColor.textSecondary,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
         ),
         SizedBox(height: 8.h),
         Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+          padding: EdgeInsets.symmetric(horizontal: 14.w),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: NewAppColor.neutral300, width: 1),
+            border:
+                Border.all(color: NewAppColor.borderStrong, width: 1),
+            borderRadius: BorderRadius.circular(11.r),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               hint: Text(
                 '$label을 선택하세요',
-                style: const FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral400,
-                    ),
+                style: TextStyle(
+                  color: NewAppColor.textTertiary,
+                  fontSize: 14.5.sp,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Pretendard',
+                ),
               ),
               isExpanded: true,
               icon: Icon(
                 Icons.keyboard_arrow_down,
-                color: NewAppColor.neutral600,
+                color: NewAppColor.textMuted,
+                size: 20.sp,
+              ),
+              style: TextStyle(
+                color: NewAppColor.textStrong,
+                fontSize: 14.5.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Pretendard',
               ),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
-                  child: Text(
-                    item,
-                    style: const FigmaTextStyles().body1.copyWith(
-                          color: NewAppColor.neutral900,
-                        ),
-                  ),
+                  child: Text(item),
                 );
               }).toList(),
               onChanged: onChanged,
@@ -775,53 +863,127 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
     );
   }
 
+  // 1.2.0: 날짜 필드 — 좌측 아이콘 + 라운드 11 (기본 calendar, 커스텀 가능)
   Widget _buildDateField({
     required String label,
     required DateTime? date,
     required VoidCallback onTap,
+    IconData prefixIcon = Icons.calendar_today_outlined,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const FigmaTextStyles().body1.copyWith(
-                color: NewAppColor.neutral900,
-                fontWeight: FontWeight.w500,
-              ),
+          style: TextStyle(
+            color: NewAppColor.textSecondary,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
         ),
         SizedBox(height: 8.h),
         GestureDetector(
           onTap: onTap,
+          behavior: HitTestBehavior.opaque,
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            padding:
+                EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: NewAppColor.neutral300, width: 1),
+              border:
+                  Border.all(color: NewAppColor.borderStrong, width: 1),
+              borderRadius: BorderRadius.circular(11.r),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  date != null
-                      ? '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}'
-                      : '$label을 선택하세요',
-                  style: const FigmaTextStyles().body1.copyWith(
-                        color: date != null
-                            ? NewAppColor.neutral900
-                            : NewAppColor.neutral400,
-                      ),
-                ),
                 Icon(
-                  Icons.calendar_today,
-                  size: 16.sp,
-                  color: NewAppColor.neutral600,
+                  prefixIcon,
+                  size: 17.sp,
+                  color: NewAppColor.textTertiary,
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Text(
+                    date != null
+                        ? '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}'
+                        : '$label을 선택하세요',
+                    style: TextStyle(
+                      color: date != null
+                          ? NewAppColor.textStrong
+                          : NewAppColor.textTertiary,
+                      fontSize: 14.5.sp,
+                      fontWeight: date != null
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  // 1.2.0: 성별 토글 (여/남) — 활성=skyPrimary 채움/흰글자, 비활성=borderSoft + textSecondary
+  Widget _buildGenderToggle({
+    required String? value,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '성별',
+          style: TextStyle(
+            color: NewAppColor.textSecondary,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Row(
+          children: ['여', '남'].map((gender) {
+            final isSelected = value == gender;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                    right: gender == '여' ? 6.w : 0),
+                child: GestureDetector(
+                  onTap: () => onChanged(isSelected ? null : gender),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    height: 44.h,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? NewAppColor.skyPrimary
+                          : NewAppColor.borderSoft,
+                      borderRadius: BorderRadius.circular(11.r),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      gender,
+                      style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : NewAppColor.textSecondary,
+                        fontSize: 14.5.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard',
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );

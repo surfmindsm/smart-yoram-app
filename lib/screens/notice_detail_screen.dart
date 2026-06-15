@@ -5,6 +5,7 @@ import '../models/announcement.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../utils/announcement_categories.dart';
+import '../components/app_toast.dart';
 
 // 1.2.0 C 방향: 공지 상세 — 흰 탑바 + 흰 카드(라운드 18) + 칩/제목/메타/본문
 class AnnouncementDetailScreen extends StatelessWidget {
@@ -31,60 +32,7 @@ ${announcement.content}
     ''';
 
     Clipboard.setData(ClipboardData(text: text));
-    _showAppToast(context, '내용이 복사되었습니다');
-  }
-
-  // 1.2.0 floating 다크 토스트 (home_screen의 _showAppToast와 동일 사양)
-  void _showAppToast(BuildContext context, String message,
-      {bool isError = false}) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        padding: EdgeInsets.zero,
-        margin: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
-        duration: Duration(milliseconds: isError ? 2800 : 2000),
-        content: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-          decoration: BoxDecoration(
-            color: NewAppColor.textStrong,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF020817).withOpacity(0.25),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isError ? Icons.error_outline : Icons.check_circle_outline,
-                color: isError
-                    ? NewAppColor.danger300
-                    : NewAppColor.success300,
-                size: 18.sp,
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  message,
-                  style: FigmaTextStyles().body3.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    AppToast.success(context, '내용이 복사되었습니다');
   }
 
   @override

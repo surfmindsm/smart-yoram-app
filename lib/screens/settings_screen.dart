@@ -57,6 +57,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // 현재 사용자
   User? _currentUser;
   Member? _currentMember;
+  Church? _currentChurch;
 
   @override
   void initState() {
@@ -83,6 +84,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           });
         }
       }
+
+      // 1.2.0: 프로필 카드 부제용 교회명 조회
+      final churchResponse = await _churchService.getMyChurch();
+      if (mounted &&
+          churchResponse.success &&
+          churchResponse.data != null) {
+        setState(() {
+          _currentChurch = churchResponse.data;
+        });
+      }
     }
   }
 
@@ -105,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: () => Navigator.pop(context),
               ),
         title: Text(
-          '설정',
+          '마이페이지',
           style: FigmaTextStyles().subtitle1.copyWith(
                 color: NewAppColor.textStrong,
                 fontSize: 17.sp,
@@ -122,6 +133,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListView(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               children: [
+                // 1.2.0 C 방향: 프로필 카드
+                _buildProfileCard(),
                 // 계정 섹션
                 _buildGroupedSection(
                   title: '계정',
@@ -153,80 +166,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
 
                 // 관리자 메뉴 섹션 (church_admin, system_admin, church_super_admin만 표시)
-                if (_currentUser?.isChurchAdmin == true) ...[
-                  SizedBox(height: 16.h),
-                  _buildGroupedSection(
-                    title: '관리자 메뉴',
-                    items: [
-                      _GroupedSettingItem(
-                        icon: Icons.people_outline,
-                        title: '교인 관리',
-                        subtitle: '교인 목록, 정보 수정, 상태 관리',
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/admin/members'),
-                      ),
-                      _GroupedSettingItem(
-                        icon: Icons.church_outlined,
-                        title: '심방 신청 관리',
-                        subtitle: '신청 목록, 상태 변경, 담당자 지정',
-                        onTap: () => Navigator.pushNamed(
-                            context, '/admin/pastoral-care'),
-                      ),
-                      _GroupedSettingItem(
-                        icon: Icons.announcement_outlined,
-                        title: '공지사항 관리',
-                        subtitle: '공지 작성, 수정, 삭제',
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/admin/notices'),
-                      ),
-                    ],
-                  ),
-                ],
+                if (_currentUser?.isChurchAdmin == true)
+                  _buildAdminMenuSection(),
 
                 SizedBox(height: 16.h),
 
-                // 앱 설정 섹션
+                // 앱 설정 섹션 — 글꼴 크기 3분할 세그먼트
                 Consumer<FontSettingsService>(
                   builder: (context, fontSettings, child) {
-                    return _buildGroupedSection(
-                      title: '앱 설정',
-                      items: [
-                        _GroupedSettingItem(
-                          icon: Icons.text_fields_outlined,
-                          title: '글꼴 크기',
-                          subtitle: FontSettingsService.getFontSizeDescription(
-                              fontSettings.fontSize),
-                          trailing: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 12.w, vertical: 7.h),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: NewAppColor.neutral200),
-                              borderRadius: BorderRadius.circular(4.r),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  FontSettingsService.getFontSizeDescription(
-                                      fontSettings.fontSize),
-                                  style:
-                                      const FigmaTextStyles().caption1.copyWith(
-                                            color: NewAppColor.neutral800,
-                                          ),
-                                ),
-                                SizedBox(width: 8.w),
-                                Icon(
-                                  Icons.keyboard_arrow_down,
-                                  size: 12.sp,
-                                  color: NewAppColor.neutral800,
-                                ),
-                              ],
-                            ),
-                          ),
-                          onTap: () => _showFontSizeOptions(),
-                        ),
-                      ],
-                    );
+                    return _buildFontSizeSection(fontSettings);
                   },
                 ),
 
@@ -285,23 +233,451 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
 
-                // 로그아웃 섹션
-                _buildGroupedSection(
-                  title: '계정 관리',
-                  items: [
-                    _GroupedSettingItem(
-                      icon: Icons.logout,
-                      title: '로그아웃',
-                      onTap: _logout,
-                    ),
-                  ],
-                ),
+                // 로그아웃 — danger 톤 보더 버튼
+                _buildLogoutButton(),
                 SizedBox(height: 32.h),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  // 1.2.0 C 방향: 프로필 카드 (큰 이니셜 아바타 + 이름 + 직분 칩 + 교회/부서)
+  Widget _buildProfileCard() {
+    final name = _currentMember?.name ?? _currentUser?.fullName ?? '사용자';
+    final initial = name.isNotEmpty ? name[0] : '?';
+    final position = _currentMember?.positionLabel ?? '';
+    final churchName = _currentChurch?.name ?? '';
+    final department = _currentMember?.department ?? '';
+    final isChurchAdmin = _currentUser?.isChurchAdmin == true;
+
+    // 1.2.0: AppBar 하단과 명확히 분리되도록 상하 여백 확보 + 좌우는 ListView 패딩 활용
+    return Padding(
+      padding: EdgeInsets.only(top: 18.h, bottom: 6.h),
+      child: Row(
+        children: [
+          // 큰 이니셜 아바타 64×64 skyTint
+          Container(
+            width: 64.w,
+            height: 64.w,
+            decoration: BoxDecoration(
+              color: NewAppColor.skyTint,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: (_currentMember?.fullProfilePhotoUrl != null &&
+                    _currentMember!.fullProfilePhotoUrl!.isNotEmpty)
+                ? ClipOval(
+                    child: Image.network(
+                      _currentMember!.fullProfilePhotoUrl!,
+                      width: 64.w,
+                      height: 64.w,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Text(
+                        initial,
+                        style: TextStyle(
+                          color: NewAppColor.skyDeep,
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                    ),
+                  )
+                : Text(
+                    initial,
+                    style: TextStyle(
+                      color: NewAppColor.skyDeep,
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+          ),
+          SizedBox(width: 15.w),
+          // 이름 + 직분/관리자 칩 + 교회·부서
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          color: NewAppColor.textStrong,
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Pretendard',
+                          letterSpacing: -0.36,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(width: 7.w),
+                    // 교회 관리자면 shield 칩, 아니면 직분 칩
+                    if (isChurchAdmin)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 9.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: NewAppColor.skyPrimary,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(LucideIcons.shield,
+                                color: Colors.white, size: 12.sp),
+                            SizedBox(width: 3.w),
+                            Text(
+                              '교회 관리자',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (position.isNotEmpty)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 9.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: NewAppColor.skyTint,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          position,
+                          style: TextStyle(
+                            color: NewAppColor.skyDeep,
+                            fontSize: 11.5.sp,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Pretendard',
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                if (churchName.isNotEmpty || department.isNotEmpty) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    [
+                      if (churchName.isNotEmpty) churchName,
+                      if (department.isNotEmpty) department,
+                    ].join(' · '),
+                    style: TextStyle(
+                      color: NewAppColor.textTertiary,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 1.2.0 C 방향: 글꼴 크기 — 3분할 세그먼트 (작게/보통/크게)
+  Widget _buildFontSizeSection(FontSettingsService fontSettings) {
+    const sizes = ['작게', '보통', '크게'];
+    final current = fontSettings.fontSize;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 섹션 헤더
+        Padding(
+          padding: EdgeInsets.only(left: 6.w, bottom: 8.h, top: 22.h),
+          child: Text(
+            '앱 설정',
+            style: FigmaTextStyles().sectionHeader.copyWith(
+                  color: NewAppColor.textTertiary,
+                ),
+          ),
+        ),
+        // 카드
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 14.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: NewAppColor.borderHair, width: 1),
+            borderRadius: BorderRadius.circular(14.r),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 헤더: 아이콘 + 라벨
+              Row(
+                children: [
+                  Container(
+                    width: 32.w,
+                    height: 32.w,
+                    decoration: BoxDecoration(
+                      color: NewAppColor.borderSoft,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.text_fields_outlined,
+                      size: 17.sp,
+                      color: NewAppColor.textMuted,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Text(
+                    '글꼴 크기',
+                    style: TextStyle(
+                      color: NewAppColor.textStrong,
+                      fontSize: 14.5.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Pretendard',
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 13.h),
+              // 3분할 세그먼트
+              Row(
+                children: List.generate(sizes.length, (i) {
+                  final label = sizes[i];
+                  final isSelected = current == label;
+                  // 글꼴 크기에 따라 미리보기 폰트 사이즈도 차등
+                  final previewSize = label == '작게'
+                      ? 13.sp
+                      : label == '보통'
+                          ? 14.sp
+                          : 15.sp;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          right: i < sizes.length - 1 ? 8.w : 0),
+                      child: GestureDetector(
+                        onTap: () => fontSettings.setFontSize(label),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 9.h),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? NewAppColor.skyPrimary
+                                : NewAppColor.borderSoft,
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : NewAppColor.textMuted,
+                              fontSize: previewSize,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                              fontFamily: 'Pretendard',
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 1.2.0 C 방향: 로그아웃 — danger 톤 보더 박스 버튼 (목업 §79)
+  Widget _buildLogoutButton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 6.w, bottom: 8.h, top: 22.h),
+          child: Text(
+            '계정 관리',
+            style: FigmaTextStyles().sectionHeader.copyWith(
+                  color: NewAppColor.textTertiary,
+                ),
+          ),
+        ),
+        Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(13.r),
+          child: InkWell(
+            onTap: _logout,
+            borderRadius: BorderRadius.circular(13.r),
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 14.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                    color: NewAppColor.dangerBorder, width: 1),
+                borderRadius: BorderRadius.circular(13.r),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.logout,
+                    color: NewAppColor.danger700,
+                    size: 18.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '로그아웃',
+                    style: TextStyle(
+                      color: NewAppColor.danger700,
+                      fontSize: 14.5.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 1.2.0 C 방향: 관리자 메뉴 섹션 (skyDeep 라벨 + '관리자 전용' 칩 + skyTint 상하 강조 보더)
+  Widget _buildAdminMenuSection() {
+    // TODO: 실제 대기 건수는 API로 가져오기. 현재는 모델 단서로 0 표시.
+    const int pendingPastoralCount = 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 섹션 헤더 — skyDeep + '관리자 전용' 칩
+        Padding(
+          padding: EdgeInsets.only(left: 6.w, bottom: 8.h, top: 22.h),
+          child: Row(
+            children: [
+              Text(
+                '관리자 메뉴',
+                style: TextStyle(
+                  color: NewAppColor.skyDeep,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Pretendard',
+                  letterSpacing: 0.36,
+                ),
+              ),
+              SizedBox(width: 7.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: NewAppColor.skyPrimary,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '관리자 전용',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 그룹 컨테이너 — 상하 1.5px skyTint 보더로 강조 (목업 §109)
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(width: 1.5, color: NewAppColor.skyTint),
+              bottom: BorderSide(width: 1.5, color: NewAppColor.skyTint),
+            ),
+            borderRadius: BorderRadius.circular(14.r),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              _buildGroupedSettingItem(
+                item: _GroupedSettingItem(
+                  icon: Icons.people_outline,
+                  title: '교인 관리',
+                  subtitle: '교인 목록 · 정보 수정 · 상태 관리',
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/admin/members'),
+                ),
+                isFirst: true,
+                isLast: false,
+              ),
+              _buildGroupedSettingItem(
+                item: _GroupedSettingItem(
+                  icon: Icons.favorite_outline,
+                  title: '심방 신청 관리',
+                  subtitle: '신청 목록 · 상태 변경 · 담당자 지정',
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/admin/pastoral-care'),
+                  trailing: pendingPastoralCount > 0
+                      ? Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 6.w, vertical: 1.h),
+                          constraints: BoxConstraints(
+                            minWidth: 20.w,
+                            minHeight: 20.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: NewAppColor.danger700,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '$pendingPastoralCount',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w800,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+                isFirst: false,
+                isLast: false,
+              ),
+              _buildGroupedSettingItem(
+                item: _GroupedSettingItem(
+                  icon: Icons.announcement_outlined,
+                  title: '공지사항 관리',
+                  subtitle: '공지 작성 · 수정 · 삭제',
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/admin/notices'),
+                ),
+                isFirst: false,
+                isLast: true,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -428,10 +804,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SizedBox(width: 12.w),
-            // 트레일링 영역 (화살표 또는 스위치)
-            if (item.trailing != null)
-              item.trailing!
-            else
+            // 트레일링 영역
+            if (item.trailing != null) ...[
+              item.trailing!,
+              // tap 가능한 항목이면 trailing 옆에 chevron도 표시
+              if (item.onTap != null) ...[
+                SizedBox(width: 6.w),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18.sp,
+                  color: NewAppColor.iconFaint,
+                ),
+              ],
+            ] else
               Icon(
                 Icons.chevron_right,
                 size: 18.sp,

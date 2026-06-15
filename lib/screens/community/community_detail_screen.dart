@@ -5403,57 +5403,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     );
   }
 
-  // 1.2.0 floating 다크 토스트 (정책 §3 바텀시트 톤)
-  void _showAppToast(String message, {bool isError = false}) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        padding: EdgeInsets.zero,
-        margin: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
-        duration: Duration(milliseconds: isError ? 2800 : 2000),
-        content: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-          decoration: BoxDecoration(
-            color: NewAppColor.textStrong,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF020817).withOpacity(0.25),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isError ? Icons.error_outline : Icons.check_circle_outline,
-                color: isError
-                    ? NewAppColor.danger300
-                    : NewAppColor.success300,
-                size: 18.sp,
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  message,
-                  style: FigmaTextStyles().body3.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // 1.2.0: 토스트는 components/app_toast.dart의 AppToast 사용
 }
 
 /// 커뮤니티 YouTube 플레이어 화면

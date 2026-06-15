@@ -1,194 +1,114 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
-import '../resource/color_style.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
 
-enum ToastType {
-  info,
-  success,
-  warning,
-  error,
-}
-
-enum ToastPosition {
-  top,
-  center,
-  bottom,
-}
-
+/// 1.2.0 C 방향: 앱 전역 floating 다크 토스트
+///
+/// 디자인 정책 §3 바텀시트 톤 — `textStrong` 다크 배경 + 흰 글자.
+/// 종류에 따라 아이콘과 색만 달라진다 (info/success=success300, error=danger300,
+/// warning=warning300).
+///
+/// 사용:
+///   AppToast.show(context, '저장되었습니다');         // info/success
+///   AppToast.success(context, '복사되었습니다');
+///   AppToast.error(context, '저장 실패');
+///   AppToast.warning(context, '확인이 필요합니다');
+///
+/// 이 유틸은 Overlay 기반으로 구현돼 있어 Scaffold 외부에서도 호출 가능하다.
 class AppToast {
+  AppToast._();
+
   static OverlayEntry? _overlayEntry;
 
+  /// 기본 (info) 토스트 — 체크 아이콘
   static void show(
     BuildContext context,
     String message, {
     ToastType type = ToastType.info,
     ToastPosition position = ToastPosition.bottom,
-    Duration duration = const Duration(seconds: 3),
-    String? title,
-    Widget? action,
+    Duration? duration,
+    String? title, // 호환성 위해 유지 (현재 단일 라인 디자인이라 사용 안 함)
   }) {
-    hide();
+    _show(context, message, type, position, duration);
+  }
 
-    final toastConfig = _getToastConfig(type);
+  static void info(BuildContext context, String message,
+      {ToastPosition position = ToastPosition.bottom}) {
+    _show(context, message, ToastType.info, position, null);
+  }
 
-    _overlayEntry = OverlayEntry(
-      builder: (context) => _ToastWidget(
-        message: message,
-        title: title,
-        type: type,
-        position: position,
-        duration: duration,
-        action: action,
-        config: toastConfig,
-        onDismiss: hide,
-      ),
-    );
+  static void success(BuildContext context, String message,
+      {ToastPosition position = ToastPosition.bottom}) {
+    _show(context, message, ToastType.success, position, null);
+  }
 
-    Overlay.of(context).insert(_overlayEntry!);
+  static void warning(BuildContext context, String message,
+      {ToastPosition position = ToastPosition.bottom}) {
+    _show(context, message, ToastType.warning, position, null);
+  }
+
+  static void error(BuildContext context, String message,
+      {ToastPosition position = ToastPosition.bottom}) {
+    _show(context, message, ToastType.error, position, null);
   }
 
   static void hide() {
     try {
       _overlayEntry?.remove();
-    } catch (e) {
-      // Overlay가 이미 제거된 경우 무시
+    } catch (_) {
+      // 이미 제거된 경우 무시
     } finally {
       _overlayEntry = null;
     }
   }
 
-  static _ToastConfig _getToastConfig(ToastType type) {
-    switch (type) {
-      case ToastType.info:
-        return const _ToastConfig(
-          backgroundColor: AppColor.primary600,
-          iconColor: AppColor.white,
-          textColor: AppColor.white,
-          icon: Icons.info,
-        );
-      case ToastType.success:
-        return const _ToastConfig(
-          backgroundColor: Color(0xff10b981),
-          iconColor: AppColor.white,
-          textColor: AppColor.white,
-          icon: Icons.check_circle,
-        );
-      case ToastType.warning:
-        return const _ToastConfig(
-          backgroundColor: AppColor.orange500,
-          iconColor: AppColor.white,
-          textColor: AppColor.white,
-          icon: Icons.warning,
-        );
-      case ToastType.error:
-        return const _ToastConfig(
-          backgroundColor: AppColor.error,
-          iconColor: AppColor.white,
-          textColor: AppColor.white,
-          icon: Icons.error,
-        );
-    }
-  }
-
-  // Named methods for common use cases
-  static void info(
+  static void _show(
     BuildContext context,
-    String message, {
-    String? title,
-    Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
-    Widget? action,
-  }) {
-    show(
-      context,
-      message,
-      type: ToastType.info,
-      title: title,
-      duration: duration,
-      position: position,
-      action: action,
-    );
-  }
+    String message,
+    ToastType type,
+    ToastPosition position,
+    Duration? duration,
+  ) {
+    hide();
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) return;
 
-  static void success(
-    BuildContext context,
-    String message, {
-    String? title,
-    Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
-    Widget? action,
-  }) {
-    show(
-      context,
-      message,
-      type: ToastType.success,
-      title: title,
-      duration: duration,
-      position: position,
-      action: action,
-    );
-  }
+    // error는 노출 시간 약간 더 길게
+    final effectiveDuration = duration ??
+        Duration(milliseconds: type == ToastType.error ? 2800 : 2000);
 
-  static void warning(
-    BuildContext context,
-    String message, {
-    String? title,
-    Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
-    Widget? action,
-  }) {
-    show(
-      context,
-      message,
-      type: ToastType.warning,
-      title: title,
-      duration: duration,
-      position: position,
-      action: action,
+    _overlayEntry = OverlayEntry(
+      builder: (_) => _ToastWidget(
+        message: message,
+        type: type,
+        position: position,
+        duration: effectiveDuration,
+        onDismiss: hide,
+      ),
     );
-  }
-
-  static void error(
-    BuildContext context,
-    String message, {
-    String? title,
-    Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
-    Widget? action,
-  }) {
-    show(
-      context,
-      message,
-      type: ToastType.error,
-      title: title,
-      duration: duration,
-      position: position,
-      action: action,
-    );
+    overlay.insert(_overlayEntry!);
   }
 }
 
+enum ToastType { info, success, warning, error }
+
+enum ToastPosition { top, center, bottom }
+
 class _ToastWidget extends StatefulWidget {
   final String message;
-  final String? title;
   final ToastType type;
   final ToastPosition position;
   final Duration duration;
-  final Widget? action;
-  final _ToastConfig config;
   final VoidCallback onDismiss;
 
   const _ToastWidget({
-    Key? key,
     required this.message,
-    this.title,
     required this.type,
     required this.position,
     required this.duration,
-    this.action,
-    required this.config,
     required this.onDismiss,
-  }) : super(key: key);
+  });
 
   @override
   State<_ToastWidget> createState() => _ToastWidgetState();
@@ -196,152 +116,148 @@ class _ToastWidget extends StatefulWidget {
 
 class _ToastWidgetState extends State<_ToastWidget>
     with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
 
   @override
   void initState() {
     super.initState();
-    
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 180),
       vsync: this,
     );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
-
-    _slideAnimation = Tween<Offset>(
-      begin: _getSlideBegin(),
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: _initialOffset(),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
-
-    _animationController.forward();
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _controller.forward();
 
     Future.delayed(widget.duration, () {
-      if (mounted) {
-        _animationController.reverse().then((_) {
-          widget.onDismiss();
-        });
-      }
+      if (!mounted) return;
+      _controller.reverse().then((_) => widget.onDismiss());
     });
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
-  Offset _getSlideBegin() {
+  Offset _initialOffset() {
     switch (widget.position) {
       case ToastPosition.top:
-        return const Offset(0, -1);
+        return const Offset(0, -0.4);
       case ToastPosition.center:
-        return const Offset(0, 0);
+        return Offset.zero;
       case ToastPosition.bottom:
-        return const Offset(0, 1);
+        return const Offset(0, 0.4);
     }
   }
 
-  double _getTopPosition() {
+  ({IconData icon, Color iconColor}) _typeStyle() {
+    switch (widget.type) {
+      case ToastType.error:
+        return (icon: Icons.error_outline, iconColor: NewAppColor.danger300);
+      case ToastType.warning:
+        return (
+          icon: Icons.warning_amber_outlined,
+          iconColor: NewAppColor.warning300,
+        );
+      case ToastType.success:
+      case ToastType.info:
+        return (
+          icon: Icons.check_circle_outline,
+          iconColor: NewAppColor.success300,
+        );
+    }
+  }
+
+  EdgeInsets _positionPadding(BuildContext context) {
+    final padding = MediaQuery.of(context).padding;
+    final size = MediaQuery.of(context).size;
     switch (widget.position) {
       case ToastPosition.top:
-        return 60;
+        return EdgeInsets.only(
+          top: padding.top + 12.h,
+          left: 16.w,
+          right: 16.w,
+        );
       case ToastPosition.center:
-        return MediaQuery.of(context).size.height * 0.5 - 40;
+        return EdgeInsets.only(
+          top: size.height / 2 - 30,
+          left: 16.w,
+          right: 16.w,
+        );
       case ToastPosition.bottom:
-        return MediaQuery.of(context).size.height - 140;
+        return EdgeInsets.only(
+          bottom: padding.bottom + 24.h,
+          left: 16.w,
+          right: 16.w,
+        );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: _getTopPosition(),
-      left: 16,
-      right: 16,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: widget.config.backgroundColor,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    widget.config.icon,
-                    color: widget.config.iconColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    final style = _typeStyle();
+    final alignment = widget.position == ToastPosition.top
+        ? Alignment.topCenter
+        : widget.position == ToastPosition.center
+            ? Alignment.center
+            : Alignment.bottomCenter;
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        ignoring: true,
+        child: Padding(
+          padding: _positionPadding(context),
+          child: Align(
+            alignment: alignment,
+            child: SlideTransition(
+              position: _slide,
+              child: FadeTransition(
+                opacity: _fade,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 14.w, vertical: 12.h),
+                    decoration: BoxDecoration(
+                      color: NewAppColor.textStrong,
+                      borderRadius: BorderRadius.circular(12.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF020817).withOpacity(0.25),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (widget.title != null)
-                          Text(
-                            widget.title!,
-                            style: TextStyle(
-                              color: widget.config.textColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        Text(
-                          widget.message,
-                          style: TextStyle(
-                            color: widget.config.textColor,
-                            fontSize: 14,
-                            fontWeight: widget.title != null 
-                              ? FontWeight.w400 
-                              : FontWeight.w500,
+                        Icon(
+                          style.icon,
+                          color: style.iconColor,
+                          size: 18.sp,
+                        ),
+                        SizedBox(width: 10.w),
+                        Flexible(
+                          child: Text(
+                            widget.message,
+                            style: FigmaTextStyles().body3.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (widget.action != null) ...[
-                    const SizedBox(width: 12),
-                    widget.action!,
-                  ],
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                      _animationController.reverse().then((_) {
-                        widget.onDismiss();
-                      });
-                    },
-                    child: Icon(
-                      Icons.close,
-                      color: widget.config.iconColor.withOpacity(0.8),
-                      size: 18,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -349,18 +265,4 @@ class _ToastWidgetState extends State<_ToastWidget>
       ),
     );
   }
-}
-
-class _ToastConfig {
-  final Color backgroundColor;
-  final Color iconColor;
-  final Color textColor;
-  final IconData icon;
-
-  const _ToastConfig({
-    required this.backgroundColor,
-    required this.iconColor,
-    required this.textColor,
-    required this.icon,
-  });
 }
