@@ -8,6 +8,7 @@ import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../services/member_service.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/custom_date_picker.dart';
 
 /// 관리자용 교인 수정 화면
 class AdminMemberEditScreen extends StatefulWidget {
@@ -357,12 +358,11 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   }
 
   Future<void> _selectBirthdate() async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showCustomDatePicker(
       context: context,
       initialDate: _selectedBirthdate ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      locale: const Locale('ko', 'KR'),
     );
 
     if (picked != null) {
@@ -404,12 +404,11 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                 // 생년월일
                 GestureDetector(
                   onTap: () async {
-                    final picked = await showDatePicker(
+                    final picked = await showCustomDatePicker(
                       context: context,
                       initialDate: childBirthdate ?? DateTime.now(),
                       firstDate: DateTime(1900),
                       lastDate: DateTime.now(),
-                      locale: const Locale('ko', 'KR'),
                     );
                     if (picked != null) {
                       setDialogState(() {
@@ -554,12 +553,11 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
         break;
     }
 
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showCustomDatePicker(
       context: context,
       initialDate: currentValue ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      locale: const Locale('ko', 'KR'),
     );
 
     if (picked != null) {

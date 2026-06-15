@@ -9,6 +9,7 @@ import '../../resource/text_style_new.dart';
 import '../../services/member_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/custom_date_picker.dart';
 
 /// 관리자용 교인 추가 화면
 class AdminMemberCreateScreen extends StatefulWidget {
@@ -199,29 +200,172 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: FigmaTextStyles().body2.copyWith(
-            color: NewAppColor.neutral400,
-          ),
+      hintStyle: TextStyle(
+        color: NewAppColor.textMuted,
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w500,
+        fontFamily: 'Pretendard',
+      ),
       counterText: counterText,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: NewAppColor.neutral100,
+      fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.r),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: NewAppColor.borderHair, width: 1),
       ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: NewAppColor.borderHair, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: NewAppColor.skyPrimary, width: 1.5),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+    );
+  }
+
+  // 시안: 라벨 + 빨강 * 필수
+  Widget _buildFieldLabel(String text, {bool required = false}) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6.h, left: 2.w),
+      child: Row(
+        children: [
+          Text(
+            text,
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          if (required) ...[
+            SizedBox(width: 3.w),
+            Text(
+              '*',
+              style: TextStyle(
+                color: NewAppColor.danger700,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // 시안: 2분할 segmented chip (성별, 양력/음력 등)
+  Widget _buildSegmented({
+    required List<({String value, String label})> options,
+    required String? selectedValue,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Row(
+      children: options.map((opt) {
+        final selected = opt.value == selectedValue;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: opt == options.last ? 0 : 8.w,
+            ),
+            child: GestureDetector(
+              onTap: () => onChanged(opt.value),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 13.h),
+                decoration: BoxDecoration(
+                  color: selected ? NewAppColor.skyPrimary : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: selected
+                        ? NewAppColor.skyPrimary
+                        : NewAppColor.borderHair,
+                    width: 1,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  opt.label,
+                  style: TextStyle(
+                    color: selected ? Colors.white : NewAppColor.textSecondary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // 시안: 점선 원형 아바타 + sky 카메라 버튼 (사진 업로드는 기존 미구현이라 자리만 유지)
+  Widget _buildAvatarPicker() {
+    return Center(
+      child: SizedBox(
+        width: 96.w,
+        height: 96.w,
+        child: Stack(
+          children: [
+            Container(
+              width: 96.w,
+              height: 96.w,
+              decoration: BoxDecoration(
+                color: NewAppColor.canvasAlt,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: NewAppColor.borderStrong,
+                  width: 1.5,
+                ),
+              ),
+              child: Icon(
+                Icons.person_outline,
+                size: 42.sp,
+                color: NewAppColor.iconFaint,
+              ),
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 32.w,
+                height: 32.w,
+                decoration: BoxDecoration(
+                  color: NewAppColor.skyPrimary,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: NewAppColor.skyPrimary.withOpacity(0.30),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.camera_alt,
+                    color: Colors.white, size: 16.sp),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Future<void> _selectBirthdate() async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showCustomDatePicker(
       context: context,
       initialDate: _selectedBirthdate ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      locale: const Locale('ko', 'KR'),
     );
 
     if (picked != null) {
@@ -243,7 +387,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
           title: Text(
             '자녀 추가',
             style: FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
+              color: NewAppColor.textStrong,
             ),
           ),
           content: SingleChildScrollView(
@@ -263,12 +407,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                 // 생년월일
                 GestureDetector(
                   onTap: () async {
-                    final picked = await showDatePicker(
+                    final picked = await showCustomDatePicker(
                       context: context,
                       initialDate: childBirthdate ?? DateTime.now(),
                       firstDate: DateTime(1900),
                       lastDate: DateTime.now(),
-                      locale: const Locale('ko', 'KR'),
                     );
                     if (picked != null) {
                       setDialogState(() {
@@ -279,7 +422,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                     decoration: BoxDecoration(
-                      color: NewAppColor.neutral100,
+                      color: NewAppColor.canvasAlt,
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Row(
@@ -291,14 +434,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                               : '생년월일 선택',
                           style: FigmaTextStyles().body2.copyWith(
                                 color: childBirthdate != null
-                                    ? NewAppColor.neutral900
-                                    : NewAppColor.neutral400,
+                                    ? NewAppColor.textStrong
+                                    : NewAppColor.textMuted,
                               ),
                         ),
                         Icon(
                           Icons.calendar_today,
                           size: 20.sp,
-                          color: NewAppColor.neutral400,
+                          color: NewAppColor.textMuted,
                         ),
                       ],
                     ),
@@ -319,7 +462,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                             childGender = value!;
                           });
                         },
-                        activeColor: NewAppColor.primary600,
+                        activeColor: NewAppColor.skyPrimary,
                         contentPadding: EdgeInsets.zero,
                       ),
                     ),
@@ -333,7 +476,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                             childGender = value!;
                           });
                         },
-                        activeColor: NewAppColor.primary600,
+                        activeColor: NewAppColor.skyPrimary,
                         contentPadding: EdgeInsets.zero,
                       ),
                     ),
@@ -348,7 +491,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
               child: Text(
                 '취소',
                 style: FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.neutral600,
+                  color: NewAppColor.textSecondary,
                 ),
               ),
             ),
@@ -376,7 +519,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
               child: Text(
                 '추가',
                 style: FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.primary600,
+                  color: NewAppColor.skyPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -413,12 +556,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
         break;
     }
 
-    final DateTime? picked = await showDatePicker(
+    final DateTime? picked = await showCustomDatePicker(
       context: context,
       initialDate: currentValue ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      locale: const Locale('ko', 'KR'),
     );
 
     if (picked != null) {
@@ -638,20 +780,42 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
         leading: material.IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: Colors.black),
+          icon: Icon(Icons.close,
+              color: NewAppColor.textStrong, size: 22.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '교인 추가',
-          style: const FigmaTextStyles().title2.copyWith(
-            color: NewAppColor.neutral900,
-          ),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
+        actions: [
+          TextButton(
+            onPressed: _isLoading ? null : _submitForm,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 14.w),
+            ),
+            child: Text(
+              '저장',
+              style: TextStyle(
+                color: NewAppColor.skyPrimary,
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ),
+        ],
       ),
       body: Form(
         key: _formKey,
@@ -659,13 +823,15 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(20.w),
+                padding: EdgeInsets.fromLTRB(18.w, 12.h, 18.w, 32.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildAvatarPicker(),
+                    SizedBox(height: 24.h),
                     // 기본 정보 섹션
                     _buildSectionTitle('기본 정보'),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     _buildBasicInfoSection(),
 
                     SizedBox(height: 24.h),
@@ -714,43 +880,67 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
 
                     // 추가 정보 섹션
                     _buildSectionTitle('추가 정보'),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     _buildAdditionalInfoSection(),
 
-                    SizedBox(height: 32.h),
+                    SizedBox(height: 18.h),
+                    _buildHintFooter(),
+                    SizedBox(height: 16.h),
                   ],
                 ),
               ),
             ),
-            // 하단 버튼
+            // 하단 액션 바
             Container(
-              padding: EdgeInsets.all(20.w),
+              padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 14.h),
               decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
+                color: NewAppColor.canvasAlt,
+                border: Border(
+                  top: BorderSide(color: NewAppColor.borderHair, width: 1),
+                ),
               ),
               child: SafeArea(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: AppButton(
-                    onPressed: _isLoading ? null : _submitForm,
-                    child: _isLoading
-                        ? SizedBox(
-                            width: 20.w,
-                            height: 20.h,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                top: false,
+                child: GestureDetector(
+                  onTap: _isLoading ? null : _submitForm,
+                  behavior: HitTestBehavior.opaque,
+                  child: Opacity(
+                    opacity: _isLoading ? 0.5 : 1.0,
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: 15.h),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.skyPrimary,
+                        borderRadius: BorderRadius.circular(13.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: NewAppColor.skyPrimary.withOpacity(0.30),
+                            blurRadius: 22,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: _isLoading
+                          ? SizedBox(
+                              width: 20.w,
+                              height: 20.w,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
+                              ),
+                            )
+                          : Text(
+                              '교인 추가',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Pretendard',
+                              ),
                             ),
-                          )
-                        : const Text('교인 추가'),
+                    ),
                   ),
                 ),
               ),
@@ -762,20 +952,54 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const FigmaTextStyles().title3.copyWith(
-        color: NewAppColor.neutral900,
+    return Padding(
+      padding: EdgeInsets.only(left: 2.w),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: NewAppColor.textTertiary,
+          fontSize: 12.5.sp,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'Pretendard',
+        ),
+      ),
+    );
+  }
+
+  // 시안: 하단 안내문 (정보 아이콘 + 회색 문구)
+  Widget _buildHintFooter() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 2.w),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline,
+              size: 14.sp, color: NewAppColor.textTertiary),
+          SizedBox(width: 7.w),
+          Expanded(
+            child: Text(
+              '입력한 이메일로 초대 메일이 발송되며, 교인이 직접 가입을 완료합니다.',
+              style: TextStyle(
+                color: NewAppColor.textTertiary,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Pretendard',
+                height: 1.55,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBasicInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -825,37 +1049,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
           SizedBox(height: 16.h),
 
           // 생년월일 구분 (양력/음력)
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('양력'),
-                  value: 'solar',
-                  groupValue: _selectedBirthdateType,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedBirthdateType = value;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('음력'),
-                  value: 'lunar',
-                  groupValue: _selectedBirthdateType,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedBirthdateType = value;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
+          _buildFieldLabel('생년월일 구분'),
+          _buildSegmented(
+            options: const [
+              (value: 'solar', label: '양력'),
+              (value: 'lunar', label: '음력'),
             ],
+            selectedValue: _selectedBirthdateType,
+            onChanged: (v) => setState(() => _selectedBirthdateType = v),
           ),
           SizedBox(height: 16.h),
 
@@ -865,7 +1066,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -877,14 +1078,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         : '생년월일',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedBirthdate != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     Icons.calendar_today,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -893,37 +1094,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
           SizedBox(height: 16.h),
 
           // 성별 선택
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('남성'),
-                  value: 'male',
-                  groupValue: _selectedGender,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedGender = value!;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('여성'),
-                  value: 'female',
-                  groupValue: _selectedGender,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedGender = value!;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
+          _buildFieldLabel('성별'),
+          _buildSegmented(
+            options: const [
+              (value: 'female', label: '여'),
+              (value: 'male', label: '남'),
             ],
+            selectedValue: _selectedGender,
+            onChanged: (v) => setState(() => _selectedGender = v),
           ),
           SizedBox(height: 16.h),
 
@@ -942,10 +1120,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
 
   Widget _buildFamilyInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -985,7 +1164,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: NewAppColor.canvasAlt,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Row(
@@ -997,14 +1176,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                           : '결혼일 선택',
                       style: FigmaTextStyles().body2.copyWith(
                             color: _selectedMarriedOn != null
-                                ? NewAppColor.neutral900
-                                : NewAppColor.neutral400,
+                                ? NewAppColor.textStrong
+                                : NewAppColor.textMuted,
                           ),
                     ),
                     Icon(
                       Icons.calendar_today,
                       size: 20.sp,
-                      color: NewAppColor.neutral400,
+                      color: NewAppColor.textMuted,
                     ),
                   ],
                 ),
@@ -1024,7 +1203,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                   '자녀 정보',
                   style: FigmaTextStyles().body1.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: NewAppColor.neutral900,
+                    color: NewAppColor.textStrong,
                   ),
                 ),
                 material.IconButton(
@@ -1032,7 +1211,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                   icon: Icon(
                     LucideIcons.plus,
                     size: 20.sp,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                   ),
                   padding: EdgeInsets.zero,
                   constraints: BoxConstraints(),
@@ -1047,7 +1226,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                 child: Text(
                   '자녀 정보를 추가하려면 위의 버튼을 클릭하세요.',
                   style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ),
               )
@@ -1059,10 +1238,10 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                   margin: EdgeInsets.only(bottom: 8.h),
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: NewAppColor.neutral100,
+                    color: NewAppColor.canvasAlt,
                     borderRadius: BorderRadius.circular(8.r),
                     border: Border.all(
-                      color: NewAppColor.neutral200,
+                      color: NewAppColor.borderHair,
                       width: 1,
                     ),
                   ),
@@ -1076,14 +1255,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                               child['name'] ?? '',
                               style: FigmaTextStyles().body1.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: NewAppColor.neutral900,
+                                color: NewAppColor.textStrong,
                               ),
                             ),
                             SizedBox(height: 4.h),
                             Text(
                               '${child['gender'] == 'male' ? '남' : '여'} · ${child['birthdate'] != null ? '${(child['birthdate'] as DateTime).year}.${(child['birthdate'] as DateTime).month.toString().padLeft(2, '0')}.${(child['birthdate'] as DateTime).day.toString().padLeft(2, '0')}' : '생년월일 미입력'}',
                               style: FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral600,
+                                color: NewAppColor.textSecondary,
                               ),
                             ),
                           ],
@@ -1098,7 +1277,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         icon: Icon(
                           LucideIcons.trash2,
                           size: 18.sp,
-                          color: NewAppColor.danger600,
+                          color: NewAppColor.danger700,
                         ),
                         padding: EdgeInsets.zero,
                         constraints: BoxConstraints(),
@@ -1115,10 +1294,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
 
   Widget _buildJobInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1207,10 +1387,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
 
   Widget _buildMinistryExtendedInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1221,7 +1402,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1233,14 +1414,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         : '사역 시작일 선택',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedMinistryStartDate != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     Icons.calendar_today,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1298,10 +1479,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
 
   Widget _buildMinistryInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1396,7 +1578,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1408,14 +1590,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         : '임명일 선택',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedAppointedOn != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     Icons.calendar_today,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1502,10 +1684,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
 
   Widget _buildChurchExtendedInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1537,7 +1720,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1549,14 +1732,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         : '입교일 선택',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedConfirmationDate != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     Icons.calendar_today,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1570,7 +1753,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1582,14 +1765,14 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         : '세례일 선택',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedBaptismDate != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     Icons.calendar_today,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1611,10 +1794,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
 
   Widget _buildCustomFieldsSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1732,10 +1916,11 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
 
   Widget _buildAdditionalInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

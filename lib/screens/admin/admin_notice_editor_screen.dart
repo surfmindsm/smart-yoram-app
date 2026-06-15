@@ -654,10 +654,9 @@ class _AdminNoticeEditorScreenState extends State<AdminNoticeEditorScreen> {
               ],
             ),
           ),
-          Switch.adaptive(
+          AppSwitch(
             value: value,
             onChanged: onChanged,
-            activeColor: NewAppColor.skyPrimary,
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'dart:io';
 import '../models/member.dart';
 import '../services/member_service.dart';
 import '../constants/member_positions.dart';
+import '../widgets/custom_date_picker.dart';
 
 class MemberDetailScreen extends StatefulWidget {
   final Member member;
@@ -498,9 +499,9 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   }
 
   void _selectBirthDate() async {
-    final date = await showDatePicker(
+    final date = await showCustomDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedBirthDate ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
@@ -514,9 +515,9 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
 
   void _selectRegistrationDate() async {
-    final date = await showDatePicker(
+    final date = await showCustomDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedRegistrationDate ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );

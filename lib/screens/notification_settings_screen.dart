@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide IconButton;
+import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../components/index.dart';
 import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
 import '../services/notification_settings_service.dart';
 
+/// 알림 설정 화면 — 1.2.0 C 방향
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
 
@@ -16,7 +18,6 @@ class NotificationSettingsScreen extends StatefulWidget {
 
 class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
-  // 알림 설정 상태
   String selectedSound = '알림음';
   bool chatNotifications = true;
   bool likeNotifications = true;
@@ -32,7 +33,6 @@ class _NotificationSettingsScreenState
     _loadSettings();
   }
 
-  /// 저장된 설정 로드
   Future<void> _loadSettings() async {
     try {
       final chat = await _settingsService.getChatNotifications();
@@ -51,241 +51,302 @@ class _NotificationSettingsScreenState
       });
     } catch (e) {
       print('알림 설정 로드 실패: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          leading: IconButton(
-            icon: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral800),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            '알림 설정',
-            style: FigmaTextStyles()
-                .headline4
-                .copyWith(color: NewAppColor.neutral800),
-          ),
-          centerTitle: true,
-        ),
-        body: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(NewAppColor.primary600),
-          ),
-        ),
-      );
-    }
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.canvasAlt,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral800),
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleSpacing: 0,
+        leading: material.IconButton(
+          icon: Icon(Icons.chevron_left,
+              color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '알림 설정',
-          style: FigmaTextStyles()
-              .headline4
-              .copyWith(color: NewAppColor.neutral800),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 18.sp,
+              ),
         ),
-        centerTitle: true,
       ),
-      body: ListView(
-        children: [
-          // 알림음 설정 섹션
-          _buildSectionHeader('알림음 설정'),
-          _buildNavigationTile(
-            title: '알림음',
-            subtitle: selectedSound,
-            onTap: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => NotificationSoundScreen(
-                    selectedSound: selectedSound,
-                  ),
-                ),
-              );
-              if (result != null) {
-                setState(() {
-                  selectedSound = result;
-                });
-                // 알림음 설정 저장
-                await _settingsService.setNotificationSound(result);
-              }
-            },
-          ),
-          Divider(height: 1, color: NewAppColor.neutral200),
-
-          // 서비스별 푸시 알림 섹션
-          _buildSectionHeader('서비스별 푸시 알림'),
-          _buildSwitchTile(
-            title: '채팅',
-            subtitle: '새로운 채팅 메시지 알림을 받습니다',
-            value: chatNotifications,
-            onChanged: (value) async {
-              setState(() {
-                chatNotifications = value;
-              });
-              // 채팅 알림 설정 저장
-              await _settingsService.setChatNotifications(value);
-            },
-          ),
-          _buildSwitchTile(
-            title: '좋아요',
-            subtitle: '내 게시글에 좋아요를 받으면 알림을 받습니다',
-            value: likeNotifications,
-            onChanged: (value) async {
-              setState(() {
-                likeNotifications = value;
-              });
-              // 좋아요 알림 설정 저장
-              await _settingsService.setLikeNotifications(value);
-            },
-          ),
-          _buildSwitchTile(
-            title: '교회 소식',
-            subtitle: '교회 공지사항 및 소식 알림을 받습니다',
-            value: churchNewsNotifications,
-            onChanged: (value) async {
-              setState(() {
-                churchNewsNotifications = value;
-              });
-              // 교회 소식 알림 설정 저장
-              await _settingsService.setChurchNewsNotifications(value);
-            },
-          ),
-          _buildSwitchTile(
-            title: '교회 메시지',
-            subtitle: '관리자 커스텀 메시지 알림을 받습니다',
-            value: churchMessageNotifications,
-            onChanged: (value) async {
-              setState(() {
-                churchMessageNotifications = value;
-              });
-              // 교회 메시지 알림 설정 저장
-              await _settingsService.setChurchMessageNotifications(value);
-            },
-          ),
-        ],
-      ),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(color: NewAppColor.skyPrimary),
+            )
+          : SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(14.w, 16.h, 14.w, 32.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader('알림음 설정'),
+                  SizedBox(height: 8.h),
+                  _buildCard([
+                    _buildNavRow(
+                      icon: Icons.music_note_outlined,
+                      title: '알림음',
+                      value: selectedSound,
+                      onTap: () async {
+                        final result = await Navigator.push<String>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => NotificationSoundScreen(
+                              selectedSound: selectedSound,
+                            ),
+                          ),
+                        );
+                        if (result != null) {
+                          setState(() => selectedSound = result);
+                          await _settingsService.setNotificationSound(result);
+                        }
+                      },
+                    ),
+                  ]),
+                  SizedBox(height: 20.h),
+                  _buildSectionHeader('서비스별 푸시 알림'),
+                  SizedBox(height: 8.h),
+                  _buildCard([
+                    _buildSwitchRow(
+                      icon: Icons.chat_bubble_outline,
+                      iconBg: NewAppColor.skyTint,
+                      iconFg: NewAppColor.skyDeep,
+                      title: '채팅',
+                      description: '새로운 채팅 메시지 알림을 받습니다',
+                      value: chatNotifications,
+                      onChanged: (value) async {
+                        setState(() => chatNotifications = value);
+                        await _settingsService.setChatNotifications(value);
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildSwitchRow(
+                      icon: Icons.favorite_border,
+                      iconBg: NewAppColor.dangerBg,
+                      iconFg: NewAppColor.danger700,
+                      title: '좋아요',
+                      description: '내 게시글에 좋아요를 받으면 알림을 받습니다',
+                      value: likeNotifications,
+                      onChanged: (value) async {
+                        setState(() => likeNotifications = value);
+                        await _settingsService.setLikeNotifications(value);
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildSwitchRow(
+                      icon: Icons.campaign_outlined,
+                      iconBg: NewAppColor.warningBg,
+                      iconFg: NewAppColor.warning700,
+                      title: '교회 소식',
+                      description: '교회 공지사항 및 소식 알림을 받습니다',
+                      value: churchNewsNotifications,
+                      onChanged: (value) async {
+                        setState(() => churchNewsNotifications = value);
+                        await _settingsService.setChurchNewsNotifications(value);
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildSwitchRow(
+                      icon: Icons.mark_email_unread_outlined,
+                      iconBg: NewAppColor.successBg,
+                      iconFg: NewAppColor.success700,
+                      title: '교회 메시지',
+                      description: '관리자 커스텀 메시지 알림을 받습니다',
+                      value: churchMessageNotifications,
+                      onChanged: (value) async {
+                        setState(() => churchMessageNotifications = value);
+                        await _settingsService
+                            .setChurchMessageNotifications(value);
+                      },
+                    ),
+                  ]),
+                  SizedBox(height: 20.h),
+                  _buildHint(),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _buildSectionHeader(String title) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 12.h),
+    return Padding(
+      padding: EdgeInsets.only(left: 4.w),
       child: Text(
         title,
-        style: FigmaTextStyles().body3.copyWith(
-              color: NewAppColor.neutral800,
-            ),
-      ),
-    );
-  }
-
-  Widget _buildNavigationTile({
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral900,
-                        ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    subtitle,
-                    style: FigmaTextStyles().caption1.copyWith(
-                          color: NewAppColor.neutral600,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Icon(
-              Icons.chevron_right,
-              color: NewAppColor.neutral400,
-              size: 24.w,
-            ),
-          ],
+        style: TextStyle(
+          color: NewAppColor.textTertiary,
+          fontSize: 12.5.sp,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'Pretendard',
         ),
       ),
     );
   }
 
-  Widget _buildSwitchTile({
+  Widget _buildCard(List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      height: 1,
+      color: NewAppColor.borderHair,
+      margin: EdgeInsets.symmetric(horizontal: 14.w),
+    );
+  }
+
+  Widget _buildNavRow({
+    required IconData icon,
     required String title,
-    required String subtitle,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+          child: Row(
+            children: [
+              Container(
+                width: 38.w,
+                height: 38.w,
+                decoration: BoxDecoration(
+                  color: NewAppColor.skyTint,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: NewAppColor.skyDeep, size: 18.sp),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 14.5.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  color: NewAppColor.textTertiary,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
+              SizedBox(width: 4.w),
+              Icon(Icons.chevron_right,
+                  color: NewAppColor.iconFaint, size: 19.sp),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwitchRow({
+    required IconData icon,
+    required Color iconBg,
+    required Color iconFg,
+    required String title,
+    required String description,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       child: Row(
         children: [
+          Container(
+            width: 38.w,
+            height: 38.w,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: iconFg, size: 18.sp),
+          ),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   title,
-                  style: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.neutral900,
-                      ),
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 14.5.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Pretendard',
+                  ),
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 2.h),
                 Text(
-                  subtitle,
-                  style: FigmaTextStyles().caption1.copyWith(
-                        color: NewAppColor.neutral600,
-                      ),
+                  description,
+                  style: TextStyle(
+                    color: NewAppColor.textTertiary,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Pretendard',
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
           ),
-          SizedBox(width: 16.w),
-          Switch.adaptive(
+          SizedBox(width: 8.w),
+          AppSwitch(
             value: value,
             onChanged: onChanged,
-            activeColor: NewAppColor.skyPrimary,
-            activeTrackColor: NewAppColor.skyTint,
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: NewAppColor.borderStrong,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHint() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Text(
+        '시스템 알림이 꺼져 있으면 앱 내 설정과 관계없이 알림이 전달되지 않을 수 있어요.',
+        style: TextStyle(
+          color: NewAppColor.textTertiary,
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'Pretendard',
+          height: 1.55,
+        ),
       ),
     );
   }
 }
 
-// 알림음 선택 화면
+/// 알림음 선택 화면 — 1.2.0 C 방향
 class NotificationSoundScreen extends StatefulWidget {
   final String selectedSound;
 
@@ -335,14 +396,12 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
 
   Future<void> _playSound(String soundPath) async {
     if (soundPath.isEmpty) return;
-
     try {
       await _audioPlayer.stop();
       await _audioPlayer
           .play(AssetSource(soundPath.replaceFirst('assets/', '')));
     } catch (e) {
       print('알림음 재생 실패: $e');
-      // 파일이 없어도 앱이 크래시되지 않도록 에러를 무시
     }
   }
 
@@ -350,81 +409,162 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // 뒤로가기 시 선택된 알림음 반환
         Navigator.pop(context, _selectedSound);
         return false;
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: NewAppColor.canvasAlt,
         appBar: AppBar(
-          backgroundColor: NewAppColor.primary600,
+          backgroundColor: NewAppColor.canvasAlt,
           elevation: 0,
-          leading: IconButton(
-            icon: Icon(LucideIcons.chevronLeft, color: Colors.white),
-            onPressed: () {
-              // 뒤로가기 버튼 클릭 시 선택된 알림음 반환
-              Navigator.pop(context, _selectedSound);
-            },
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          centerTitle: false,
+          titleSpacing: 0,
+          leading: material.IconButton(
+            icon: Icon(Icons.chevron_left,
+                color: NewAppColor.textStrong, size: 26.sp),
+            onPressed: () => Navigator.pop(context, _selectedSound),
           ),
           title: Text(
             '알림음 선택',
-            style: FigmaTextStyles().headline4.copyWith(color: Colors.white),
+            style: FigmaTextStyles().subtitle1.copyWith(
+                  color: NewAppColor.textStrong,
+                  fontSize: 18.sp,
+                ),
           ),
-          centerTitle: true,
         ),
-        body: ListView.builder(
-          itemCount: _sounds.length,
-          itemBuilder: (context, index) {
-            final soundName = _sounds.keys.elementAt(index);
-            final soundPath = _sounds[soundName]!;
-            final isSelected = soundName == _selectedSound;
-
-            return InkWell(
-              onTap: () async {
-                // 알림음 미리듣기
-                await _playSound(soundPath);
-
-                // 선택된 알림음 표시
-                setState(() {
-                  _selectedSound = soundName;
-                });
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: NewAppColor.neutral200,
-                      width: 1,
-                    ),
+        body: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(14.w, 8.h, 14.w, 32.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(4.w, 8.h, 4.w, 12.h),
+                child: Text(
+                  '항목을 누르면 미리 듣고 선택할 수 있어요.',
+                  style: TextStyle(
+                    color: NewAppColor.textTertiary,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Pretendard',
+                    height: 1.55,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        soundName,
-                        style: FigmaTextStyles().body2.copyWith(
-                              color: isSelected
-                                  ? NewAppColor.primary600
-                                  : NewAppColor.neutral900,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(color: NewAppColor.borderHair, width: 1),
+                ),
+                child: Column(
+                  children: List.generate(_sounds.length, (index) {
+                    final soundName = _sounds.keys.elementAt(index);
+                    final soundPath = _sounds[soundName]!;
+                    final isSelected = soundName == _selectedSound;
+                    final isLast = index == _sounds.length - 1;
+                    final isSilent = soundPath.isEmpty;
+
+                    return Column(
+                      children: [
+                        Material(
+                          color: isSelected
+                              ? NewAppColor.skyTint.withOpacity(0.45)
+                              : Colors.transparent,
+                          child: InkWell(
+                            onTap: () async {
+                              if (!isSilent) await _playSound(soundPath);
+                              setState(() => _selectedSound = soundName);
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w, vertical: 14.h),
+                              child: Row(
+                                children: [
+                                  // 라디오 인디케이터
+                                  Container(
+                                    width: 20.w,
+                                    height: 20.w,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? NewAppColor.skyPrimary
+                                            : NewAppColor.borderStrong,
+                                        width: isSelected ? 5.5 : 1.5,
+                                      ),
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(width: 14.w),
+                                  // 사운드 이름
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        if (isSilent) ...[
+                                          Icon(
+                                            Icons.volume_off_outlined,
+                                            size: 16.sp,
+                                            color: NewAppColor.textTertiary,
+                                          ),
+                                          SizedBox(width: 6.w),
+                                        ],
+                                        Flexible(
+                                          child: Text(
+                                            soundName,
+                                            style: TextStyle(
+                                              color: NewAppColor.textStrong,
+                                              fontSize: 14.5.sp,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w800
+                                                  : FontWeight.w600,
+                                              fontFamily: 'Pretendard',
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // 미리듣기 아이콘 (소리 있는 경우만)
+                                  if (!isSilent)
+                                    Container(
+                                      width: 32.w,
+                                      height: 32.w,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? NewAppColor.skyPrimary
+                                            : NewAppColor.borderSoft,
+                                        borderRadius:
+                                            BorderRadius.circular(10.r),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.play_arrow_rounded,
+                                        size: 18.sp,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : NewAppColor.textSecondary,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                      ),
-                    ),
-                    if (isSelected)
-                      Icon(
-                        Icons.check,
-                        color: NewAppColor.primary600,
-                        size: 24.w,
-                      ),
-                  ],
+                          ),
+                        ),
+                        if (!isLast)
+                          Container(
+                            height: 1,
+                            color: NewAppColor.borderHair,
+                            margin: EdgeInsets.only(left: 50.w, right: 14.w),
+                          ),
+                      ],
+                    );
+                  }),
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );
