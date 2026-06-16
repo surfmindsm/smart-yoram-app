@@ -47,3 +47,6 @@ app.*.map.json
 # Firebase Service Account (보안상 중요)
 *-firebase-adminsdk*.json
 firebase-adminsdk*.json
+
+# Claude Code 로컬 설정
+.claude/
