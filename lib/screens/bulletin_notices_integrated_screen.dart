@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
@@ -34,7 +35,13 @@ class _BulletinNoticesIntegratedScreenState
   // 1.2.0 C 방향: 타이틀 + 세그먼트 토글 (흰 상단 영역)
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
       backgroundColor: NewAppColor.canvasAlt,
       body: Column(
         children: [
@@ -84,7 +91,7 @@ class _BulletinNoticesIntegratedScreenState
           ),
         ],
       ),
-    );
+    ));
   }
 
   // 1.2.0 C 방향: 세그먼트 토글 (로그인 화면 이메일/전화 토글과 동일)

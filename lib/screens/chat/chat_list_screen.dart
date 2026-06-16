@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
@@ -170,7 +171,13 @@ class _ChatListScreenState extends State<ChatListScreen>
   // 1.2.0 C 방향: 흰 헤더(타이틀 + 스카이 필터 칩) + 흰 목록
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
       backgroundColor: NewAppColor.canvasAlt,
       body: _isLoading
           ? Center(
@@ -247,7 +254,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                 ),
               ],
             ),
-    );
+    ));
   }
 
   // 1.2.0 C 방향: 스카이 필터 칩 (활성=skyPrimary 채움, 비활성=라인)

@@ -97,7 +97,15 @@ class MyApp extends ConsumerWidget {
                     brightness: Brightness.light,
                   ),
                   useMaterial3: true,
-                  fontFamily: 'Pretendard', // Google Fonts로 나중에 설정 가능
+                  fontFamily: 'Pretendard',
+                  // 1.2.0: 흰 AppBar에서 status bar 아이콘 진하게 보이도록
+                  appBarTheme: const AppBarTheme(
+                    systemOverlayStyle: SystemUiOverlayStyle(
+                      statusBarColor: Colors.transparent,
+                      statusBarIconBrightness: Brightness.dark,
+                      statusBarBrightness: Brightness.light,
+                    ),
+                  ),
                 ),
                 home: const AuthWrapper(),
                 routes: {

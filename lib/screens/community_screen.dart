@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
@@ -107,14 +108,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
         backgroundColor: Colors.white,
         body: Center(
           child: CircularProgressIndicator(
             color: NewAppColor.skyPrimary,
           ),
         ),
-      );
+      ));
     }
 
     if (_currentUser == null) {
@@ -143,9 +150,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
 
     // 1.2.0 C 방향: 흰 배경 + 헤더 + 카테고리 리스트
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Column(
         children: [
           // 상단 헤더 (타이틀 + 알림/내글/찜 아이콘)
           Container(
@@ -208,6 +221,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -205,7 +206,13 @@ class _MembersScreenState extends State<MembersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
       backgroundColor: NewAppColor.canvasAlt,
       body: Column(
         children: [
@@ -306,7 +313,7 @@ class _MembersScreenState extends State<MembersScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   // 1.2.0 C 방향: 가로 스크롤 필터 칩 row
