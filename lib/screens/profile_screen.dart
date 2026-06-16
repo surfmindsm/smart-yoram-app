@@ -5,6 +5,7 @@ import '../services/user_service.dart';
 import '../services/member_service.dart';
 import '../models/user.dart' as app_user;
 import '../models/member.dart';
+import '../resource/color_style_new.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -104,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             CircleAvatar(
               radius: 50,
-              backgroundColor: Colors.blue[100],
+              backgroundColor: NewAppColor.skyTint,
               backgroundImage: currentMember?.profilePhotoUrl != null 
                   ? NetworkImage(currentMember!.profilePhotoUrl!) 
                   : null,
@@ -125,13 +126,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 margin: const EdgeInsets.only(top: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.blue[100],
+                  color: NewAppColor.skyTint,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   currentMember!.position!,
                   style: TextStyle(
-                    color: Colors.blue[700],
+                    color: NewAppColor.skyPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

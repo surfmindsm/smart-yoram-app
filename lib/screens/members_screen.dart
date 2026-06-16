@@ -641,7 +641,7 @@ class _MembersScreenState extends State<MembersScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: NewAppColor.primary600),
+            CircularProgressIndicator(color: NewAppColor.skyPrimary),
             SizedBox(height: 16.h),
             Text(
               '교인 정보를 불러오는 중...',
@@ -657,7 +657,7 @@ class _MembersScreenState extends State<MembersScreen> {
     if (filteredMembers.isEmpty) {
       return RefreshIndicator(
         onRefresh: () => _loadMembers(),
-        color: NewAppColor.primary600,
+        color: NewAppColor.skyPrimary,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: SizedBox(

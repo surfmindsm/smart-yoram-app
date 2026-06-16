@@ -490,7 +490,8 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
@@ -1193,7 +1194,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
   }
 
   Color _getStatusColor(String? status) {
-    if (status == null) return NewAppColor.primary600;
+    if (status == null) return NewAppColor.skyPrimary;
 
     switch (status.toLowerCase()) {
       case 'active':
@@ -1207,11 +1208,11 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
       case 'reserved': // 예약중 (레거시)
         return NewAppColor.warning600;
       case 'requesting':
-        return NewAppColor.primary600;
+        return NewAppColor.skyPrimary;
       case 'open':
         return NewAppColor.success600;
       default:
-        return NewAppColor.primary600;
+        return NewAppColor.skyPrimary;
     }
   }
 
@@ -2410,11 +2411,12 @@ class _AdvancedFilterBottomSheetState
                           ),
                           child: Text(
                             '적용',
-                            style: FigmaTextStyles().button2.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w800,
-                                ),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Pretendard',
+                            ),
                           ),
                         ),
                       ),
@@ -2593,17 +2595,16 @@ class _AdvancedFilterBottomSheetState
                                     Expanded(
                                       child: Text(
                                         labelOf(opt),
-                                        style: FigmaTextStyles()
-                                            .body2
-                                            .copyWith(
-                                              color: isSel
-                                                  ? NewAppColor.skyDeep
-                                                  : NewAppColor.neutral700,
-                                              fontSize: 15.sp,
-                                              fontWeight: isSel
-                                                  ? FontWeight.w700
-                                                  : FontWeight.w500,
-                                            ),
+                                        style: TextStyle(
+                                          color: isSel
+                                              ? NewAppColor.skyDeep
+                                              : NewAppColor.textStrong,
+                                          fontSize: 15.sp,
+                                          fontWeight: isSel
+                                              ? FontWeight.w700
+                                              : FontWeight.w600,
+                                          fontFamily: 'Pretendard',
+                                        ),
                                       ),
                                     ),
                                     if (isSel)

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum ButtonVariant {
   primary,
@@ -116,44 +116,44 @@ class AppButton extends StatelessWidget {
     switch (variant) {
       case ButtonVariant.primary:
         return _ButtonTheme(
-          backgroundColor: AppColor.primary7,
-          textColor: AppColor.white,
-          borderColor: AppColor.primary7,
+          backgroundColor: NewAppColor.skyDeep,
+          textColor: Colors.white,
+          borderColor: NewAppColor.skyDeep,
           borderWidth: 1,
         );
       case ButtonVariant.secondary:
         return _ButtonTheme(
-          backgroundColor: AppColor.secondary00,
-          textColor: AppColor.secondary07,
-          borderColor: AppColor.border1,
+          backgroundColor: NewAppColor.canvasAlt,
+          textColor: NewAppColor.textStrong,
+          borderColor: NewAppColor.borderHair,
           borderWidth: 1,
         );
       case ButtonVariant.outline:
         return _ButtonTheme(
           backgroundColor: Colors.transparent,
-          textColor: AppColor.secondary07,
-          borderColor: AppColor.border1,
+          textColor: NewAppColor.textStrong,
+          borderColor: NewAppColor.borderHair,
           borderWidth: 1,
         );
       case ButtonVariant.ghost:
         return _ButtonTheme(
           backgroundColor: Colors.transparent,
-          textColor: AppColor.secondary07,
+          textColor: NewAppColor.textStrong,
           borderColor: Colors.transparent,
           borderWidth: 0,
         );
       case ButtonVariant.link:
         return _ButtonTheme(
           backgroundColor: Colors.transparent,
-          textColor: AppColor.primary7,
+          textColor: NewAppColor.skyDeep,
           borderColor: Colors.transparent,
           borderWidth: 0,
         );
       case ButtonVariant.destructive:
         return _ButtonTheme(
-          backgroundColor: AppColor.error,
-          textColor: AppColor.white,
-          borderColor: AppColor.error,
+          backgroundColor: NewAppColor.danger700,
+          textColor: Colors.white,
+          borderColor: NewAppColor.danger700,
           borderWidth: 1,
         );
     }

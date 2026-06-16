@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../components/index.dart' hide IconButton;
 import '../widget/widgets.dart';
+import '../resource/color_style_new.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -186,7 +187,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 Text(
                   time,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 12, color: NewAppColor.textMuted),
                 ),
               ],
             ),
@@ -239,54 +240,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
 
   void _showAdminMenu() {
-    showModalBottomSheet(
+    AppMenuSheet.show(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '관리자 메뉴',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(LucideIcons.database),
-              title: const Text('데이터 백업'),
-              onTap: () {
-                Navigator.pop(context);
-                _backupData();
-              },
-            ),
-            ListTile(
-              leading: const Icon(LucideIcons.refreshCw),
-              title: const Text('데이터 동기화'),
-              onTap: () {
-                Navigator.pop(context);
-                _syncData();
-              },
-            ),
-            ListTile(
-              leading: const Icon(LucideIcons.bug),
-              title: const Text('시스템 진단'),
-              onTap: () {
-                Navigator.pop(context);
-                _systemDiagnostics();
-              },
-            ),
-            ListTile(
-              leading: const Icon(LucideIcons.logOut),
-              title: const Text('관리자 로그아웃'),
-              onTap: () {
-                Navigator.pop(context);
-                _adminLogout();
-              },
-            ),
-          ],
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.database,
+          label: '데이터 백업',
+          onTap: _backupData,
         ),
-      ),
+        AppMenuItem(
+          icon: LucideIcons.refreshCw,
+          label: '데이터 동기화',
+          onTap: _syncData,
+        ),
+        AppMenuItem(
+          icon: LucideIcons.bug,
+          label: '시스템 진단',
+          onTap: _systemDiagnostics,
+        ),
+        AppMenuItem(
+          icon: LucideIcons.logOut,
+          label: '관리자 로그아웃',
+          danger: true,
+          onTap: _adminLogout,
+        ),
+      ],
     );
   }
 

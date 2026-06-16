@@ -45,7 +45,8 @@ ${announcement.content}
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.arrowLeft, color: NewAppColor.textStrong, size: 23.sp),
           onPressed: () => Navigator.pop(context),

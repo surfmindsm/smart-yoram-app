@@ -206,7 +206,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
             icon: Icon(
               LucideIcons.user,
               color: _selectedPreacher != null
-                  ? NewAppColor.primary600
+                  ? NewAppColor.skyPrimary
                   : NewAppColor.neutral900,
             ),
             onPressed: _showPreacherBottomSheet,
@@ -224,7 +224,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
             child: _isLoading
                 ? Center(
                     child: CircularProgressIndicator(
-                      color: NewAppColor.primary600,
+                      color: NewAppColor.skyPrimary,
                     ),
                   )
                 : _errorMessage != null
@@ -241,7 +241,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                             return _loadData();
                           }
                         },
-                        color: NewAppColor.primary600,
+                        color: NewAppColor.skyPrimary,
                         child: CustomScrollView(
                           slivers: _buildContent(),
                         ),
@@ -284,10 +284,10 @@ class _SermonsScreenState extends State<SermonsScreen> {
         margin: EdgeInsets.only(right: 8.w, top: 8.h, bottom: 8.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
-          color: isSelected ? NewAppColor.primary600 : Colors.white,
+          color: isSelected ? NewAppColor.skyPrimary : Colors.white,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: isSelected ? NewAppColor.primary600 : NewAppColor.neutral300,
+            color: isSelected ? NewAppColor.skyPrimary : NewAppColor.neutral300,
           ),
         ),
         child: Center(
@@ -314,7 +314,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: NewAppColor.primary100,
+              color: NewAppColor.skyTint,
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Row(
@@ -323,13 +323,13 @@ class _SermonsScreenState extends State<SermonsScreen> {
                 Icon(
                   LucideIcons.user,
                   size: 16.w,
-                  color: NewAppColor.primary700,
+                  color: NewAppColor.skyDeep,
                 ),
                 SizedBox(width: 4.w),
                 Text(
                   _selectedPreacher!,
                   style: FigmaTextStyles().captionText1.copyWith(
-                        color: NewAppColor.primary700,
+                        color: NewAppColor.skyDeep,
                         fontWeight: FontWeight.w600,
                       ),
                 ),
@@ -446,7 +446,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                                   LucideIcons.user,
                                   size: 20.w,
                                   color: isSelected
-                                      ? NewAppColor.primary600
+                                      ? NewAppColor.skyPrimary
                                       : NewAppColor.neutral600,
                                 ),
                                 SizedBox(width: 12.w),
@@ -454,7 +454,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                                   preacher,
                                   style: FigmaTextStyles().body2.copyWith(
                                         color: isSelected
-                                            ? NewAppColor.primary600
+                                            ? NewAppColor.skyPrimary
                                             : NewAppColor.neutral900,
                                         fontWeight: isSelected
                                             ? FontWeight.w600
@@ -466,7 +466,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                                   Icon(
                                     LucideIcons.check,
                                     size: 20.w,
-                                    color: NewAppColor.primary600,
+                                    color: NewAppColor.skyPrimary,
                                   ),
                               ],
                             ),
@@ -640,7 +640,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: NewAppColor.primary600,
+                        color: NewAppColor.skyPrimary,
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
@@ -731,7 +731,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                     Text(
                       sermon.category!,
                       style: FigmaTextStyles().captionText2.copyWith(
-                            color: NewAppColor.primary600,
+                            color: NewAppColor.skyPrimary,
                           ),
                     ),
                     SizedBox(height: 4.h),
@@ -826,7 +826,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
           ElevatedButton(
             onPressed: _loadData,
             style: ElevatedButton.styleFrom(
-              backgroundColor: NewAppColor.primary600,
+              backgroundColor: NewAppColor.skyPrimary,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
               shape: RoundedRectangleBorder(
@@ -1063,7 +1063,7 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
         child: Padding(
           padding: EdgeInsets.all(24.h),
           child: CircularProgressIndicator(
-            color: NewAppColor.primary600,
+            color: NewAppColor.skyPrimary,
           ),
         ),
       );
@@ -1179,10 +1179,10 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
       player: YoutubePlayer(
         controller: _controller,
         showVideoProgressIndicator: true,
-        progressIndicatorColor: NewAppColor.primary600,
+        progressIndicatorColor: NewAppColor.skyPrimary,
         progressColors: ProgressBarColors(
-          playedColor: NewAppColor.primary600,
-          handleColor: NewAppColor.primary700,
+          playedColor: NewAppColor.skyPrimary,
+          handleColor: NewAppColor.skyDeep,
         ),
       ),
       builder: (context, player) {
@@ -1254,13 +1254,13 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
                                         vertical: 6.h,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: NewAppColor.primary100,
+                                        color: NewAppColor.skyTint,
                                         borderRadius: BorderRadius.circular(4.r),
                                       ),
                                       child: Text(
                                         widget.sermon.category!,
                                         style: FigmaTextStyles().captionText2.copyWith(
-                                              color: NewAppColor.primary700,
+                                              color: NewAppColor.skyDeep,
                                               fontWeight: FontWeight.w600,
                                             ),
                                       ),

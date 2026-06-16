@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum CalendarView {
   month,
@@ -69,8 +69,8 @@ class _AppCalendarState extends State<AppCalendar> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColor.white,
-        border: Border.all(color: AppColor.border1),
+        color: Colors.white,
+        border: Border.all(color: NewAppColor.borderHair),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -88,7 +88,7 @@ class _AppCalendarState extends State<AppCalendar> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColor.border1)),
+        border: Border(bottom: BorderSide(color: NewAppColor.borderHair)),
       ),
       child: Row(
         children: [
@@ -104,7 +104,7 @@ class _AppCalendarState extends State<AppCalendar> {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColor.secondary06,
+                color: NewAppColor.textStrong,
               ),
               textAlign: TextAlign.center,
             ),
@@ -133,7 +133,7 @@ class _AppCalendarState extends State<AppCalendar> {
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColor.secondary04,
+                color: NewAppColor.textMuted,
               ),
               textAlign: TextAlign.center,
             ),
@@ -187,14 +187,14 @@ class _AppCalendarState extends State<AppCalendar> {
       child: Container(
         decoration: BoxDecoration(
           color: isSelected
-            ? AppColor.primary600
+            ? NewAppColor.skyPrimary
             : isInRange
-              ? AppColor.primary100
+              ? NewAppColor.skyTint
               : isToday
-                ? AppColor.primary100.withOpacity(0.3)
+                ? NewAppColor.skyTint.withOpacity(0.3)
                 : Colors.transparent,
           border: isToday && !isSelected
-            ? Border.all(color: AppColor.primary600, width: 1)
+            ? Border.all(color: NewAppColor.skyPrimary, width: 1)
             : null,
           borderRadius: BorderRadius.circular(6),
         ),
@@ -207,12 +207,12 @@ class _AppCalendarState extends State<AppCalendar> {
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isDisabled
-                  ? AppColor.secondary02
+                  ? NewAppColor.borderStrong
                   : isSelected
-                    ? AppColor.white
+                    ? Colors.white
                     : isToday
-                      ? AppColor.primary600
-                      : AppColor.secondary06,
+                      ? NewAppColor.skyPrimary
+                      : NewAppColor.textStrong,
               ),
             ),
             if (events.isNotEmpty)
@@ -226,7 +226,7 @@ class _AppCalendarState extends State<AppCalendar> {
                       height: 4,
                       margin: const EdgeInsets.symmetric(horizontal: 1),
                       decoration: BoxDecoration(
-                        color: event.color ?? AppColor.primary600,
+                        color: event.color ?? NewAppColor.skyPrimary,
                         shape: BoxShape.circle,
                       ),
                     );

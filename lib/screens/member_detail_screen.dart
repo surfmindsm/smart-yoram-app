@@ -88,7 +88,8 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             fontFamily: 'Pretendard',
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         backgroundColor: Colors.white,
         foregroundColor: NewAppColor.textStrong,
         elevation: 0,
@@ -709,7 +710,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                 title,
                 style: TextStyle(
                   color: NewAppColor.textStrong,
-                  fontSize: 16.sp,
+                  fontSize: 17.sp,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'Pretendard',
                 ),
@@ -743,10 +744,10 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                                   color: selected
                                       ? NewAppColor.skyDeep
                                       : NewAppColor.textStrong,
-                                  fontSize: 14.sp,
+                                  fontSize: 15.sp,
                                   fontWeight: selected
                                       ? FontWeight.w700
-                                      : FontWeight.w500,
+                                      : FontWeight.w600,
                                   fontFamily: 'Pretendard',
                                 ),
                               ),

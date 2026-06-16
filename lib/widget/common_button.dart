@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
-import 'package:smart_yoram_app/resource/color_style.dart';
+import '../resource/color_style_new.dart';
 
 /// 앱에서 공통으로 사용되는 버튼 위젯들
 class CommonButton extends StatelessWidget {
@@ -67,7 +67,7 @@ class CommonButton extends StatelessWidget {
         // 비활성화 상태에서도 배경색이 적용되도록 MaterialStateProperty 사용
         final backgroundColor = customBackgroundColor ?? 
             MaterialStateProperty.resolveWith<Color>((states) {
-              return AppColor.primary900; // 항상 동일한 배경색 적용
+              return NewAppColor.skyDeep; // 항상 동일한 배경색 적용
             });
         
         final foregroundColor = customForegroundColor ?? 
@@ -103,8 +103,8 @@ class CommonButton extends StatelessWidget {
         button = OutlinedButton(
           onPressed: isLoading ? null : onPressed,
           style: OutlinedButton.styleFrom(
-            side: BorderSide(color: AppColor.primary900),
-            foregroundColor: AppColor.primary900,
+            side: BorderSide(color: NewAppColor.skyDeep),
+            foregroundColor: NewAppColor.skyDeep,
             padding: padding ??
                 const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             shape: RoundedRectangleBorder(
@@ -119,7 +119,7 @@ class CommonButton extends StatelessWidget {
         button = TextButton(
           onPressed: isLoading ? null : onPressed,
           style: TextButton.styleFrom(
-            foregroundColor: AppColor.primary900,
+            foregroundColor: NewAppColor.skyDeep,
             padding: padding ??
                 const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             shape: RoundedRectangleBorder(
@@ -134,7 +134,7 @@ class CommonButton extends StatelessWidget {
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColor.error,
+            backgroundColor: NewAppColor.danger700,
             foregroundColor: Colors.white,
             padding: padding ??
                 const EdgeInsets.symmetric(vertical: 12, horizontal: 24),

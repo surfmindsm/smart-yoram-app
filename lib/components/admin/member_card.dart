@@ -104,7 +104,7 @@ class MemberCard extends StatelessWidget {
                     Text(
                       member.district!,
                       style: const FigmaTextStyles().caption2.copyWith(
-                        color: NewAppColor.primary600,
+                        color: NewAppColor.skyPrimary,
                       ),
                     ),
                   ],
@@ -153,7 +153,7 @@ class MemberCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.w600,
-            color: NewAppColor.primary600,
+            color: NewAppColor.skyPrimary,
           ),
         ),
       ),

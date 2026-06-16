@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../components/index.dart';
-import '../../components/admin/status_badge.dart';
 import '../../models/member.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
@@ -364,120 +363,218 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: material.IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: Colors.black),
+          icon: Icon(LucideIcons.chevronLeft,
+              color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '교인 상세',
-          style: const FigmaTextStyles().title2.copyWith(
-            color: NewAppColor.neutral900,
-          ),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
         actions: [
           material.IconButton(
-            icon: const Icon(LucideIcons.pencil, color: Colors.black),
+            icon: Icon(LucideIcons.pencil,
+                color: NewAppColor.textStrong, size: 20.sp),
             onPressed: _navigateToEdit,
           ),
           material.IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Colors.black),
+            icon: Icon(LucideIcons.refreshCw,
+                color: NewAppColor.textStrong, size: 20.sp),
             onPressed: _loadMember,
           ),
         ],
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(color: NewAppColor.skyPrimary))
           : SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 32.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 프로필 섹션
                   _buildProfileSection(),
-                  SizedBox(height: 16.h),
-                  // 기본 정보 섹션
+                  SizedBox(height: 12.h),
                   _buildBasicInfoSection(),
-                  SizedBox(height: 16.h),
-                  // 개인 및 가족 정보 섹션
-                  _buildPersonalFamilyInfoSection(),
-                  SizedBox(height: 16.h),
-                  // 교회 정보 섹션
+                  SizedBox(height: 12.h),
+                  if (_hasPersonalFamily()) ...[
+                    _buildPersonalFamilyInfoSection(),
+                    SizedBox(height: 12.h),
+                  ],
                   _buildChurchInfoSection(),
-                  // 교회 정보 확장 섹션 (있는 경우만)
                   if (_hasChurchInfoExtended()) ...[
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     _buildChurchInfoExtendedSection(),
                   ],
-                  // 직업 정보 섹션 (있는 경우만)
                   if (_hasJobInfo()) ...[
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     _buildJobInfoSection(),
                   ],
-                  // 사역 정보 확장 섹션 (있는 경우만)
                   if (_hasMinistryInfoExtended()) ...[
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     _buildMinistryInfoExtendedSection(),
                   ],
-                  // 자유필드 섹션 (있는 경우만)
                   if (_hasCustomFields()) ...[
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     _buildCustomFieldsSection(),
                   ],
-                  // 추가 정보 섹션 (있는 경우만)
                   if (_hasAdditionalInfo()) ...[
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     _buildAdditionalInfoSection(),
                   ],
-                  // 시스템 정보 섹션
                   if (_hasSystemInfo()) ...[
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     _buildSystemInfoSection(),
                   ],
-                  SizedBox(height: 16.h),
-                  // 관리 액션 섹션
+                  SizedBox(height: 18.h),
                   _buildActionSection(),
-                  SizedBox(height: 32.h),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildProfileSection() {
+  bool _hasPersonalFamily() {
+    return (_member.maritalStatus != null &&
+            _member.maritalStatus!.isNotEmpty) ||
+        (_member.spouseName != null && _member.spouseName!.isNotEmpty) ||
+        _member.marriedOn != null ||
+        (_member.children != null && _member.children!.isNotEmpty);
+  }
+
+  // 1.2.0 표준 카드 셸 — borderHair 1px + radius 14
+  Widget _sectionCard({required Widget child}) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24.w),
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair),
+      ),
+      padding: EdgeInsets.fromLTRB(18.w, 16.h, 18.w, 18.h),
+      child: child,
+    );
+  }
+
+  // 1.2.0 표준 섹션 헤더
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 14.h),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: NewAppColor.textStrong,
+          fontSize: 15.sp,
+          fontWeight: FontWeight.w800,
+          fontFamily: 'Pretendard',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileSection() {
+    final isActive = _member.memberStatus == 'active';
+    final positionLabel = _getPositionMainDisplay(_member.positionMain);
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair),
+      ),
+      padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 22.h),
       child: Column(
         children: [
-          // 프로필 사진
           _buildProfileImage(),
-          SizedBox(height: 16.h),
-          // 이름
+          SizedBox(height: 14.h),
           Text(
             _member.name,
-            style: const FigmaTextStyles().title1.copyWith(
-              color: NewAppColor.neutral900,
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Pretendard',
             ),
           ),
           SizedBox(height: 8.h),
-          // 상태 뱃지
-          StatusBadge(
-            status: _member.memberStatus == 'active' ? 'active' : 'inactive',
-            label: _member.memberStatus == 'active' ? '활성' : '비활성',
-          ),
-          if (_member.district != null && _member.district!.isNotEmpty) ...[
-            SizedBox(height: 8.h),
-            Text(
-              _member.district!,
-              style: const FigmaTextStyles().body2.copyWith(
-                color: NewAppColor.primary600,
+          Wrap(
+            spacing: 6.w,
+            runSpacing: 6.h,
+            alignment: WrapAlignment.center,
+            children: [
+              // 상태 칩
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? NewAppColor.successBg
+                      : NewAppColor.borderSoft,
+                  borderRadius: BorderRadius.circular(999.r),
+                ),
+                child: Text(
+                  isActive ? '활성' : '비활성',
+                  style: TextStyle(
+                    color: isActive
+                        ? NewAppColor.success700
+                        : NewAppColor.textMuted,
+                    fontSize: 11.5.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
               ),
-            ),
-          ],
+              if (positionLabel.isNotEmpty)
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.skyTint,
+                    borderRadius: BorderRadius.circular(999.r),
+                  ),
+                  child: Text(
+                    positionLabel,
+                    style: TextStyle(
+                      color: NewAppColor.skyDeep,
+                      fontSize: 11.5.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ),
+              if (_member.district != null && _member.district!.isNotEmpty)
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.borderSoft,
+                    borderRadius: BorderRadius.circular(999.r),
+                  ),
+                  child: Text(
+                    _member.district!,
+                    style: TextStyle(
+                      color: NewAppColor.textSecondary,
+                      fontSize: 11.5.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -486,14 +583,20 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   Widget _buildProfileImage() {
     if (_member.profilePhotoUrl != null &&
         _member.profilePhotoUrl!.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(100.r),
-        child: Image.network(
-          _member.profilePhotoUrl!,
-          width: 80.w,
-          height: 80.h,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+      return Container(
+        width: 88.w,
+        height: 88.w,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: NewAppColor.borderHair, width: 1),
+        ),
+        child: ClipOval(
+          child: Image.network(
+            _member.profilePhotoUrl!,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                _buildDefaultAvatar(),
+          ),
         ),
       );
     }
@@ -502,10 +605,10 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
 
   Widget _buildDefaultAvatar() {
     return Container(
-      width: 80.w,
-      height: 80.h,
+      width: 88.w,
+      height: 88.w,
       decoration: BoxDecoration(
-        color: NewAppColor.primary200,
+        color: NewAppColor.skyTint,
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -513,8 +616,9 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           _member.name.isNotEmpty ? _member.name[0] : '?',
           style: TextStyle(
             fontSize: 32.sp,
-            fontWeight: FontWeight.w600,
-            color: NewAppColor.primary600,
+            fontWeight: FontWeight.w700,
+            color: NewAppColor.skyDeep,
+            fontFamily: 'Pretendard',
           ),
         ),
       ),
@@ -522,20 +626,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Widget _buildBasicInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '기본 정보',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('기본 정보'),
           if (_member.nameEng != null && _member.nameEng!.isNotEmpty) ...[
             _buildInfoRow(
               icon: LucideIcons.caseSensitive,
@@ -590,20 +685,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Widget _buildPersonalFamilyInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '개인 및 가족 정보',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('개인 및 가족 정보'),
           if (_member.maritalStatus != null &&
               _member.maritalStatus!.isNotEmpty) ...[
             _buildInfoRow(
@@ -632,59 +718,72 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           // 자녀 정보 표시
           if (_member.children != null && _member.children!.isNotEmpty) ...[
-            Column(
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 32.w,
-                      height: 32.h,
-                      decoration: BoxDecoration(
-                        color: NewAppColor.neutral100,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        LucideIcons.baby,
-                        size: 18.sp,
-                        color: NewAppColor.neutral700,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      '자녀',
-                      style: const FigmaTextStyles().caption1.copyWith(
-                        color: NewAppColor.neutral600,
-                      ),
-                    ),
-                  ],
+                Container(
+                  width: 34.w,
+                  height: 34.w,
+                  decoration: BoxDecoration(
+                    color: NewAppColor.borderSoft,
+                    borderRadius: BorderRadius.circular(9.r),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    LucideIcons.baby,
+                    size: 16.sp,
+                    color: NewAppColor.textTertiary,
+                  ),
                 ),
-                SizedBox(height: 8.h),
-                ...(_member.children!).asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final child = entry.value;
-                  final name = child['name'] ?? '';
-                  final gender = child['gender'] ?? '';
-                  final birthdate = child['birthdate'];
-
-                  String childInfo = '${index + 1}. $name';
-                  if (gender.isNotEmpty) {
-                    childInfo += ' ($gender)';
-                  }
-                  if (birthdate != null && birthdate is String && birthdate.isNotEmpty) {
-                    childInfo += ' - $birthdate';
-                  }
-
-                  return Padding(
-                    padding: EdgeInsets.only(left: 44.w, bottom: 4.h),
-                    child: Text(
-                      childInfo,
-                      style: const FigmaTextStyles().body1.copyWith(
-                        color: NewAppColor.neutral900,
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '자녀',
+                        style: TextStyle(
+                          color: NewAppColor.textMuted,
+                          fontSize: 11.5.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Pretendard',
+                        ),
                       ),
-                    ),
-                  );
-                }),
+                      SizedBox(height: 3.h),
+                      ...(_member.children!).asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final child = entry.value;
+                        final name = child['name'] ?? '';
+                        final gender = child['gender'] ?? '';
+                        final birthdate = child['birthdate'];
+
+                        String childInfo = '${index + 1}. $name';
+                        if (gender.isNotEmpty) {
+                          childInfo += ' ($gender)';
+                        }
+                        if (birthdate != null &&
+                            birthdate is String &&
+                            birthdate.isNotEmpty) {
+                          childInfo += ' · $birthdate';
+                        }
+
+                        return Padding(
+                          padding: EdgeInsets.only(top: 2.h),
+                          child: Text(
+                            childInfo,
+                            style: TextStyle(
+                              color: NewAppColor.textStrong,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Pretendard',
+                              height: 1.4,
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
               ],
             ),
           ],
@@ -694,20 +793,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Widget _buildChurchInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '교회 정보',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('교회 정보'),
           if (_member.positionMain != null &&
               _member.positionMain!.isNotEmpty) ...[
             _buildInfoRow(
@@ -770,20 +860,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Widget _buildChurchInfoExtendedSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '교회 정보 확장',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('교회 정보 확장'),
           if (_member.memberType != null && _member.memberType!.isNotEmpty) ...[
             _buildInfoRow(
               icon: LucideIcons.badge,
@@ -824,20 +905,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Widget _buildJobInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '직업 정보',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('직업 정보'),
           if (_member.jobCategory != null &&
               _member.jobCategory!.isNotEmpty) ...[
             _buildInfoRow(
@@ -894,20 +966,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Widget _buildMinistryInfoExtendedSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '사역 정보 확장',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('사역 정보 확장'),
           if (_member.ministryStartDate != null) ...[
             _buildInfoRow(
               icon: LucideIcons.calendarDays,
@@ -996,20 +1059,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
       fields.add(MapEntry(12, _member.customField12!));
     }
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '커스텀 필드',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('커스텀 필드'),
           ...fields.map((entry) {
             final isLast = entry == fields.last;
             return Column(
@@ -1029,20 +1083,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Widget _buildAdditionalInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '추가 정보',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('추가 정보'),
           if (_member.specialNotes != null &&
               _member.specialNotes!.isNotEmpty) ...[
             _buildInfoRow(
@@ -1057,20 +1102,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Widget _buildSystemInfoSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '시스템 정보',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
+          _sectionHeader('시스템 정보'),
           if (_member.createdAt != null) ...[
             _buildInfoRow(
               icon: LucideIcons.clock,
@@ -1152,88 +1188,136 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8.h),
-        child: Row(
-          children: [
-            Container(
-              width: 32.w,
-              height: 32.h,
-              decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 18.sp,
-                color: NewAppColor.neutral700,
-              ),
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34.w,
+            height: 34.w,
+            decoration: BoxDecoration(
+              color: NewAppColor.borderSoft,
+              borderRadius: BorderRadius.circular(9.r),
             ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const FigmaTextStyles().caption1.copyWith(
-                      color: NewAppColor.neutral600,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    value,
-                    style: const FigmaTextStyles().body1.copyWith(
-                      color: NewAppColor.neutral900,
-                    ),
-                  ),
-                ],
-              ),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 16.sp,
+              color: NewAppColor.textTertiary,
             ),
-            if (onTap != null)
-              Icon(
-                LucideIcons.chevronRight,
-                size: 16.sp,
-                color: NewAppColor.neutral400,
-              ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: NewAppColor.textMuted,
+                    fontSize: 11.5.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+                SizedBox(height: 3.h),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Pretendard',
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onTap != null) ...[
+            SizedBox(width: 8.w),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 16.sp,
+              color: NewAppColor.textTertiary,
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildActionSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      color: Colors.white,
+    final isActive = _member.memberStatus == 'active';
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '관리 작업',
-            style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              onPressed: _toggleMemberStatus,
-              variant: ButtonVariant.secondary,
-              child: Text(
-                _member.memberStatus == 'active' ? '비활성화' : '활성화',
+          _sectionHeader('관리 작업'),
+          GestureDetector(
+            onTap: _toggleMemberStatus,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 14.h),
+              decoration: BoxDecoration(
+                color: NewAppColor.borderSoft,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isActive
+                        ? LucideIcons.circlePause
+                        : LucideIcons.circleCheck,
+                    size: 16.sp,
+                    color: NewAppColor.textSecondary,
+                  ),
+                  SizedBox(width: 6.w),
+                  Text(
+                    isActive ? '비활성화' : '활성화',
+                    style: TextStyle(
+                      color: NewAppColor.textSecondary,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          SizedBox(height: 12.h),
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              onPressed: _deleteMember,
-              variant: ButtonVariant.destructive,
-              child: const Text('교인 삭제'),
+          SizedBox(height: 10.h),
+          GestureDetector(
+            onTap: _deleteMember,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 14.h),
+              decoration: BoxDecoration(
+                color: NewAppColor.dangerBg,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(LucideIcons.trash2,
+                      size: 16.sp, color: NewAppColor.danger700),
+                  SizedBox(width: 6.w),
+                  Text(
+                    '교인 삭제',
+                    style: TextStyle(
+                      color: NewAppColor.danger700,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

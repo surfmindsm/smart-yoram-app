@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../resource/color_style_new.dart';
+import 'app_select.dart' show AppSelectOption;
 
 /// 1.2.0 C 방향 표준 바텀시트 컴포넌트
 ///
@@ -93,7 +94,7 @@ class AppConfirmSheet {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: NewAppColor.textStrong,
-                        fontSize: 19.sp,
+                        fontSize: 17.sp,
                         fontWeight: FontWeight.w800,
                         fontFamily: 'Pretendard',
                       ),
@@ -200,7 +201,7 @@ class AppConfirmSheet {
           style: TextStyle(
             color: Colors.white,
             fontSize: 15.sp,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             fontFamily: 'Pretendard',
           ),
         ),
@@ -243,7 +244,7 @@ class AppMenuSheet {
                   ],
                 );
               }),
-              SizedBox(height: 6.h),
+              SizedBox(height: 22.h),
             ],
           ),
         );
@@ -279,7 +280,7 @@ class AppMenuSheet {
                   style: TextStyle(
                     color: labelColor,
                     fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     fontFamily: 'Pretendard',
                   ),
                 ),
@@ -403,7 +404,7 @@ class AppInfoSheet {
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 15.sp,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           fontFamily: 'Pretendard',
                         ),
                       ),
@@ -456,5 +457,159 @@ IconData _defaultIcon(AppSheetTone tone) {
       return LucideIcons.circleCheck;
     case AppSheetTone.warning:
       return LucideIcons.triangleAlert;
+  }
+}
+
+/// 셀렉트 시트 — 옵션 목록에서 하나 선택 (Material Dropdown 대체)
+class AppSelectSheet {
+  AppSelectSheet._();
+
+  static Future<T?> show<T>({
+    required BuildContext context,
+    required String title,
+    required List<AppSelectOption<T>> options,
+    T? selectedValue,
+  }) {
+    return showModalBottomSheet<T>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: AppSheet.container(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(child: AppSheet.handle()),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(22.w, 4.h, 22.w, 12.h),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: NewAppColor.textStrong,
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.only(bottom: 14.h),
+                    itemCount: options.length,
+                    separatorBuilder: (_, __) => Container(
+                      height: 1,
+                      color: NewAppColor.borderHair,
+                      margin: EdgeInsets.symmetric(horizontal: 22.w),
+                    ),
+                    itemBuilder: (_, index) {
+                      final option = options[index];
+                      final isSelected = option.value == selectedValue;
+                      return InkWell(
+                        onTap: () =>
+                            Navigator.pop(sheetContext, option.value),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 22.w, vertical: 14.h),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  option.label,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? NewAppColor.skyDeep
+                                        : NewAppColor.textStrong,
+                                    fontSize: 15.sp,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    fontFamily: 'Pretendard',
+                                  ),
+                                ),
+                              ),
+                              if (isSelected)
+                                Icon(
+                                  LucideIcons.check,
+                                  size: 18.sp,
+                                  color: NewAppColor.skyPrimary,
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 셀렉터 박스 (Material Dropdown 대체용 위젯) —
+/// 흰 fill + borderHair 1px + 좌측 라벨 + 우측 chevron-down
+class AppSelectField extends StatelessWidget {
+  final String? value;
+  final String placeholder;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  const AppSelectField({
+    super.key,
+    required this.value,
+    required this.placeholder,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasValue = value != null && value!.isNotEmpty;
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+        decoration: BoxDecoration(
+          color: enabled ? Colors.white : NewAppColor.canvasAlt,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: NewAppColor.borderHair, width: 1),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                hasValue ? value! : placeholder,
+                style: TextStyle(
+                  color: hasValue
+                      ? NewAppColor.textStrong
+                      : NewAppColor.textMuted,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
+            ),
+            Icon(
+              LucideIcons.chevronDown,
+              size: 18.sp,
+              color: NewAppColor.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

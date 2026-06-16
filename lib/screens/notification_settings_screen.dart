@@ -61,7 +61,7 @@ class _NotificationSettingsScreenState
     return Scaffold(
       backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        backgroundColor: NewAppColor.canvasAlt,
+        backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -69,15 +69,20 @@ class _NotificationSettingsScreenState
         titleSpacing: 0,
         leading: material.IconButton(
           icon: Icon(LucideIcons.chevronLeft,
-              color: NewAppColor.textStrong, size: 26.sp),
+              color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '알림 설정',
-          style: FigmaTextStyles().subtitle1.copyWith(
-                color: NewAppColor.textStrong,
-                fontSize: 18.sp,
-              ),
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
+          ),
+        ),
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
         ),
       ),
       body: _isLoading
@@ -416,7 +421,7 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
       child: Scaffold(
         backgroundColor: NewAppColor.canvasAlt,
         appBar: AppBar(
-          backgroundColor: NewAppColor.canvasAlt,
+          backgroundColor: Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
@@ -424,15 +429,20 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
           titleSpacing: 0,
           leading: material.IconButton(
             icon: Icon(LucideIcons.chevronLeft,
-                color: NewAppColor.textStrong, size: 26.sp),
+                color: NewAppColor.textStrong, size: 24.sp),
             onPressed: () => Navigator.pop(context, _selectedSound),
           ),
           title: Text(
             '알림음 선택',
-            style: FigmaTextStyles().subtitle1.copyWith(
-                  color: NewAppColor.textStrong,
-                  fontSize: 18.sp,
-                ),
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 17.sp,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          shape: Border(
+            bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
           ),
         ),
         body: SingleChildScrollView(

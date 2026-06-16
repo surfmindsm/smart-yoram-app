@@ -606,14 +606,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 Expanded(
                   child: Text(
                     label,
-                    style: FigmaTextStyles().body2.copyWith(
-                          color: isSelected
-                              ? NewAppColor.skyDeep
-                              : NewAppColor.neutral700,
-                          fontSize: 15.sp,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
-                        ),
+                    style: TextStyle(
+                      color: isSelected
+                          ? NewAppColor.skyDeep
+                          : NewAppColor.textStrong,
+                      fontSize: 15.sp,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w600,
+                      fontFamily: 'Pretendard',
+                    ),
                   ),
                 ),
                 if (isSelected)
@@ -917,15 +918,16 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                               SizedBox(width: 11.w),
                               Text(
                                 reason.label,
-                                style: FigmaTextStyles().body2.copyWith(
-                                      color: isSelected
-                                          ? NewAppColor.skyDeep
-                                          : NewAppColor.neutral700,
-                                      fontSize: 15.sp,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                    ),
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? NewAppColor.skyDeep
+                                      : NewAppColor.textStrong,
+                                  fontSize: 15.sp,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w600,
+                                  fontFamily: 'Pretendard',
+                                ),
                               ),
                             ],
                           ),

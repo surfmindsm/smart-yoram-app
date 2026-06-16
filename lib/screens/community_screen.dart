@@ -189,7 +189,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       ),
                     // 내 글
                     _headerIconButton(
-                      icon: LucideIcons.pencil,
+                      icon: LucideIcons.filePen,
                       onTap: _navigateToMyPosts,
                     ),
                     // 찜

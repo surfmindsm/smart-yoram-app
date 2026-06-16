@@ -123,7 +123,7 @@ class UpdateDialog extends StatelessWidget {
                       Text(
                         versionCheckResult.versionInfo?.latestVersion ?? '-',
                         style: FigmaTextStyles().caption1.copyWith(
-                              color: NewAppColor.primary600,
+                              color: NewAppColor.skyPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                       ),

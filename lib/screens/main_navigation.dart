@@ -134,7 +134,7 @@ class _MainNavigationState extends State<MainNavigation>
         backgroundColor: NewAppColor.neutral100,
         body: Center(
           child: CircularProgressIndicator(
-            color: NewAppColor.primary600,
+            color: NewAppColor.skyPrimary,
           ),
         ),
       );

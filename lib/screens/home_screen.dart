@@ -581,7 +581,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           end: Alignment.bottomRight,
           colors: [
             NewAppColor.skyPrimary,
-            NewAppColor.primary800,
+            NewAppColor.skyDeep,
           ],
         ),
       ),
@@ -1013,42 +1013,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 개발용 로그아웃 다이얼로그
+  // 개발용 로그아웃 시트 — 1.2.0 AppMenuSheet
   void _showDevLogoutDialog() {
-    showDialog(
+    AppMenuSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('개발용 로그아웃'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('로그인 화면 테스트를 위한 개발용 기능입니다.'),
-            SizedBox(height: 8),
-            Text('선택하신 옵션:'),
-          ],
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.logOut,
+          label: '로그아웃만',
+          onTap: _logoutOnly,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _logoutOnly();
-            },
-            child: const Text('로그아웃만'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _logoutAndDisableAutoLogin();
-            },
-            child: const Text('로그아웃 + 자동로그인 비활성화'),
-          ),
-        ],
-      ),
+        AppMenuItem(
+          icon: LucideIcons.userX,
+          label: '로그아웃 + 자동로그인 비활성화',
+          danger: true,
+          onTap: _logoutAndDisableAutoLogin,
+        ),
+      ],
     );
   }
 

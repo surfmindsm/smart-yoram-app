@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../components/index.dart' hide IconButton;
 import '../widget/widgets.dart';
 import '../config/api_config.dart';
+import '../resource/color_style_new.dart';
 // import 'package:file_picker/file_picker.dart'; // TODO: 파일 선택용 패키지 추가 필요
 
 class ExcelManagementScreen extends StatefulWidget {
@@ -274,7 +275,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                 children: [
                   Row(
                     children: [
-                      Icon(LucideIcons.users, color: Colors.blue[700]),
+                      Icon(LucideIcons.users, color: NewAppColor.skyPrimary),
                       const SizedBox(width: 8),
                       const Text(
                         '교인 명단 관리',
@@ -345,7 +346,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                 children: [
                   Row(
                     children: [
-                      Icon(LucideIcons.circleCheck, color: Colors.green[700]),
+                      Icon(LucideIcons.circleCheck, color: NewAppColor.success700),
                       const SizedBox(width: 8),
                       const Text(
                         '출석 기록 관리',
@@ -374,7 +375,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
           
           // 사용법 안내 카드
           Card(
-            color: Colors.blue[50],
+            color: NewAppColor.skyTint,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -382,14 +383,14 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
                 children: [
                   Row(
                     children: [
-                      Icon(LucideIcons.info, color: Colors.blue[700]),
+                      Icon(LucideIcons.info, color: NewAppColor.skyPrimary),
                       const SizedBox(width: 8),
                       Text(
                         '사용법 안내',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue[700],
+                          color: NewAppColor.skyPrimary,
                         ),
                       ),
                     ],
@@ -412,7 +413,7 @@ class _ExcelManagementScreenState extends State<ExcelManagementScreen>
               margin: const EdgeInsets.only(top: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange[50],
+                color: NewAppColor.warningBg,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.orange[200]!),
               ),

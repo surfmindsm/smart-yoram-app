@@ -60,7 +60,8 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
           elevation: 0,
           scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
-          centerTitle: true,
+          centerTitle: false,
+          titleSpacing: 0,
           leading: widget.isFirstSetup
               ? null
               : IconButton(

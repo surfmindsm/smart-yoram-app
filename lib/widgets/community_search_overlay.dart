@@ -203,7 +203,7 @@ class _CommunitySearchOverlayState extends State<CommunitySearchOverlay> {
             child: ElevatedButton(
               onPressed: _performSearch,
               style: ElevatedButton.styleFrom(
-                backgroundColor: NewAppColor.primary600,
+                backgroundColor: NewAppColor.skyPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
                 ),

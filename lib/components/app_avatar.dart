@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum AvatarSize {
   xs,
@@ -38,10 +38,10 @@ class AppAvatar extends StatelessWidget {
       width: sizeConfig.size,
       height: sizeConfig.size,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColor.primary100,
+        color: backgroundColor ?? NewAppColor.skyTint,
         borderRadius: BorderRadius.circular(sizeConfig.size / 2),
         border: Border.all(
-          color: AppColor.border1,
+          color: NewAppColor.borderHair,
           width: 1,
         ),
       ),
@@ -90,7 +90,7 @@ class AppAvatar extends StatelessWidget {
           style: TextStyle(
             fontSize: sizeConfig.fontSize,
             fontWeight: FontWeight.w600,
-            color: textColor ?? AppColor.primary7,
+            color: textColor ?? NewAppColor.skyDeep,
           ),
         ),
       );
@@ -100,7 +100,7 @@ class AppAvatar extends StatelessWidget {
     return Icon(
       LucideIcons.user,
       size: sizeConfig.iconSize,
-      color: textColor ?? AppColor.primary7,
+      color: textColor ?? NewAppColor.skyDeep,
     );
   }
 
@@ -200,8 +200,8 @@ class AppAvatarGroup extends StatelessWidget {
             child: AppAvatar(
               initials: '+$remainingCount',
               size: size,
-              backgroundColor: AppColor.secondary00,
-              textColor: AppColor.secondary06,
+              backgroundColor: NewAppColor.canvasAlt,
+              textColor: NewAppColor.textStrong,
             ),
           ),
       ],
@@ -263,10 +263,10 @@ class AppProfileAvatar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isOnline 
                     ? const Color(0xff22C55E) 
-                    : AppColor.secondary04,
+                    : NewAppColor.textMuted,
                 borderRadius: BorderRadius.circular(statusSize / 2),
                 border: Border.all(
-                  color: AppColor.white,
+                  color: Colors.white,
                   width: 2,
                 ),
               ),

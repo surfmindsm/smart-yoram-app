@@ -196,7 +196,7 @@ class _OfferingHistoryScreenState extends State<OfferingHistoryScreen> {
     return Scaffold(
       backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        backgroundColor: NewAppColor.canvasAlt,
+        backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -204,25 +204,30 @@ class _OfferingHistoryScreenState extends State<OfferingHistoryScreen> {
         titleSpacing: 0,
         leading: material.IconButton(
           icon: Icon(LucideIcons.chevronLeft,
-              color: NewAppColor.textStrong, size: 26.sp),
+              color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '내 헌금 내역',
-          style: FigmaTextStyles().subtitle1.copyWith(
-                color: NewAppColor.textStrong,
-                fontSize: 18.sp,
-              ),
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
+          ),
         ),
         actions: [
           material.IconButton(
             icon: Icon(LucideIcons.download,
-                color: NewAppColor.textSecondary, size: 22.sp),
+                color: NewAppColor.textStrong, size: 20.sp),
             onPressed: () =>
                 AppToast.show(context, '기부금영수증 발급 기능은 곧 추가됩니다'),
           ),
           SizedBox(width: 4.w),
         ],
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
       ),
       body: isLoading
           ? Center(
@@ -442,12 +447,12 @@ class _OfferingHistoryScreenState extends State<OfferingHistoryScreen> {
                                 '$year년',
                                 style: TextStyle(
                                   color: isSelected
-                                      ? NewAppColor.skyPrimary
+                                      ? NewAppColor.skyDeep
                                       : NewAppColor.textStrong,
-                                  fontSize: 14.5.sp,
+                                  fontSize: 15.sp,
                                   fontWeight: isSelected
-                                      ? FontWeight.w800
-                                      : FontWeight.w500,
+                                      ? FontWeight.w700
+                                      : FontWeight.w600,
                                   fontFamily: 'Pretendard',
                                 ),
                               ),

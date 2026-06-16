@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum AlertType {
   info,
@@ -119,29 +119,29 @@ class AppAlert extends StatelessWidget {
     switch (type) {
       case AlertType.info:
         return _AlertTheme(
-          backgroundColor: AppColor.primary100,
-          borderColor: AppColor.primary3.withOpacity(0.3),
-          iconColor: AppColor.primary7,
-          titleColor: AppColor.secondary07,
-          descriptionColor: AppColor.secondary06,
+          backgroundColor: NewAppColor.skyTint,
+          borderColor: NewAppColor.skyPrimary.withOpacity(0.3),
+          iconColor: NewAppColor.skyDeep,
+          titleColor: NewAppColor.textStrong,
+          descriptionColor: NewAppColor.textStrong,
           defaultIcon: LucideIcons.info,
         );
       case AlertType.warning:
         return _AlertTheme(
-          backgroundColor: AppColor.orange100,
-          borderColor: AppColor.orange400.withOpacity(0.3),
-          iconColor: AppColor.orange500,
-          titleColor: AppColor.secondary07,
-          descriptionColor: AppColor.secondary06,
+          backgroundColor: NewAppColor.warningBg,
+          borderColor: NewAppColor.warning700.withOpacity(0.3),
+          iconColor: NewAppColor.warning700,
+          titleColor: NewAppColor.textStrong,
+          descriptionColor: NewAppColor.textStrong,
           defaultIcon: LucideIcons.triangleAlert,
         );
       case AlertType.error:
         return _AlertTheme(
           backgroundColor: const Color(0xffFEF2F2),
-          borderColor: AppColor.error.withOpacity(0.3),
-          iconColor: AppColor.error,
-          titleColor: AppColor.secondary07,
-          descriptionColor: AppColor.secondary06,
+          borderColor: NewAppColor.danger700.withOpacity(0.3),
+          iconColor: NewAppColor.danger700,
+          titleColor: NewAppColor.textStrong,
+          descriptionColor: NewAppColor.textStrong,
           defaultIcon: LucideIcons.circleAlert,
         );
       case AlertType.success:
@@ -149,8 +149,8 @@ class AppAlert extends StatelessWidget {
           backgroundColor: const Color(0xffF0FDF4),
           borderColor: const Color(0xff22C55E).withOpacity(0.3),
           iconColor: const Color(0xff22C55E),
-          titleColor: AppColor.secondary07,
-          descriptionColor: AppColor.secondary06,
+          titleColor: NewAppColor.textStrong,
+          descriptionColor: NewAppColor.textStrong,
           defaultIcon: LucideIcons.circleCheck,
         );
     }

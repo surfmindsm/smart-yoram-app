@@ -116,7 +116,8 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: material.IconButton(
           icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 26.sp),
@@ -892,7 +893,7 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: NewAppColor.textStrong,
-                            fontSize: 19.sp,
+                            fontSize: 17.sp,
                             fontWeight: FontWeight.w800,
                             fontFamily: 'Pretendard',
                           ),

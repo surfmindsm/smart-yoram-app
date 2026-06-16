@@ -10,12 +10,12 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:smart_yoram_app/resource/color_style.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../models/bulletin.dart';
 import '../models/file_type.dart';
 
 import '../resource/text_style.dart';
+import '../resource/color_style_new.dart';
 
 class BulletinFullscreenViewer extends StatefulWidget {
   final Bulletin bulletin;
@@ -124,7 +124,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
       return Center(
         child: Text(
           'PDF 파일을 불러올 수 없습니다',
-          style: AppTextStyle(color: AppColor.white).b2(),
+          style: AppTextStyle(color: Colors.white).b2(),
         ),
       );
     }
@@ -232,7 +232,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
             Text(message),
           ],
         ),
-        backgroundColor: Colors.green[700],
+        backgroundColor: NewAppColor.success700,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -248,7 +248,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
             Text(message),
           ],
         ),
-        backgroundColor: Colors.red[700],
+        backgroundColor: NewAppColor.danger700,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -264,7 +264,7 @@ class _BulletinFullscreenViewerState extends State<BulletinFullscreenViewer> {
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           widget.bulletin.title,
-          style: AppTextStyle(color: AppColor.white).b2(),
+          style: AppTextStyle(color: Colors.white).b2(),
         ),
         actions: [
           if (widget.fileType == FileType.image)

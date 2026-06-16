@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 class AppSkeleton extends StatefulWidget {
   final double? width;
@@ -68,7 +68,7 @@ class _AppSkeletonState extends State<AppSkeleton>
       width: widget.width,
       height: widget.height,
       decoration: BoxDecoration(
-        color: AppColor.secondary04.withOpacity(opacity),
+        color: NewAppColor.textMuted.withOpacity(opacity),
         borderRadius: widget.borderRadius ?? BorderRadius.circular(4),
       ),
     );
@@ -162,9 +162,9 @@ class AppCardSkeleton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColor.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.border1),
+        border: Border.all(color: NewAppColor.borderHair),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,9 +322,9 @@ class AppTableSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColor.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.border1),
+        border: Border.all(color: NewAppColor.borderHair),
       ),
       child: Column(
         children: [
@@ -334,7 +334,7 @@ class AppTableSkeleton extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: AppColor.border1),
+                  bottom: BorderSide(color: NewAppColor.borderHair),
                 ),
               ),
               child: Row(
@@ -360,7 +360,7 @@ class AppTableSkeleton extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: rowIndex < rows - 1 
-                    ? Border(bottom: BorderSide(color: AppColor.border1))
+                    ? Border(bottom: BorderSide(color: NewAppColor.borderHair))
                     : null,
               ),
               child: Row(

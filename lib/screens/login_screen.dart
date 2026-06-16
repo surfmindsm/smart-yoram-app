@@ -707,7 +707,7 @@ class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: NewAppColor.textStrong,
-                    fontSize: 19.sp,
+                    fontSize: 17.sp,
                     fontWeight: FontWeight.w800,
                     fontFamily: 'Pretendard',
                   ),
@@ -988,7 +988,7 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: NewAppColor.textStrong,
-                    fontSize: 19.sp,
+                    fontSize: 17.sp,
                     fontWeight: FontWeight.w800,
                     fontFamily: 'Pretendard',
                   ),

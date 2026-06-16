@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../components/index.dart' hide IconButton;
@@ -157,13 +158,32 @@ class _CalendarScreenState extends State<CalendarScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('일정'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft,
+              color: NewAppColor.textStrong, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '일정',
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.plus),
+            icon: Icon(LucideIcons.plus,
+                color: NewAppColor.textStrong, size: 22.sp),
             onPressed: () {
               _showAddEventDialog();
             },
@@ -171,8 +191,20 @@ class _CalendarScreenState extends State<CalendarScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          labelColor: NewAppColor.skyPrimary,
+          unselectedLabelColor: NewAppColor.textMuted,
+          indicatorColor: NewAppColor.skyPrimary,
+          dividerColor: NewAppColor.borderHair,
+          labelStyle: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Pretendard',
+          ),
           tabs: const [
             Tab(text: '오늘'),
             Tab(text: '예정'),
@@ -191,8 +223,9 @@ class _CalendarScreenState extends State<CalendarScreen>
       floatingActionButton: FloatingActionButton(
         heroTag: "calendar_fab",
         onPressed: _showAddEventDialog,
-        backgroundColor: Colors.blue[700],
-        child: const Icon(LucideIcons.plus, color: Colors.white),
+        backgroundColor: NewAppColor.skyPrimary,
+        elevation: 2,
+        child: Icon(LucideIcons.plus, color: Colors.white, size: 24.sp),
       ),
     );
   }
@@ -218,7 +251,7 @@ class _CalendarScreenState extends State<CalendarScreen>
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            color: Colors.blue[50],
+            color: NewAppColor.skyTint,
             child: Column(
               children: [
                 Text(
@@ -226,7 +259,7 @@ class _CalendarScreenState extends State<CalendarScreen>
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue[700],
+                    color: NewAppColor.skyPrimary,
                   ),
                 ),
                 Text(
@@ -305,7 +338,7 @@ class _CalendarScreenState extends State<CalendarScreen>
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                color: Colors.grey[100],
+                color: NewAppColor.borderSoft,
                 child: Text(
                   monthKey,
                   style: const TextStyle(
@@ -343,7 +376,7 @@ class _CalendarScreenState extends State<CalendarScreen>
           children: [
             Text(
               _formatEventDate(event.date),
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: NewAppColor.textMuted),
             ),
             if (event.description != null)
               Text(

@@ -333,6 +333,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
     super.dispose();
   }
 
+  // 1.2.0 C 방향: 교인 추가 화면과 동일 — 흰 fill + borderHair 1px → focus skyPrimary 1.5
   InputDecoration _buildInputDecoration({
     required String hintText,
     String? counterText,
@@ -341,19 +342,30 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: FigmaTextStyles().body2.copyWith(
-            color: NewAppColor.neutral400,
-          ),
+      hintStyle: TextStyle(
+        color: NewAppColor.textMuted,
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w500,
+        fontFamily: 'Pretendard',
+      ),
       counterText: counterText,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: NewAppColor.neutral100,
+      fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.r),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: NewAppColor.borderHair, width: 1),
       ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: NewAppColor.borderHair, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: NewAppColor.skyPrimary, width: 1.5),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
     );
   }
 
@@ -377,31 +389,54 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
     DateTime? childBirthdate;
     String childGender = 'male';
 
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(
-            '자녀 추가',
-            style: FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
-            ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
-          content: SingleChildScrollView(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
+            ),
+            padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 이름
-                TextFormField(
-                  controller: nameController,
-                  decoration: _buildInputDecoration(
-                    hintText: '자녀 이름',
+                Center(
+                  child: Container(
+                    width: 36.w,
+                    height: 4.h,
+                    decoration: BoxDecoration(
+                      color: NewAppColor.borderStrong,
+                      borderRadius: BorderRadius.circular(999.r),
+                    ),
                   ),
                 ),
                 SizedBox(height: 16.h),
-
-                // 생년월일
+                Text(
+                  '자녀 추가',
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+                SizedBox(height: 18.h),
+                _buildFieldLabel('이름', required: true),
+                TextFormField(
+                  controller: nameController,
+                  decoration: _buildInputDecoration(hintText: '자녀 이름'),
+                ),
+                SizedBox(height: 14.h),
+                _buildFieldLabel('생년월일'),
                 GestureDetector(
                   onTap: () async {
                     final picked = await showCustomDatePicker(
@@ -411,15 +446,16 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                       lastDate: DateTime.now(),
                     );
                     if (picked != null) {
-                      setDialogState(() {
+                      setSheetState(() {
                         childBirthdate = picked;
                       });
                     }
                   },
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 14.w, vertical: 13.h),
                     decoration: BoxDecoration(
-                      color: NewAppColor.neutral100,
+                      color: NewAppColor.canvasAlt,
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Row(
@@ -429,52 +465,107 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                           childBirthdate != null
                               ? '${childBirthdate!.year}.${childBirthdate!.month.toString().padLeft(2, '0')}.${childBirthdate!.day.toString().padLeft(2, '0')}'
                               : '생년월일 선택',
-                          style: FigmaTextStyles().body2.copyWith(
-                                color: childBirthdate != null
-                                    ? NewAppColor.neutral900
-                                    : NewAppColor.neutral400,
-                              ),
+                          style: TextStyle(
+                            color: childBirthdate != null
+                                ? NewAppColor.textStrong
+                                : NewAppColor.textMuted,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Pretendard',
+                          ),
                         ),
                         Icon(
                           LucideIcons.calendarDays,
                           size: 20.sp,
-                          color: NewAppColor.neutral400,
+                          color: NewAppColor.textMuted,
                         ),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 16.h),
-
-                // 성별
+                SizedBox(height: 14.h),
+                _buildFieldLabel('성별'),
+                _buildSegmented(
+                  options: const [
+                    (value: 'female', label: '여'),
+                    (value: 'male', label: '남'),
+                  ],
+                  selectedValue: childGender,
+                  onChanged: (v) => setSheetState(() => childGender = v),
+                ),
+                SizedBox(height: 24.h),
                 Row(
                   children: [
                     Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('남자'),
-                        value: 'male',
-                        groupValue: childGender,
-                        onChanged: (value) {
-                          setDialogState(() {
-                            childGender = value!;
-                          });
-                        },
-                        activeColor: NewAppColor.primary600,
-                        contentPadding: EdgeInsets.zero,
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(sheetContext),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 15.h),
+                          decoration: BoxDecoration(
+                            color: NewAppColor.borderSoft,
+                            borderRadius: BorderRadius.circular(13.r),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '취소',
+                            style: TextStyle(
+                              color: NewAppColor.textSecondary,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                        ),
                       ),
                     ),
+                    SizedBox(width: 11.w),
                     Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('여자'),
-                        value: 'female',
-                        groupValue: childGender,
-                        onChanged: (value) {
-                          setDialogState(() {
-                            childGender = value!;
+                      child: GestureDetector(
+                        onTap: () {
+                          if (nameController.text.trim().isEmpty) {
+                            AppToast.show(
+                              sheetContext,
+                              '자녀 이름을 입력하세요',
+                              type: ToastType.error,
+                            );
+                            return;
+                          }
+                          setState(() {
+                            _children.add({
+                              'name': nameController.text.trim(),
+                              'birthdate': childBirthdate,
+                              'gender': childGender,
+                            });
                           });
+                          Navigator.pop(sheetContext);
                         },
-                        activeColor: NewAppColor.primary600,
-                        contentPadding: EdgeInsets.zero,
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 15.h),
+                          decoration: BoxDecoration(
+                            color: NewAppColor.skyPrimary,
+                            borderRadius: BorderRadius.circular(13.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: NewAppColor.skyPrimary
+                                    .withOpacity(0.30),
+                                blurRadius: 22,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '추가',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -482,46 +573,6 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                '취소',
-                style: FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.neutral600,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                if (nameController.text.trim().isEmpty) {
-                  AppToast.show(
-                    context,
-                    '자녀 이름을 입력하세요',
-                    type: ToastType.error,
-                  );
-                  return;
-                }
-
-                setState(() {
-                  _children.add({
-                    'name': nameController.text.trim(),
-                    'birthdate': childBirthdate,
-                    'gender': childGender,
-                  });
-                });
-
-                Navigator.pop(context);
-              },
-              child: Text(
-                '추가',
-                style: FigmaTextStyles().body1.copyWith(
-                  color: NewAppColor.primary600,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -765,25 +816,48 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: material.IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: Colors.black),
+          icon: Icon(LucideIcons.x,
+              color: NewAppColor.textStrong, size: 22.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '교인 수정',
-          style: const FigmaTextStyles().title2.copyWith(
-            color: NewAppColor.neutral900,
-          ),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
+        actions: [
+          TextButton(
+            onPressed: _isLoading ? null : _submitForm,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 14.w),
+            ),
+            child: Text(
+              '저장',
+              style: TextStyle(
+                color: NewAppColor.skyPrimary,
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ),
+        ],
       ),
       body: _isInitializing
           ? Center(
               child: CircularProgressIndicator(
-                color: NewAppColor.primary600,
+                color: NewAppColor.skyPrimary,
               ),
             )
           : Form(
@@ -792,98 +866,104 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(20.w),
+                      padding: EdgeInsets.fromLTRB(18.w, 12.h, 18.w, 32.h),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                    // 기본 정보 섹션
-                    _buildSectionTitle('기본 정보'),
-                    SizedBox(height: 16.h),
-                    _buildBasicInfoSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // 개인 및 가족 정보 섹션
-                    _buildSectionTitle('개인 및 가족 정보'),
-                    SizedBox(height: 16.h),
-                    _buildFamilyInfoSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // 교회 정보 섹션
-                    _buildSectionTitle('교회 정보'),
-                    SizedBox(height: 16.h),
-                    _buildMinistryInfoSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // 교회 정보 확장 섹션
-                    _buildSectionTitle('교회 정보 확장'),
-                    SizedBox(height: 16.h),
-                    _buildChurchExtendedInfoSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // 직업 정보 섹션
-                    _buildSectionTitle('직업 정보'),
-                    SizedBox(height: 16.h),
-                    _buildJobInfoSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // 사역 정보 확장 섹션
-                    _buildSectionTitle('사역 정보 확장'),
-                    SizedBox(height: 16.h),
-                    _buildMinistryExtendedInfoSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // 자유필드 섹션
-                    _buildSectionTitle('자유필드'),
-                    SizedBox(height: 16.h),
-                    _buildCustomFieldsSection(),
-
-                    SizedBox(height: 24.h),
-
-                    // 추가 정보 섹션
-                    _buildSectionTitle('추가 정보'),
-                    SizedBox(height: 16.h),
-                    _buildAdditionalInfoSection(),
-
-                          SizedBox(height: 32.h),
+                          _buildAvatarPicker(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('기본 정보'),
+                          SizedBox(height: 12.h),
+                          _buildBasicInfoSection(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('개인 및 가족 정보'),
+                          SizedBox(height: 16.h),
+                          _buildFamilyInfoSection(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('교회 정보'),
+                          SizedBox(height: 16.h),
+                          _buildMinistryInfoSection(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('교회 정보 확장'),
+                          SizedBox(height: 16.h),
+                          _buildChurchExtendedInfoSection(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('직업 정보'),
+                          SizedBox(height: 16.h),
+                          _buildJobInfoSection(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('사역 정보 확장'),
+                          SizedBox(height: 16.h),
+                          _buildMinistryExtendedInfoSection(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('자유필드'),
+                          SizedBox(height: 16.h),
+                          _buildCustomFieldsSection(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('추가 정보'),
+                          SizedBox(height: 12.h),
+                          _buildAdditionalInfoSection(),
+                          SizedBox(height: 18.h),
+                          _buildHintFooter(),
+                          SizedBox(height: 16.h),
                         ],
                       ),
                     ),
                   ),
-                  // 하단 버튼
+                  // 하단 액션 바 — 교인 추가와 동일
                   Container(
-                    padding: EdgeInsets.all(20.w),
+                    padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 14.h),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
+                      color: NewAppColor.canvasAlt,
+                      border: Border(
+                        top: BorderSide(
+                            color: NewAppColor.borderHair, width: 1),
+                      ),
                     ),
                     child: SafeArea(
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: AppButton(
-                          onPressed: _isLoading ? null : _submitForm,
-                          child: _isLoading
-                              ? SizedBox(
-                                  width: 20.w,
-                                  height: 20.h,
-                                  child: const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(Colors.white),
+                      top: false,
+                      child: GestureDetector(
+                        onTap: _isLoading ? null : _submitForm,
+                        behavior: HitTestBehavior.opaque,
+                        child: Opacity(
+                          opacity: _isLoading ? 0.5 : 1.0,
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(vertical: 15.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.skyPrimary,
+                              borderRadius: BorderRadius.circular(13.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: NewAppColor.skyPrimary
+                                      .withOpacity(0.30),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: _isLoading
+                                ? SizedBox(
+                                    width: 20.w,
+                                    height: 20.w,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                      valueColor:
+                                          AlwaysStoppedAnimation<Color>(
+                                              Colors.white),
+                                    ),
+                                  )
+                                : Text(
+                                    '교인 수정',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w800,
+                                      fontFamily: 'Pretendard',
+                                    ),
                                   ),
-                                )
-                              : const Text('교인 수정'),
+                          ),
                         ),
                       ),
                     ),
@@ -894,22 +974,319 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
     );
   }
 
+  // 교인 추가와 동일: textTertiary 12.5sp/700 (작은 캡션 스타일)
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const FigmaTextStyles().title3.copyWith(
-        color: NewAppColor.neutral900,
+    return Padding(
+      padding: EdgeInsets.only(left: 2.w),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: NewAppColor.textTertiary,
+          fontSize: 12.5.sp,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'Pretendard',
+        ),
       ),
+    );
+  }
+
+  // 1.2.0 표준 카드 셸 (create와 동일: padding 16.w, radius 14, borderHair)
+  BoxDecoration get _cardDecoration => BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
+      );
+
+  // 셀렉터용 옵션/라벨 정의
+  static const Map<String, String> _maritalStatusOptions = {
+    'single': '미혼',
+    'married': '기혼',
+    'divorced': '이혼',
+    'widowed': '사별',
+  };
+  static const Map<String, String> _jobCategoryOptions = {
+    'IT': 'IT/기술',
+    'EDUCATION': '교육',
+    'MEDICAL': '의료',
+    'FINANCE': '금융',
+    'MANUFACTURING': '제조',
+    'SERVICE': '서비스',
+    'CONSTRUCTION': '건설',
+    'SALES': '영업/판매',
+    'GOVERNMENT': '공무원',
+    'PROFESSIONAL': '전문직',
+    'SELF_EMPLOYED': '자영업',
+    'STUDENT': '학생',
+    'HOMEMAKER': '주부',
+    'RETIRED': '은퇴',
+    'UNEMPLOYED': '무직',
+    'OTHER': '기타',
+  };
+  static const Map<String, String> _positionMainOptions = {
+    'CLERGY': '교역자',
+    'ELDER': '장로',
+    'DEACONESS': '권사',
+    'DEACON': '집사',
+    'CHURCH_SCHOOL': '교회학교',
+    'MEMBER': '성도',
+  };
+  static const Map<String, String> _departmentOptions = {
+    'WORSHIP': '예배부',
+    'EDUCATION': '교육부',
+    'MISSION': '선교부',
+    'YOUTH': '청년부',
+    'CHILDREN': '아동부',
+  };
+  static const Map<String, String> _memberTypeOptions = {
+    'seeker': '구도자',
+    'new_family': '새가족',
+    'member': '등록교인',
+    'transferred': '이명교인',
+    'visiting': '방문교인',
+  };
+
+  String? _maritalStatusLabel(String? v) =>
+      v == null ? null : _maritalStatusOptions[v];
+  String? _jobCategoryLabel(String? v) =>
+      v == null ? null : _jobCategoryOptions[v];
+  String? _positionMainLabel(String? v) =>
+      v == null ? null : _positionMainOptions[v];
+  String? _departmentLabel(String? v) =>
+      v == null ? null : _departmentOptions[v];
+  String? _memberTypeLabel(String? v) =>
+      v == null ? null : _memberTypeOptions[v];
+
+  // 직분 대분류 → 세부 직분 옵션 매핑
+  Map<String, String> _positionDetailMap() {
+    switch (_selectedPositionMain) {
+      case 'CLERGY':
+        return const {
+          'SENIOR_PASTOR': '담임목사',
+          'EMERITUS_PASTOR': '원로목사',
+          'ASSOCIATE_PASTOR': '부목사',
+          'COOPERATE_PASTOR': '협동목사',
+          'EVANGELIST': '전도사',
+          'INTERN_EVANGELIST': '전임전도사',
+          'EDUCATION_EVANGELIST': '교육담당전도사',
+        };
+      case 'ELDER':
+        return const {
+          'ACTIVE_ELDER': '시무장로',
+          'EMERITUS_ELDER': '원로장로',
+          'TRANSFERRED_EMERITUS_ELDER': '이명은퇴장로',
+        };
+      case 'DEACONESS':
+        return const {
+          'HONORARY_DEACONESS': '명예권사',
+          'ACTIVE_DEACONESS': '시무권사',
+        };
+      case 'DEACON':
+        return const {
+          'HONORARY_DEACON': '명예집사',
+          'PROBATIONARY_DEACON': '서리집사',
+          'ACTIVE_DEACON': '집사',
+          'ORDAINED_DEACON': '안수집사',
+        };
+      case 'CHURCH_SCHOOL':
+        return const {
+          'INFANT': '영아부',
+          'KINDERGARTEN': '유치부',
+          'YOUNG_CHILDREN': '유년부',
+          'ELEMENTARY': '초등부',
+          'JUNIOR': '소년부',
+          'MIDDLE_SCHOOL': '중등부',
+          'HIGH_SCHOOL': '고등부',
+          'YOUTH': '청년부',
+        };
+      case 'MEMBER':
+        return const {
+          'TEACHER': '교사',
+          'STUDENT': '학생',
+        };
+      default:
+        return {};
+    }
+  }
+
+  // 시안: 라벨 + 빨강 * 필수 (create와 동일)
+  Widget _buildFieldLabel(String text, {bool required = false}) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6.h, left: 2.w),
+      child: Row(
+        children: [
+          Text(
+            text,
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          if (required) ...[
+            SizedBox(width: 3.w),
+            Text(
+              '*',
+              style: TextStyle(
+                color: NewAppColor.danger700,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // 시안: 점선 원형 아바타 + sky 카메라 버튼 (사진 업로드는 자리만 유지)
+  Widget _buildAvatarPicker() {
+    final hasPhoto = (widget.member.profilePhotoUrl ?? '').isNotEmpty;
+    return Center(
+      child: SizedBox(
+        width: 96.w,
+        height: 96.w,
+        child: Stack(
+          children: [
+            Container(
+              width: 96.w,
+              height: 96.w,
+              decoration: BoxDecoration(
+                color: NewAppColor.canvasAlt,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: NewAppColor.borderStrong,
+                  width: 1.5,
+                ),
+              ),
+              child: hasPhoto
+                  ? ClipOval(
+                      child: Image.network(
+                        widget.member.profilePhotoUrl!,
+                        width: 96.w,
+                        height: 96.w,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                          LucideIcons.user,
+                          size: 42.sp,
+                          color: NewAppColor.iconFaint,
+                        ),
+                      ),
+                    )
+                  : Icon(
+                      LucideIcons.user,
+                      size: 42.sp,
+                      color: NewAppColor.iconFaint,
+                    ),
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 32.w,
+                height: 32.w,
+                decoration: BoxDecoration(
+                  color: NewAppColor.skyPrimary,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: NewAppColor.skyPrimary.withOpacity(0.30),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Icon(LucideIcons.camera,
+                    color: Colors.white, size: 16.sp),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 시안: 하단 안내문 (정보 아이콘 + 회색 문구)
+  Widget _buildHintFooter() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 2.w),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(LucideIcons.info,
+              size: 14.sp, color: NewAppColor.textTertiary),
+          SizedBox(width: 7.w),
+          Expanded(
+            child: Text(
+              '수정한 내용은 저장 즉시 반영되며, 잘못 입력한 정보는 다시 수정할 수 있어요.',
+              style: TextStyle(
+                color: NewAppColor.textTertiary,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Pretendard',
+                height: 1.55,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 시안: 2분할 segmented chip (성별, 양력/음력 등) — create와 동일
+  Widget _buildSegmented({
+    required List<({String value, String label})> options,
+    required String? selectedValue,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Row(
+      children: options.map((opt) {
+        final selected = opt.value == selectedValue;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: opt == options.last ? 0 : 8.w,
+            ),
+            child: GestureDetector(
+              onTap: () => onChanged(opt.value),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 13.h),
+                decoration: BoxDecoration(
+                  color: selected ? NewAppColor.skyPrimary : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: selected
+                        ? NewAppColor.skyPrimary
+                        : NewAppColor.borderHair,
+                    width: 1,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  opt.label,
+                  style: TextStyle(
+                    color: selected ? Colors.white : NewAppColor.textSecondary,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildBasicInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -958,37 +1335,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
           SizedBox(height: 16.h),
 
           // 생년월일 구분 (양력/음력)
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('양력'),
-                  value: 'solar',
-                  groupValue: _selectedBirthdateType,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedBirthdateType = value;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('음력'),
-                  value: 'lunar',
-                  groupValue: _selectedBirthdateType,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedBirthdateType = value;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
+          _buildFieldLabel('생년월일 구분'),
+          _buildSegmented(
+            options: const [
+              (value: 'solar', label: '양력'),
+              (value: 'lunar', label: '음력'),
             ],
+            selectedValue: _selectedBirthdateType,
+            onChanged: (v) => setState(() => _selectedBirthdateType = v),
           ),
           SizedBox(height: 16.h),
 
@@ -998,7 +1352,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1010,14 +1364,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         : '생년월일',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedBirthdate != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     LucideIcons.calendarDays,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1026,37 +1380,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
           SizedBox(height: 16.h),
 
           // 성별 선택
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('남성'),
-                  value: 'male',
-                  groupValue: _selectedGender,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedGender = value!;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('여성'),
-                  value: 'female',
-                  groupValue: _selectedGender,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedGender = value!;
-                    });
-                  },
-                  activeColor: NewAppColor.primary600,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
+          _buildFieldLabel('성별'),
+          _buildSegmented(
+            options: const [
+              (value: 'female', label: '여'),
+              (value: 'male', label: '남'),
             ],
+            selectedValue: _selectedGender,
+            onChanged: (v) => setState(() => _selectedGender = v),
           ),
           SizedBox(height: 16.h),
 
@@ -1075,30 +1406,30 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
 
   Widget _buildFamilyInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 결혼 상태 선택
-          DropdownButtonFormField<String>(
-            value: _selectedMaritalStatus,
-            decoration: _buildInputDecoration(
-              hintText: '상태 선택',
-            ),
-            items: const [
-              DropdownMenuItem(value: 'single', child: Text('미혼')),
-              DropdownMenuItem(value: 'married', child: Text('기혼')),
-              DropdownMenuItem(value: 'divorced', child: Text('이혼')),
-              DropdownMenuItem(value: 'widowed', child: Text('사별')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedMaritalStatus = value;
-              });
+          AppSelectField(
+            value: _maritalStatusLabel(_selectedMaritalStatus),
+            placeholder: '상태 선택',
+            onTap: () async {
+              final picked = await AppSelectSheet.show<String>(
+                context: context,
+                title: '결혼 상태',
+                selectedValue: _selectedMaritalStatus,
+                options: const [
+                  AppSelectOption(value: 'single', label: '미혼'),
+                  AppSelectOption(value: 'married', label: '기혼'),
+                  AppSelectOption(value: 'divorced', label: '이혼'),
+                  AppSelectOption(value: 'widowed', label: '사별'),
+                ],
+              );
+              if (picked != null) {
+                setState(() => _selectedMaritalStatus = picked);
+              }
             },
           ),
 
@@ -1118,7 +1449,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
+                  color: NewAppColor.canvasAlt,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Row(
@@ -1130,14 +1461,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                           : '결혼일 선택',
                       style: FigmaTextStyles().body2.copyWith(
                             color: _selectedMarriedOn != null
-                                ? NewAppColor.neutral900
-                                : NewAppColor.neutral400,
+                                ? NewAppColor.textStrong
+                                : NewAppColor.textMuted,
                           ),
                     ),
                     Icon(
                       LucideIcons.calendarDays,
                       size: 20.sp,
-                      color: NewAppColor.neutral400,
+                      color: NewAppColor.textMuted,
                     ),
                   ],
                 ),
@@ -1157,7 +1488,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   '자녀 정보',
                   style: FigmaTextStyles().body1.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: NewAppColor.neutral900,
+                    color: NewAppColor.textStrong,
                   ),
                 ),
                 material.IconButton(
@@ -1165,7 +1496,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   icon: Icon(
                     LucideIcons.plus,
                     size: 20.sp,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                   ),
                   padding: EdgeInsets.zero,
                   constraints: BoxConstraints(),
@@ -1180,7 +1511,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                 child: Text(
                   '자녀 정보를 추가하려면 위의 버튼을 클릭하세요.',
                   style: FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textTertiary,
                   ),
                 ),
               )
@@ -1192,10 +1523,10 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   margin: EdgeInsets.only(bottom: 8.h),
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: NewAppColor.neutral100,
+                    color: NewAppColor.borderSoft,
                     borderRadius: BorderRadius.circular(8.r),
                     border: Border.all(
-                      color: NewAppColor.neutral200,
+                      color: NewAppColor.borderHair,
                       width: 1,
                     ),
                   ),
@@ -1209,14 +1540,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                               child['name'] ?? '',
                               style: FigmaTextStyles().body1.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: NewAppColor.neutral900,
+                                color: NewAppColor.textStrong,
                               ),
                             ),
                             SizedBox(height: 4.h),
                             Text(
                               '${child['gender'] == 'male' ? '남' : '여'} · ${child['birthdate'] != null ? '${(child['birthdate'] as DateTime).year}.${(child['birthdate'] as DateTime).month.toString().padLeft(2, '0')}.${(child['birthdate'] as DateTime).day.toString().padLeft(2, '0')}' : '생년월일 미입력'}',
                               style: FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral600,
+                                color: NewAppColor.textMuted,
                               ),
                             ),
                           ],
@@ -1248,43 +1579,28 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
 
   Widget _buildJobInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 직업분류 (드롭다운)
-          DropdownButtonFormField<String?>(
-            value: _selectedJobCategory,
-            decoration: _buildInputDecoration(
-              hintText: '분류 선택',
-            ),
-            items: const [
-              DropdownMenuItem<String?>(value: null, child: Text('분류 선택')),
-              DropdownMenuItem<String?>(value: 'IT', child: Text('IT/기술')),
-              DropdownMenuItem<String?>(value: 'EDUCATION', child: Text('교육')),
-              DropdownMenuItem<String?>(value: 'MEDICAL', child: Text('의료')),
-              DropdownMenuItem<String?>(value: 'FINANCE', child: Text('금융')),
-              DropdownMenuItem<String?>(value: 'MANUFACTURING', child: Text('제조')),
-              DropdownMenuItem<String?>(value: 'SERVICE', child: Text('서비스')),
-              DropdownMenuItem<String?>(value: 'CONSTRUCTION', child: Text('건설')),
-              DropdownMenuItem<String?>(value: 'SALES', child: Text('영업/판매')),
-              DropdownMenuItem<String?>(value: 'GOVERNMENT', child: Text('공무원')),
-              DropdownMenuItem<String?>(value: 'PROFESSIONAL', child: Text('전문직')),
-              DropdownMenuItem<String?>(value: 'SELF_EMPLOYED', child: Text('자영업')),
-              DropdownMenuItem<String?>(value: 'STUDENT', child: Text('학생')),
-              DropdownMenuItem<String?>(value: 'HOMEMAKER', child: Text('주부')),
-              DropdownMenuItem<String?>(value: 'RETIRED', child: Text('은퇴')),
-              DropdownMenuItem<String?>(value: 'UNEMPLOYED', child: Text('무직')),
-              DropdownMenuItem<String?>(value: 'OTHER', child: Text('기타')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedJobCategory = value;
-              });
+          // 직업분류 (셀렉터)
+          AppSelectField(
+            value: _jobCategoryLabel(_selectedJobCategory),
+            placeholder: '분류 선택',
+            onTap: () async {
+              final picked = await AppSelectSheet.show<String>(
+                context: context,
+                title: '직업 분류',
+                selectedValue: _selectedJobCategory,
+                options: _jobCategoryOptions.entries
+                    .map((e) =>
+                        AppSelectOption(value: e.key, label: e.value))
+                    .toList(),
+              );
+              if (picked != null) {
+                setState(() => _selectedJobCategory = picked);
+              }
             },
           ),
           SizedBox(height: 16.h),
@@ -1340,11 +1656,8 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
 
   Widget _buildMinistryExtendedInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1354,7 +1667,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1366,14 +1679,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         : '사역 시작일 선택',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedMinistryStartDate != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     LucideIcons.calendarDays,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1399,19 +1712,22 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
           ),
           SizedBox(height: 16.h),
 
-          // 인도자
-          DropdownButtonFormField<int?>(
-            value: _selectedInviter3MemberId,
-            decoration: _buildInputDecoration(
-              hintText: '없음',
-            ),
-            items: const [
-              DropdownMenuItem<int?>(value: null, child: Text('없음')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedInviter3MemberId = value;
-              });
+          // 인도자 (현재 옵션이 '없음'만 있어 안내만 표시)
+          AppSelectField(
+            value: _selectedInviter3MemberId == null
+                ? null
+                : '#${_selectedInviter3MemberId!}',
+            placeholder: '없음',
+            onTap: () async {
+              final picked = await AppSelectSheet.show<int?>(
+                context: context,
+                title: '인도자',
+                selectedValue: _selectedInviter3MemberId,
+                options: const [
+                  AppSelectOption<int?>(value: null, label: '없음'),
+                ],
+              );
+              setState(() => _selectedInviter3MemberId = picked);
             },
           ),
           SizedBox(height: 16.h),
@@ -1431,94 +1747,101 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
 
   Widget _buildMinistryInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 직분 대분류
-          DropdownButtonFormField<String?>(
-            value: _selectedPositionMain,
-            decoration: _buildInputDecoration(
-              hintText: '직분 대분류',
-            ),
-            items: const [
-              DropdownMenuItem<String?>(value: null, child: Text('직분 대분류')),
-              DropdownMenuItem<String?>(value: 'CLERGY', child: Text('교역자')),
-              DropdownMenuItem<String?>(value: 'ELDER', child: Text('장로')),
-              DropdownMenuItem<String?>(value: 'DEACONESS', child: Text('권사')),
-              DropdownMenuItem<String?>(value: 'DEACON', child: Text('집사')),
-              DropdownMenuItem<String?>(value: 'CHURCH_SCHOOL', child: Text('교회학교')),
-              DropdownMenuItem<String?>(value: 'MEMBER', child: Text('성도')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedPositionMain = value;
-                _selectedPositionDetail = null; // 대분류 변경 시 세부 직분 초기화
-              });
+          AppSelectField(
+            value: _positionMainLabel(_selectedPositionMain),
+            placeholder: '직분 대분류',
+            onTap: () async {
+              final picked = await AppSelectSheet.show<String>(
+                context: context,
+                title: '직분 대분류',
+                selectedValue: _selectedPositionMain,
+                options: _positionMainOptions.entries
+                    .map((e) =>
+                        AppSelectOption(value: e.key, label: e.value))
+                    .toList(),
+              );
+              if (picked != null) {
+                setState(() {
+                  _selectedPositionMain = picked;
+                  _selectedPositionDetail = null;
+                });
+              }
             },
           ),
 
           // 세부 직분 (직분 대분류가 선택된 경우에만 표시)
           if (_selectedPositionMain != null) ...[
             SizedBox(height: 16.h),
-            DropdownButtonFormField<String?>(
-              value: _selectedPositionDetail,
-              decoration: _buildInputDecoration(
-                hintText: '세부 직분 선택',
-              ),
-              items: _getPositionDetailItems(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedPositionDetail = value;
-                });
+            AppSelectField(
+              value: _positionDetailMap()[_selectedPositionDetail],
+              placeholder: '세부 직분 선택',
+              onTap: () async {
+                final picked = await AppSelectSheet.show<String>(
+                  context: context,
+                  title: '세부 직분',
+                  selectedValue: _selectedPositionDetail,
+                  options: _positionDetailMap()
+                      .entries
+                      .map((e) =>
+                          AppSelectOption(value: e.key, label: e.value))
+                      .toList(),
+                );
+                if (picked != null) {
+                  setState(() => _selectedPositionDetail = picked);
+                }
               },
             ),
           ],
           SizedBox(height: 16.h),
 
           // 조직
-          DropdownButtonFormField<String?>(
-            value: _selectedOrganizationId,
-            decoration: _buildInputDecoration(
-              hintText: '조직',
-            ),
-            items: [
-              const DropdownMenuItem<String?>(value: null, child: Text('조직')),
-              ..._organizations.map((org) => DropdownMenuItem<String?>(
-                    value: org['id'] as String,
-                    child: Text(org['name'] as String),
-                  )),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedOrganizationId = value;
-              });
+          AppSelectField(
+            value: _organizations
+                .where((o) => o['id'] == _selectedOrganizationId)
+                .map((o) => o['name'] as String)
+                .firstOrNull,
+            placeholder: '조직',
+            onTap: () async {
+              final picked = await AppSelectSheet.show<String?>(
+                context: context,
+                title: '조직',
+                selectedValue: _selectedOrganizationId,
+                options: [
+                  const AppSelectOption<String?>(value: null, label: '없음'),
+                  ..._organizations.map((org) => AppSelectOption<String?>(
+                        value: org['id'] as String,
+                        label: org['name'] as String,
+                      )),
+                ],
+              );
+              setState(() => _selectedOrganizationId = picked);
             },
           ),
           SizedBox(height: 16.h),
 
           // 부서
-          DropdownButtonFormField<String?>(
-            value: _selectedDepartment,
-            decoration: _buildInputDecoration(
-              hintText: '부서',
-            ),
-            items: const [
-              DropdownMenuItem<String?>(value: null, child: Text('부서')),
-              DropdownMenuItem<String?>(value: 'WORSHIP', child: Text('예배부')),
-              DropdownMenuItem<String?>(value: 'EDUCATION', child: Text('교육부')),
-              DropdownMenuItem<String?>(value: 'MISSION', child: Text('선교부')),
-              DropdownMenuItem<String?>(value: 'YOUTH', child: Text('청년부')),
-              DropdownMenuItem<String?>(value: 'CHILDREN', child: Text('아동부')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedDepartment = value;
-              });
+          AppSelectField(
+            value: _departmentLabel(_selectedDepartment),
+            placeholder: '부서',
+            onTap: () async {
+              final picked = await AppSelectSheet.show<String>(
+                context: context,
+                title: '부서',
+                selectedValue: _selectedDepartment,
+                options: _departmentOptions.entries
+                    .map((e) =>
+                        AppSelectOption(value: e.key, label: e.value))
+                    .toList(),
+              );
+              if (picked != null) {
+                setState(() => _selectedDepartment = picked);
+              }
             },
           ),
           SizedBox(height: 16.h),
@@ -1529,7 +1852,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1541,14 +1864,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         : '임명일 선택',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedAppointedOn != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     LucideIcons.calendarDays,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1568,98 +1891,30 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
     );
   }
 
-  List<DropdownMenuItem<String?>> _getPositionDetailItems() {
-    const emptyOption = DropdownMenuItem<String?>(value: null, child: Text('세부 직분 선택'));
-
-    if (_selectedPositionMain == null) {
-      return [emptyOption];
-    }
-
-    List<DropdownMenuItem<String?>> items = [emptyOption];
-
-    switch (_selectedPositionMain) {
-      case 'CLERGY':
-        items.addAll(const [
-          DropdownMenuItem(value: 'SENIOR_PASTOR', child: Text('담임목사')),
-          DropdownMenuItem(value: 'EMERITUS_PASTOR', child: Text('원로목사')),
-          DropdownMenuItem(value: 'ASSOCIATE_PASTOR', child: Text('부목사')),
-          DropdownMenuItem(value: 'COOPERATE_PASTOR', child: Text('협동목사')),
-          DropdownMenuItem(value: 'EVANGELIST', child: Text('전도사')),
-          DropdownMenuItem(value: 'INTERN_EVANGELIST', child: Text('전임전도사')),
-          DropdownMenuItem(value: 'EDUCATION_EVANGELIST', child: Text('교육담당전도사')),
-        ]);
-        break;
-      case 'ELDER':
-        items.addAll(const [
-          DropdownMenuItem(value: 'ACTIVE_ELDER', child: Text('시무장로')),
-          DropdownMenuItem(value: 'EMERITUS_ELDER', child: Text('원로장로')),
-          DropdownMenuItem(value: 'TRANSFERRED_EMERITUS_ELDER', child: Text('이명은퇴장로')),
-        ]);
-        break;
-      case 'DEACONESS':
-        items.addAll(const [
-          DropdownMenuItem(value: 'HONORARY_DEACONESS', child: Text('명예권사')),
-          DropdownMenuItem(value: 'ACTIVE_DEACONESS', child: Text('시무권사')),
-        ]);
-        break;
-      case 'DEACON':
-        items.addAll(const [
-          DropdownMenuItem(value: 'HONORARY_DEACON', child: Text('명예집사')),
-          DropdownMenuItem(value: 'PROBATIONARY_DEACON', child: Text('서리집사')),
-          DropdownMenuItem(value: 'ACTIVE_DEACON', child: Text('집사')),
-          DropdownMenuItem(value: 'ORDAINED_DEACON', child: Text('안수집사')),
-        ]);
-        break;
-      case 'CHURCH_SCHOOL':
-        items.addAll(const [
-          DropdownMenuItem(value: 'INFANT', child: Text('영아부')),
-          DropdownMenuItem(value: 'KINDERGARTEN', child: Text('유치부')),
-          DropdownMenuItem(value: 'YOUNG_CHILDREN', child: Text('유년부')),
-          DropdownMenuItem(value: 'ELEMENTARY', child: Text('초등부')),
-          DropdownMenuItem(value: 'JUNIOR', child: Text('소년부')),
-          DropdownMenuItem(value: 'MIDDLE_SCHOOL', child: Text('중등부')),
-          DropdownMenuItem(value: 'HIGH_SCHOOL', child: Text('고등부')),
-          DropdownMenuItem(value: 'YOUTH', child: Text('청년부')),
-        ]);
-        break;
-      case 'MEMBER':
-        items.addAll(const [
-          DropdownMenuItem(value: 'TEACHER', child: Text('교사')),
-          DropdownMenuItem(value: 'STUDENT', child: Text('학생')),
-        ]);
-        break;
-    }
-
-    return items;
-  }
-
   Widget _buildChurchExtendedInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 교인구분
-          DropdownButtonFormField<String>(
-            value: _selectedMemberType,
-            decoration: _buildInputDecoration(
-              hintText: '구분 선택',
-            ),
-            items: const [
-              DropdownMenuItem(value: 'seeker', child: Text('구도자')),
-              DropdownMenuItem(value: 'new_family', child: Text('새가족')),
-              DropdownMenuItem(value: 'member', child: Text('등록교인')),
-              DropdownMenuItem(value: 'transferred', child: Text('이명교인')),
-              DropdownMenuItem(value: 'visiting', child: Text('방문교인')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedMemberType = value;
-              });
+          AppSelectField(
+            value: _memberTypeLabel(_selectedMemberType),
+            placeholder: '구분 선택',
+            onTap: () async {
+              final picked = await AppSelectSheet.show<String>(
+                context: context,
+                title: '교인 구분',
+                selectedValue: _selectedMemberType,
+                options: _memberTypeOptions.entries
+                    .map((e) =>
+                        AppSelectOption(value: e.key, label: e.value))
+                    .toList(),
+              );
+              if (picked != null) {
+                setState(() => _selectedMemberType = picked);
+              }
             },
           ),
           SizedBox(height: 16.h),
@@ -1670,7 +1925,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1682,14 +1937,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         : '입교일 선택',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedConfirmationDate != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     LucideIcons.calendarDays,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1703,7 +1958,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: NewAppColor.neutral100,
+                color: NewAppColor.canvasAlt,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
@@ -1715,14 +1970,14 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         : '세례일 선택',
                     style: FigmaTextStyles().body2.copyWith(
                           color: _selectedBaptismDate != null
-                              ? NewAppColor.neutral900
-                              : NewAppColor.neutral400,
+                              ? NewAppColor.textStrong
+                              : NewAppColor.textMuted,
                         ),
                   ),
                   Icon(
                     LucideIcons.calendarDays,
                     size: 20.sp,
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -1744,11 +1999,8 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
 
   Widget _buildCustomFieldsSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1865,11 +2117,8 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
 
   Widget _buildAdditionalInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      padding: EdgeInsets.all(16.w),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

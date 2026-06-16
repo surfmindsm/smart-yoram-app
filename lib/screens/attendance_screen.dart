@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
+import '../resource/color_style_new.dart';
 import '../models/attendance.dart';
 import '../models/api_response.dart';
 import '../models/qr_code.dart';
@@ -238,14 +240,44 @@ class _AttendanceScreenState extends State<AttendanceScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('출석 관리'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft,
+              color: NewAppColor.textStrong, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '출석 관리',
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          labelColor: NewAppColor.skyPrimary,
+          unselectedLabelColor: NewAppColor.textMuted,
+          indicatorColor: NewAppColor.skyPrimary,
+          dividerColor: NewAppColor.borderHair,
+          labelStyle: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Pretendard',
+          ),
           tabs: const [
             Tab(icon: Icon(LucideIcons.qrCode), text: '내 QR 코드'),
             Tab(icon: Icon(LucideIcons.history), text: '출석 기록'),
@@ -368,7 +400,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                     icon: const Icon(LucideIcons.refreshCw),
                     label: const Text('QR 코드 새로고침'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[700],
+                      backgroundColor: NewAppColor.skyPrimary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -416,7 +448,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           // 헤더
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.grey[50],
+            color: NewAppColor.canvasAlt,
             child: Row(
               children: [
                 const Icon(LucideIcons.history, color: Colors.blue),
@@ -432,7 +464,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                 Text(
                   '총 ${myAttendanceHistory.length}건',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: NewAppColor.textMuted,
                   ),
                 ),
               ],
@@ -552,7 +584,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                           Text(
                             '총 ${attendanceStats['total_services'] ?? 0}회 중 ${attendanceStats['attended_services'] ?? 0}회 출석',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: NewAppColor.textMuted,
                             ),
                           ),
                         ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 class AppSlider extends StatelessWidget {
   final double value;
@@ -43,7 +43,7 @@ class AppSlider extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColor.secondary06,
+                  color: NewAppColor.textStrong,
                 ),
               ),
               if (showValue)
@@ -51,7 +51,7 @@ class AppSlider extends StatelessWidget {
                   valueFormatter?.call(value) ?? value.toStringAsFixed(1),
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColor.secondary04,
+                    color: NewAppColor.textMuted,
                   ),
                 ),
             ],
@@ -61,10 +61,10 @@ class AppSlider extends StatelessWidget {
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             trackHeight: 4,
-            activeTrackColor: isDisabled ? AppColor.secondary02 : AppColor.primary600,
-            inactiveTrackColor: AppColor.secondary01,
-            thumbColor: isDisabled ? AppColor.secondary02 : AppColor.primary600,
-            overlayColor: AppColor.primary600.withOpacity(0.1),
+            activeTrackColor: isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary,
+            inactiveTrackColor: Colors.white,
+            thumbColor: isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary,
+            overlayColor: NewAppColor.skyPrimary.withOpacity(0.1),
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
             tickMarkShape: SliderTickMarkShape.noTickMark,
@@ -84,7 +84,7 @@ class AppSlider extends StatelessWidget {
             description!,
             style: TextStyle(
               fontSize: 12,
-              color: isDisabled ? AppColor.secondary03 : AppColor.secondary04,
+              color: isDisabled ? NewAppColor.textTertiary : NewAppColor.textMuted,
             ),
           ),
         ],
@@ -187,7 +187,7 @@ class AppRangeSlider extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColor.secondary06,
+                  color: NewAppColor.textStrong,
                 ),
               ),
               if (showValues)
@@ -195,7 +195,7 @@ class AppRangeSlider extends StatelessWidget {
                   '${valueFormatter?.call(values.start) ?? values.start.toStringAsFixed(1)} - ${valueFormatter?.call(values.end) ?? values.end.toStringAsFixed(1)}',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColor.secondary04,
+                    color: NewAppColor.textMuted,
                   ),
                 ),
             ],
@@ -205,10 +205,10 @@ class AppRangeSlider extends StatelessWidget {
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             trackHeight: 4,
-            activeTrackColor: isDisabled ? AppColor.secondary02 : AppColor.primary600,
-            inactiveTrackColor: AppColor.secondary01,
-            thumbColor: isDisabled ? AppColor.secondary02 : AppColor.primary600,
-            overlayColor: AppColor.primary600.withOpacity(0.1),
+            activeTrackColor: isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary,
+            inactiveTrackColor: Colors.white,
+            thumbColor: isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary,
+            overlayColor: NewAppColor.skyPrimary.withOpacity(0.1),
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
             tickMarkShape: SliderTickMarkShape.noTickMark,
@@ -231,7 +231,7 @@ class AppRangeSlider extends StatelessWidget {
             description!,
             style: TextStyle(
               fontSize: 12,
-              color: isDisabled ? AppColor.secondary03 : AppColor.secondary04,
+              color: isDisabled ? NewAppColor.textTertiary : NewAppColor.textMuted,
             ),
           ),
         ],

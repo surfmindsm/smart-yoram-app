@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../components/app_toast.dart';
 import '../widget/widgets.dart';
 import '../config/api_config.dart';
+import '../resource/color_style_new.dart';
 
 class StatisticsDashboardScreen extends StatefulWidget {
   const StatisticsDashboardScreen({Key? key}) : super(key: key);
@@ -202,25 +204,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
   }
 
   void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(LucideIcons.circleAlert, color: Colors.red),
-            SizedBox(width: 8),
-            Text('오류'),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
+    AppToast.error(context, message);
   }
 
   @override
@@ -271,18 +255,18 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
         children: [
           // 기간 표시
           Card(
-            color: Colors.blue[50],
+            color: NewAppColor.skyTint,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  Icon(LucideIcons.calendarDays, color: Colors.blue[700]),
+                  Icon(LucideIcons.calendarDays, color: NewAppColor.skyPrimary),
                   const SizedBox(width: 8),
                   Text(
                     '분석 기간: ${selectedDateRange.start.toString().split(' ')[0]} ~ ${selectedDateRange.end.toString().split(' ')[0]}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue[700],
+                      color: NewAppColor.skyPrimary,
                     ),
                   ),
                 ],
@@ -573,7 +557,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
                                 margin: const EdgeInsets.only(bottom: 12),
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey[300]!),
+                                  border: Border.all(color: NewAppColor.borderStrong!),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
@@ -677,7 +661,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen>
           children: [
             Row(
               children: [
-                Icon(icon, color: Colors.blue[700]),
+                Icon(icon, color: NewAppColor.skyPrimary),
                 const SizedBox(width: 8),
                 Text(
                   title,

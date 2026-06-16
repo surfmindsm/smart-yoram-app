@@ -36,7 +36,7 @@ class AppDialog extends StatelessWidget {
           maxHeight: MediaQuery.of(context).size.height * 0.8,
         ),
         decoration: BoxDecoration(
-          color: NewAppColor.white,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
@@ -195,8 +195,8 @@ class AppAlertDialog extends StatelessWidget {
         ElevatedButton(
           onPressed: onConfirm ?? () => Navigator.of(context).pop(true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: destructive ? NewAppColor.danger600 : NewAppColor.primary600,
-            foregroundColor: NewAppColor.white,
+            backgroundColor: destructive ? NewAppColor.danger600 : NewAppColor.skyPrimary,
+            foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.r),
@@ -206,7 +206,7 @@ class AppAlertDialog extends StatelessWidget {
           child: Text(
             confirmText,
             style: FigmaTextStyles().subtitle3.copyWith(
-              color: NewAppColor.white,
+              color: Colors.white,
             ),
           ),
         ),
@@ -255,14 +255,14 @@ class AppLoadingDialog extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
-          color: NewAppColor.white,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(NewAppColor.primary600),
+              valueColor: AlwaysStoppedAnimation<Color>(NewAppColor.skyPrimary),
             ),
             if (message != null) ...[
               SizedBox(height: 16.h),
@@ -320,8 +320,8 @@ class AppInfoDialog extends StatelessWidget {
         ElevatedButton(
           onPressed: onConfirm ?? () => Navigator.of(context).pop(),
           style: ElevatedButton.styleFrom(
-            backgroundColor: NewAppColor.primary600,
-            foregroundColor: NewAppColor.white,
+            backgroundColor: NewAppColor.skyPrimary,
+            foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.r),
@@ -331,7 +331,7 @@ class AppInfoDialog extends StatelessWidget {
           child: Text(
             buttonText,
             style: FigmaTextStyles().subtitle3.copyWith(
-              color: NewAppColor.white,
+              color: Colors.white,
             ),
           ),
         ),
@@ -399,8 +399,8 @@ class AppErrorDialog extends StatelessWidget {
         ElevatedButton(
           onPressed: onConfirm ?? () => Navigator.of(context).pop(),
           style: ElevatedButton.styleFrom(
-            backgroundColor: NewAppColor.primary600,
-            foregroundColor: NewAppColor.white,
+            backgroundColor: NewAppColor.skyPrimary,
+            foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.r),
@@ -410,7 +410,7 @@ class AppErrorDialog extends StatelessWidget {
           child: Text(
             buttonText,
             style: FigmaTextStyles().subtitle3.copyWith(
-              color: NewAppColor.white,
+              color: Colors.white,
             ),
           ),
         ),
@@ -569,8 +569,8 @@ class _AppInputDialogState extends State<AppInputDialog> {
         ElevatedButton(
           onPressed: _handleConfirm,
           style: ElevatedButton.styleFrom(
-            backgroundColor: NewAppColor.primary600,
-            foregroundColor: NewAppColor.white,
+            backgroundColor: NewAppColor.skyPrimary,
+            foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.r),
@@ -580,7 +580,7 @@ class _AppInputDialogState extends State<AppInputDialog> {
           child: Text(
             widget.confirmText,
             style: FigmaTextStyles().subtitle3.copyWith(
-              color: NewAppColor.white,
+              color: Colors.white,
             ),
           ),
         ),

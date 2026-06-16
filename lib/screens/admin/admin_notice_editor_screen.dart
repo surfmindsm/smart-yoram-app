@@ -239,7 +239,8 @@ class _AdminNoticeEditorScreenState extends State<AdminNoticeEditorScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: material.IconButton(
           icon: Icon(LucideIcons.x,
               color: NewAppColor.textStrong, size: 22.sp),

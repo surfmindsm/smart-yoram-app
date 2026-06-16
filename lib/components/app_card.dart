@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum CardVariant {
   elevated,
@@ -58,7 +58,7 @@ class AppCard extends StatelessWidget {
         boxShadow: elevation != null || variant == CardVariant.elevated
             ? [
                 BoxShadow(
-                  color: AppColor.secondary07.withOpacity(0.1),
+                  color: NewAppColor.textStrong.withOpacity(0.1),
                   blurRadius: elevation ?? cardTheme.elevation,
                   offset: Offset(0, (elevation ?? cardTheme.elevation) / 2),
                 ),
@@ -88,21 +88,21 @@ class AppCard extends StatelessWidget {
     switch (variant) {
       case CardVariant.elevated:
         return _CardTheme(
-          backgroundColor: AppColor.white,
+          backgroundColor: Colors.white,
           borderColor: Colors.transparent,
           borderWidth: 0,
           elevation: 4,
         );
       case CardVariant.outlined:
         return _CardTheme(
-          backgroundColor: AppColor.white,
-          borderColor: AppColor.border1,
+          backgroundColor: Colors.white,
+          borderColor: NewAppColor.borderHair,
           borderWidth: 1,
           elevation: 0,
         );
       case CardVariant.filled:
         return _CardTheme(
-          backgroundColor: AppColor.secondary00,
+          backgroundColor: NewAppColor.canvasAlt,
           borderColor: Colors.transparent,
           borderWidth: 0,
           elevation: 0,
@@ -162,7 +162,7 @@ class AppCardHeader extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColor.secondary07,
+                      color: NewAppColor.textStrong,
                       height: 1.3,
                     ),
                   ),
@@ -172,7 +172,7 @@ class AppCardHeader extends StatelessWidget {
                     subtitle!,
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColor.secondary05,
+                      color: NewAppColor.textSecondary,
                       height: 1.4,
                     ),
                   ),
@@ -268,13 +268,13 @@ class InfoCard extends StatelessWidget {
                 ? Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColor.primary100,
+                      color: NewAppColor.skyTint,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       icon,
                       size: 20,
-                      color: AppColor.primary7,
+                      color: NewAppColor.skyDeep,
                     ),
                   )
                 : null,
@@ -284,7 +284,7 @@ class InfoCard extends StatelessWidget {
               description,
               style: TextStyle(
                 fontSize: 14,
-                color: AppColor.secondary06,
+                color: NewAppColor.textStrong,
                 height: 1.5,
               ),
             ),
@@ -334,7 +334,7 @@ class StatsCard extends StatelessWidget {
                   title,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColor.secondary05,
+                    color: NewAppColor.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -343,7 +343,7 @@ class StatsCard extends StatelessWidget {
                 Icon(
                   icon,
                   size: 20,
-                  color: iconColor ?? AppColor.secondary05,
+                  color: iconColor ?? NewAppColor.textSecondary,
                 ),
             ],
           ),
@@ -353,7 +353,7 @@ class StatsCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: AppColor.secondary07,
+              color: NewAppColor.textStrong,
               height: 1.2,
             ),
           ),
@@ -366,7 +366,7 @@ class StatsCard extends StatelessWidget {
                     subtitle!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppColor.secondary05,
+                      color: NewAppColor.textSecondary,
                     ),
                   ),
                 if (trend != null) ...[

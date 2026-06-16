@@ -381,29 +381,34 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         titleSpacing: 0,
         leading: material.IconButton(
           icon: Icon(LucideIcons.chevronLeft,
-              color: NewAppColor.textStrong, size: 26.sp),
+              color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '알림',
-          style: FigmaTextStyles().subtitle1.copyWith(
-                color: NewAppColor.textStrong,
-                fontSize: 18.sp,
-              ),
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
+          ),
         ),
         actions: [
           material.IconButton(
             icon: Icon(LucideIcons.ellipsis,
-                color: NewAppColor.textSecondary, size: 22.sp),
+                color: NewAppColor.textStrong, size: 22.sp),
             onPressed: _showDeleteMenu,
           ),
           material.IconButton(
             icon: Icon(LucideIcons.settings,
-                color: NewAppColor.textSecondary, size: 21.sp),
+                color: NewAppColor.textStrong, size: 20.sp),
             onPressed: _goToNotificationSettings,
           ),
           SizedBox(width: 4.w),
         ],
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
       ),
       body: isLoading
           ? Center(

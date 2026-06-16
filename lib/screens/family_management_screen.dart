@@ -322,7 +322,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                 title,
                 style: TextStyle(
                   color: NewAppColor.textStrong,
-                  fontSize: 16.sp,
+                  fontSize: 17.sp,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'Pretendard',
                 ),
@@ -350,8 +350,8 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                           '${m['name']} (${m['age']}세)',
                           style: TextStyle(
                             color: NewAppColor.textStrong,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
                             fontFamily: 'Pretendard',
                           ),
                         ),
@@ -399,7 +399,7 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                 '관계 선택',
                 style: TextStyle(
                   color: NewAppColor.textStrong,
-                  fontSize: 16.sp,
+                  fontSize: 17.sp,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'Pretendard',
                 ),
@@ -433,10 +433,10 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
                                   color: isSelected
                                       ? NewAppColor.skyDeep
                                       : NewAppColor.textStrong,
-                                  fontSize: 14.sp,
+                                  fontSize: 15.sp,
                                   fontWeight: isSelected
                                       ? FontWeight.w700
-                                      : FontWeight.w500,
+                                      : FontWeight.w600,
                                   fontFamily: 'Pretendard',
                                 ),
                               ),
@@ -558,7 +558,8 @@ class _FamilyManagementScreenState extends State<FamilyManagementScreen> {
             fontFamily: 'Pretendard',
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         backgroundColor: Colors.white,
         foregroundColor: NewAppColor.textStrong,
         elevation: 0,
@@ -1066,7 +1067,8 @@ class FamilyTreeScreen extends StatelessWidget {
             fontFamily: 'Pretendard',
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         backgroundColor: Colors.white,
         foregroundColor: NewAppColor.textStrong,
         elevation: 0,

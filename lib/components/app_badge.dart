@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum BadgeVariant {
   primary,
@@ -87,44 +87,44 @@ class AppBadge extends StatelessWidget {
     switch (variant) {
       case BadgeVariant.primary:
         return _BadgeTheme(
-          backgroundColor: AppColor.primary7,
-          textColor: AppColor.white,
+          backgroundColor: NewAppColor.skyDeep,
+          textColor: Colors.white,
           borderColor: Colors.transparent,
           borderWidth: 0,
         );
       case BadgeVariant.secondary:
         return _BadgeTheme(
-          backgroundColor: AppColor.secondary00,
-          textColor: AppColor.secondary07,
+          backgroundColor: NewAppColor.canvasAlt,
+          textColor: NewAppColor.textStrong,
           borderColor: Colors.transparent,
           borderWidth: 0,
         );
       case BadgeVariant.success:
         return _BadgeTheme(
           backgroundColor: const Color(0xff22C55E),
-          textColor: AppColor.white,
+          textColor: Colors.white,
           borderColor: Colors.transparent,
           borderWidth: 0,
         );
       case BadgeVariant.warning:
         return _BadgeTheme(
-          backgroundColor: AppColor.orange500,
-          textColor: AppColor.white,
+          backgroundColor: NewAppColor.warning700,
+          textColor: Colors.white,
           borderColor: Colors.transparent,
           borderWidth: 0,
         );
       case BadgeVariant.error:
         return _BadgeTheme(
-          backgroundColor: AppColor.error,
-          textColor: AppColor.white,
+          backgroundColor: NewAppColor.danger700,
+          textColor: Colors.white,
           borderColor: Colors.transparent,
           borderWidth: 0,
         );
       case BadgeVariant.outline:
         return _BadgeTheme(
           backgroundColor: Colors.transparent,
-          textColor: AppColor.secondary07,
-          borderColor: AppColor.border1,
+          textColor: NewAppColor.textStrong,
+          borderColor: NewAppColor.borderHair,
           borderWidth: 1,
         );
     }

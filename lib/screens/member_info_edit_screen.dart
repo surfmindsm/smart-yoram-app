@@ -283,7 +283,8 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
@@ -796,7 +797,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
     );
   }
 
-  // 1.2.0: 드롭다운 필드 — borderStrong 1px 라운드 11
+  // 1.2.0: 드롭다운 필드 — 셀렉터 박스 + AppSelectSheet
   Widget _buildDropdownField({
     required String label,
     required String? value,
@@ -816,48 +817,21 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
           ),
         ),
         SizedBox(height: 8.h),
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 14.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border:
-                Border.all(color: NewAppColor.borderStrong, width: 1),
-            borderRadius: BorderRadius.circular(11.r),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              hint: Text(
-                '$label을 선택하세요',
-                style: TextStyle(
-                  color: NewAppColor.textTertiary,
-                  fontSize: 14.5.sp,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Pretendard',
-                ),
-              ),
-              isExpanded: true,
-              icon: Icon(
-                LucideIcons.chevronDown,
-                color: NewAppColor.textMuted,
-                size: 20.sp,
-              ),
-              style: TextStyle(
-                color: NewAppColor.textStrong,
-                fontSize: 14.5.sp,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Pretendard',
-              ),
-              items: items.map((String item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
-              onChanged: onChanged,
-            ),
-          ),
+        AppSelectField(
+          value: value,
+          placeholder: '$label을 선택하세요',
+          onTap: () async {
+            final picked = await AppSelectSheet.show<String>(
+              context: context,
+              title: label,
+              selectedValue: value,
+              options: items
+                  .map((item) =>
+                      AppSelectOption(value: item, label: item))
+                  .toList(),
+            );
+            if (picked != null) onChanged(picked);
+          },
         ),
       ],
     );

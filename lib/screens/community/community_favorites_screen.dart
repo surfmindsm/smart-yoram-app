@@ -89,7 +89,8 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),

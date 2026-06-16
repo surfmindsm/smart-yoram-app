@@ -556,7 +556,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                   //         padding: EdgeInsets.symmetric(
                                   //             vertical: 14.h),
                                   //         side: BorderSide(
-                                  //           color: NewAppColor.primary600,
+                                  //           color: NewAppColor.skyPrimary,
                                   //           width: 1.5,
                                   //         ),
                                   //         shape: RoundedRectangleBorder(
@@ -569,7 +569,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                   //         style: FigmaTextStyles()
                                   //             .button1
                                   //             .copyWith(
-                                  //               color: NewAppColor.primary600,
+                                  //               color: NewAppColor.skyPrimary,
                                   //             ),
                                   //       ),
                                   //     ),
@@ -583,7 +583,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                           ? _onChatButtonPressed
                                           : null,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: NewAppColor.primary600,
+                                        backgroundColor: NewAppColor.skyPrimary,
                                         foregroundColor: Colors.white,
                                         disabledBackgroundColor:
                                             NewAppColor.neutral300,
@@ -1208,106 +1208,20 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   }
 
   void _showContactDialog(String phoneNumber) {
-    showModalBottomSheet(
+    AppMenuSheet.show(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: 8.h),
-              Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: NewAppColor.neutral300,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Column(
-                  children: [
-                    Text(
-                      phoneNumber,
-                      style: TextStyle(
-                        color: NewAppColor.neutral900,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Pretendard Variable',
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                    // 전화 걸기
-                    ListTile(
-                      leading: Container(
-                        width: 48.w,
-                        height: 48.w,
-                        decoration: BoxDecoration(
-                          color: NewAppColor.primary100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          LucideIcons.phone,
-                          color: NewAppColor.primary600,
-                          size: 24.sp,
-                        ),
-                      ),
-                      title: Text(
-                        '전화 걸기',
-                        style: TextStyle(
-                          color: NewAppColor.neutral900,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'Pretendard Variable',
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _makePhoneCall(phoneNumber);
-                      },
-                    ),
-                    // 메시지 보내기
-                    ListTile(
-                      leading: Container(
-                        width: 48.w,
-                        height: 48.w,
-                        decoration: BoxDecoration(
-                          color: NewAppColor.primary100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          LucideIcons.messageCircle,
-                          color: NewAppColor.primary600,
-                          size: 24.sp,
-                        ),
-                      ),
-                      title: Text(
-                        '메시지 보내기',
-                        style: TextStyle(
-                          color: NewAppColor.neutral900,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'Pretendard Variable',
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _sendMessage(phoneNumber);
-                      },
-                    ),
-                    SizedBox(height: 8.h),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.phone,
+          label: '전화 걸기 · $phoneNumber',
+          onTap: () => _makePhoneCall(phoneNumber),
+        ),
+        AppMenuItem(
+          icon: LucideIcons.messageCircle,
+          label: '메시지 보내기',
+          onTap: () => _sendMessage(phoneNumber),
+        ),
+      ],
     );
   }
 
@@ -1652,7 +1566,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       switch (status) {
         case 'open':
         case 'active': // 'active'도 모집중으로 처리
-          return NewAppColor.primary600;
+          return NewAppColor.skyPrimary;
         case 'closed':
           return NewAppColor.neutral600;
         default:
@@ -1704,7 +1618,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               children: [
                 Icon(
                   LucideIcons.briefcase,
-                  color: NewAppColor.primary600,
+                  color: NewAppColor.skyPrimary,
                   size: 20.sp,
                 ),
                 SizedBox(width: 12.w),
@@ -1720,7 +1634,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   const Spacer(),
                   Icon(
                     LucideIcons.check,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                     size: 20.sp,
                   ),
                 ],
@@ -1802,7 +1716,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     Color getStatusColor(String status) {
       switch (status) {
         case 'active':
-          return NewAppColor.primary600;
+          return NewAppColor.skyPrimary;
         case 'closed':
           return NewAppColor.neutral600;
         default:
@@ -1851,7 +1765,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               children: [
                 Icon(
                   LucideIcons.music,
-                  color: NewAppColor.primary600,
+                  color: NewAppColor.skyPrimary,
                   size: 20.sp,
                 ),
                 SizedBox(width: 12.w),
@@ -1867,7 +1781,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   const Spacer(),
                   Icon(
                     LucideIcons.check,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                     size: 20.sp,
                   ),
                 ],
@@ -1950,12 +1864,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       switch (status) {
         case 'available':
         case 'active': // active도 지원가능으로 처리
-          return NewAppColor.primary600;
+          return NewAppColor.skyPrimary;
         case 'completed':
         case 'closed':
           return NewAppColor.neutral600;
         default:
-          return NewAppColor.primary600; // 기본값은 지원가능 색상
+          return NewAppColor.skyPrimary; // 기본값은 지원가능 색상
       }
     }
 
@@ -2004,7 +1918,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               children: [
                 Icon(
                   LucideIcons.userSearch,
-                  color: NewAppColor.primary600,
+                  color: NewAppColor.skyPrimary,
                   size: 20.sp,
                 ),
                 SizedBox(width: 12.w),
@@ -2020,7 +1934,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   const Spacer(),
                   Icon(
                     LucideIcons.check,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                     size: 20.sp,
                   ),
                 ],
@@ -2102,11 +2016,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     Color getStatusColor(String status) {
       switch (status) {
         case 'active':
-          return NewAppColor.primary600;
+          return NewAppColor.skyPrimary;
         case 'completed':
           return NewAppColor.neutral600;
         default:
-          return NewAppColor.primary600; // 기본값은 진행중 색상
+          return NewAppColor.skyPrimary; // 기본값은 진행중 색상
       }
     }
 
@@ -2151,7 +2065,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               children: [
                 Icon(
                   LucideIcons.calendarCheck,
-                  color: NewAppColor.primary600,
+                  color: NewAppColor.skyPrimary,
                   size: 20.sp,
                 ),
                 SizedBox(width: 12.w),
@@ -2167,7 +2081,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   const Spacer(),
                   Icon(
                     LucideIcons.check,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                     size: 20.sp,
                   ),
                 ],
@@ -2249,7 +2163,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     Color getStatusColor(String status) {
       switch (status) {
         case 'active':
-          return NewAppColor.primary600;
+          return NewAppColor.skyPrimary;
         case 'ing':
           return NewAppColor.warning600;
         case 'completed':
@@ -2304,7 +2218,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               children: [
                 Icon(
                   LucideIcons.shoppingBag,
-                  color: NewAppColor.primary600,
+                  color: NewAppColor.skyPrimary,
                   size: 20.sp,
                 ),
                 SizedBox(width: 12.w),
@@ -2320,7 +2234,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   const Spacer(),
                   Icon(
                     LucideIcons.check,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                     size: 20.sp,
                   ),
                 ],
@@ -2432,7 +2346,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     Color getStatusColor(String status) {
       switch (status) {
         case 'active':
-          return NewAppColor.primary600;
+          return NewAppColor.skyPrimary;
         case 'ing':
           return NewAppColor.warning600;
         case 'completed':
@@ -2487,7 +2401,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               children: [
                 Icon(
                   LucideIcons.search,
-                  color: NewAppColor.primary600,
+                  color: NewAppColor.skyPrimary,
                   size: 20.sp,
                 ),
                 SizedBox(width: 12.w),
@@ -2503,7 +2417,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                   const Spacer(),
                   Icon(
                     LucideIcons.check,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                     size: 20.sp,
                   ),
                 ],
@@ -2985,7 +2899,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               vertical: 16.h,
                             ),
                             color: isSelected
-                                ? NewAppColor.primary100
+                                ? NewAppColor.skyTint
                                 : Colors.white,
                             child: Row(
                               children: [
@@ -2994,19 +2908,23 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       ? LucideIcons.circleDot
                                       : LucideIcons.circle,
                                   color: isSelected
-                                      ? NewAppColor.primary600
+                                      ? NewAppColor.skyPrimary
                                       : NewAppColor.neutral400,
                                   size: 20.sp,
                                 ),
                                 SizedBox(width: 12.w),
                                 Text(
                                   reason.label,
-                                  style: FigmaTextStyles().body1.copyWith(
-                                        fontSize: 15.sp,
-                                        color: isSelected
-                                            ? NewAppColor.primary600
-                                            : NewAppColor.neutral900,
-                                      ),
+                                  style: TextStyle(
+                                    fontSize: 15.sp,
+                                    color: isSelected
+                                        ? NewAppColor.skyDeep
+                                        : NewAppColor.textStrong,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    fontFamily: 'Pretendard',
+                                  ),
                                 ),
                               ],
                             ),
@@ -3318,7 +3236,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 3. 상품 설명 ===
         Container(
@@ -3351,7 +3269,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 2. 상품 정보 카드 ===
         Container(
@@ -3405,7 +3323,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 4. 연락처 정보 ===
         if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
@@ -3467,7 +3385,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       case 'sold':
         return NewAppColor.neutral500;
       default:
-        return NewAppColor.primary600;
+        return NewAppColor.skyPrimary;
     }
   }
 
@@ -3910,7 +3828,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
         // === 3. 상세 설명 ===
         Container(
           color: Colors.white,
@@ -3942,7 +3860,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 2. 요청 정보 카드 ===
         Container(
@@ -3987,7 +3905,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       label: '보상',
                       value: rewardText,
                       valueColor: item.rewardType == 'payment'
-                          ? NewAppColor.primary600
+                          ? NewAppColor.skyPrimary
                           : NewAppColor.neutral600,
                       valueWeight: FontWeight.w600,
                     ),
@@ -4011,7 +3929,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         ),
 
         // 구분선
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 4. 연락처 정보 ===
         if ((item.contactPhone != null && item.contactPhone!.isNotEmpty) ||
@@ -4141,7 +4059,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
 
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 2. 제목 + 상태 섹션 ===
         Container(
@@ -4195,7 +4113,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
 
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 3. 상세 설명 (자기소개) ===
         if (item.introduction != null && item.introduction!.isNotEmpty) ...[
@@ -4217,7 +4135,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ],
             ),
           ),
-          // Container(height: 8.h, color: NewAppColor.white),
+          // Container(height: 8.h, color: Colors.white),
         ],
 
         // === 4. 기본 정보 카드 ===
@@ -4261,7 +4179,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
 
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 5. 활동 조건 ===
         Container(
@@ -4313,13 +4231,13 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 8.w, vertical: 4.h),
                                   decoration: BoxDecoration(
-                                    color: NewAppColor.primary100,
+                                    color: NewAppColor.skyTint,
                                     borderRadius: BorderRadius.circular(4.r),
                                   ),
                                   child: Text(
                                     location,
                                     style: FigmaTextStyles().body2.copyWith(
-                                          color: NewAppColor.primary700,
+                                          color: NewAppColor.skyDeep,
                                           fontSize: 12.sp,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -4386,7 +4304,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
           ),
         ),
 
-        // Container(height: 8.h, color: NewAppColor.white),
+        // Container(height: 8.h, color: Colors.white),
 
         // === 6. 팀 소개 ===
         if (item.experience.isNotEmpty) ...[
@@ -4417,7 +4335,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ],
             ),
           ),
-          // Container(height: 8.h, color: NewAppColor.white),
+          // Container(height: 8.h, color: Colors.white),
         ],
 
         // === 7. 포트폴리오 ===
@@ -4614,12 +4532,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             width: 40.w,
                             height: 40.w,
                             decoration: BoxDecoration(
-                              color: NewAppColor.primary100,
+                              color: NewAppColor.skyTint,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               LucideIcons.file,
-                              color: NewAppColor.primary600,
+                              color: NewAppColor.skyPrimary,
                               size: 24.sp,
                             ),
                           ),
@@ -4660,7 +4578,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ],
             ),
           ),
-          // Container(height: 8.h, color: NewAppColor.white),
+          // Container(height: 8.h, color: Colors.white),
         ],
 
         // === 8. 연락처 정보 ===
@@ -5006,7 +4924,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             children: [
               // 전화 걸기
               ListTile(
-                leading: Icon(LucideIcons.phone, color: NewAppColor.primary600),
+                leading: Icon(LucideIcons.phone, color: NewAppColor.skyPrimary),
                 title: Text(
                   '전화 걸기',
                   style: FigmaTextStyles().body1,
@@ -5034,7 +4952,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Divider(height: 1, color: NewAppColor.borderSoft),
               // 문자 보내기
               ListTile(
-                leading: Icon(LucideIcons.messageCircle, color: NewAppColor.primary600),
+                leading: Icon(LucideIcons.messageCircle, color: NewAppColor.skyPrimary),
                 title: Text(
                   '문자 보내기',
                   style: FigmaTextStyles().body1,
@@ -5457,10 +5375,10 @@ class _CommunityYouTubePlayerScreenState
       player: YoutubePlayer(
         controller: _controller,
         showVideoProgressIndicator: true,
-        progressIndicatorColor: NewAppColor.primary600,
+        progressIndicatorColor: NewAppColor.skyPrimary,
         progressColors: ProgressBarColors(
-          playedColor: NewAppColor.primary600,
-          handleColor: NewAppColor.primary700,
+          playedColor: NewAppColor.skyPrimary,
+          handleColor: NewAppColor.skyDeep,
         ),
       ),
       builder: (context, player) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum CheckboxSize {
   sm,
@@ -46,14 +46,14 @@ class AppCheckbox extends StatelessWidget {
                 height: sizeConfig.checkboxSize,
                 decoration: BoxDecoration(
                   color: value 
-                    ? (isDisabled ? AppColor.secondary02 : AppColor.primary600)
-                    : AppColor.white,
+                    ? (isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary)
+                    : Colors.white,
                   border: Border.all(
                     color: errorText != null
-                      ? AppColor.error
+                      ? NewAppColor.danger700
                       : value
-                        ? (isDisabled ? AppColor.secondary02 : AppColor.primary600)
-                        : (isDisabled ? AppColor.secondary02 : AppColor.border1),
+                        ? (isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary)
+                        : (isDisabled ? NewAppColor.borderStrong : NewAppColor.borderHair),
                     width: value ? 0 : 1,
                   ),
                   borderRadius: BorderRadius.circular(4),
@@ -62,7 +62,7 @@ class AppCheckbox extends StatelessWidget {
                   ? Icon(
                       LucideIcons.check,
                       size: sizeConfig.iconSize,
-                      color: AppColor.white,
+                      color: Colors.white,
                     )
                   : null,
               ),
@@ -82,8 +82,8 @@ class AppCheckbox extends StatelessWidget {
                             fontSize: sizeConfig.fontSize,
                             fontWeight: FontWeight.w500,
                             color: isDisabled
-                              ? AppColor.secondary03
-                              : AppColor.secondary06,
+                              ? NewAppColor.textTertiary
+                              : NewAppColor.textStrong,
                           ),
                         ),
                       ),
@@ -94,8 +94,8 @@ class AppCheckbox extends StatelessWidget {
                         style: TextStyle(
                           fontSize: sizeConfig.fontSize - 2,
                           color: isDisabled
-                            ? AppColor.secondary03
-                            : AppColor.secondary04,
+                            ? NewAppColor.textTertiary
+                            : NewAppColor.textMuted,
                         ),
                       ),
                     ],
@@ -111,7 +111,7 @@ class AppCheckbox extends StatelessWidget {
             errorText!,
             style: const TextStyle(
               fontSize: 12,
-              color: AppColor.error,
+              color: NewAppColor.danger700,
             ),
           ),
         ],

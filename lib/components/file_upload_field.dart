@@ -6,6 +6,7 @@ import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'app_sheet.dart';
 
 /// 파일 업로드 컴포넌트
 class FileUploadField extends StatefulWidget {
@@ -154,40 +155,27 @@ class _FileUploadFieldState extends State<FileUploadField> {
     );
   }
 
-  // 파일 선택 방법 다이얼로그
+  // 파일 선택 방법 메뉴 — 1.2.0 AppMenuSheet
   void _showFilePickerDialog() {
-    showModalBottomSheet(
+    AppMenuSheet.show(
       context: context,
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: Icon(LucideIcons.images, color: NewAppColor.primary600),
-              title: const Text('갤러리에서 선택'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickFiles();
-              },
-            ),
-            ListTile(
-              leading: Icon(LucideIcons.camera, color: NewAppColor.primary600),
-              title: const Text('사진 촬영'),
-              onTap: () {
-                Navigator.pop(context);
-                _takePhoto();
-              },
-            ),
-            ListTile(
-              leading: Icon(LucideIcons.folder, color: NewAppColor.primary600),
-              title: const Text('파일 선택'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickFiles();
-              },
-            ),
-          ],
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.images,
+          label: '갤러리에서 선택',
+          onTap: _pickFiles,
         ),
-      ),
+        AppMenuItem(
+          icon: LucideIcons.camera,
+          label: '사진 촬영',
+          onTap: _takePhoto,
+        ),
+        AppMenuItem(
+          icon: LucideIcons.folder,
+          label: '파일 선택',
+          onTap: _pickFiles,
+        ),
+      ],
     );
   }
 
@@ -243,7 +231,7 @@ class _FileUploadFieldState extends State<FileUploadField> {
                   Text(
                     '${_files.length}개 파일 선택됨',
                     style: figmaStyles.body2.copyWith(
-                      color: NewAppColor.primary600,
+                      color: NewAppColor.skyPrimary,
                       fontFamily: 'Pretendard Variable',
                       fontWeight: FontWeight.w600,
                       letterSpacing: -0.35,
@@ -276,7 +264,7 @@ class _FileUploadFieldState extends State<FileUploadField> {
                     Icon(
                       _getFileIcon(file),
                       size: 24.w,
-                      color: NewAppColor.primary600,
+                      color: NewAppColor.skyPrimary,
                     ),
                     SizedBox(width: 12.w),
                     Expanded(

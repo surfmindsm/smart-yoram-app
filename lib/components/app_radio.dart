@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum RadioSize {
   sm,
@@ -54,11 +54,11 @@ class AppRadio<T> extends StatelessWidget {
             width: sizeConfig.radioSize,
             height: sizeConfig.radioSize,
             decoration: BoxDecoration(
-              color: AppColor.white,
+              color: Colors.white,
               border: Border.all(
                 color: isSelected
-                  ? (isDisabled ? AppColor.secondary02 : AppColor.primary600)
-                  : (isDisabled ? AppColor.secondary02 : AppColor.border1),
+                  ? (isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary)
+                  : (isDisabled ? NewAppColor.borderStrong : NewAppColor.borderHair),
                 width: isSelected ? 2 : 1,
               ),
               shape: BoxShape.circle,
@@ -69,7 +69,7 @@ class AppRadio<T> extends StatelessWidget {
                     width: sizeConfig.innerDotSize,
                     height: sizeConfig.innerDotSize,
                     decoration: BoxDecoration(
-                      color: isDisabled ? AppColor.secondary02 : AppColor.primary600,
+                      color: isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -92,8 +92,8 @@ class AppRadio<T> extends StatelessWidget {
                         fontSize: sizeConfig.fontSize,
                         fontWeight: FontWeight.w500,
                         color: isDisabled
-                          ? AppColor.secondary03
-                          : AppColor.secondary06,
+                          ? NewAppColor.textTertiary
+                          : NewAppColor.textStrong,
                       ),
                     ),
                   ),
@@ -104,8 +104,8 @@ class AppRadio<T> extends StatelessWidget {
                     style: TextStyle(
                       fontSize: sizeConfig.fontSize - 2,
                       color: isDisabled
-                        ? AppColor.secondary03
-                        : AppColor.secondary04,
+                        ? NewAppColor.textTertiary
+                        : NewAppColor.textMuted,
                     ),
                   ),
                 ],
@@ -176,7 +176,7 @@ class AppRadioGroup<T> extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppColor.secondary06,
+              color: NewAppColor.textStrong,
             ),
           ),
           const SizedBox(height: 8),
@@ -220,7 +220,7 @@ class AppRadioGroup<T> extends StatelessWidget {
             errorText!,
             style: const TextStyle(
               fontSize: 12,
-              color: AppColor.error,
+              color: NewAppColor.danger700,
             ),
           ),
         ],

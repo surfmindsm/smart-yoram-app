@@ -106,7 +106,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         automaticallyImplyLeading: _currentUser?.isCommunityAdmin != true,
         leading: _currentUser?.isCommunityAdmin == true
             ? null
@@ -868,12 +869,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     margin: EdgeInsets.only(bottom: 8.h),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? NewAppColor.primary100
+                          ? NewAppColor.skyTint
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
                         color: isSelected
-                            ? NewAppColor.primary600
+                            ? NewAppColor.skyPrimary
                             : NewAppColor.neutral200,
                         width: isSelected ? 2 : 1,
                       ),
@@ -892,7 +893,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       ? FontWeight.w600
                                       : FontWeight.w400,
                                   color: isSelected
-                                      ? NewAppColor.primary600
+                                      ? NewAppColor.skyPrimary
                                       : NewAppColor.neutral900,
                                 ),
                               ),
@@ -913,7 +914,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         if (isSelected)
                           Icon(
                             LucideIcons.circleCheck,
-                            color: NewAppColor.primary600,
+                            color: NewAppColor.skyPrimary,
                             size: 24.sp,
                           ),
                       ],

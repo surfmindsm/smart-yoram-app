@@ -123,7 +123,7 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>>
                 turns: _rotationAnimation,
                 child: widget.suffixIcon ?? Icon(
                   LucideIcons.chevronDown,
-                  color: _isOpen ? NewAppColor.primary600 : NewAppColor.neutral400,
+                  color: _isOpen ? NewAppColor.skyPrimary : NewAppColor.neutral400,
                   size: 24.sp,
                 ),
               ),

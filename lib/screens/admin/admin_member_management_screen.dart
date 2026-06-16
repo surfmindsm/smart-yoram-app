@@ -181,7 +181,8 @@ class _AdminMemberManagementScreenState
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
@@ -409,183 +410,38 @@ class _AdminMemberManagementScreenState
     _filterMembers();
   }
 
-  void _showPositionFilter() {
-    showModalBottomSheet(
+  void _showPositionFilter() async {
+    final picked = await AppSelectSheet.show<String?>(
       context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '직분별 필터',
-                style: FigmaTextStyles().headline6.copyWith(
-                      color: NewAppColor.neutral900,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // 전체 옵션
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: selectedPositionCategory == null
-                              ? NewAppColor.primary100
-                              : null,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: ListTile(
-                          title: const Text('전체'),
-                          trailing: selectedPositionCategory == null
-                              ? Icon(LucideIcons.check, color: NewAppColor.primary600)
-                              : null,
-                          onTap: () {
-                            setState(() {
-                              selectedPositionCategory = null;
-                            });
-                            _filterMembers();
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                      ...positionCategories.entries.map((entry) {
-                        final isSelected =
-                            selectedPositionCategory == entry.key;
-                        return Container(
-                          margin: EdgeInsets.symmetric(vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: isSelected ? NewAppColor.primary100 : null,
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: ListTile(
-                            title: Text(entry.value),
-                            trailing: isSelected
-                                ? Icon(LucideIcons.check,
-                                    color: NewAppColor.primary600)
-                                : null,
-                            onTap: () {
-                              setState(() {
-                                selectedPositionCategory = entry.key;
-                              });
-                              _filterMembers();
-                              Navigator.pop(context);
-                            },
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-            ],
-          ),
-        );
-      },
+      title: '직분별 필터',
+      selectedValue: selectedPositionCategory,
+      options: [
+        const AppSelectOption<String?>(value: null, label: '전체'),
+        ...positionCategories.entries
+            .map((e) => AppSelectOption<String?>(value: e.key, label: e.value)),
+      ],
     );
+    if (!mounted) return;
+    setState(() => selectedPositionCategory = picked);
+    _filterMembers();
   }
 
-  void _showDepartmentFilter() {
-    final departments = availableDepartments;
-
-    showModalBottomSheet(
+  void _showDepartmentFilter() async {
+    final picked = await AppSelectSheet.show<String?>(
       context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '부서별 필터',
-                style: FigmaTextStyles().headline6.copyWith(
-                      color: NewAppColor.neutral900,
-                    ),
-              ),
-              SizedBox(height: 16.h),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // 전체 옵션
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: selectedDepartment == null
-                              ? NewAppColor.primary100
-                              : null,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: ListTile(
-                          title: const Text('전체'),
-                          trailing: selectedDepartment == null
-                              ? Icon(LucideIcons.check, color: NewAppColor.primary600)
-                              : null,
-                          onTap: () {
-                            setState(() {
-                              selectedDepartment = null;
-                            });
-                            _filterMembers();
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                      ...departments.map((dept) {
-                        final label =
-                            MemberDepartmentOptions.getLabel(dept) ?? dept;
-                        final isSelected = selectedDepartment == dept;
-                        return Container(
-                          margin: EdgeInsets.symmetric(vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: isSelected ? NewAppColor.primary100 : null,
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: ListTile(
-                            title: Text(label),
-                            trailing: isSelected
-                                ? Icon(LucideIcons.check,
-                                    color: NewAppColor.primary600)
-                                : null,
-                            onTap: () {
-                              setState(() {
-                                selectedDepartment = dept;
-                              });
-                              _filterMembers();
-                              Navigator.pop(context);
-                            },
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-            ],
-          ),
-        );
-      },
+      title: '부서별 필터',
+      selectedValue: selectedDepartment,
+      options: [
+        const AppSelectOption<String?>(value: null, label: '전체'),
+        ...availableDepartments.map((dept) => AppSelectOption<String?>(
+              value: dept,
+              label: MemberDepartmentOptions.getLabel(dept) ?? dept,
+            )),
+      ],
     );
+    if (!mounted) return;
+    setState(() => selectedDepartment = picked);
+    _filterMembers();
   }
 
   void _showDistrictFilter() {
@@ -1049,9 +905,12 @@ class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
         children: [
           Text(
             '조직별 필터',
-            style: FigmaTextStyles().headline6.copyWith(
-                  color: NewAppColor.neutral900,
-                ),
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 17.sp,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Pretendard',
+            ),
           ),
           SizedBox(height: 16.h),
           if (isLoading)
@@ -1059,7 +918,7 @@ class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
               child: Padding(
                 padding: EdgeInsets.all(20.h),
                 child: CircularProgressIndicator(
-                  color: NewAppColor.primary600,
+                  color: NewAppColor.skyPrimary,
                 ),
               ),
             )
@@ -1072,14 +931,14 @@ class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
                       margin: EdgeInsets.symmetric(vertical: 4.h),
                       decoration: BoxDecoration(
                         color: widget.selectedDistrictId == null
-                            ? NewAppColor.primary100
+                            ? NewAppColor.skyTint
                             : null,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: ListTile(
                         title: const Text('전체'),
                         trailing: widget.selectedDistrictId == null
-                            ? Icon(LucideIcons.check, color: NewAppColor.primary600)
+                            ? Icon(LucideIcons.check, color: NewAppColor.skyPrimary)
                             : null,
                         onTap: () {
                           widget.onDistrictSelected(null, null);
@@ -1095,13 +954,13 @@ class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
                       return Container(
                         margin: EdgeInsets.symmetric(vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: isSelected ? NewAppColor.primary100 : null,
+                          color: isSelected ? NewAppColor.skyTint : null,
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: ListTile(
                           title: Text(displayName),
                           trailing: isSelected
-                              ? Icon(LucideIcons.check, color: NewAppColor.primary600)
+                              ? Icon(LucideIcons.check, color: NewAppColor.skyPrimary)
                               : null,
                           onTap: () {
                             widget.onDistrictSelected(districtId, displayName);

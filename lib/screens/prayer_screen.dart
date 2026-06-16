@@ -181,18 +181,30 @@ class _PrayerScreenState extends State<PrayerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft,
+              color: NewAppColor.textStrong, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           '중보 기도',
-          style: const FigmaTextStyles().headline4.copyWith(
-            color: Colors.white,
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
           ),
         ),
-        backgroundColor: NewAppColor.success600,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.plus),
+            icon: Icon(LucideIcons.plus,
+                color: NewAppColor.textStrong, size: 22.sp),
             onPressed: () {
               _showAddDialog();
             },
@@ -223,8 +235,8 @@ class _PrayerScreenState extends State<PrayerScreen>
                           bottom: BorderSide(
                             width: _currentTabIndex == 0 ? 2.0 : 1,
                             color: _currentTabIndex == 0
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral200,
+                                ? NewAppColor.skyPrimary
+                                : NewAppColor.borderHair,
                           ),
                         ),
                       ),
@@ -234,8 +246,8 @@ class _PrayerScreenState extends State<PrayerScreen>
                           textAlign: TextAlign.center,
                           style: const FigmaTextStyles().title4.copyWith(
                             color: _currentTabIndex == 0
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral500,
+                                ? NewAppColor.skyPrimary
+                                : NewAppColor.textMuted,
                             fontWeight: _currentTabIndex == 0
                                 ? FontWeight.w600
                                 : FontWeight.w400,
@@ -262,8 +274,8 @@ class _PrayerScreenState extends State<PrayerScreen>
                           bottom: BorderSide(
                             width: _currentTabIndex == 1 ? 2.0 : 1,
                             color: _currentTabIndex == 1
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral200,
+                                ? NewAppColor.skyPrimary
+                                : NewAppColor.borderHair,
                           ),
                         ),
                       ),
@@ -273,8 +285,8 @@ class _PrayerScreenState extends State<PrayerScreen>
                           textAlign: TextAlign.center,
                           style: const FigmaTextStyles().title4.copyWith(
                             color: _currentTabIndex == 1
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral500,
+                                ? NewAppColor.skyPrimary
+                                : NewAppColor.textMuted,
                             fontWeight: _currentTabIndex == 1
                                 ? FontWeight.w600
                                 : FontWeight.w400,
@@ -301,8 +313,8 @@ class _PrayerScreenState extends State<PrayerScreen>
                           bottom: BorderSide(
                             width: _currentTabIndex == 2 ? 2.0 : 1,
                             color: _currentTabIndex == 2
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral200,
+                                ? NewAppColor.skyPrimary
+                                : NewAppColor.borderHair,
                           ),
                         ),
                       ),
@@ -312,8 +324,8 @@ class _PrayerScreenState extends State<PrayerScreen>
                           textAlign: TextAlign.center,
                           style: const FigmaTextStyles().title4.copyWith(
                             color: _currentTabIndex == 2
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral500,
+                                ? NewAppColor.skyPrimary
+                                : NewAppColor.textMuted,
                             fontWeight: _currentTabIndex == 2
                                 ? FontWeight.w600
                                 : FontWeight.w400,
@@ -328,7 +340,7 @@ class _PrayerScreenState extends State<PrayerScreen>
           ),
         ),
       ),
-      backgroundColor: NewAppColor.neutral100,
+      backgroundColor: NewAppColor.canvasAlt,
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -354,7 +366,7 @@ class _PrayerScreenState extends State<PrayerScreen>
     }
 
     return Container(
-      color: NewAppColor.neutral100,
+      color: NewAppColor.canvasAlt,
       child: RefreshIndicator(
         onRefresh: _loadData,
         child: ListView.builder(
@@ -400,7 +412,7 @@ class _PrayerScreenState extends State<PrayerScreen>
     }
 
     return Container(
-      color: NewAppColor.neutral100,
+      color: NewAppColor.canvasAlt,
       child: RefreshIndicator(
         onRefresh: _loadData,
         child: Column(
@@ -418,14 +430,14 @@ class _PrayerScreenState extends State<PrayerScreen>
                 children: [
                   Icon(
                     LucideIcons.info,
-                    color: NewAppColor.success600,
+                    color: NewAppColor.skyPrimary,
                     size: 24.r,
                   ),
                   SizedBox(height: 8.h),
                   Text(
                     '심방 신청',
                     style: const FigmaTextStyles().title4.copyWith(
-                      color: NewAppColor.success600,
+                      color: NewAppColor.skyPrimary,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -433,7 +445,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                     '목사님이나 교역자의 심방이 필요하시면\n언제든 신청해주세요',
                     textAlign: TextAlign.center,
                     style: const FigmaTextStyles().body2.copyWith(
-                      color: NewAppColor.neutral600,
+                      color: NewAppColor.textMuted,
                     ),
                   ),
                 ],
@@ -495,7 +507,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: NewAppColor.neutral400,
+                    color: NewAppColor.textTertiary,
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Text(
@@ -510,7 +522,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: NewAppColor.success600,
+                    color: NewAppColor.skyPrimary,
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Text(
@@ -577,14 +589,14 @@ class _PrayerScreenState extends State<PrayerScreen>
           Text(
             request.title,
             style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
+              color: NewAppColor.textStrong,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             request.content,
             style: const FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral700,
+              color: NewAppColor.textSecondary,
             ),
           ),
           SizedBox(height: 12.h),
@@ -593,13 +605,13 @@ class _PrayerScreenState extends State<PrayerScreen>
               Icon(
                 LucideIcons.clock,
                 size: 14.r,
-                color: NewAppColor.neutral500,
+                color: NewAppColor.textMuted,
               ),
               SizedBox(width: 4.w),
               Text(
                 _formatDate(request.createdAt),
                 style: const FigmaTextStyles().caption1.copyWith(
-                  color: NewAppColor.neutral500,
+                  color: NewAppColor.textMuted,
                 ),
               ),
               const Spacer(),
@@ -612,7 +624,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                       vertical: 6.h,
                     ),
                     decoration: BoxDecoration(
-                      color: NewAppColor.success200,
+                      color: NewAppColor.skyTint,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Row(
@@ -621,13 +633,13 @@ class _PrayerScreenState extends State<PrayerScreen>
                         Icon(
                           LucideIcons.heart,
                           size: 14.r,
-                          color: NewAppColor.success600,
+                          color: NewAppColor.skyPrimary,
                         ),
                         SizedBox(width: 4.w),
                         Text(
                           '기도해요',
                           style: const FigmaTextStyles().caption1.copyWith(
-                            color: NewAppColor.success600,
+                            color: NewAppColor.skyPrimary,
                           ),
                         ),
                       ],
@@ -688,27 +700,27 @@ class _PrayerScreenState extends State<PrayerScreen>
           Text(
             '신청 사유: ${request.reason}',
             style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral900,
+              color: NewAppColor.textStrong,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             '희망 날짜: ${request.preferredDate}',
             style: const FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral700,
+              color: NewAppColor.textSecondary,
             ),
           ),
           Text(
             '희망 시간: ${request.preferredTime}',
             style: const FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral700,
+              color: NewAppColor.textSecondary,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             '신청일: ${_formatDate(request.createdAt)}',
             style: const FigmaTextStyles().caption1.copyWith(
-              color: NewAppColor.neutral500,
+              color: NewAppColor.textMuted,
             ),
           ),
         ],
@@ -719,15 +731,15 @@ class _PrayerScreenState extends State<PrayerScreen>
   Color _getCategoryColor(String category) {
     switch (category) {
       case 'personal':
-        return NewAppColor.primary600;
+        return NewAppColor.skyPrimary;
       case 'family':
-        return NewAppColor.success600;
+        return NewAppColor.skyPrimary;
       case 'church':
         return NewAppColor.secondary600;
       case 'mission':
         return NewAppColor.warning600;
       default:
-        return NewAppColor.neutral600;
+        return NewAppColor.textMuted;
     }
   }
 
@@ -749,13 +761,13 @@ class _PrayerScreenState extends State<PrayerScreen>
   Color _getRequestTypeColor(String type) {
     switch (type) {
       case 'visitation':
-        return NewAppColor.primary600;
+        return NewAppColor.skyPrimary;
       case 'counseling':
-        return NewAppColor.success600;
+        return NewAppColor.skyPrimary;
       case 'prayer':
         return NewAppColor.secondary600;
       default:
-        return NewAppColor.neutral600;
+        return NewAppColor.textMuted;
     }
   }
 
@@ -777,11 +789,11 @@ class _PrayerScreenState extends State<PrayerScreen>
       case 'pending':
         return NewAppColor.warning600;
       case 'scheduled':
-        return NewAppColor.primary600;
+        return NewAppColor.skyPrimary;
       case 'completed':
-        return NewAppColor.success600;
+        return NewAppColor.skyPrimary;
       default:
-        return NewAppColor.neutral600;
+        return NewAppColor.textMuted;
     }
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 class AppSelectOption<T> {
   final T value;
@@ -117,11 +117,11 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
           child: Material(
             elevation: 8,
             borderRadius: BorderRadius.circular(8),
-            color: AppColor.white,
+            color: Colors.white,
             child: Container(
               constraints: const BoxConstraints(maxHeight: 200),
               decoration: BoxDecoration(
-                border: Border.all(color: AppColor.border1),
+                border: Border.all(color: NewAppColor.borderHair),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -171,7 +171,7 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
                             ),
                             decoration: BoxDecoration(
                               color: isSelected 
-                                ? AppColor.primary100 
+                                ? NewAppColor.skyTint 
                                 : Colors.transparent,
                             ),
                             child: Row(
@@ -186,10 +186,10 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: option.disabled
-                                        ? AppColor.secondary03
+                                        ? NewAppColor.textTertiary
                                         : isSelected
-                                          ? AppColor.primary600
-                                          : AppColor.secondary06,
+                                          ? NewAppColor.skyPrimary
+                                          : NewAppColor.textStrong,
                                     ),
                                   ),
                                 ),
@@ -198,7 +198,7 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
                                   const Icon(
                                     LucideIcons.check,
                                     size: 16,
-                                    color: AppColor.primary600,
+                                    color: NewAppColor.skyPrimary,
                                   ),
                               ],
                             ),
@@ -243,7 +243,7 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppColor.secondary06,
+              color: NewAppColor.textStrong,
             ),
           ),
           const SizedBox(height: 6),
@@ -259,16 +259,16 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
               decoration: BoxDecoration(
                 border: Border.all(
                   color: widget.errorText != null 
-                    ? AppColor.error
+                    ? NewAppColor.danger700
                     : _isOpen
-                      ? AppColor.primary600
+                      ? NewAppColor.skyPrimary
                       : widget.disabled 
-                        ? AppColor.secondary02
-                        : AppColor.border1,
+                        ? NewAppColor.borderStrong
+                        : NewAppColor.borderHair,
                   width: _isOpen ? 2 : 1,
                 ),
                 borderRadius: BorderRadius.circular(8),
-                color: widget.disabled ? AppColor.secondary00 : AppColor.white,
+                color: widget.disabled ? NewAppColor.canvasAlt : Colors.white,
               ),
               child: Row(
                 children: [
@@ -282,16 +282,16 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
                       style: TextStyle(
                         fontSize: 14,
                         color: widget.value == null
-                          ? AppColor.secondary03
+                          ? NewAppColor.textTertiary
                           : widget.disabled
-                            ? AppColor.secondary03
-                            : AppColor.secondary06,
+                            ? NewAppColor.textTertiary
+                            : NewAppColor.textStrong,
                       ),
                     ),
                   ),
                   Icon(
                     _isOpen ? LucideIcons.chevronUp : LucideIcons.chevronDown,
-                    color: widget.disabled ? AppColor.secondary03 : AppColor.secondary04,
+                    color: widget.disabled ? NewAppColor.textTertiary : NewAppColor.textMuted,
                   ),
                 ],
               ),
@@ -304,7 +304,7 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
             widget.errorText!,
             style: const TextStyle(
               fontSize: 12,
-              color: AppColor.error,
+              color: NewAppColor.danger700,
             ),
           ),
         ],

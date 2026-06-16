@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
-import '../resource/color_style.dart';
+import '../resource/color_style_new.dart';
 import '../config/api_config.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -146,7 +146,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w500,
-                      color: AppColor.secondary07,
+                      color: NewAppColor.textStrong,
                     ),
                   ),
                   const Spacer(),
@@ -324,7 +324,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColor.primary600,
+        backgroundColor: NewAppColor.skyPrimary,
       ),
     );
   }
@@ -338,19 +338,19 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColor.background,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         title: Text(
           '사용자 관리',
           style: TextStyle(
-            color: AppColor.secondary07,
+            color: NewAppColor.textStrong,
             fontWeight: FontWeight.w600,
             fontSize: 20.sp,
           ),
         ),
-        backgroundColor: AppColor.background,
+        backgroundColor: NewAppColor.canvasAlt,
         elevation: 0,
-        iconTheme: IconThemeData(color: AppColor.secondary07),
+        iconTheme: IconThemeData(color: NewAppColor.textStrong),
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 16.w),
@@ -392,13 +392,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: AppColor.primary600),
+                        CircularProgressIndicator(color: NewAppColor.skyPrimary),
                         SizedBox(height: 16.h),
                         Text(
                           '사용자 목록을 불러오는 중...',
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: AppColor.secondary05,
+                            color: NewAppColor.textSecondary,
                           ),
                         ),
                       ],
@@ -412,14 +412,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                             Icon(
                               LucideIcons.userX,
                               size: 64.sp,
-                              color: AppColor.secondary03,
+                              color: NewAppColor.textTertiary,
                             ),
                             SizedBox(height: 16.h),
                             Text(
                               searchQuery.isEmpty ? '등록된 사용자가 없습니다' : '검색 결과가 없습니다',
                               style: TextStyle(
                                 fontSize: 16.sp,
-                                color: AppColor.secondary05,
+                                color: NewAppColor.textSecondary,
                               ),
                             ),
                           ],
@@ -451,7 +451,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 16.sp,
-                                        color: AppColor.secondary07,
+                                        color: NewAppColor.textStrong,
                                       ),
                                     ),
                                     SizedBox(height: 4.h),
@@ -459,7 +459,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                       user['email'],
                                       style: TextStyle(
                                         fontSize: 14.sp,
-                                        color: AppColor.secondary05,
+                                        color: NewAppColor.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -490,13 +490,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                   ],
                                 ),
                                 trailing: PopupMenuButton(
-                                  icon: Icon(LucideIcons.ellipsisVertical, color: AppColor.secondary05),
+                                  icon: Icon(LucideIcons.ellipsisVertical, color: NewAppColor.textSecondary),
                                   itemBuilder: (context) => [
                                     PopupMenuItem(
                                       value: 'edit',
                                       child: Row(
                                         children: [
-                                          Icon(LucideIcons.pencil, color: AppColor.secondary07),
+                                          Icon(LucideIcons.pencil, color: NewAppColor.textStrong),
                                           SizedBox(width: 8.w),
                                           Text('수정'),
                                         ],
@@ -508,7 +508,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                         children: [
                                           Icon(
                                             user['is_active'] ? LucideIcons.ban : LucideIcons.circleCheck,
-                                            color: AppColor.secondary07,
+                                            color: NewAppColor.textStrong,
                                           ),
                                           SizedBox(width: 8.w),
                                           Text(user['is_active'] ? '비활성화' : '활성화'),
@@ -519,9 +519,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                       value: 'delete',
                                       child: Row(
                                         children: [
-                                          Icon(LucideIcons.trash2, color: AppColor.error),
+                                          Icon(LucideIcons.trash2, color: NewAppColor.danger700),
                                           SizedBox(width: 8.w),
-                                          Text('삭제', style: TextStyle(color: AppColor.error)),
+                                          Text('삭제', style: TextStyle(color: NewAppColor.danger700)),
                                         ],
                                       ),
                                     ),
@@ -554,13 +554,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   Color _getRoleColor(String role) {
     switch (role) {
       case 'admin':
-        return AppColor.error;
+        return NewAppColor.danger700;
       case 'pastor':
-        return AppColor.primary600;
+        return NewAppColor.skyPrimary;
       case 'member':
-        return AppColor.secondary05;
+        return NewAppColor.textSecondary;
       default:
-        return AppColor.secondary03;
+        return NewAppColor.textTertiary;
     }
   }
 

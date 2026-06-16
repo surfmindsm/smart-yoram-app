@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 class AppDropdownMenuItem<T> {
   final T value;
@@ -53,7 +53,7 @@ class AppDropdown<T> extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppColor.secondary06,
+              color: NewAppColor.textStrong,
             ),
           ),
           const SizedBox(height: 6),
@@ -64,14 +64,14 @@ class AppDropdown<T> extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border.all(
               color: errorText != null 
-                ? AppColor.error
+                ? NewAppColor.danger700
                 : disabled 
-                  ? AppColor.secondary02
-                  : AppColor.border1,
+                  ? NewAppColor.borderStrong
+                  : NewAppColor.borderHair,
               width: 1,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: disabled ? AppColor.secondary00 : AppColor.white,
+            color: disabled ? NewAppColor.canvasAlt : Colors.white,
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(
@@ -87,7 +87,7 @@ class AppDropdown<T> extends StatelessWidget {
                       placeholder ?? 'Select an option',
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppColor.secondary03,
+                        color: NewAppColor.textTertiary,
                       ),
                     ),
                   ),
@@ -107,7 +107,7 @@ class AppDropdown<T> extends StatelessWidget {
                           item.text,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppColor.secondary06,
+                            color: NewAppColor.textStrong,
                           ),
                         ),
                       ),
@@ -120,9 +120,9 @@ class AppDropdown<T> extends StatelessWidget {
               isExpanded: true,
               icon: const Icon(
                 LucideIcons.chevronDown,
-                color: AppColor.secondary03,
+                color: NewAppColor.textTertiary,
               ),
-              dropdownColor: AppColor.white,
+              dropdownColor: Colors.white,
               elevation: 8,
               borderRadius: BorderRadius.circular(8),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -136,7 +136,7 @@ class AppDropdown<T> extends StatelessWidget {
             errorText!,
             style: const TextStyle(
               fontSize: 12,
-              color: AppColor.error,
+              color: NewAppColor.danger700,
             ),
           ),
         ],

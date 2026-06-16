@@ -175,7 +175,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 color: NewAppColor.neutral900,
               ),
         ),
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _saveProfile,
@@ -184,7 +185,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               style: const FigmaTextStyles().body1.copyWith(
                     color: _isSaving
                         ? NewAppColor.neutral400
-                        : NewAppColor.primary600,
+                        : NewAppColor.skyPrimary,
                     fontWeight: FontWeight.w600,
                   ),
             ),

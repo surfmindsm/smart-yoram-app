@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum PopoverPosition {
   top,
@@ -170,9 +170,9 @@ class _AppPopoverState extends State<AppPopover>
             : null,
         padding: widget.padding ?? const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: widget.backgroundColor ?? AppColor.white,
+          color: widget.backgroundColor ?? Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColor.border1),
+          border: Border.all(color: NewAppColor.borderHair),
           boxShadow: const [
             BoxShadow(
               color: Colors.black12,
@@ -259,7 +259,7 @@ class _AppPopoverState extends State<AppPopover>
               child: Row(
                 children: [
                   if (item.icon != null) ...[
-                    Icon(item.icon, size: 16, color: AppColor.secondary04),
+                    Icon(item.icon, size: 16, color: NewAppColor.textMuted),
                     const SizedBox(width: 8),
                   ],
                   Expanded(
@@ -267,7 +267,7 @@ class _AppPopoverState extends State<AppPopover>
                       item.title,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppColor.secondary06,
+                        color: NewAppColor.textStrong,
                       ),
                     ),
                   ),
@@ -303,7 +303,7 @@ class _AppPopoverState extends State<AppPopover>
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColor.secondary06,
+              color: NewAppColor.textStrong,
             ),
           ),
           if (description != null) ...[
@@ -312,7 +312,7 @@ class _AppPopoverState extends State<AppPopover>
               description,
               style: const TextStyle(
                 fontSize: 12,
-                color: AppColor.secondary04,
+                color: NewAppColor.textMuted,
               ),
             ),
           ],

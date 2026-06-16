@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum ProgressSize {
   sm,
@@ -55,7 +55,7 @@ class AppProgress extends StatelessWidget {
                 style: TextStyle(
                   fontSize: sizeConfig.fontSize,
                   fontWeight: FontWeight.w500,
-                  color: AppColor.secondary06,
+                  color: NewAppColor.textStrong,
                 ),
               ),
               if (showPercentage)
@@ -64,7 +64,7 @@ class AppProgress extends StatelessWidget {
                     '${(clampedValue * 100).round()}%',
                   style: TextStyle(
                     fontSize: sizeConfig.fontSize - 2,
-                    color: AppColor.secondary04,
+                    color: NewAppColor.textMuted,
                   ),
                 ),
             ],
@@ -109,7 +109,7 @@ class AppProgress extends StatelessWidget {
             description!,
             style: TextStyle(
               fontSize: sizeConfig.fontSize - 2,
-              color: AppColor.secondary04,
+              color: NewAppColor.textMuted,
             ),
           ),
         ],
@@ -141,28 +141,28 @@ class AppProgress extends StatelessWidget {
     switch (variant) {
       case ProgressVariant.primary:
         return const _ProgressColorConfig(
-          foreground: AppColor.primary600,
-          background: AppColor.secondary01,
+          foreground: NewAppColor.skyPrimary,
+          background: Colors.white,
         );
       case ProgressVariant.secondary:
         return const _ProgressColorConfig(
-          foreground: AppColor.secondary04,
-          background: AppColor.secondary01,
+          foreground: NewAppColor.textMuted,
+          background: Colors.white,
         );
       case ProgressVariant.success:
         return const _ProgressColorConfig(
           foreground: Color(0xff10b981),
-          background: AppColor.secondary01,
+          background: Colors.white,
         );
       case ProgressVariant.warning:
         return const _ProgressColorConfig(
-          foreground: AppColor.orange500,
-          background: AppColor.secondary01,
+          foreground: NewAppColor.warning700,
+          background: Colors.white,
         );
       case ProgressVariant.error:
         return const _ProgressColorConfig(
-          foreground: AppColor.error,
-          background: AppColor.secondary01,
+          foreground: NewAppColor.danger700,
+          background: Colors.white,
         );
     }
   }
@@ -280,7 +280,7 @@ class AppCircularProgress extends StatelessWidget {
                     style: TextStyle(
                       fontSize: size * 0.15,
                       fontWeight: FontWeight.w600,
-                      color: AppColor.secondary06,
+                      color: NewAppColor.textStrong,
                     ),
                   ),
                 ),
@@ -293,7 +293,7 @@ class AppCircularProgress extends StatelessWidget {
             label!,
             style: const TextStyle(
               fontSize: 12,
-              color: AppColor.secondary04,
+              color: NewAppColor.textMuted,
             ),
           ),
         ],
@@ -305,28 +305,28 @@ class AppCircularProgress extends StatelessWidget {
     switch (variant) {
       case ProgressVariant.primary:
         return const _ProgressColorConfig(
-          foreground: AppColor.primary600,
-          background: AppColor.secondary01,
+          foreground: NewAppColor.skyPrimary,
+          background: Colors.white,
         );
       case ProgressVariant.secondary:
         return const _ProgressColorConfig(
-          foreground: AppColor.secondary04,
-          background: AppColor.secondary01,
+          foreground: NewAppColor.textMuted,
+          background: Colors.white,
         );
       case ProgressVariant.success:
         return const _ProgressColorConfig(
           foreground: Color(0xff10b981),
-          background: AppColor.secondary01,
+          background: Colors.white,
         );
       case ProgressVariant.warning:
         return const _ProgressColorConfig(
-          foreground: AppColor.orange500,
-          background: AppColor.secondary01,
+          foreground: NewAppColor.warning700,
+          background: Colors.white,
         );
       case ProgressVariant.error:
         return const _ProgressColorConfig(
-          foreground: AppColor.error,
-          background: AppColor.secondary01,
+          foreground: NewAppColor.danger700,
+          background: Colors.white,
         );
     }
   }

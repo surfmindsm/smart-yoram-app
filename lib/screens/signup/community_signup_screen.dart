@@ -165,7 +165,8 @@ class _CommunitySignupScreenState extends State<CommunitySignupScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: material.IconButton(
           icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 26.sp),
@@ -676,12 +677,12 @@ class _CommunitySignupScreenState extends State<CommunitySignupScreen> {
                                     item['label']!,
                                     style: TextStyle(
                                       color: isSelected
-                                          ? NewAppColor.skyPrimary
+                                          ? NewAppColor.skyDeep
                                           : NewAppColor.textStrong,
-                                      fontSize: 14.5.sp,
+                                      fontSize: 15.sp,
                                       fontWeight: isSelected
-                                          ? FontWeight.w800
-                                          : FontWeight.w500,
+                                          ? FontWeight.w700
+                                          : FontWeight.w600,
                                       fontFamily: 'Pretendard',
                                     ),
                                   ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum TabsVariant {
   line,
@@ -69,7 +69,7 @@ class _AppTabsState extends State<AppTabs>
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: AppColor.border1,
+                color: NewAppColor.borderHair,
                 width: 1,
               ),
             ),
@@ -77,8 +77,8 @@ class _AppTabsState extends State<AppTabs>
           child: TabBar(
             controller: _controller,
             isScrollable: widget.scrollable,
-            labelColor: AppColor.primary7,
-            unselectedLabelColor: AppColor.secondary05,
+            labelColor: NewAppColor.skyDeep,
+            unselectedLabelColor: NewAppColor.textSecondary,
             labelStyle: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -87,7 +87,7 @@ class _AppTabsState extends State<AppTabs>
               fontSize: 14,
               fontWeight: FontWeight.w400,
             ),
-            indicatorColor: AppColor.primary7,
+            indicatorColor: NewAppColor.skyDeep,
             indicatorWeight: 2,
             indicatorSize: TabBarIndicatorSize.label,
             splashFactory: NoSplash.splashFactory,
@@ -112,14 +112,14 @@ class _AppTabsState extends State<AppTabs>
           height: 48,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: AppColor.secondary00,
+            color: NewAppColor.canvasAlt,
             borderRadius: BorderRadius.circular(8),
           ),
           child: TabBar(
             controller: _controller,
             isScrollable: widget.scrollable,
-            labelColor: AppColor.secondary07,
-            unselectedLabelColor: AppColor.secondary05,
+            labelColor: NewAppColor.textStrong,
+            unselectedLabelColor: NewAppColor.textSecondary,
             labelStyle: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -129,11 +129,11 @@ class _AppTabsState extends State<AppTabs>
               fontWeight: FontWeight.w400,
             ),
             indicator: BoxDecoration(
-              color: AppColor.white,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(6),
               boxShadow: [
                 BoxShadow(
-                  color: AppColor.secondary07.withOpacity(0.1),
+                  color: NewAppColor.textStrong.withOpacity(0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 1),
                 ),
@@ -227,7 +227,7 @@ class _AppTabsHeaderState extends State<AppTabsHeader> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: AppColor.border1,
+            color: NewAppColor.borderHair,
             width: 1,
           ),
         ),
@@ -255,7 +255,7 @@ class _AppTabsHeaderState extends State<AppTabsHeader> {
       height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColor.secondary00,
+        color: NewAppColor.canvasAlt,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -289,7 +289,7 @@ class _AppTabsHeaderState extends State<AppTabsHeader> {
             border: isSelected
                 ? Border(
                     bottom: BorderSide(
-                      color: AppColor.primary7,
+                      color: NewAppColor.skyDeep,
                       width: 2,
                     ),
                   )
@@ -300,7 +300,7 @@ class _AppTabsHeaderState extends State<AppTabsHeader> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
-              color: isSelected ? AppColor.primary7 : AppColor.secondary05,
+              color: isSelected ? NewAppColor.skyDeep : NewAppColor.textSecondary,
             ),
           ),
         ),
@@ -322,11 +322,11 @@ class _AppTabsHeaderState extends State<AppTabsHeader> {
             alignment: Alignment.center,
             decoration: isSelected
                 ? BoxDecoration(
-                    color: AppColor.white,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColor.secondary07.withOpacity(0.1),
+                        color: NewAppColor.textStrong.withOpacity(0.1),
                         blurRadius: 4,
                         offset: const Offset(0, 1),
                       ),
@@ -338,7 +338,7 @@ class _AppTabsHeaderState extends State<AppTabsHeader> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
-                color: isSelected ? AppColor.secondary07 : AppColor.secondary05,
+                color: isSelected ? NewAppColor.textStrong : NewAppColor.textSecondary,
               ),
             ),
           ),

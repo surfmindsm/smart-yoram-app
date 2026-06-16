@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 
 enum TooltipPosition {
   top,
@@ -35,11 +35,11 @@ class AppTooltip extends StatelessWidget {
     return Tooltip(
       message: message,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColor.secondary06,
+        color: backgroundColor ?? NewAppColor.textStrong,
         borderRadius: BorderRadius.circular(6),
       ),
       textStyle: textStyle ?? const TextStyle(
-        color: AppColor.white,
+        color: Colors.white,
         fontSize: 12,
         fontWeight: FontWeight.w400,
       ),
@@ -77,7 +77,7 @@ class AppTooltip extends StatelessWidget {
       child: child,
       message: message,
       position: position,
-      backgroundColor: AppColor.secondary06,
+      backgroundColor: NewAppColor.textStrong,
     );
   }
 
@@ -92,7 +92,7 @@ class AppTooltip extends StatelessWidget {
       child: child,
       message: message,
       position: position,
-      backgroundColor: AppColor.orange500,
+      backgroundColor: NewAppColor.warning700,
     );
   }
 
@@ -107,7 +107,7 @@ class AppTooltip extends StatelessWidget {
       child: child,
       message: message,
       position: position,
-      backgroundColor: AppColor.error,
+      backgroundColor: NewAppColor.danger700,
     );
   }
 }
@@ -204,7 +204,7 @@ class _AppRichTooltipState extends State<AppRichTooltip>
               ),
               padding: widget.padding ?? const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: widget.backgroundColor ?? AppColor.secondary06,
+                color: widget.backgroundColor ?? NewAppColor.textStrong,
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: const [
                   BoxShadow(

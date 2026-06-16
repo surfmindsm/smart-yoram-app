@@ -853,7 +853,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 children: [
                   Icon(
                     LucideIcons.info,
-                    color: NewAppColor.primary600,
+                    color: NewAppColor.skyPrimary,
                     size: 24.sp,
                   ),
                   SizedBox(width: 8.w),
@@ -882,7 +882,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: NewAppColor.primary600,
+                    backgroundColor: NewAppColor.skyPrimary,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                     shape: RoundedRectangleBorder(
@@ -968,7 +968,8 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
@@ -1018,7 +1019,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               child: FloatingActionButton.extended(
                 onPressed: _isFormValid() ? _submit : null,
                 backgroundColor: _isFormValid()
-                    ? NewAppColor.primary600
+                    ? NewAppColor.skyPrimary
                     : NewAppColor.neutral300,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -1227,7 +1228,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       }
                     });
                   },
-                  activeColor: NewAppColor.primary600,
+                  activeColor: NewAppColor.skyPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4.r),
                   ),
@@ -1321,7 +1322,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       _deliveryAvailable = value ?? false;
                     });
                   },
-                  activeColor: NewAppColor.primary600,
+                  activeColor: NewAppColor.skyPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4.r),
                   ),
@@ -1760,7 +1761,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       _deliveryAvailable = value ?? false;
                     });
                   },
-                  activeColor: NewAppColor.primary600,
+                  activeColor: NewAppColor.skyPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4.r),
                   ),
@@ -1947,7 +1948,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
     return Text(
       text,
       style: FigmaTextStyles().caption1.copyWith(
-            color: NewAppColor.primary700,
+            color: NewAppColor.skyDeep,
             height: 1.4,
           ),
     );
@@ -2118,7 +2119,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                                 }
                               });
                             },
-                            activeColor: NewAppColor.primary600,
+                            activeColor: NewAppColor.skyPrimary,
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -2927,9 +2928,9 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       _preferredLocations.remove(location);
                     });
                   },
-                  backgroundColor: NewAppColor.primary100,
+                  backgroundColor: NewAppColor.skyTint,
                   labelStyle: FigmaTextStyles().body2.copyWith(
-                        color: NewAppColor.primary700,
+                        color: NewAppColor.skyDeep,
                       ),
                 );
               }).toList(),
@@ -3121,20 +3122,20 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 12.w, vertical: 8.h),
                         decoration: BoxDecoration(
-                          color: NewAppColor.primary100,
+                          color: NewAppColor.skyTint,
                           borderRadius: BorderRadius.circular(4.r),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(LucideIcons.circleCheck,
-                                size: 16.r, color: NewAppColor.primary600),
+                                size: 16.r, color: NewAppColor.skyPrimary),
                             SizedBox(width: 4.w),
                             Text(
                               '파일 업로드 완료',
                               style: FigmaTextStyles().body2.copyWith(
                                     fontSize: 12.sp,
-                                    color: NewAppColor.primary600,
+                                    color: NewAppColor.skyPrimary,
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),
@@ -3146,7 +3147,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                                 });
                               },
                               child: Icon(LucideIcons.x,
-                                  size: 16.r, color: NewAppColor.primary600),
+                                  size: 16.r, color: NewAppColor.skyPrimary),
                             ),
                           ],
                         ),

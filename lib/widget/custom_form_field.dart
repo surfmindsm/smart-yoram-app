@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/text_style.dart';
-import 'package:smart_yoram_app/resource/color_style.dart';
+import '../resource/color_style_new.dart';
 
 /// 공통 폼 필드 위젯
 class CustomFormField extends StatelessWidget {
@@ -114,7 +114,7 @@ class CustomFormField extends StatelessWidget {
             ),
             focusedBorder: focusedBorder ?? OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColor.primary900),
+              borderSide: BorderSide(color: NewAppColor.skyDeep),
             ),
             enabledBorder: enabledBorder,
             errorBorder: errorBorder,
@@ -202,7 +202,7 @@ class CustomDropdownField<T> extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColor.primary900),
+              borderSide: BorderSide(color: NewAppColor.skyDeep),
             ),
             filled: !enabled,
             fillColor: enabled ? null : Colors.grey[100],

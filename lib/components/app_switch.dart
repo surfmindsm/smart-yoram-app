@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../resource/color_style.dart';
+import 'package:smart_yoram_app/resource/color_style_new.dart';
 import '../resource/color_style_new.dart';
 
 enum SwitchSize {
@@ -48,8 +48,8 @@ class AppSwitch extends StatelessWidget {
                         fontSize: sizeConfig.fontSize,
                         fontWeight: FontWeight.w500,
                         color: isDisabled
-                          ? AppColor.secondary03
-                          : AppColor.secondary06,
+                          ? NewAppColor.textTertiary
+                          : NewAppColor.textStrong,
                       ),
                     ),
                   ),
@@ -60,8 +60,8 @@ class AppSwitch extends StatelessWidget {
                     style: TextStyle(
                       fontSize: sizeConfig.fontSize - 2,
                       color: isDisabled
-                        ? AppColor.secondary03
-                        : AppColor.secondary04,
+                        ? NewAppColor.textTertiary
+                        : NewAppColor.textMuted,
                     ),
                   ),
                 ],
@@ -79,8 +79,8 @@ class AppSwitch extends StatelessWidget {
             height: sizeConfig.trackHeight,
             decoration: BoxDecoration(
               color: value
-                ? (isDisabled ? AppColor.secondary02 : NewAppColor.skyPrimary)
-                : (isDisabled ? AppColor.secondary02 : AppColor.secondary03),
+                ? (isDisabled ? NewAppColor.borderStrong : NewAppColor.skyPrimary)
+                : (isDisabled ? NewAppColor.borderStrong : NewAppColor.textTertiary),
               borderRadius: BorderRadius.circular(sizeConfig.trackHeight / 2),
             ),
             child: Stack(
@@ -96,7 +96,7 @@ class AppSwitch extends StatelessWidget {
                     width: sizeConfig.thumbSize,
                     height: sizeConfig.thumbSize,
                     decoration: const BoxDecoration(
-                      color: AppColor.white,
+                      color: Colors.white,
                       shape: BoxShape.circle,
                     ),
                   ),

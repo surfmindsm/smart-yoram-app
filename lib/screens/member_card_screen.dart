@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../components/index.dart' hide IconButton;
+import '../resource/color_style_new.dart';
 import '../models/member.dart' as MemberModel;
 import '../models/qr_code.dart';
 import '../models/api_response.dart';
@@ -122,10 +124,31 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
-        title: const Text('교인증'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft,
+              color: NewAppColor.textStrong, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '교인증',
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
+          ),
+        ),
+        shape: Border(
+          bottom: BorderSide(color: NewAppColor.borderSoft, width: 1),
+        ),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -193,8 +216,8 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.blue[700]!,
-            Colors.blue[500]!,
+            NewAppColor.skyPrimary,
+            NewAppColor.skyDeep,
           ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -374,7 +397,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!, width: 2),
+            border: Border.all(color: NewAppColor.borderStrong, width: 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.2),
@@ -405,13 +428,13 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                           const Icon(
                             LucideIcons.qrCode,
                             size: 80,
-                            color: Colors.grey,
+                            color: NewAppColor.textTertiary,
                           ),
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'QR 코드 생성 실패',
                             style: TextStyle(
-                              color: Colors.grey,
+                              color: NewAppColor.textTertiary,
                               fontSize: 14,
                             ),
                           ),
@@ -425,11 +448,11 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                     ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           '출석 체크 시 이 QR 코드를 스캔해 주세요',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey,
+            color: NewAppColor.textMuted,
           ),
           textAlign: TextAlign.center,
         ),
@@ -447,7 +470,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
             icon: const Icon(LucideIcons.history),
             label: const Text('출석 기록 보기'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[700],
+              backgroundColor: NewAppColor.skyPrimary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
@@ -526,7 +549,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                   return ListTile(
                     leading: Icon(
                       isPresent ? LucideIcons.circleCheck : LucideIcons.x,
-                      color: isPresent ? Colors.green : Colors.red,
+                      color: isPresent ? NewAppColor.success700 : NewAppColor.danger700,
                     ),
                     title: Text(
                       record.attendanceDate.toLocal().toString().split(' ')[0],
