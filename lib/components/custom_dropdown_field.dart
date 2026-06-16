@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 향상된 UI/UX를 가진 커스텀 드롭다운 위젯
 ///
@@ -121,7 +122,7 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>>
               suffixIcon: RotationTransition(
                 turns: _rotationAnimation,
                 child: widget.suffixIcon ?? Icon(
-                  Icons.keyboard_arrow_down_rounded,
+                  LucideIcons.chevronDown,
                   color: _isOpen ? NewAppColor.primary600 : NewAppColor.neutral400,
                   size: 24.sp,
                 ),

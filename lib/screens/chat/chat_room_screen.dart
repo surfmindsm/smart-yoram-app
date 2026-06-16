@@ -258,7 +258,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         centerTitle: false,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -298,7 +298,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.more_vert,
+            icon: Icon(LucideIcons.ellipsisVertical,
                 color: NewAppColor.textSecondary, size: 21.sp),
             onPressed: _showChatMenu,
             padding: EdgeInsets.zero,
@@ -404,14 +404,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         height: 48.w,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Icon(
-                          Icons.image_outlined,
+                          LucideIcons.image,
                           color: NewAppColor.skyDeep,
                           size: 22.sp,
                         ),
                       ),
                     )
                   : Icon(
-                      Icons.image_outlined,
+                      LucideIcons.image,
                       color: NewAppColor.skyDeep,
                       size: 22.sp,
                     ),
@@ -451,7 +451,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           ),
                           if (isSeller)
                             Icon(
-                              Icons.keyboard_arrow_down,
+                              LucideIcons.chevronDown,
                               size: 13.sp,
                               color: NewAppColor.skyDeep,
                             ),
@@ -489,7 +489,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             ),
             SizedBox(width: 6.w),
             Icon(
-              Icons.chevron_right,
+              LucideIcons.chevronRight,
               size: 17.sp,
               color: NewAppColor.iconFaint,
             ),
@@ -617,7 +617,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   ),
                 ),
                 if (isSelected)
-                  Icon(Icons.check,
+                  Icon(LucideIcons.check,
                       color: NewAppColor.skyDeep, size: 19.sp),
               ],
             ),
@@ -673,7 +673,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.chat_bubble_outline,
+            LucideIcons.messageCircle,
             size: 56.sp,
             color: NewAppColor.iconFaint,
           ),
@@ -776,7 +776,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         ),
                       )
                     : Icon(
-                        Icons.send,
+                        LucideIcons.send,
                         color: Colors.white,
                         size: 19.sp,
                       ),
@@ -835,7 +835,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           ),
                           alignment: Alignment.center,
                           child: Icon(
-                            Icons.flag_outlined,
+                            LucideIcons.flag,
                             color: NewAppColor.danger700,
                             size: 20.sp,
                           ),
@@ -907,8 +907,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                             children: [
                               Icon(
                                 isSelected
-                                    ? Icons.radio_button_checked
-                                    : Icons.radio_button_unchecked,
+                                    ? LucideIcons.circleDot
+                                    : LucideIcons.circle,
                                 color: isSelected
                                     ? NewAppColor.skyDeep
                                     : NewAppColor.iconFaint,

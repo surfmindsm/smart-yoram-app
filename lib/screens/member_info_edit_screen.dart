@@ -285,7 +285,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -344,7 +344,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
-                          Icons.info_outline,
+                          LucideIcons.info,
                           size: 19.sp,
                           color: NewAppColor.skyDeep,
                         ),
@@ -409,7 +409,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                             child: _buildDateField(
                               label: '생년월일',
                               date: _selectedBirthdate,
-                              prefixIcon: Icons.cake_outlined,
+                              prefixIcon: LucideIcons.cake,
                               onTap: () => _selectDate(
                                 context,
                                 _selectedBirthdate,
@@ -435,7 +435,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                         controller: _phoneController,
                         placeholder: '전화번호를 입력하세요',
                         keyboardType: TextInputType.phone,
-                        prefixIcon: Icons.phone_outlined,
+                        prefixIcon: LucideIcons.phone,
                       ),
                     ],
                   ),
@@ -493,7 +493,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                           controller: _detailAddressController,
                           placeholder: '상세주소를 입력하세요 (예: 101동 203호)',
                           maxLines: 2,
-                          prefixIcon: Icons.location_on_outlined,
+                          prefixIcon: LucideIcons.mapPin,
                         ),
                       ],
                     ],
@@ -608,7 +608,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
                         controller: _workplacePhoneController,
                         placeholder: '직장 전화번호를 입력하세요',
                         keyboardType: TextInputType.phone,
-                        prefixIcon: Icons.phone_outlined,
+                        prefixIcon: LucideIcons.phone,
                       ),
                     ],
                   ),
@@ -785,7 +785,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
               ),
               SizedBox(width: 8.w),
               Icon(
-                Icons.lock_outline,
+                LucideIcons.lock,
                 size: 15.sp,
                 color: NewAppColor.iconFaint,
               ),
@@ -839,7 +839,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
               ),
               isExpanded: true,
               icon: Icon(
-                Icons.keyboard_arrow_down,
+                LucideIcons.chevronDown,
                 color: NewAppColor.textMuted,
                 size: 20.sp,
               ),
@@ -868,7 +868,7 @@ class _MemberInfoEditScreenState extends State<MemberInfoEditScreen> {
     required String label,
     required DateTime? date,
     required VoidCallback onTap,
-    IconData prefixIcon = Icons.calendar_today_outlined,
+    IconData prefixIcon = LucideIcons.calendarDays,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -6,6 +6,7 @@ import '../components/index.dart';
 import '../resource/text_style_new.dart';
 import '../resource/color_style_new.dart';
 import '../services/notification_settings_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 알림 설정 화면 — 1.2.0 C 방향
 class NotificationSettingsScreen extends StatefulWidget {
@@ -67,7 +68,7 @@ class _NotificationSettingsScreenState
         centerTitle: false,
         titleSpacing: 0,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -92,7 +93,7 @@ class _NotificationSettingsScreenState
                   SizedBox(height: 8.h),
                   _buildCard([
                     _buildNavRow(
-                      icon: Icons.music_note_outlined,
+                      icon: LucideIcons.music,
                       title: '알림음',
                       value: selectedSound,
                       onTap: () async {
@@ -116,7 +117,7 @@ class _NotificationSettingsScreenState
                   SizedBox(height: 8.h),
                   _buildCard([
                     _buildSwitchRow(
-                      icon: Icons.chat_bubble_outline,
+                      icon: LucideIcons.messageCircle,
                       iconBg: NewAppColor.skyTint,
                       iconFg: NewAppColor.skyDeep,
                       title: '채팅',
@@ -129,7 +130,7 @@ class _NotificationSettingsScreenState
                     ),
                     _buildDivider(),
                     _buildSwitchRow(
-                      icon: Icons.favorite_border,
+                      icon: LucideIcons.heart,
                       iconBg: NewAppColor.dangerBg,
                       iconFg: NewAppColor.danger700,
                       title: '좋아요',
@@ -142,7 +143,7 @@ class _NotificationSettingsScreenState
                     ),
                     _buildDivider(),
                     _buildSwitchRow(
-                      icon: Icons.campaign_outlined,
+                      icon: LucideIcons.megaphone,
                       iconBg: NewAppColor.warningBg,
                       iconFg: NewAppColor.warning700,
                       title: '교회 소식',
@@ -155,7 +156,7 @@ class _NotificationSettingsScreenState
                     ),
                     _buildDivider(),
                     _buildSwitchRow(
-                      icon: Icons.mark_email_unread_outlined,
+                      icon: LucideIcons.mailOpen,
                       iconBg: NewAppColor.successBg,
                       iconFg: NewAppColor.success700,
                       title: '교회 메시지',
@@ -258,7 +259,7 @@ class _NotificationSettingsScreenState
                 ),
               ),
               SizedBox(width: 4.w),
-              Icon(Icons.chevron_right,
+              Icon(LucideIcons.chevronRight,
                   color: NewAppColor.iconFaint, size: 19.sp),
             ],
           ),
@@ -422,7 +423,7 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
           centerTitle: false,
           titleSpacing: 0,
           leading: material.IconButton(
-            icon: Icon(Icons.chevron_left,
+            icon: Icon(LucideIcons.chevronLeft,
                 color: NewAppColor.textStrong, size: 26.sp),
             onPressed: () => Navigator.pop(context, _selectedSound),
           ),
@@ -504,7 +505,7 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
                                       children: [
                                         if (isSilent) ...[
                                           Icon(
-                                            Icons.volume_off_outlined,
+                                            LucideIcons.volumeX,
                                             size: 16.sp,
                                             color: NewAppColor.textTertiary,
                                           ),
@@ -540,7 +541,7 @@ class _NotificationSoundScreenState extends State<NotificationSoundScreen> {
                                       ),
                                       alignment: Alignment.center,
                                       child: Icon(
-                                        Icons.play_arrow_rounded,
+                                        LucideIcons.play,
                                         size: 18.sp,
                                         color: isSelected
                                             ? Colors.white

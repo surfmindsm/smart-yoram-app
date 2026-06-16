@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../components/index.dart' hide IconButton;
+import '../resource/color_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ChurchRegistrationScreen extends StatefulWidget {
   const ChurchRegistrationScreen({super.key});
@@ -15,7 +18,7 @@ class _ChurchRegistrationScreenState extends State<ChurchRegistrationScreen> {
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  
+
   bool _agreeToTerms = false;
   bool _agreeToPrivacy = false;
 
@@ -31,188 +34,172 @@ class _ChurchRegistrationScreenState extends State<ChurchRegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canSubmit = _agreeToTerms && _agreeToPrivacy;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('교회 등록'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        title: Text(
+          '교회 등록',
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: NewAppColor.textStrong,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft, size: 26.sp, color: NewAppColor.textStrong),
+          onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.h),
+          child: Container(height: 1.h, color: NewAppColor.borderHair),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 32.h),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '교회 정보를 입력해주세요',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: NewAppColor.textStrong,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Pretendard',
+                ),
               ),
-              const SizedBox(height: 24),
-              
-              // 교회명
-              TextFormField(
+              SizedBox(height: 4.h),
+              Text(
+                '관리자 승인 후 이용 가능합니다.',
+                style: TextStyle(
+                  color: NewAppColor.textTertiary,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
+              SizedBox(height: 22.h),
+
+              AppInput(
+                label: '교회명',
+                placeholder: '○○교회',
                 controller: _churchNameController,
-                decoration: const InputDecoration(
-                  labelText: '교회명',
-                  hintText: '○○교회',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.church),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '교회명을 입력해주세요';
-                  }
-                  return null;
-                },
+                required: true,
+                prefixIcon: LucideIcons.church,
               ),
-              const SizedBox(height: 16),
-              
-              // 대표자명
-              TextFormField(
+              SizedBox(height: 14.h),
+              AppInput(
+                label: '대표자명',
+                placeholder: '담임목사님 성함',
                 controller: _representativeController,
-                decoration: const InputDecoration(
-                  labelText: '대표자명',
-                  hintText: '담임목사님 성함',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '대표자명을 입력해주세요';
-                  }
-                  return null;
-                },
+                required: true,
+                prefixIcon: LucideIcons.user,
               ),
-              const SizedBox(height: 16),
-              
-              // 교회 주소
-              TextFormField(
+              SizedBox(height: 14.h),
+              AppInput(
+                label: '교회 주소',
+                placeholder: '주소를 입력해주세요',
                 controller: _addressController,
-                decoration: const InputDecoration(
-                  labelText: '교회 주소',
-                  hintText: '주소를 입력해주세요',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                  suffixIcon: Icon(Icons.search),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '교회 주소를 입력해주세요';
-                  }
-                  return null;
-                },
-                onTap: () {
-                  // TODO: 주소 검색 기능 구현
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('주소 검색 기능은 추후 구현 예정입니다')),
-                  );
-                },
+                required: true,
+                prefixIcon: LucideIcons.mapPin,
+                suffixIcon: LucideIcons.search,
                 readOnly: true,
+                onTap: () {
+                  AppToast.show(context, '주소 검색 기능은 추후 구현 예정입니다');
+                },
               ),
-              const SizedBox(height: 16),
-              
-              // 연락처
-              TextFormField(
+              SizedBox(height: 14.h),
+              AppInput(
+                label: '대표 연락처',
+                placeholder: '010-0000-0000',
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: '대표 연락처',
-                  hintText: '010-0000-0000',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
-                ),
+                required: true,
+                prefixIcon: LucideIcons.phone,
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '연락처를 입력해주세요';
-                  }
-                  if (!RegExp(r'^01[0-9]-[0-9]{4}-[0-9]{4}$').hasMatch(value)) {
-                    return '올바른 휴대폰 번호 형식이 아닙니다';
-                  }
-                  return null;
-                },
               ),
-              const SizedBox(height: 16),
-              
-              // 이메일
-              TextFormField(
+              SizedBox(height: 14.h),
+              AppInput(
+                label: '대표 이메일',
+                placeholder: 'church@example.com',
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: '대표 이메일',
-                  hintText: 'church@example.com',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
+                required: true,
+                prefixIcon: LucideIcons.mail,
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '이메일을 입력해주세요';
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                    return '올바른 이메일 형식이 아닙니다';
-                  }
-                  return null;
-                },
               ),
-              const SizedBox(height: 24),
-              
-              // 약관 동의
+
+              SizedBox(height: 24.h),
+
+              // 약관 동의 카드
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(color: NewAppColor.borderHair),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '약관 동의',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: NewAppColor.textStrong,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard',
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    CheckboxListTile(
-                      title: const Text('서비스 이용약관 동의 (필수)'),
+                    SizedBox(height: 12.h),
+                    _buildAgreementRow(
+                      label: '서비스 이용약관 동의 (필수)',
                       value: _agreeToTerms,
-                      onChanged: (value) {
-                        setState(() {
-                          _agreeToTerms = value ?? false;
-                        });
-                      },
-                      controlAffinity: ListTileControlAffinity.leading,
-                      dense: true,
+                      onChanged: (v) => setState(() => _agreeToTerms = v),
                     ),
-                    CheckboxListTile(
-                      title: const Text('개인정보 처리방침 동의 (필수)'),
+                    SizedBox(height: 10.h),
+                    _buildAgreementRow(
+                      label: '개인정보 처리방침 동의 (필수)',
                       value: _agreeToPrivacy,
-                      onChanged: (value) {
-                        setState(() {
-                          _agreeToPrivacy = value ?? false;
-                        });
-                      },
-                      controlAffinity: ListTileControlAffinity.leading,
-                      dense: true,
+                      onChanged: (v) => setState(() => _agreeToPrivacy = v),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
-              
+
+              SizedBox(height: 28.h),
+
               // 등록 버튼
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 52.h,
                 child: ElevatedButton(
-                  onPressed: _agreeToTerms && _agreeToPrivacy ? _registerChurch : null,
+                  onPressed: canSubmit ? _registerChurch : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
+                    backgroundColor: NewAppColor.skyPrimary,
+                    disabledBackgroundColor: NewAppColor.borderSoft,
                     foregroundColor: Colors.white,
+                    disabledForegroundColor: NewAppColor.textTertiary,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
                   ),
-                  child: const Text('교회 등록하기', style: TextStyle(fontSize: 16)),
+                  child: Text(
+                    '교회 등록하기',
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -222,25 +209,61 @@ class _ChurchRegistrationScreenState extends State<ChurchRegistrationScreen> {
     );
   }
 
-  void _registerChurch() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: 교회 등록 로직 구현
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('등록 완료'),
-          content: const Text('교회 등록이 완료되었습니다.\n관리자 승인 후 이용 가능합니다.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop(); // 등록 화면도 닫기
-              },
-              child: const Text('확인'),
+  Widget _buildAgreementRow({
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => onChanged(!value),
+      child: Row(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 20.w,
+            height: 20.w,
+            decoration: BoxDecoration(
+              color: value ? NewAppColor.skyPrimary : Colors.white,
+              borderRadius: BorderRadius.circular(6.r),
+              border: Border.all(
+                color: value ? NewAppColor.skyPrimary : NewAppColor.borderStrong,
+                width: 1.5,
+              ),
             ),
-          ],
-        ),
+            child: value
+                ? Icon(LucideIcons.check, size: 14.sp, color: Colors.white)
+                : null,
+          ),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: NewAppColor.textSecondary,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _registerChurch() async {
+    if (_formKey.currentState!.validate()) {
+      await AppConfirmSheet.show(
+        context: context,
+        title: '교회 등록이 완료되었어요',
+        description: '관리자 승인 후 이용 가능합니다.',
+        confirmLabel: '확인',
+        cancelLabel: '닫기',
+        tone: AppSheetTone.success,
+        icon: LucideIcons.circleCheck,
       );
+      if (mounted) Navigator.of(context).pop();
     }
   }
 }

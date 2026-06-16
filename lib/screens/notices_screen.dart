@@ -9,6 +9,7 @@ import '../utils/announcement_categories.dart';
 import '../utils/date_filter.dart';
 import '../components/index.dart' hide IconButton;
 import 'notice_detail_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class NoticesScreen extends StatefulWidget {
   final bool showAppBar;
@@ -184,7 +185,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                         child: Padding(
                           padding: EdgeInsets.all(4.r),
                           child: Icon(
-                            Icons.arrow_back,
+                            LucideIcons.arrowLeft,
                             color: NewAppColor.textStrong,
                             size: 22.sp,
                           ),
@@ -212,7 +213,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                   child: Row(
                     children: [
                       Icon(
-                        Icons.search,
+                        LucideIcons.search,
                         size: 18.sp,
                         color: NewAppColor.textTertiary,
                       ),
@@ -341,7 +342,7 @@ class _NoticesScreenState extends State<NoticesScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.campaign_outlined,
+              LucideIcons.megaphone,
               size: 56.sp,
               color: NewAppColor.iconFaint,
             ),
@@ -443,7 +444,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                   Row(
                     children: [
                       Icon(
-                        Icons.person_outline,
+                        LucideIcons.user,
                         size: 13.sp,
                         color: NewAppColor.textTertiary,
                       ),
@@ -461,7 +462,7 @@ class _NoticesScreenState extends State<NoticesScreen>
                       ),
                       SizedBox(width: 12.w),
                       Icon(
-                        Icons.access_time,
+                        LucideIcons.clock,
                         size: 13.sp,
                         color: NewAppColor.textTertiary,
                       ),
@@ -481,7 +482,7 @@ class _NoticesScreenState extends State<NoticesScreen>
             ),
             SizedBox(width: 12.w),
             Icon(
-              Icons.chevron_right,
+              LucideIcons.chevronRight,
               size: 18.sp,
               color: NewAppColor.iconFaint,
             ),

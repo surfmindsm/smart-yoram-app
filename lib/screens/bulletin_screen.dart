@@ -7,6 +7,7 @@ import '../models/bulletin.dart';
 import '../models/file_type.dart';
 import '../services/bulletin_service.dart';
 import 'bulletin_fullscreen_viewer.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class BulletinScreen extends StatefulWidget {
   final bool showTopPadding;
@@ -217,7 +218,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.menu_book_outlined,
+                              LucideIcons.bookOpen,
                               size: 56.sp,
                               color: NewAppColor.iconFaint,
                             ),
@@ -431,7 +432,7 @@ class _BulletinScreenState extends State<BulletinScreen> {
             ),
             SizedBox(width: 8.w),
             Icon(
-              Icons.chevron_right,
+              LucideIcons.chevronRight,
               size: 18.sp,
               color: NewAppColor.iconFaint,
             ),

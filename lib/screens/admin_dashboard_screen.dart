@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../components/index.dart' hide IconButton;
 import '../widget/widgets.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -18,7 +19,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         actions: [
           IconButton(
             onPressed: _showAdminMenu,
-            icon: const Icon(Icons.settings),
+            icon: const Icon(LucideIcons.settings),
           ),
         ],
       ),
@@ -55,17 +56,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: StatCard(title: '총 교인수', value: '342명', icon: Icons.group, color: Colors.blue)),
+            Expanded(child: StatCard(title: '총 교인수', value: '342명', icon: LucideIcons.users, color: Colors.blue)),
             const SizedBox(width: 12),
-            Expanded(child: StatCard(title: '이번주 출석', value: '287명', icon: Icons.check_circle, color: Colors.green)),
+            Expanded(child: StatCard(title: '이번주 출석', value: '287명', icon: LucideIcons.circleCheck, color: Colors.green)),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: StatCard(title: '새가족', value: '12명', icon: Icons.person_add, color: Colors.orange)),
+            Expanded(child: StatCard(title: '새가족', value: '12명', icon: LucideIcons.userPlus, color: Colors.orange)),
             const SizedBox(width: 12),
-            Expanded(child: StatCard(title: '신규공지', value: '3개', icon: Icons.campaign, color: Colors.purple)),
+            Expanded(child: StatCard(title: '신규공지', value: '3개', icon: LucideIcons.megaphone, color: Colors.purple)),
           ],
         ),
       ],
@@ -87,12 +88,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: [
-            QuickMenuItem(title: '교인 등록', icon: Icons.person_add, onTap: () => _addMember()),
-            QuickMenuItem(title: '공지 작성', icon: Icons.edit, onTap: () => _createNotice()),
-            QuickMenuItem(title: '출석 관리', icon: Icons.fact_check, onTap: () => _manageAttendance()),
-            QuickMenuItem(title: '주보 업로드', icon: Icons.upload, onTap: () => _uploadBulletin()),
-            QuickMenuItem(title: '단체 메시지', icon: Icons.chat, onTap: () => _sendGroupMessage()),
-            QuickMenuItem(title: '통계 보기', icon: Icons.bar_chart, onTap: () => _viewStatistics()),
+            QuickMenuItem(title: '교인 등록', icon: LucideIcons.userPlus, onTap: () => _addMember()),
+            QuickMenuItem(title: '공지 작성', icon: LucideIcons.pencil, onTap: () => _createNotice()),
+            QuickMenuItem(title: '출석 관리', icon: LucideIcons.clipboardCheck, onTap: () => _manageAttendance()),
+            QuickMenuItem(title: '주보 업로드', icon: LucideIcons.upload, onTap: () => _uploadBulletin()),
+            QuickMenuItem(title: '단체 메시지', icon: LucideIcons.messageCircle, onTap: () => _sendGroupMessage()),
+            QuickMenuItem(title: '통계 보기', icon: LucideIcons.chartColumn, onTap: () => _viewStatistics()),
           ],
         ),
       ],
@@ -133,25 +134,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               _buildActivityItem(
                 '김성도님이 출석체크를 완료했습니다',
                 '5분 전',
-                Icons.check_circle,
+                LucideIcons.circleCheck,
                 Colors.green,
               ),
               _buildActivityItem(
                 '새로운 공지사항이 등록되었습니다',
                 '30분 전',
-                Icons.campaign,
+                LucideIcons.megaphone,
                 Colors.blue,
               ),
               _buildActivityItem(
                 '이신규님이 새가족으로 등록되었습니다',
                 '2시간 전',
-                Icons.person_add,
+                LucideIcons.userPlus,
                 Colors.orange,
               ),
               _buildActivityItem(
                 '주보가 업데이트되었습니다',
                 '4시간 전',
-                Icons.book,
+                LucideIcons.book,
                 Colors.purple,
               ),
             ],
@@ -202,31 +203,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         SectionHeader(title: '관리 메뉴'),
         const SizedBox(height: 16),
         CustomListTile(
-          icon: Icons.group,
+          icon: LucideIcons.users,
           title: '교인 관리',
           subtitle: '교인 정보 수정 및 관리',
           onTap: _manageMembersScreen,
         ),
         CustomListTile(
-          icon: Icons.security,
+          icon: LucideIcons.shield,
           title: '권한 관리',
           subtitle: '사용자 권한 설정',
           onTap: _managePermissions,
         ),
         CustomListTile(
-          icon: Icons.storage,
+          icon: LucideIcons.database,
           title: '데이터 관리',
           subtitle: '데이터 가져오기 및 내보내기',
           onTap: _manageData,
         ),
         CustomListTile(
-          icon: Icons.credit_card,
+          icon: LucideIcons.creditCard,
           title: '결제 관리',
           subtitle: '헌금 및 십일조 관리',
           onTap: _managePayments,
         ),
         CustomListTile(
-          icon: Icons.settings,
+          icon: LucideIcons.settings,
           title: '시스템 설정',
           subtitle: '전체 시스템 설정',
           onTap: _systemSettings,
@@ -252,7 +253,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.storage),
+              leading: const Icon(LucideIcons.database),
               title: const Text('데이터 백업'),
               onTap: () {
                 Navigator.pop(context);
@@ -260,7 +261,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.refresh),
+              leading: const Icon(LucideIcons.refreshCw),
               title: const Text('데이터 동기화'),
               onTap: () {
                 Navigator.pop(context);
@@ -268,7 +269,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.bug_report),
+              leading: const Icon(LucideIcons.bug),
               title: const Text('시스템 진단'),
               onTap: () {
                 Navigator.pop(context);
@@ -276,7 +277,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.logout),
+              leading: const Icon(LucideIcons.logOut),
               title: const Text('관리자 로그아웃'),
               onTap: () {
                 Navigator.pop(context);
@@ -340,132 +341,75 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _managePermissions() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('권한 관리 화면으로 이동합니다')),
-    );
+    AppToast.show(context, '권한 관리 화면으로 이동합니다');
   }
 
   void _manageData() {
-    showDialog(
+    AppMenuSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('데이터 관리'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.upload),
-              title: Text('엑셀 업로드'),
-              subtitle: Text('교인 정보 일괄 등록'),
-            ),
-            ListTile(
-              leading: Icon(Icons.download),
-              title: Text('엑셀 다운로드'),
-              subtitle: Text('교인 정보 내보내기'),
-            ),
-          ],
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.upload,
+          label: '엑셀 업로드',
+          onTap: () => AppToast.show(context, '교인 정보 일괄 등록'),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
+        AppMenuItem(
+          icon: LucideIcons.download,
+          label: '엑셀 다운로드',
+          onTap: () => AppToast.show(context, '교인 정보 내보내기'),
+        ),
+      ],
     );
   }
 
   void _managePayments() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('결제 관리 화면으로 이동합니다')),
-    );
+    AppToast.show(context, '결제 관리 화면으로 이동합니다');
   }
 
   void _systemSettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('시스템 설정 화면으로 이동합니다')),
-    );
+    AppToast.show(context, '시스템 설정 화면으로 이동합니다');
   }
 
   // 관리자 메뉴 함수들
   void _backupData() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('데이터 백업 중...'),
-          ],
-        ),
-      ),
-    );
-
-    // 백업 시뮬레이션
+    AppToast.show(context, '데이터 백업을 시작합니다');
     Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('데이터 백업이 완료되었습니다')),
-      );
+      if (mounted) AppToast.success(context, '데이터 백업이 완료되었습니다');
     });
   }
 
   void _syncData() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('데이터 동기화를 시작합니다')),
-    );
+    AppToast.show(context, '데이터 동기화를 시작합니다');
   }
 
   void _systemDiagnostics() {
-    showDialog(
+    AppInfoSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('시스템 진단 결과'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('✅ 데이터베이스 연결: 정상'),
-            Text('✅ 서버 상태: 정상'),
-            Text('✅ 백업 상태: 정상'),
-            Text('⚠️ 저장공간: 75% 사용중'),
-            Text('✅ 마지막 업데이트: 2시간 전'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
+      title: '시스템 진단 결과',
+      icon: LucideIcons.heartPulse,
+      body: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('✅ 데이터베이스 연결: 정상'),
+          Text('✅ 서버 상태: 정상'),
+          Text('✅ 백업 상태: 정상'),
+          Text('⚠️ 저장공간: 75% 사용중'),
+          Text('✅ 마지막 업데이트: 2시간 전'),
         ],
       ),
     );
   }
 
-  void _adminLogout() {
-    showDialog(
+  Future<void> _adminLogout() async {
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('관리자 로그아웃'),
-        content: const Text('관리자 모드에서 로그아웃하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('관리자 모드에서 로그아웃되었습니다')),
-              );
-            },
-            child: const Text('로그아웃'),
-          ),
-        ],
-      ),
+      title: '관리자 모드에서 로그아웃할까요?',
+      confirmLabel: '로그아웃',
+      tone: AppSheetTone.danger,
+      icon: LucideIcons.logOut,
     );
+    if (ok == true && mounted) {
+      AppToast.show(context, '관리자 모드에서 로그아웃되었습니다');
+    }
   }
 }

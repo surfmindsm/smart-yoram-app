@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide IconButton;
 import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../components/index.dart';
 import '../../models/announcement.dart';
 import '../../resource/color_style_new.dart';
@@ -54,176 +55,53 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
     }
   }
 
-  // 1.2.0 삭제 확인 시트 (미리보기 박스 포함)
-  void _confirmDelete() {
-    showModalBottomSheet(
+  // 삭제 확인 — AppConfirmSheet 헬퍼 사용
+  Future<void> _confirmDelete() async {
+    final ok = await AppConfirmSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
-      builder: (sheetContext) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
+      title: '공지사항을 삭제할까요?',
+      description: '삭제하면 교인 화면에서도 사라지며,\n되돌릴 수 없어요.',
+      confirmLabel: '삭제',
+      tone: AppSheetTone.danger,
+      preview: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(14.w),
+        decoration: BoxDecoration(
+          color: NewAppColor.dangerBg,
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(
+            color: NewAppColor.danger700.withOpacity(0.18),
+            width: 1,
           ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 22.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 5,
-                    margin: EdgeInsets.only(bottom: 18.h),
-                    decoration: BoxDecoration(
-                      color: NewAppColor.borderStrong,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  Container(
-                    width: 54.w,
-                    height: 54.w,
-                    decoration: BoxDecoration(
-                      color: NewAppColor.dangerBg,
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.delete_outline,
-                        color: NewAppColor.danger700, size: 26.sp),
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    '공지사항을 삭제할까요?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: NewAppColor.textStrong,
-                      fontSize: 19.sp,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Pretendard',
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    '삭제하면 교인 화면에서도 사라지며,\n되돌릴 수 없어요.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: NewAppColor.textMuted,
-                      fontSize: 13.5.sp,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Pretendard',
-                      height: 1.55,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(14.w),
-                    decoration: BoxDecoration(
-                      color: NewAppColor.dangerBg,
-                      borderRadius: BorderRadius.circular(14.r),
-                      border: Border.all(
-                        color: NewAppColor.danger700.withOpacity(0.18),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: 6.w,
-                          runSpacing: 6.h,
-                          children: [
-                            _buildPreviewChip(_categoryLabel(_announcement.category)),
-                            if (_announcement.isPinned) _buildPreviewChip('고정'),
-                          ],
-                        ),
-                        SizedBox(height: 7.h),
-                        Text(
-                          _announcement.title,
-                          style: TextStyle(
-                            color: NewAppColor.textStrong,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w800,
-                            fontFamily: 'Pretendard',
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 18.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(sheetContext),
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 15.h),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.borderSoft,
-                              borderRadius: BorderRadius.circular(13.r),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '취소',
-                              style: TextStyle(
-                                color: NewAppColor.textSecondary,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Pretendard',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 11.w),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(sheetContext);
-                            _performDelete();
-                          },
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 15.h),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.danger700,
-                              borderRadius: BorderRadius.circular(13.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: NewAppColor.danger700.withOpacity(0.30),
-                                  blurRadius: 22,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '삭제',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'Pretendard',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 6.w,
+              runSpacing: 6.h,
+              children: [
+                _buildPreviewChip(_categoryLabel(_announcement.category)),
+                if (_announcement.isPinned) _buildPreviewChip('고정'),
+              ],
             ),
-          ),
-        );
-      },
+            SizedBox(height: 7.h),
+            Text(
+              _announcement.title,
+              style: TextStyle(
+                color: NewAppColor.textStrong,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
+    if (ok == true) await _performDelete();
   }
 
   Future<void> _performDelete() async {
@@ -266,7 +144,7 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -416,8 +294,8 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
           children: [
             _buildIconAction(
               icon: _announcement.isPinned
-                  ? Icons.push_pin
-                  : Icons.push_pin_outlined,
+                  ? LucideIcons.pin
+                  : LucideIcons.pin,
               tone: _announcement.isPinned
                   ? _IconActionTone.sky
                   : _IconActionTone.neutral,
@@ -425,7 +303,7 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
             ),
             SizedBox(width: 9.w),
             _buildIconAction(
-              icon: Icons.delete_outline,
+              icon: LucideIcons.trash2,
               tone: _IconActionTone.danger,
               onTap: _confirmDelete,
             ),
@@ -451,7 +329,7 @@ class _AdminNoticeDetailScreenState extends State<AdminNoticeDetailScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.edit_outlined,
+                      Icon(LucideIcons.pencil,
                           color: Colors.white, size: 16.sp),
                       SizedBox(width: 7.w),
                       Text(

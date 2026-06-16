@@ -5,6 +5,7 @@ import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 파일 업로드 컴포넌트
 class FileUploadField extends StatefulWidget {
@@ -130,16 +131,16 @@ class _FileUploadFieldState extends State<FileUploadField> {
     final extension = _getFileName(file).split('.').last.toLowerCase();
     switch (extension) {
       case 'pdf':
-        return Icons.picture_as_pdf;
+        return LucideIcons.fileType;
       case 'jpg':
       case 'jpeg':
       case 'png':
-        return Icons.image;
+        return LucideIcons.image;
       case 'doc':
       case 'docx':
-        return Icons.description;
+        return LucideIcons.fileText;
       default:
-        return Icons.insert_drive_file;
+        return LucideIcons.file;
     }
   }
 
@@ -161,7 +162,7 @@ class _FileUploadFieldState extends State<FileUploadField> {
         child: Wrap(
           children: [
             ListTile(
-              leading: Icon(Icons.photo_library, color: NewAppColor.primary600),
+              leading: Icon(LucideIcons.images, color: NewAppColor.primary600),
               title: const Text('갤러리에서 선택'),
               onTap: () {
                 Navigator.pop(context);
@@ -169,7 +170,7 @@ class _FileUploadFieldState extends State<FileUploadField> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.camera_alt, color: NewAppColor.primary600),
+              leading: Icon(LucideIcons.camera, color: NewAppColor.primary600),
               title: const Text('사진 촬영'),
               onTap: () {
                 Navigator.pop(context);
@@ -177,7 +178,7 @@ class _FileUploadFieldState extends State<FileUploadField> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.folder, color: NewAppColor.primary600),
+              leading: Icon(LucideIcons.folder, color: NewAppColor.primary600),
               title: const Text('파일 선택'),
               onTap: () {
                 Navigator.pop(context);
@@ -213,7 +214,7 @@ class _FileUploadFieldState extends State<FileUploadField> {
             child: Column(
               children: [
                 Icon(
-                  Icons.cloud_upload_outlined,
+                  LucideIcons.cloudUpload,
                   size: 48.w,
                   color: NewAppColor.neutral400,
                 ),
@@ -306,7 +307,7 @@ class _FileUploadFieldState extends State<FileUploadField> {
                     ),
                     IconButton(
                       icon: Icon(
-                        Icons.close,
+                        LucideIcons.x,
                         size: 20.w,
                         color: NewAppColor.danger600,
                       ),

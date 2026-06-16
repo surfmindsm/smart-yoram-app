@@ -130,7 +130,7 @@ class _AdminPastoralCareListScreenState
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -170,7 +170,7 @@ class _AdminPastoralCareListScreenState
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.inbox_outlined,
+                              LucideIcons.inbox,
                               size: 56.sp,
                               color: NewAppColor.iconFaint,
                             ),

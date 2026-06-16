@@ -2,20 +2,18 @@ import 'package:flutter/material.dart';
 // // import.*lucide_icons.*;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
-import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/fcm_service.dart';
 import '../services/member_service.dart';
 import '../services/presence_service.dart';
-import '../models/user.dart';
 import '../models/api_response.dart';
 import '../services/user_service.dart';
 import '../components/login_type_toggle.dart';
-import '../components/app_dialog.dart';
 import '../components/app_input.dart';
-import '../components/app_button.dart' hide IconButton;
+import '../components/app_toast.dart';
 import '../screens/settings/profile_image_setup_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -140,7 +138,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const figmaStyles = FigmaTextStyles();
+    final bool canSubmit =
+        (((_loginType == 'email' && _isEmailValid) ||
+                (_loginType == 'phone' && _isPhoneValid)) &&
+            _isPasswordValid &&
+            !isLoading);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -152,392 +154,287 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: Form(
             key: _formKey,
-            child: Column(
-              children: [
-                SizedBox(height: 80.h),
-
-                // 메인 컨텐츠 영역
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 32.h, 20.w, 32.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 24.h),
+                  // 로고 + 카피
+                  Center(
+                    child: Image.asset(
+                      'assets/images/logo_type3_white.png',
+                      height: 80.h,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  SizedBox(height: 14.h),
+                  Center(
+                    child: Text(
+                      '교회 생활의 새로운 시작',
+                      style: TextStyle(
+                        color: NewAppColor.textSecondary,
+                        fontSize: 14.5.sp,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Pretendard',
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 28.h),
+                  // 로그인 방식 토글
+                  LoginTypeToggle(
+                    selectedType: _loginType,
+                    onTypeChanged: (type) =>
+                        setState(() => _loginType = type),
+                  ),
+                  SizedBox(height: 22.h),
+                  // 이메일/전화번호 라벨
+                  _buildFieldLabel(
+                      _loginType == 'email' ? '이메일' : '전화번호'),
+                  SizedBox(height: 8.h),
+                  _buildIdentifierField(),
+                  SizedBox(height: 16.h),
+                  _buildFieldLabel('비밀번호'),
+                  SizedBox(height: 8.h),
+                  _buildPasswordField(canSubmit),
+                  SizedBox(height: 14.h),
+                  // 아이디 저장 / 비밀번호 찾기
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // 타이틀 섹션
-                      SizedBox(
-                        width: double.infinity,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      GestureDetector(
+                        onTap: () => setState(() => _saveId = !_saveId),
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
                           children: [
-                            Image.asset(
-                              'assets/images/logo_type3_white.png',
-                              height: 96.h,
-                              fit: BoxFit.contain,
-                              alignment: Alignment.centerLeft,
+                            Container(
+                              width: 20.w,
+                              height: 20.w,
+                              decoration: BoxDecoration(
+                                color: _saveId
+                                    ? NewAppColor.skyPrimary
+                                    : Colors.white,
+                                border: Border.all(
+                                  color: _saveId
+                                      ? NewAppColor.skyPrimary
+                                      : NewAppColor.borderStrong,
+                                  width: 1.5,
+                                ),
+                                borderRadius: BorderRadius.circular(5.r),
+                              ),
+                              child: _saveId
+                                  ? Icon(LucideIcons.check,
+                                      size: 14.w, color: Colors.white)
+                                  : null,
                             ),
-                            SizedBox(height: 24.h),
+                            SizedBox(width: 8.w),
                             Text(
-                              '교회 생활의 새로운 시작',
-                              style: figmaStyles.headline4.copyWith(
-                                color: NewAppColor.neutral600,
+                              '아이디 저장',
+                              style: TextStyle(
+                                color: NewAppColor.textSecondary,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
                                 fontFamily: 'Pretendard',
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: -0.50,
                               ),
                             ),
                           ],
                         ),
                       ),
-
-                      SizedBox(height: 24.h),
-
-                      // 로그인 타입 토글
-                      LoginTypeToggle(
-                        selectedType: _loginType,
-                        onTypeChanged: (type) =>
-                            setState(() => _loginType = type),
-                      ),
-
-                      SizedBox(height: 24.h),
-
-                      // 입력 필드들
-                      Column(
-                        children: [
-                          // 이메일/전화번호 입력 필드
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _loginType == 'email' ? '이메일' : '전화번호',
-                                style: figmaStyles.bodyText2.copyWith(
-                                  color: Colors.black,
-                                  fontFamily: 'Pretendard Variable',
-                                  letterSpacing: -0.35,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: NewAppColor.primary300,
-                                    width: 1,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                child: TextFormField(
-                                  controller: _usernameController,
-                                  keyboardType: _loginType == 'email'
-                                      ? TextInputType.emailAddress
-                                      : TextInputType.phone,
-                                  textInputAction: TextInputAction.next,
-                                  onFieldSubmitted: (_) {
-                                    FocusScope.of(context)
-                                        .requestFocus(_passwordFocusNode);
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: _loginType == 'email'
-                                        ? '이메일을 입력하세요'
-                                        : '전화번호를 입력하세요',
-                                    hintStyle: figmaStyles.body1.copyWith(
-                                      color: NewAppColor.neutral200,
-                                      fontFamily: 'Pretendard Variable',
-                                      letterSpacing: -0.38,
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16.w, vertical: 16.h),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return '${_loginType == 'email' ? '이메일' : '전화번호'}을 입력하세요';
-                                    }
-                                    if (_loginType == 'email' &&
-                                        !value.contains('@')) {
-                                      return '올바른 이메일 주소를 입력하세요';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 16.h),
-
-                          // 비밀번호 입력 필드
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '비밀번호',
-                                style: figmaStyles.bodyText2.copyWith(
-                                  color: Colors.black,
-                                  fontFamily: 'Pretendard Variable',
-                                  letterSpacing: -0.35,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: NewAppColor.primary300,
-                                    width: 1,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                child: TextFormField(
-                                  controller: _passwordController,
-                                  focusNode: _passwordFocusNode,
-                                  obscureText: obscurePassword,
-                                  textInputAction: TextInputAction.done,
-                                  onFieldSubmitted: (_) {
-                                    if (((_loginType == 'email' &&
-                                                _isEmailValid) ||
-                                            (_loginType == 'phone' &&
-                                                _isPhoneValid)) &&
-                                        _isPasswordValid &&
-                                        !isLoading) {
-                                      _login();
-                                    }
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: '비밀번호를 입력하세요',
-                                    hintStyle: figmaStyles.body1.copyWith(
-                                      color: NewAppColor.neutral200,
-                                      fontFamily: 'Pretendard Variable',
-                                      letterSpacing: -0.38,
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16.w, vertical: 16.h),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        obscurePassword
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        size: 20.sp,
-                                        color: NewAppColor.neutral700,
-                                      ),
-                                      onPressed: () => setState(() =>
-                                          obscurePassword = !obscurePassword),
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return '비밀번호를 입력하세요';
-                                    }
-                                    if (value.length < 6) {
-                                      return '비밀번호는 6자 이상이어야 합니다';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 16.h),
-
-                          // 체크박스와 링크
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _saveId = !_saveId),
-                                    child: Container(
-                                      width: 20.w,
-                                      height: 20.h,
-                                      decoration: BoxDecoration(
-                                        color: _saveId
-                                            ? NewAppColor.primary600
-                                            : Colors.white,
-                                        border: Border.all(
-                                          color: _saveId
-                                              ? NewAppColor.primary600
-                                              : NewAppColor.neutral300,
-                                          width: 1.5,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(4.r),
-                                      ),
-                                      child: _saveId
-                                          ? Icon(
-                                              Icons.check,
-                                              size: 14.w,
-                                              color: Colors.white,
-                                            )
-                                          : null,
-                                    ),
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Text(
-                                    '아이디 저장',
-                                    style: figmaStyles.captionText1.copyWith(
-                                      color: NewAppColor.neutral500,
-                                      fontFamily: 'Pretendard Variable',
-                                      letterSpacing: -0.30,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: _forgotPassword,
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      '비밀번호 찾기',
-                                      style: figmaStyles.captionText1.copyWith(
-                                        color: NewAppColor.neutral500,
-                                        fontFamily: 'Pretendard Variable',
-                                        letterSpacing: -0.30,
-                                      ),
-                                    ),
-                                    Container(
-                                      width: 12.w,
-                                      height: 12.h,
-                                      child: Icon(
-                                        Icons.keyboard_arrow_right,
-                                        size: 10.w,
-                                        color: NewAppColor.neutral500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 48.h),
-
-                      // 로그인 버튼
                       GestureDetector(
-                        onTap: (((_loginType == 'email' && _isEmailValid) ||
-                                    (_loginType == 'phone' && _isPhoneValid)) &&
-                                _isPasswordValid &&
-                                !isLoading)
-                            ? _login
-                            : null,
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          decoration: BoxDecoration(
-                            color: (((_loginType == 'email' && _isEmailValid) ||
-                                        (_loginType == 'phone' &&
-                                            _isPhoneValid)) &&
-                                    _isPasswordValid)
-                                ? NewAppColor.primary600
-                                : Color(0xFFF1F4FF),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Center(
-                            child: isLoading
-                                ? SizedBox(
-                                    width: 20.w,
-                                    height: 20.h,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(
-                                    '로그인',
-                                    style: figmaStyles.subtitle2.copyWith(
-                                      color: (((_loginType == 'email' &&
-                                                      _isEmailValid) ||
-                                                  (_loginType == 'phone' &&
-                                                      _isPhoneValid)) &&
-                                              _isPasswordValid)
-                                          ? Colors.white
-                                          : Color(0xFF9FB2F2),
-                                      fontFamily: 'Pretendard Variable',
-                                      letterSpacing: -0.40,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 24.h),
-
-                      // 회원가입 버튼
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/signup/selection');
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(
-                              color: NewAppColor.primary600,
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '회원가입',
-                              style: figmaStyles.subtitle2.copyWith(
-                                color: NewAppColor.primary600,
-                                fontFamily: 'Pretendard Variable',
-                                letterSpacing: -0.40,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 32.h),
-
-                      // 관리자 안내 문구
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 16.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: NewAppColor.neutral100,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Column(
+                        onTap: _forgotPassword,
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
                           children: [
                             Text(
-                              '관리자는 웹사이트를 이용해 주세요',
-                              style: figmaStyles.body3.copyWith(
-                                color: NewAppColor.neutral900,
-                                fontFamily: 'Pretendard Variable',
-                                letterSpacing: -0.30,
+                              '비밀번호 찾기',
+                              style: TextStyle(
+                                color: NewAppColor.skyPrimary,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Pretendard',
                               ),
                             ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              'churchround.com',
-                              style: figmaStyles.body3.copyWith(
-                                color: NewAppColor.primary600,
-                                fontFamily: 'Pretendard Variable',
-                                letterSpacing: -0.30,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            Icon(LucideIcons.chevronRight,
+                                size: 16.sp,
+                                color: NewAppColor.skyPrimary),
                           ],
                         ),
                       ),
                     ],
                   ),
-                ),
-                SizedBox(height: 40.h), // 하단 여백 추가
-              ],
+                  SizedBox(height: 26.h),
+                  // 로그인 버튼 (주)
+                  _buildPrimaryButton(canSubmit),
+                  SizedBox(height: 12.h),
+                  // 회원가입 버튼 (보조)
+                  _buildSecondaryButton(),
+                  SizedBox(height: 22.h),
+                  // 관리자 안내 박스
+                  _buildAdminHint(),
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFieldLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: NewAppColor.textStrong,
+        fontSize: 13.sp,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Pretendard',
+      ),
+    );
+  }
+
+  Widget _buildIdentifierField() {
+    return AppInput(
+      controller: _usernameController,
+      placeholder:
+          _loginType == 'email' ? '이메일을 입력하세요' : '전화번호를 입력하세요',
+      prefixIcon: _loginType == 'email'
+          ? LucideIcons.mail
+          : LucideIcons.phone,
+      keyboardType: _loginType == 'email'
+          ? TextInputType.emailAddress
+          : TextInputType.phone,
+    );
+  }
+
+  Widget _buildPasswordField(bool canSubmit) {
+    return AppInput(
+      controller: _passwordController,
+      focusNode: _passwordFocusNode,
+      placeholder: '비밀번호를 입력하세요',
+      prefixIcon: LucideIcons.lock,
+      suffixIcon: obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
+      onSuffixIconTap: () =>
+          setState(() => obscurePassword = !obscurePassword),
+      obscureText: obscurePassword,
+      onSubmitted: (_) {
+        if (canSubmit) _login();
+      },
+    );
+  }
+
+  Widget _buildPrimaryButton(bool enabled) {
+    return GestureDetector(
+      onTap: enabled ? _login : null,
+      behavior: HitTestBehavior.opaque,
+      child: Opacity(
+        opacity: enabled ? 1.0 : 0.45,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(vertical: 15.h),
+          decoration: BoxDecoration(
+            color: NewAppColor.skyPrimary,
+            borderRadius: BorderRadius.circular(13.r),
+            boxShadow: enabled
+                ? [
+                    BoxShadow(
+                      color: NewAppColor.skyPrimary.withOpacity(0.30),
+                      blurRadius: 22,
+                      offset: const Offset(0, 10),
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: isLoading
+              ? SizedBox(
+                  width: 20.w,
+                  height: 20.w,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text(
+                  '로그인',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/signup/selection'),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 15.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(13.r),
+          border: Border.all(color: NewAppColor.borderStrong, width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          '회원가입',
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminHint() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.canvasAlt,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(LucideIcons.info,
+              size: 16.sp, color: NewAppColor.textTertiary),
+          SizedBox(width: 9.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '관리자는 웹사이트를 이용해 주세요',
+                  style: TextStyle(
+                    color: NewAppColor.textSecondary,
+                    fontSize: 12.5.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  'churchround.com',
+                  style: TextStyle(
+                    color: NewAppColor.skyPrimary,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -645,12 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await _handleLoginSuccess(result);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('로그인 오류: $e'),
-            backgroundColor: Color.fromARGB(255, 191, 156, 163),
-          ),
-        );
+        AppToast.error(context, '로그인 오류가 발생했습니다');
       }
     } finally {
       if (mounted) {
@@ -711,126 +603,49 @@ class _LoginScreenState extends State<LoginScreen> {
           errorMessage = '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('로그인 실패: $errorMessage'),
-            backgroundColor: Color.fromARGB(255, 191, 156, 163),
-          ),
-        );
+        AppToast.error(context, '로그인 실패: $errorMessage');
       }
     }
   }
 
   Future<void> _forgotPassword() async {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => _ForgotPasswordDialog(authService: _authService),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) =>
+          _ForgotPasswordSheet(authService: _authService),
     );
   }
 
-  void _requestAccount() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('계정 생성 요청'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('교회 관리자에게 계정 생성을 요청합니다.'),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: '이름',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 12),
-            TextField(
-              decoration: InputDecoration(
-                labelText: '전화번호',
-                hintText: '010-0000-0000',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.phone,
-            ),
-            SizedBox(height: 12),
-            TextField(
-              decoration: InputDecoration(
-                labelText: '요청 메시지 (선택)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('계정 생성 요청이 전송되었습니다')),
-              );
-            },
-            child: const Text('요청'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 개발용: 자동 로그인 활성화
-  Future<void> _enableAutoLogin() async {
-    try {
-      await _authService.setAutoLoginEnabled(true);
-      if (mounted) {
-        setState(() {});
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('자동 로그인이 활성화되었습니다.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('설정 변경 실패: $e'),
-            backgroundColor: Color.fromARGB(255, 191, 156, 163),
-          ),
-        );
-      }
-    }
-  }
-
-  // 첫 로그인 시 비밀번호 변경 다이얼로그
+  // 첫 로그인 시 비밀번호 변경 시트
   void _showPasswordChangeDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false, // 다이얼로그 밖 클릭으로 닫기 방지
-      builder: (context) => _PasswordChangeDialog(
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) => _PasswordChangeSheet(
         onComplete: _checkAndNavigateToProfileSetup,
       ),
     );
   }
 }
 
-// 비밀번호 변경 다이얼로그 위젯
-class _PasswordChangeDialog extends StatefulWidget {
+// 비밀번호 변경 시트 (첫 로그인) — 1.2.0
+class _PasswordChangeSheet extends StatefulWidget {
   final Future<void> Function() onComplete;
 
-  const _PasswordChangeDialog({required this.onComplete});
+  const _PasswordChangeSheet({required this.onComplete});
 
   @override
-  _PasswordChangeDialogState createState() => _PasswordChangeDialogState();
+  State<_PasswordChangeSheet> createState() => _PasswordChangeSheetState();
 }
 
-class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
+class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
   final AuthService _authService = AuthService();
   final TextEditingController _currentPasswordController =
       TextEditingController();
@@ -850,57 +665,170 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AppDialog(
-      title: '비밀번호 변경',
-      description: '보안상 첫 로그인 시 비밀번호를 변경해주세요.',
-      dismissible: false,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 현재 비밀번호
-          AppPasswordInput(
-            label: '현재 비밀번호',
-            placeholder: '현재 비밀번호를 입력하세요',
-            controller: _currentPasswordController,
-            required: true,
-          ),
-          const SizedBox(height: 16),
-          // 새 비밀번호
-          AppPasswordInput(
-            label: '새 비밀번호',
-            placeholder: '새 비밀번호를 입력하세요 (최소 6자)',
-            controller: _newPasswordController,
-            required: true,
-          ),
-          const SizedBox(height: 16),
-          // 비밀번호 확인
-          AppPasswordInput(
-            label: '비밀번호 확인',
-            placeholder: '새 비밀번호를 다시 입력하세요',
-            controller: _confirmPasswordController,
-            required: true,
-          ),
-        ],
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      actions: [
-        AppButton(
-          text: '나중에',
-          variant: ButtonVariant.ghost,
-          onPressed: _isLoading
-              ? null
-              : () async {
-                  // 나중에 변경하기 - 프로필 이미지 확인 후 이동
-                  Navigator.pop(context);
-                  await widget.onComplete();
-                },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
         ),
-        AppButton(
-          text: '변경하기',
-          variant: ButtonVariant.primary,
-          onPressed: _isLoading ? null : _changePassword,
-          isLoading: _isLoading,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 22.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 5,
+                  margin: EdgeInsets.only(bottom: 18.h),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.borderStrong,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Container(
+                  width: 54.w,
+                  height: 54.w,
+                  decoration: BoxDecoration(
+                    color: NewAppColor.skyTint,
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(LucideIcons.lock,
+                      color: NewAppColor.skyDeep, size: 26.sp),
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  '비밀번호를 변경해주세요',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 19.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '보안을 위해 첫 로그인 시\n비밀번호 변경이 필요해요.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: NewAppColor.textMuted,
+                    fontSize: 13.5.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Pretendard',
+                    height: 1.55,
+                  ),
+                ),
+                SizedBox(height: 22.h),
+                AppPasswordInput(
+                  label: '현재 비밀번호',
+                  placeholder: '현재 비밀번호를 입력하세요',
+                  controller: _currentPasswordController,
+                  required: true,
+                ),
+                SizedBox(height: 14.h),
+                AppPasswordInput(
+                  label: '새 비밀번호',
+                  placeholder: '새 비밀번호를 입력하세요 (최소 6자)',
+                  controller: _newPasswordController,
+                  required: true,
+                ),
+                SizedBox(height: 14.h),
+                AppPasswordInput(
+                  label: '비밀번호 확인',
+                  placeholder: '새 비밀번호를 다시 입력하세요',
+                  controller: _confirmPasswordController,
+                  required: true,
+                ),
+                SizedBox(height: 22.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _isLoading
+                            ? null
+                            : () async {
+                                Navigator.pop(context);
+                                await widget.onComplete();
+                              },
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 15.h),
+                          decoration: BoxDecoration(
+                            color: NewAppColor.borderSoft,
+                            borderRadius: BorderRadius.circular(13.r),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '나중에',
+                            style: TextStyle(
+                              color: NewAppColor.textSecondary,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 11.w),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _isLoading ? null : _changePassword,
+                        behavior: HitTestBehavior.opaque,
+                        child: Opacity(
+                          opacity: _isLoading ? 0.5 : 1.0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 15.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.skyPrimary,
+                              borderRadius: BorderRadius.circular(13.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: NewAppColor.skyPrimary
+                                      .withOpacity(0.30),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: _isLoading
+                                ? SizedBox(
+                                    width: 18.w,
+                                    height: 18.w,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                      valueColor:
+                                          AlwaysStoppedAnimation<Color>(
+                                              Colors.white),
+                                    ),
+                                  )
+                                : Text(
+                                    '변경하기',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w800,
+                                      fontFamily: 'Pretendard',
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -911,52 +839,27 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
     final confirmPassword = _confirmPasswordController.text.trim();
 
     if (currentPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('현재 비밀번호를 입력해주세요'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '현재 비밀번호를 입력해주세요');
       return;
     }
 
     if (newPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('새 비밀번호를 입력해주세요'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '새 비밀번호를 입력해주세요');
       return;
     }
 
     if (newPassword.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('비밀번호는 최소 6자 이상이어야 합니다'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '비밀번호는 최소 6자 이상이어야 합니다');
       return;
     }
 
     if (confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('비밀번호 확인을 입력해주세요'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '비밀번호 확인을 입력해주세요');
       return;
     }
 
     if (newPassword != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('비밀번호가 일치하지 않습니다'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '비밀번호가 일치하지 않습니다');
       return;
     }
 
@@ -996,33 +899,18 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
             // 예외가 발생해도 비밀번호 변경은 성공했으므로 계속 진행
           }
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('비밀번호가 성공적으로 변경되었습니다.'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          AppToast.success(context, '비밀번호가 성공적으로 변경되었습니다');
 
           // 비밀번호 변경 성공 후 프로필 이미지 확인 후 이동
           Navigator.pop(context);
           await widget.onComplete();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('비밀번호 변경 실패: ${result.message}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          AppToast.error(context, '비밀번호 변경 실패: ${result.message}');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('오류가 발생했습니다: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppToast.error(context, '오류가 발생했습니다');
       }
     } finally {
       if (mounted) {
@@ -1034,17 +922,17 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
   }
 }
 
-// 비밀번호 찾기 다이얼로그 위젯
-class _ForgotPasswordDialog extends StatefulWidget {
+// 비밀번호 찾기 시트 — 1.2.0
+class _ForgotPasswordSheet extends StatefulWidget {
   final AuthService authService;
 
-  const _ForgotPasswordDialog({required this.authService});
+  const _ForgotPasswordSheet({required this.authService});
 
   @override
-  _ForgotPasswordDialogState createState() => _ForgotPasswordDialogState();
+  State<_ForgotPasswordSheet> createState() => _ForgotPasswordSheetState();
 }
 
-class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   bool _isLoading = false;
@@ -1058,43 +946,164 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AppDialog(
-      title: '비밀번호 찾기',
-      description: '등록된 이메일과 전화번호를 입력하시면\n임시 비밀번호를 이메일로 전송해드립니다.',
-      dismissible: true,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppInput(
-            label: '이메일',
-            placeholder: 'your-email@example.com',
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            required: true,
-          ),
-          const SizedBox(height: 16),
-          AppInput(
-            label: '전화번호',
-            placeholder: '01012345678 (숫자만)',
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            required: true,
-          ),
-        ],
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      actions: [
-        AppButton(
-          text: '취소',
-          variant: ButtonVariant.ghost,
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
         ),
-        AppButton(
-          text: '전송',
-          variant: ButtonVariant.primary,
-          onPressed: _isLoading ? null : _sendResetLink,
-          isLoading: _isLoading,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 22.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 5,
+                  margin: EdgeInsets.only(bottom: 18.h),
+                  decoration: BoxDecoration(
+                    color: NewAppColor.borderStrong,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Container(
+                  width: 54.w,
+                  height: 54.w,
+                  decoration: BoxDecoration(
+                    color: NewAppColor.skyTint,
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(LucideIcons.key,
+                      color: NewAppColor.skyDeep, size: 26.sp),
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  '비밀번호 찾기',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 19.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '등록된 이메일과 전화번호를 입력하면\n임시 비밀번호를 이메일로 보내드려요.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: NewAppColor.textMuted,
+                    fontSize: 13.5.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Pretendard',
+                    height: 1.55,
+                  ),
+                ),
+                SizedBox(height: 22.h),
+                AppInput(
+                  label: '이메일',
+                  placeholder: 'your-email@example.com',
+                  controller: _emailController,
+                  prefixIcon: LucideIcons.mail,
+                  keyboardType: TextInputType.emailAddress,
+                  required: true,
+                ),
+                SizedBox(height: 14.h),
+                AppInput(
+                  label: '전화번호',
+                  placeholder: '01012345678 (숫자만)',
+                  controller: _phoneController,
+                  prefixIcon: LucideIcons.phone,
+                  keyboardType: TextInputType.phone,
+                  required: true,
+                ),
+                SizedBox(height: 22.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _isLoading
+                            ? null
+                            : () => Navigator.pop(context),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 15.h),
+                          decoration: BoxDecoration(
+                            color: NewAppColor.borderSoft,
+                            borderRadius: BorderRadius.circular(13.r),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '취소',
+                            style: TextStyle(
+                              color: NewAppColor.textSecondary,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 11.w),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _isLoading ? null : _sendResetLink,
+                        behavior: HitTestBehavior.opaque,
+                        child: Opacity(
+                          opacity: _isLoading ? 0.5 : 1.0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 15.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.skyPrimary,
+                              borderRadius: BorderRadius.circular(13.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: NewAppColor.skyPrimary
+                                      .withOpacity(0.30),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: _isLoading
+                                ? SizedBox(
+                                    width: 18.w,
+                                    height: 18.w,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                      valueColor:
+                                          AlwaysStoppedAnimation<Color>(
+                                              Colors.white),
+                                    ),
+                                  )
+                                : Text(
+                                    '전송',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w800,
+                                      fontFamily: 'Pretendard',
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -1104,33 +1113,18 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
 
     // 이메일 검증
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('이메일을 입력해주세요'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '이메일을 입력해주세요');
       return;
     }
 
     if (!email.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('유효한 이메일 주소를 입력해주세요'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '유효한 이메일 주소를 입력해주세요');
       return;
     }
 
     // 전화번호 검증
     if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('전화번호를 입력해주세요'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '전화번호를 입력해주세요');
       return;
     }
 
@@ -1138,12 +1132,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
     final phoneDigits = phone.replaceAll(RegExp(r'[^0-9]'), '');
 
     if (phoneDigits.length < 9 || phoneDigits.length > 11) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('유효한 전화번호를 입력해주세요 (9-11자리)'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, '유효한 전화번호를 입력해주세요 (9-11자리)');
       return;
     }
 
@@ -1153,30 +1142,23 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
 
     try {
       // 비밀번호 재설정 API 호출 (이메일 + 전화번호)
-      final result = await widget.authService.requestPasswordReset(email, phoneDigits);
+      final result =
+          await widget.authService.requestPasswordReset(email, phoneDigits);
 
       if (mounted) {
         Navigator.pop(context);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.message),
-            backgroundColor: result.success ? Colors.green : Colors.red,
-          ),
-        );
+        if (result.success) {
+          AppToast.success(context, result.message);
+        } else {
+          AppToast.error(context, result.message);
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('오류가 발생했습니다: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppToast.error(context, '오류가 발생했습니다');
       }
     }
   }

@@ -5,6 +5,7 @@ import '../components/index.dart';
 import '../models/models.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class UpdateDialog extends StatelessWidget {
   final VersionCheckResult versionCheckResult;
@@ -149,7 +150,7 @@ class UpdateDialog extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.warning_rounded,
+                      LucideIcons.triangleAlert,
                       color: NewAppColor.danger600,
                       size: 20.sp,
                     ),

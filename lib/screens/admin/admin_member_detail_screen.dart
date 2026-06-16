@@ -118,29 +118,18 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
 
   Future<void> _toggleMemberStatus() async {
     final newStatus = _member.memberStatus == 'active' ? 'inactive' : 'active';
-
-    showDialog(
+    final activating = newStatus == 'active';
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AppDialog(
-        title: '상태 변경',
-        content: Text(
-            '${_member.name}님의 상태를 ${newStatus == 'active' ? '활성' : '비활성'}으로 변경하시겠습니까?'),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: const Text('취소'),
-          ),
-          AppButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _performStatusUpdate(newStatus);
-            },
-            child: const Text('변경'),
-          ),
-        ],
-      ),
+      title: '${activating ? '활성' : '비활성'} 상태로 변경할까요?',
+      description: '${_member.name}님의 상태를 변경합니다.',
+      confirmLabel: activating ? '활성화' : '비활성화',
+      tone: activating ? AppSheetTone.sky : AppSheetTone.warning,
+      icon: activating
+          ? LucideIcons.circleCheck
+          : LucideIcons.circlePause,
     );
+    if (ok == true) await _performStatusUpdate(newStatus);
   }
 
   Future<void> _performStatusUpdate(String newStatus) async {
@@ -189,28 +178,14 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
   }
 
   Future<void> _deleteMember() async {
-    showDialog(
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AppDialog(
-        title: '교인 삭제',
-        content: Text('${_member.name}님의 정보를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.'),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: const Text('취소'),
-          ),
-          AppButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _performDelete();
-            },
-            variant: ButtonVariant.destructive,
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
+      title: '${_member.name}님을 삭제할까요?',
+      description: '삭제한 정보는 되돌릴 수 없어요.',
+      confirmLabel: '삭제',
+      tone: AppSheetTone.danger,
     );
+    if (ok == true) await _performDelete();
   }
 
   Future<void> _performDelete() async {
@@ -405,11 +380,11 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
         ),
         actions: [
           material.IconButton(
-            icon: const Icon(Icons.edit, color: Colors.black),
+            icon: const Icon(LucideIcons.pencil, color: Colors.black),
             onPressed: _navigateToEdit,
           ),
           material.IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black),
+            icon: const Icon(LucideIcons.refreshCw, color: Colors.black),
             onPressed: _loadMember,
           ),
         ],
@@ -563,7 +538,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           SizedBox(height: 16.h),
           if (_member.nameEng != null && _member.nameEng!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.abc,
+              icon: LucideIcons.caseSensitive,
               label: '영문명',
               value: _member.nameEng!,
             ),
@@ -571,7 +546,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.email != null && _member.email!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.email_outlined,
+              icon: LucideIcons.mail,
               label: '이메일',
               value: _member.email!,
               onTap: _sendEmail,
@@ -580,7 +555,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.phone.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.phone_outlined,
+              icon: LucideIcons.phone,
               label: '전화번호',
               value: _member.phone,
               onTap: _makePhoneCall,
@@ -589,7 +564,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.birthdate != null) ...[
             _buildInfoRow(
-              icon: Icons.cake_outlined,
+              icon: LucideIcons.cake,
               label: '생년월일',
               value:
                   '${_member.birthdate!.year}.${_member.birthdate!.month.toString().padLeft(2, '0')}.${_member.birthdate!.day.toString().padLeft(2, '0')}${_member.birthdateType != null && _member.birthdateType!.isNotEmpty ? ' (${_member.birthdateType == 'lunar' ? '음력' : '양력'})' : ''}',
@@ -597,14 +572,14 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
             SizedBox(height: 12.h),
           ],
           _buildInfoRow(
-            icon: Icons.person_outline,
+            icon: LucideIcons.user,
             label: '성별',
             value: _getGenderDisplay(_member.gender),
           ),
           if (_member.address != null && _member.address!.isNotEmpty) ...[
             SizedBox(height: 12.h),
             _buildInfoRow(
-              icon: Icons.location_on_outlined,
+              icon: LucideIcons.mapPin,
               label: '주소',
               value: _member.address!,
             ),
@@ -632,7 +607,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.maritalStatus != null &&
               _member.maritalStatus!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.favorite_outline,
+              icon: LucideIcons.heart,
               label: '결혼 상태',
               value: _member.maritalStatus!,
             ),
@@ -640,7 +615,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.spouseName != null && _member.spouseName!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.people_outline,
+              icon: LucideIcons.users,
               label: '배우자 이름',
               value: _member.spouseName!,
             ),
@@ -648,7 +623,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.marriedOn != null) ...[
             _buildInfoRow(
-              icon: Icons.celebration_outlined,
+              icon: LucideIcons.partyPopper,
               label: '결혼일',
               value:
                   '${_member.marriedOn!.year}.${_member.marriedOn!.month.toString().padLeft(2, '0')}.${_member.marriedOn!.day.toString().padLeft(2, '0')}',
@@ -670,7 +645,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        Icons.child_care_outlined,
+                        LucideIcons.baby,
                         size: 18.sp,
                         color: NewAppColor.neutral700,
                       ),
@@ -736,7 +711,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.positionMain != null &&
               _member.positionMain!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.star_outline,
+              icon: LucideIcons.star,
               label: '주 직분',
               value: _getPositionMainDisplay(_member.positionMain),
             ),
@@ -750,7 +725,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
               _member.positionDetail != null &&
               _member.positionDetail!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.info_outline,
+              icon: LucideIcons.info,
               label: '세부 직분',
               value: _getPositionDetailDisplay(_member.positionDetail),
             ),
@@ -758,7 +733,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_organizationName != null && _organizationName!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.corporate_fare_outlined,
+              icon: LucideIcons.building2,
               label: '조직',
               value: _organizationName!,
             ),
@@ -766,7 +741,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.department != null && _member.department!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.group_outlined,
+              icon: LucideIcons.users,
               label: '부서',
               value: _member.department!,
             ),
@@ -774,7 +749,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.appointedOn != null) ...[
             _buildInfoRow(
-              icon: Icons.event_outlined,
+              icon: LucideIcons.calendar,
               label: '임명일',
               value:
                   '${_member.appointedOn!.year}.${_member.appointedOn!.month.toString().padLeft(2, '0')}.${_member.appointedOn!.day.toString().padLeft(2, '0')}',
@@ -784,7 +759,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.ordinationChurch != null &&
               _member.ordinationChurch!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.church_outlined,
+              icon: LucideIcons.church,
               label: '안수교회',
               value: _member.ordinationChurch!,
             ),
@@ -811,7 +786,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           SizedBox(height: 16.h),
           if (_member.memberType != null && _member.memberType!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.badge_outlined,
+              icon: LucideIcons.badge,
               label: '교인 구분',
               value: _member.memberType!,
             ),
@@ -819,7 +794,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.confirmationDate != null) ...[
             _buildInfoRow(
-              icon: Icons.verified_outlined,
+              icon: LucideIcons.badgeCheck,
               label: '입교일',
               value:
                   '${_member.confirmationDate!.year}.${_member.confirmationDate!.month.toString().padLeft(2, '0')}.${_member.confirmationDate!.day.toString().padLeft(2, '0')}',
@@ -828,7 +803,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.baptismDate != null) ...[
             _buildInfoRow(
-              icon: Icons.water_drop_outlined,
+              icon: LucideIcons.droplet,
               label: '세례일',
               value:
                   '${_member.baptismDate!.year}.${_member.baptismDate!.month.toString().padLeft(2, '0')}.${_member.baptismDate!.day.toString().padLeft(2, '0')}',
@@ -838,7 +813,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.baptismChurch != null &&
               _member.baptismChurch!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.church_outlined,
+              icon: LucideIcons.church,
               label: '세례교회',
               value: _member.baptismChurch!,
             ),
@@ -866,7 +841,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.jobCategory != null &&
               _member.jobCategory!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.category_outlined,
+              icon: LucideIcons.layoutGrid,
               label: '직업분류',
               value: _member.jobCategory!,
             ),
@@ -874,7 +849,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.jobDetail != null && _member.jobDetail!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.business_center_outlined,
+              icon: LucideIcons.briefcase,
               label: '구체적 업무',
               value: _member.jobDetail!,
             ),
@@ -883,7 +858,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.jobPosition != null &&
               _member.jobPosition!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.badge_outlined,
+              icon: LucideIcons.badge,
               label: '직책/직위',
               value: _member.jobPosition!,
             ),
@@ -891,7 +866,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.jobTitle != null && _member.jobTitle!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.work_outline,
+              icon: LucideIcons.briefcase,
               label: '직함',
               value: _member.jobTitle!,
             ),
@@ -899,7 +874,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.workplace != null && _member.workplace!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.apartment_outlined,
+              icon: LucideIcons.building,
               label: '직장',
               value: _member.workplace!,
             ),
@@ -908,7 +883,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.workplacePhone != null &&
               _member.workplacePhone!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.phone_in_talk_outlined,
+              icon: LucideIcons.phoneCall,
               label: '직장 전화번호',
               value: _member.workplacePhone!,
             ),
@@ -935,7 +910,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           SizedBox(height: 16.h),
           if (_member.ministryStartDate != null) ...[
             _buildInfoRow(
-              icon: Icons.calendar_today_outlined,
+              icon: LucideIcons.calendarDays,
               label: '사역 시작일',
               value:
                   '${_member.ministryStartDate!.year}.${_member.ministryStartDate!.month.toString().padLeft(2, '0')}.${_member.ministryStartDate!.day.toString().padLeft(2, '0')}',
@@ -945,7 +920,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.neighboringChurch != null &&
               _member.neighboringChurch!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.location_city_outlined,
+              icon: LucideIcons.building,
               label: '이웃교회',
               value: _member.neighboringChurch!,
             ),
@@ -954,7 +929,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.positionDecision != null &&
               _member.positionDecision!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.assignment_outlined,
+              icon: LucideIcons.clipboardList,
               label: '직분 결정',
               value: _member.positionDecision!,
             ),
@@ -962,7 +937,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.inviter3MemberId != null) ...[
             _buildInfoRow(
-              icon: Icons.person_add_outlined,
+              icon: LucideIcons.userPlus,
               label: '인도자',
               value: _member.inviter3MemberId.toString(),
             ),
@@ -971,7 +946,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.dailyActivity != null &&
               _member.dailyActivity!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.schedule_outlined,
+              icon: LucideIcons.clock,
               label: '일상 활동',
               value: _member.dailyActivity!,
             ),
@@ -1040,7 +1015,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
             return Column(
               children: [
                 _buildInfoRow(
-                  icon: Icons.label_outline,
+                  icon: LucideIcons.tag,
                   label: '필드 ${entry.key}',
                   value: entry.value,
                 ),
@@ -1071,7 +1046,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           if (_member.specialNotes != null &&
               _member.specialNotes!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.notes_outlined,
+              icon: LucideIcons.stickyNote,
               label: '특별 사항',
               value: _member.specialNotes!,
             ),
@@ -1098,7 +1073,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           SizedBox(height: 16.h),
           if (_member.createdAt != null) ...[
             _buildInfoRow(
-              icon: Icons.access_time_outlined,
+              icon: LucideIcons.clock,
               label: '생성일시',
               value:
                   '${_member.createdAt!.year}.${_member.createdAt!.month.toString().padLeft(2, '0')}.${_member.createdAt!.day.toString().padLeft(2, '0')} ${_member.createdAt!.hour.toString().padLeft(2, '0')}:${_member.createdAt!.minute.toString().padLeft(2, '0')}',
@@ -1107,7 +1082,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
           ],
           if (_member.updatedAt != null) ...[
             _buildInfoRow(
-              icon: Icons.update_outlined,
+              icon: LucideIcons.refreshCw,
               label: '수정일시',
               value:
                   '${_member.updatedAt!.year}.${_member.updatedAt!.month.toString().padLeft(2, '0')}.${_member.updatedAt!.day.toString().padLeft(2, '0')} ${_member.updatedAt!.hour.toString().padLeft(2, '0')}:${_member.updatedAt!.minute.toString().padLeft(2, '0')}',
@@ -1217,7 +1192,7 @@ class _AdminMemberDetailScreenState extends State<AdminMemberDetailScreen> {
             ),
             if (onTap != null)
               Icon(
-                Icons.arrow_forward_ios,
+                LucideIcons.chevronRight,
                 size: 16.sp,
                 color: NewAppColor.neutral400,
               ),

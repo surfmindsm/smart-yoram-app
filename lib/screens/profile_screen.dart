@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../widget/widgets.dart';
 import '../services/user_service.dart';
 import '../services/member_service.dart';
@@ -77,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ? LoadingWidget()
           : (currentUser == null)
               ? EmptyStateWidget(
-                  icon: Icons.person_off,
+                  icon: LucideIcons.userX,
                   title: '사용자 정보 없음',
                   subtitle: '사용자 정보를 찾을 수 없습니다',
                 )
@@ -109,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ? NetworkImage(currentMember!.profilePhotoUrl!) 
                   : null,
               child: currentMember?.profilePhotoUrl == null
-                  ? const Icon(Icons.person, size: 50, color: Colors.blue)
+                  ? const Icon(LucideIcons.user, size: 50, color: Colors.blue)
                   : null,
             ),
             const SizedBox(height: 16),
@@ -145,35 +145,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildBasicInfoCard() {
     return InfoCardWidget(
       title: '기본 정보',
-      icon: Icons.person,
+      icon: LucideIcons.user,
       items: [
         InfoItem(
           label: '이름',
           value: currentMember?.name ?? currentUser!.fullName,
-          icon: Icons.credit_card,
+          icon: LucideIcons.creditCard,
         ),
         InfoItem(
           label: '이메일',
           value: currentUser!.email,
-          icon: Icons.email,
+          icon: LucideIcons.mail,
         ),
         if (currentMember?.phone != null && currentMember!.phone!.isNotEmpty)
           InfoItem(
             label: '전화번호',
             value: currentMember!.phone!,
-            icon: Icons.phone,
+            icon: LucideIcons.phone,
           ),
         if (currentMember?.gender != null && currentMember!.gender!.isNotEmpty)
           InfoItem(
             label: '성별',
             value: _getGenderDisplayName(currentMember!.gender!),
-            icon: Icons.group,
+            icon: LucideIcons.users,
           ),
         if (currentMember?.address != null && currentMember!.address!.isNotEmpty)
           InfoItem(
             label: '주소',
             value: currentMember!.address!,
-            icon: Icons.location_on,
+            icon: LucideIcons.mapPin,
           ),
       ],
     );
@@ -182,35 +182,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildChurchInfoCard() {
     return InfoCardWidget(
       title: '교회 정보',
-      icon: Icons.church,
+      icon: LucideIcons.church,
       items: [
         InfoItem(
           label: '권한',
           value: _getRoleDisplayName(currentUser!.role),
-          icon: Icons.security,
+          icon: LucideIcons.shield,
         ),
         InfoItem(
           label: '상태',
           value: currentMember?.memberStatus ?? 'unknown',
-          icon: Icons.check_circle,
+          icon: LucideIcons.circleCheck,
         ),
         if (currentMember?.position != null && currentMember!.position!.isNotEmpty)
           InfoItem(
             label: '직분',
             value: currentMember!.position!,
-            icon: Icons.work,
+            icon: LucideIcons.briefcase,
           ),
         if (currentMember?.district != null && currentMember!.district!.isNotEmpty)
           InfoItem(
             label: '구역',
             value: currentMember!.district!,
-            icon: Icons.location_city,
+            icon: LucideIcons.building,
           ),
         if (currentMember?.createdAt != null)
           InfoItem(
             label: '가입일',
             value: _formatDate(currentMember!.createdAt!),
-            icon: Icons.calendar_today,
+            icon: LucideIcons.calendarDays,
           ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class AppDialog extends StatelessWidget {
   final String? title;
@@ -69,7 +70,7 @@ class AppDialog extends StatelessWidget {
                         child: Container(
                           padding: EdgeInsets.all(4.w),
                           child: Icon(
-                            Icons.close,
+                            LucideIcons.x,
                             size: 20.sp,
                             color: NewAppColor.neutral600,
                           ),
@@ -379,7 +380,7 @@ class AppErrorDialog extends StatelessWidget {
       content: Row(
         children: [
           Icon(
-            Icons.error_outline,
+            LucideIcons.circleAlert,
             color: NewAppColor.danger600,
             size: 24.sp,
           ),

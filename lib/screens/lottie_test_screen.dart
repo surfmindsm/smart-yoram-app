@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Lottie 애니메이션 미리보기 테스트 화면
 class LottieTestScreen extends StatefulWidget {
@@ -99,7 +100,7 @@ class _LottieTestScreenState extends State<LottieTestScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.error_outline,
+                          LucideIcons.circleAlert,
                           size: 48.sp,
                           color: Colors.red,
                         ),
@@ -179,7 +180,7 @@ class _LottieTestScreenState extends State<LottieTestScreen> {
                             });
                           }
                         : null,
-                    icon: const Icon(Icons.arrow_back),
+                    icon: const Icon(LucideIcons.arrowLeft),
                     label: const Text('이전'),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -199,7 +200,7 @@ class _LottieTestScreenState extends State<LottieTestScreen> {
                             });
                           }
                         : null,
-                    icon: const Icon(Icons.arrow_forward),
+                    icon: const Icon(LucideIcons.arrowRight),
                     label: const Text('다음'),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -241,7 +242,7 @@ class _LottieTestScreenState extends State<LottieTestScreen> {
             repeat: true,
             errorBuilder: (context, error, stackTrace) {
               return Icon(
-                Icons.error_outline,
+                LucideIcons.circleAlert,
                 size: size * 0.4,
                 color: Colors.red,
               );

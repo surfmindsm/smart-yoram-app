@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'dart:io';
+import '../components/index.dart' hide IconButton;
 import '../models/member.dart';
 import '../services/member_service.dart';
 import '../constants/member_positions.dart';
 import '../widgets/custom_date_picker.dart';
+import '../resource/color_style_new.dart';
 
 class MemberDetailScreen extends StatefulWidget {
   final Member member;
@@ -24,16 +27,16 @@ class MemberDetailScreen extends StatefulWidget {
 class _MemberDetailScreenState extends State<MemberDetailScreen> {
   final MemberService _memberService = MemberService();
   final ImagePicker _picker = ImagePicker();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-  
+
   String _selectedGender = '남';
-  String _selectedPosition = 'MEMBER'; // 영문 코드 사용
+  String _selectedPosition = 'MEMBER';
   String _selectedStatus = 'active';
   String _selectedDistrict = '';
   DateTime? _selectedBirthDate;
-  String _selectedBirthdateType = '양력'; // 양력 또는 음력
+  String _selectedBirthdateType = '양력';
   DateTime? _selectedRegistrationDate;
 
   bool _isEditing = false;
@@ -41,7 +44,11 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   File? _selectedImage;
 
   final List<String> _genderOptions = ['남', '여'];
-  final List<String> _statusOptions = ['active', 'inactive', 'transferred'];
+  final List<Map<String, String>> _statusOptions = [
+    {'value': 'active', 'label': '활동'},
+    {'value': 'inactive', 'label': '비활동'},
+    {'value': 'transferred', 'label': '이동'},
+  ];
   final List<String> _districtOptions = ['1구역', '2구역', '3구역', '4구역', '5구역'];
 
   @override
@@ -51,7 +58,6 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
     _phoneController = TextEditingController(text: widget.member.phone);
 
     _selectedGender = widget.member.gender;
-    // position은 영문 코드로 저장되어 있음 (PASTOR, ELDER 등)
     _selectedPosition = widget.member.position ?? 'MEMBER';
     _selectedStatus = widget.member.memberStatus;
     _selectedDistrict = widget.member.district ?? '1구역';
@@ -71,56 +77,93 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(widget.member.name),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
+        title: Text(
+          widget.member.name,
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: NewAppColor.textStrong,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft, size: 26.sp, color: NewAppColor.textStrong),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           if (!widget.isEditable)
             IconButton(
-              onPressed: _isSaving ? null : () async {
-                if (_isEditing) {
-                  await _saveMemberInfo();
-                } else {
-                  setState(() {
-                    _isEditing = true;
-                  });
-                }
-              },
-              icon: _isSaving 
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(_isEditing ? Icons.save : Icons.edit),
+              onPressed: _isSaving
+                  ? null
+                  : () async {
+                      if (_isEditing) {
+                        await _saveMemberInfo();
+                      } else {
+                        setState(() => _isEditing = true);
+                      }
+                    },
+              icon: _isSaving
+                  ? SizedBox(
+                      width: 18.w,
+                      height: 18.w,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: NewAppColor.skyPrimary,
+                      ),
+                    )
+                  : Icon(
+                      _isEditing ? LucideIcons.save : LucideIcons.pencil,
+                      color: NewAppColor.textStrong,
+                      size: 22.sp,
+                    ),
             ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.h),
+          child: Container(height: 1.h, color: NewAppColor.borderHair),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.fromLTRB(20.w, 22.h, 20.w, 32.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 프로필 사진 섹션
+            // 프로필 사진
             Center(
               child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundImage: _selectedImage != null 
-                        ? FileImage(_selectedImage!) as ImageProvider
-                        : widget.member.fullProfilePhotoUrl != null
-                            ? NetworkImage(widget.member.fullProfilePhotoUrl!) as ImageProvider
-                            : null,
-                    backgroundColor: Colors.grey[300],
-                    child: (_selectedImage == null && widget.member.fullProfilePhotoUrl == null)
-                        ? Icon(
-                            Icons.person,
-                            size: 80,
-                            color: Colors.grey[600],
-                          )
-                        : null,
+                  Container(
+                    width: 110.w,
+                    height: 110.w,
+                    decoration: BoxDecoration(
+                      color: NewAppColor.borderSoft,
+                      shape: BoxShape.circle,
+                    ),
+                    child: ClipOval(
+                      child: _selectedImage != null
+                          ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                          : widget.member.fullProfilePhotoUrl != null
+                              ? Image.network(
+                                  widget.member.fullProfilePhotoUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    LucideIcons.user,
+                                    size: 54.sp,
+                                    color: NewAppColor.textTertiary,
+                                  ),
+                                )
+                              : Icon(
+                                  LucideIcons.user,
+                                  size: 54.sp,
+                                  color: NewAppColor.textTertiary,
+                                ),
+                    ),
                   ),
                   if (_isEditing)
                     Positioned(
@@ -129,15 +172,17 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                       child: GestureDetector(
                         onTap: _selectProfileImage,
                         child: Container(
-                          padding: const EdgeInsets.all(8),
+                          width: 34.w,
+                          height: 34.w,
                           decoration: BoxDecoration(
-                            color: Colors.blue[700],
+                            color: NewAppColor.skyPrimary,
                             shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
-                          child: const Icon(
-                            Icons.camera_alt,
+                          child: Icon(
+                            LucideIcons.camera,
                             color: Colors.white,
-                            size: 20,
+                            size: 16.sp,
                           ),
                         ),
                       ),
@@ -145,48 +190,70 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            
-            // 기본 정보
+            SizedBox(height: 28.h),
+
             _buildSectionTitle('기본 정보'),
-            _buildTextField('이름', _nameController, enabled: _isEditing),
+            AppInput(
+              label: '이름',
+              controller: _nameController,
+              disabled: !_isEditing,
+              required: true,
+            ),
+            SizedBox(height: 14.h),
             _buildGenderSelector(),
+            SizedBox(height: 14.h),
             _buildBirthdateField(),
-            _buildTextField('휴대폰', _phoneController, enabled: _isEditing),
-            const SizedBox(height: 16),
-            
-            // 교회 정보
+            SizedBox(height: 14.h),
+            AppInput(
+              label: '휴대폰',
+              controller: _phoneController,
+              disabled: !_isEditing,
+              required: true,
+              keyboardType: TextInputType.phone,
+            ),
+            SizedBox(height: 22.h),
+
             _buildSectionTitle('교회 정보'),
-            _buildPositionDropdown(),
-            _buildDropdownField('상태', _selectedStatus, _statusOptions),
-            _buildDropdownField('구역', _selectedDistrict, _districtOptions),
-            _buildDateField('등록일', _selectedRegistrationDate, _selectRegistrationDate),
-            const SizedBox(height: 24),
-            
-            // 가족 정보
+            _buildPositionSelector(),
+            SizedBox(height: 14.h),
+            _buildStatusSelector(),
+            SizedBox(height: 14.h),
+            _buildDistrictSelector(),
+            SizedBox(height: 14.h),
+            _buildRegistrationDateField(),
+            SizedBox(height: 22.h),
+
             _buildSectionTitle('가족 정보'),
             _buildFamilySection(),
-            
-            const SizedBox(height: 24),
-            
-            // 봉사부서
+            SizedBox(height: 22.h),
+
             _buildSectionTitle('봉사부서'),
             _buildServiceDepartments(),
-            
-            const SizedBox(height: 32),
-            
-            // 저장 버튼
+
+            SizedBox(height: 32.h),
+
             if (_isEditing)
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 52.h,
                 child: ElevatedButton(
                   onPressed: _saveMemberInfo,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
+                    backgroundColor: NewAppColor.skyPrimary,
                     foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
                   ),
-                  child: const Text('저장'),
+                  child: Text(
+                    '저장',
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -197,189 +264,250 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: EdgeInsets.only(bottom: 12.h),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
+        style: TextStyle(
+          color: NewAppColor.textStrong,
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w800,
+          fontFamily: 'Pretendard',
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {
-    bool enabled = true,
-    int maxLines = 1,
-    int? maxLength,
-  }) {
+  Widget _buildFieldLabel(String label, {bool required = false}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          enabled: enabled,
-        ),
-        maxLines: maxLines,
-        maxLength: maxLength,
-        enabled: enabled,
+      padding: EdgeInsets.only(bottom: 6.h),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: NewAppColor.textSecondary,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          if (required) ...[
+            SizedBox(width: 3.w),
+            Text(
+              '*',
+              style: TextStyle(
+                color: NewAppColor.danger700,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
 
   Widget _buildGenderSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('성별', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          Row(
-            children: _genderOptions.map((gender) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Radio<String>(
-                  value: gender,
-                  groupValue: _selectedGender,
-                  onChanged: _isEditing ? (value) {
-                    setState(() {
-                      _selectedGender = value!;
-                    });
-                  } : null,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldLabel('성별'),
+        Row(
+          children: _genderOptions.map((gender) {
+            final selected = _selectedGender == gender;
+            return Expanded(
+              child: GestureDetector(
+                onTap: _isEditing
+                    ? () => setState(() => _selectedGender = gender)
+                    : null,
+                child: Container(
+                  margin: EdgeInsets.only(
+                    right: gender == _genderOptions.first ? 8.w : 0,
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 13.h),
+                  decoration: BoxDecoration(
+                    color: selected ? NewAppColor.skyTint : Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: selected
+                          ? NewAppColor.skyPrimary
+                          : NewAppColor.borderHair,
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      gender,
+                      style: TextStyle(
+                        color: selected
+                            ? NewAppColor.skyDeep
+                            : NewAppColor.textSecondary,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                  ),
                 ),
-                Text(gender),
-                const SizedBox(width: 24),
-              ],
-            )).toList(),
-          ),
-        ],
-      ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
-  Widget _buildPositionDropdown() {
-    // 현재 position이 userOptions에 없으면 추가 (기존 특수 직분 보존)
-    List<Map<String, String>> availableOptions = List.from(MemberPosition.userOptions);
-
-    // 현재 선택된 직분이 userOptions에 없는 경우 detailOptions에서 찾아서 추가
-    bool isCurrentPositionInUserOptions = MemberPosition.userOptions.any(
-      (option) => option['value'] == _selectedPosition
+  Widget _buildSelector({
+    required String label,
+    required String displayValue,
+    required VoidCallback? onTap,
+  }) {
+    final disabled = onTap == null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldLabel(label),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+            decoration: BoxDecoration(
+              color: disabled ? NewAppColor.canvasAlt : Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: NewAppColor.borderHair),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    displayValue,
+                    style: TextStyle(
+                      color: disabled
+                          ? NewAppColor.textTertiary
+                          : NewAppColor.textStrong,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ),
+                Icon(
+                  LucideIcons.chevronDown,
+                  size: 18.sp,
+                  color: NewAppColor.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
+  }
 
-    if (!isCurrentPositionInUserOptions) {
-      final currentPositionOption = MemberPosition.detailOptions.firstWhere(
-        (option) => option['value'] == _selectedPosition,
+  Widget _buildPositionSelector() {
+    final List<Map<String, dynamic>> availableOptions =
+        List<Map<String, dynamic>>.from(MemberPosition.userOptions);
+    final bool isCurrentInOptions = MemberPosition.userOptions
+        .any((o) => o['value'] == _selectedPosition);
+    if (!isCurrentInOptions) {
+      final option = MemberPosition.detailOptions.firstWhere(
+        (o) => o['value'] == _selectedPosition,
         orElse: () => {'value': 'MEMBER', 'label': '성도'},
       );
-      // 현재 직분을 옵션 목록에 추가 (성도 다음에 배치)
-      availableOptions.insert(1, currentPositionOption);
+      availableOptions.insert(1, option);
     }
+    final currentLabel = (availableOptions.firstWhere(
+      (o) => o['value'] == _selectedPosition,
+      orElse: () => {'label': '성도'},
+    )['label'] as String?) ?? '성도';
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('직분', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _selectedPosition,
-            items: availableOptions.map((option) {
-              return DropdownMenuItem<String>(
-                value: option['value']!,
-                child: Text(option['label']!),
-              );
-            }).toList(),
-            onChanged: _isEditing
-                ? (newValue) {
-                    setState(() {
-                      _selectedPosition = newValue!;
-                    });
-                  }
-                : null,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-          ),
-        ],
-      ),
+    return _buildSelector(
+      label: '직분',
+      displayValue: currentLabel,
+      onTap: _isEditing
+          ? () => _showSelectSheet(
+                title: '직분 선택',
+                items: availableOptions
+                    .map((o) => _SelectOption(
+                          o['value'] as String,
+                          o['label'] as String,
+                        ))
+                    .toList(),
+                selectedValue: _selectedPosition,
+                onSelected: (v) => setState(() => _selectedPosition = v),
+              )
+          : null,
     );
   }
 
-  Widget _buildDropdownField(String label, String value, List<String> items) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: items.contains(value) ? value : items.first,
-            items: items.map((item) => DropdownMenuItem(
-              value: item,
-              child: Text(item),
-            )).toList(),
-            onChanged: _isEditing ? (newValue) {
-              setState(() {
-                if (label == '상태') _selectedStatus = newValue!;
-                else if (label == '구역') _selectedDistrict = newValue!;
-              });
-            } : null,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-          ),
-        ],
-      ),
+  Widget _buildStatusSelector() {
+    final currentLabel = _statusOptions.firstWhere(
+      (o) => o['value'] == _selectedStatus,
+      orElse: () => {'label': '활동'},
+    )['label']!;
+    return _buildSelector(
+      label: '상태',
+      displayValue: currentLabel,
+      onTap: _isEditing
+          ? () => _showSelectSheet(
+                title: '상태 선택',
+                items: _statusOptions
+                    .map((o) => _SelectOption(o['value']!, o['label']!))
+                    .toList(),
+                selectedValue: _selectedStatus,
+                onSelected: (v) => setState(() => _selectedStatus = v),
+              )
+          : null,
     );
   }
 
-  Widget _buildDateField(String label, DateTime? date, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        controller: TextEditingController(
-          text: date != null ? '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}' : '',
-        ),
-        readOnly: true,
-        onTap: _isEditing ? onTap : null,
-      ),
+  Widget _buildDistrictSelector() {
+    return _buildSelector(
+      label: '구역',
+      displayValue: _selectedDistrict,
+      onTap: _isEditing
+          ? () => _showSelectSheet(
+                title: '구역 선택',
+                items: _districtOptions
+                    .map((d) => _SelectOption(d, d))
+                    .toList(),
+                selectedValue: _selectedDistrict,
+                onSelected: (v) => setState(() => _selectedDistrict = v),
+              )
+          : null,
     );
   }
 
   Widget _buildBirthdateField() {
     final dateText = _selectedBirthDate != null
         ? '${_selectedBirthDate!.year}-${_selectedBirthDate!.month.toString().padLeft(2, '0')}-${_selectedBirthDate!.day.toString().padLeft(2, '0')} ($_selectedBirthdateType)'
-        : '';
+        : '선택';
+    return _buildSelector(
+      label: '생년월일',
+      displayValue: dateText,
+      onTap: _isEditing ? _selectBirthDate : null,
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: '생년월일',
-          border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        controller: TextEditingController(text: dateText),
-        readOnly: true,
-        onTap: _isEditing ? _selectBirthDate : null,
-      ),
+  Widget _buildRegistrationDateField() {
+    final dateText = _selectedRegistrationDate != null
+        ? '${_selectedRegistrationDate!.year}-${_selectedRegistrationDate!.month.toString().padLeft(2, '0')}-${_selectedRegistrationDate!.day.toString().padLeft(2, '0')}'
+        : '선택';
+    return _buildSelector(
+      label: '등록일',
+      displayValue: dateText,
+      onTap: _isEditing ? _selectRegistrationDate : null,
     );
   }
 
   Widget _buildFamilySection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,26 +515,92 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('가족 구성원'),
+              Text(
+                '가족 구성원',
+                style: TextStyle(
+                  color: NewAppColor.textStrong,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
               if (_isEditing)
-                IconButton(
-                  onPressed: _addFamilyMember,
-                  icon: const Icon(Icons.add),
+                GestureDetector(
+                  onTap: _addFamilyMember,
+                  child: Container(
+                    padding: EdgeInsets.all(6.w),
+                    decoration: BoxDecoration(
+                      color: NewAppColor.skyTint,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(
+                      LucideIcons.plus,
+                      size: 16.sp,
+                      color: NewAppColor.skyPrimary,
+                    ),
+                  ),
                 ),
             ],
           ),
-          const ListTile(
-            leading: CircleAvatar(child: Icon(Icons.person)),
-            title: Text('김아버지'),
-            subtitle: Text('부 - 장로'),
-            trailing: Icon(Icons.edit),
+          SizedBox(height: 8.h),
+          _buildFamilyRow('김아버지', '부 · 장로'),
+          _buildFamilyRow('김어머니', '모 · 권사'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFamilyRow(String name, String role) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: Row(
+        children: [
+          Container(
+            width: 36.w,
+            height: 36.w,
+            decoration: BoxDecoration(
+              color: NewAppColor.borderSoft,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              LucideIcons.user,
+              size: 18.sp,
+              color: NewAppColor.textTertiary,
+            ),
           ),
-          const ListTile(
-            leading: CircleAvatar(child: Icon(Icons.person)),
-            title: Text('김어머니'),
-            subtitle: Text('모 - 권사'),
-            trailing: Icon(Icons.edit),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  role,
+                  style: TextStyle(
+                    color: NewAppColor.textMuted,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+              ],
+            ),
           ),
+          if (_isEditing)
+            Icon(
+              LucideIcons.pencil,
+              size: 16.sp,
+              color: NewAppColor.textTertiary,
+            ),
         ],
       ),
     );
@@ -414,11 +608,11 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
   Widget _buildServiceDepartments() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,75 +620,193 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('봉사부서'),
+              Text(
+                '봉사부서',
+                style: TextStyle(
+                  color: NewAppColor.textStrong,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
               if (_isEditing)
-                IconButton(
-                  onPressed: _addServiceDepartment,
-                  icon: const Icon(Icons.add),
+                GestureDetector(
+                  onTap: _addServiceDepartment,
+                  child: Container(
+                    padding: EdgeInsets.all(6.w),
+                    decoration: BoxDecoration(
+                      color: NewAppColor.skyTint,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(
+                      LucideIcons.plus,
+                      size: 16.sp,
+                      color: NewAppColor.skyPrimary,
+                    ),
+                  ),
                 ),
             ],
           ),
-          const Wrap(
-            spacing: 8,
-            children: [
-              Chip(label: Text('찬양팀')),
-              Chip(label: Text('교육부')),
-            ],
+          SizedBox(height: 10.h),
+          Wrap(
+            spacing: 6.w,
+            runSpacing: 6.h,
+            children: ['찬양팀', '교육부'].map((dept) {
+              return Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: NewAppColor.skyTint,
+                  borderRadius: BorderRadius.circular(999.r),
+                ),
+                child: Text(
+                  dept,
+                  style: TextStyle(
+                    color: NewAppColor.skyDeep,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
     );
   }
 
-  void _selectProfileImage() {
+  void _showSelectSheet({
+    required String title,
+    required List<_SelectOption> items,
+    required String selectedValue,
+    required ValueChanged<String> onSelected,
+  }) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('갤러리에서 선택'),
-              onTap: () async {
-                Navigator.pop(context);
-                final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-                if (image != null) {
-                  setState(() {
-                    _selectedImage = File(image.path);
-                  });
-                  // TODO: 이미지 업로드 API 호출
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('카메라로 촬영'),
-              onTap: () async {
-                Navigator.pop(context);
-                final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-                if (image != null) {
-                  setState(() {
-                    _selectedImage = File(image.path);
-                  });
-                  // TODO: 이미지 업로드 API 호출
-                }
-              },
-            ),
-            if (widget.member.profilePhotoUrl != null)
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('프로필 사진 삭제'),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    _selectedImage = null;
-                  });
-                  // TODO: 이미지 삭제 API 호출
-                },
+      backgroundColor: Colors.transparent,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
+          ),
+          padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: NewAppColor.borderStrong,
+                  borderRadius: BorderRadius.circular(999.r),
+                ),
               ),
-          ],
+              SizedBox(height: 16.h),
+              Text(
+                title,
+                style: TextStyle(
+                  color: NewAppColor.textStrong,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Pretendard',
+                ),
+              ),
+              SizedBox(height: 14.h),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 0.5.sh),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => Container(
+                    height: 1,
+                    color: NewAppColor.borderHair,
+                  ),
+                  itemBuilder: (_, index) {
+                    final item = items[index];
+                    final selected = item.value == selectedValue;
+                    return InkWell(
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        onSelected(item.value);
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.label,
+                                style: TextStyle(
+                                  color: selected
+                                      ? NewAppColor.skyDeep
+                                      : NewAppColor.textStrong,
+                                  fontSize: 14.sp,
+                                  fontWeight: selected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  fontFamily: 'Pretendard',
+                                ),
+                              ),
+                            ),
+                            if (selected)
+                              Icon(
+                                LucideIcons.check,
+                                size: 18.sp,
+                                color: NewAppColor.skyPrimary,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _selectProfileImage() {
+    AppMenuSheet.show(
+      context: context,
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.image,
+          label: '갤러리에서 선택',
+          onTap: () async {
+            final XFile? image =
+                await _picker.pickImage(source: ImageSource.gallery);
+            if (image != null && mounted) {
+              setState(() => _selectedImage = File(image.path));
+            }
+          },
         ),
-      ),
+        AppMenuItem(
+          icon: LucideIcons.camera,
+          label: '카메라로 촬영',
+          onTap: () async {
+            final XFile? image =
+                await _picker.pickImage(source: ImageSource.camera);
+            if (image != null && mounted) {
+              setState(() => _selectedImage = File(image.path));
+            }
+          },
+        ),
+        if (widget.member.profilePhotoUrl != null)
+          AppMenuItem(
+            icon: LucideIcons.trash2,
+            label: '프로필 사진 삭제',
+            danger: true,
+            onTap: () {
+              setState(() => _selectedImage = null);
+            },
+          ),
+      ],
     );
   }
 
@@ -505,14 +817,8 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-    if (date != null) {
-      setState(() {
-        _selectedBirthDate = date;
-      });
-    }
+    if (date != null) setState(() => _selectedBirthDate = date);
   }
-
-
 
   void _selectRegistrationDate() async {
     final date = await showCustomDatePicker(
@@ -521,62 +827,26 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-    if (date != null) {
-      setState(() {
-        _selectedRegistrationDate = date;
-      });
-    }
+    if (date != null) setState(() => _selectedRegistrationDate = date);
   }
 
   void _addFamilyMember() {
-    // TODO: 가족 구성원 추가 다이얼로그
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('가족 구성원 추가'),
-        content: const Text('가족 구성원 추가 기능은 추후 구현 예정입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
+    AppToast.show(context, '가족 구성원 추가 기능은 추후 구현 예정입니다');
   }
 
   void _addServiceDepartment() {
-    // TODO: 봉사부서 추가 다이얼로그
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('봉사부서 추가'),
-        content: const Text('봉사부서 추가 기능은 추후 구현 예정입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
+    AppToast.show(context, '봉사부서 추가 기능은 추후 구현 예정입니다');
   }
 
   Future<void> _saveMemberInfo() async {
-    if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('이름과 전화번호는 필수 입력 항목입니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    if (_nameController.text.trim().isEmpty ||
+        _phoneController.text.trim().isEmpty) {
+      AppToast.show(context, '이름과 전화번호는 필수 입력 항목입니다');
       return;
     }
-    
-    setState(() {
-      _isSaving = true;
-    });
-    
+
+    setState(() => _isSaving = true);
+
     try {
       final request = MemberUpdateRequest(
         name: _nameController.text.trim(),
@@ -585,37 +855,28 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
         district: _selectedDistrict,
         memberStatus: _selectedStatus,
       );
-      
-      final response = await _memberService.updateMember(widget.member.id, request.toJson());
-      
+
+      final response =
+          await _memberService.updateMember(widget.member.id, request.toJson());
+
       if (response.success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('교인 정보가 수정되었습니다.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        setState(() {
-          _isEditing = false;
-        });
+        AppToast.show(context, '교인 정보가 수정되었습니다');
+        setState(() => _isEditing = false);
       } else {
         throw Exception(response.message);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('수정 실패: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppToast.show(context, '수정 실패: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSaving = false;
-        });
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
   }
+}
+
+class _SelectOption {
+  final String value;
+  final String label;
+  const _SelectOption(this.value, this.label);
 }

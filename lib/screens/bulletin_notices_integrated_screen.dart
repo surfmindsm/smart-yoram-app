@@ -4,6 +4,7 @@ import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import 'bulletin_screen.dart';
 import 'notices_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class BulletinNoticesIntegratedScreen extends StatefulWidget {
   const BulletinNoticesIntegratedScreen({super.key});
@@ -86,28 +87,65 @@ class _BulletinNoticesIntegratedScreenState
     );
   }
 
-  // 1.2.0 C 방향: 세그먼트 토글 (#F1F5F9 트랙 + 선택 시 흰배경 + skyDeep + 섀도)
+  // 1.2.0 C 방향: 세그먼트 토글 (로그인 화면 이메일/전화 토글과 동일)
+  // Stack 위에 흰 indicator를 별도 레이어로 두고 AnimatedAlign으로 좌우 슬라이드.
+  // 텍스트/아이콘은 정지 상태로 색만 보간되어 깜빡임 없음.
   Widget _buildToggleButton() {
     return AnimatedBuilder(
       animation: _tabController,
-      builder: (context, child) {
+      builder: (context, _) {
+        final bool isBulletin = _tabController.index == 0;
         return Container(
-          padding: EdgeInsets.all(4.r),
+          width: double.infinity,
+          padding: EdgeInsets.all(4.w),
           decoration: BoxDecoration(
-            color: NewAppColor.borderSoft,
+            color: NewAppColor.canvasAlt,
             borderRadius: BorderRadius.circular(12.r),
           ),
-          child: Row(
+          child: Stack(
             children: [
-              _segmentTab(
-                index: 0,
-                icon: Icons.menu_book_outlined,
-                label: '주보',
+              // 1) 슬라이드 indicator (흰 배경 + 그림자)
+              Positioned.fill(
+                child: AnimatedAlign(
+                  duration: _toggleDuration,
+                  curve: _toggleCurve,
+                  alignment: isBulletin
+                      ? Alignment.centerLeft
+                      : Alignment.centerRight,
+                  child: FractionallySizedBox(
+                    widthFactor: 0.5,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(9.r),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x140F172A),
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              _segmentTab(
-                index: 1,
-                icon: Icons.article_outlined,
-                label: '교회소식',
+              // 2) 라벨 레이어 — 항상 같은 자리 (텍스트 점프 없음)
+              Row(
+                children: [
+                  _segmentTab(
+                    index: 0,
+                    icon: LucideIcons.bookOpen,
+                    label: '주보',
+                    selected: isBulletin,
+                  ),
+                  _segmentTab(
+                    index: 1,
+                    icon: LucideIcons.fileText,
+                    label: '교회소식',
+                    selected: !isBulletin,
+                  ),
+                ],
               ),
             ],
           ),
@@ -116,12 +154,18 @@ class _BulletinNoticesIntegratedScreenState
     );
   }
 
+  static const Duration _toggleDuration = Duration(milliseconds: 220);
+  static const Curve _toggleCurve = Curves.easeOutCubic;
+
   Widget _segmentTab({
     required int index,
     required IconData icon,
     required String label,
+    required bool selected,
   }) {
-    final isSelected = _tabController.index == index;
+    final activeColor = NewAppColor.skyPrimary;
+    final inactiveColor = NewAppColor.textTertiary;
+
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -130,44 +174,30 @@ class _BulletinNoticesIntegratedScreenState
             _tabController.animateTo(index);
           });
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+        child: Padding(
           padding: EdgeInsets.symmetric(vertical: 9.h),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(9.r),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF020817).withOpacity(0.07),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 16.sp,
-                color: isSelected
-                    ? NewAppColor.skyDeep
-                    : NewAppColor.textTertiary,
+              TweenAnimationBuilder<Color?>(
+                duration: _toggleDuration,
+                curve: _toggleCurve,
+                tween: ColorTween(end: selected ? activeColor : inactiveColor),
+                builder: (_, color, __) =>
+                    Icon(icon, size: 16.sp, color: color),
               ),
-              SizedBox(width: 6.w),
-              Text(
-                label,
-                style: FigmaTextStyles().body3.copyWith(
-                      color: isSelected
-                          ? NewAppColor.skyDeep
-                          : NewAppColor.textTertiary,
-                      fontSize: 14.sp,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w600,
-                    ),
+              SizedBox(width: 7.w),
+              AnimatedDefaultTextStyle(
+                duration: _toggleDuration,
+                curve: _toggleCurve,
+                style: TextStyle(
+                  color: selected ? activeColor : inactiveColor,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Pretendard',
+                ),
+                child: Text(label),
               ),
             ],
           ),

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../components/index.dart' hide IconButton;
+import '../resource/color_style_new.dart';
 import '../utils/permission_utils.dart';
 // import 'package:mobile_scanner/mobile_scanner.dart'; // 16KB 이슈로 제거
 import '../services/qr_service.dart';
 import '../models/qr_code.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class QRScanScreen extends StatefulWidget {
   const QRScanScreen({super.key});
@@ -53,7 +57,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
         actions: [
           IconButton(
             onPressed: _toggleFlash,
-            icon: Icon(_flashEnabled ? Icons.flashlight_on : Icons.flashlight_off),
+            icon: Icon(_flashEnabled ? LucideIcons.flashlight : LucideIcons.flashlightOff),
           ),
         ],
       ),
@@ -72,7 +76,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      _hasPermission ? Icons.camera_alt : Icons.camera_alt,
+                      _hasPermission ? LucideIcons.camera : LucideIcons.camera,
                       color: Colors.white,
                       size: 80,
                     ),
@@ -120,7 +124,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(
-                    Icons.qr_code,
+                    LucideIcons.qrCode,
                     size: 48,
                     color: Colors.grey,
                   ),
@@ -146,7 +150,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       ),
                       child: Column(
                         children: [
-                          const Icon(Icons.check_circle, color: Colors.green),
+                          const Icon(LucideIcons.circleCheck, color: Colors.green),
                           const SizedBox(height: 8),
                           Text('스캔 완료: $_scannedCode'),
                         ],
@@ -160,7 +164,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: _showMyQR,
-                          icon: const Icon(Icons.qr_code),
+                          icon: const Icon(LucideIcons.qrCode),
                           label: const Text('내 QR 보기'),
                         ),
                       ),
@@ -168,7 +172,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _hasPermission ? _startScan : null,
-                          icon: const Icon(Icons.qr_code_scanner),
+                          icon: const Icon(LucideIcons.scanLine),
                           label: Text(_isScanning ? '스캔 중...' : '스캔 시작'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue[700],
@@ -240,75 +244,65 @@ class _QRScanScreenState extends State<QRScanScreen> {
 
   void _showAttendanceSuccess() {
     if (_scanResult == null) return;
-    
-    showDialog(
+    final result = _scanResult!;
+    AppInfoSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 8),
-            Text('출석 완료'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_scanResult!.member != null) ...[
-              CircleAvatar(
-                radius: 30,
-                backgroundImage: _scanResult!.member!.profilePhotoUrl != null 
-                    ? NetworkImage(_scanResult!.member!.profilePhotoUrl!) 
-                    : null,
-                child: _scanResult!.member!.profilePhotoUrl == null 
-                    ? const Icon(Icons.person, size: 30) 
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _scanResult!.member!.name,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-            ],
-            Text(_scanResult!.message),
-            const SizedBox(height: 8),
-            const Text(
-              '오늘도 예배에 참석해주셔서 감사합니다!',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+      title: '출석 완료',
+      icon: LucideIcons.circleCheck,
+      tone: AppSheetTone.success,
+      body: Column(
+        children: [
+          if (result.member != null) ...[
+            CircleAvatar(
+              radius: 32.r,
+              backgroundColor: NewAppColor.skyTint,
+              backgroundImage: result.member!.profilePhotoUrl != null
+                  ? NetworkImage(result.member!.profilePhotoUrl!)
+                  : null,
+              child: result.member!.profilePhotoUrl == null
+                  ? Icon(LucideIcons.user, size: 32.sp, color: NewAppColor.skyDeep)
+                  : null,
             ),
+            SizedBox(height: 12.h),
+            Text(
+              result.member!.name,
+              style: TextStyle(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+              ),
+            ),
+            SizedBox(height: 8.h),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('확인'),
+          Text(
+            result.message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: NewAppColor.textBody,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            '오늘도 예배에 참석해주셔서 감사합니다!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: NewAppColor.textTertiary,
+              fontSize: 12.5.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
+            ),
           ),
         ],
       ),
     );
   }
-  
+
   void _showAttendanceError(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.error, color: Colors.red),
-            SizedBox(width: 8),
-            Text('오류'),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
+    AppToast.error(context, message);
   }
 }
 
@@ -454,7 +448,7 @@ class MyQRCodeScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.qr_code, size: 80, color: Colors.grey),
+                            Icon(LucideIcons.qrCode, size: 80, color: Colors.grey),
                             SizedBox(height: 8),
                             Text(
                               'QR 코드\n(qr_flutter 패키지 필요)',
@@ -488,7 +482,7 @@ class MyQRCodeScreen extends StatelessWidget {
                           const SnackBar(content: Text('QR 코드 저장 기능은 추후 구현 예정입니다')),
                         );
                       },
-                      icon: const Icon(Icons.save),
+                      icon: const Icon(LucideIcons.save),
                       label: const Text('저장'),
                     ),
                   ),
@@ -501,7 +495,7 @@ class MyQRCodeScreen extends StatelessWidget {
                           const SnackBar(content: Text('QR 코드 공유 기능은 추후 구현 예정입니다')),
                         );
                       },
-                      icon: const Icon(Icons.share),
+                      icon: const Icon(LucideIcons.share2),
                       label: const Text('공유'),
                     ),
                   ),

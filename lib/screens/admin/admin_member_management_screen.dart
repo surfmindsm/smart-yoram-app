@@ -11,6 +11,7 @@ import '../../components/index.dart' hide IconButton;
 import '../../utils/korean_search_util.dart';
 import 'admin_member_detail_screen.dart';
 import 'admin_member_create_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 관리자용 교인 관리 화면
 class AdminMemberManagementScreen extends StatefulWidget {
@@ -182,7 +183,7 @@ class _AdminMemberManagementScreenState
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -195,7 +196,7 @@ class _AdminMemberManagementScreenState
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.person_add_alt_1,
+            icon: Icon(LucideIcons.userPlus,
                 color: NewAppColor.skyDeep, size: 22.sp),
             onPressed: _navigateToCreate,
           ),
@@ -234,7 +235,7 @@ class _AdminMemberManagementScreenState
                   child: Row(
                     children: [
                       Icon(
-                        Icons.search,
+                        LucideIcons.search,
                         size: 18.sp,
                         color: NewAppColor.textTertiary,
                       ),
@@ -349,7 +350,7 @@ class _AdminMemberManagementScreenState
         ),
         alignment: Alignment.center,
         child: Icon(
-          Icons.swap_vert,
+          LucideIcons.arrowUpDown,
           size: 16.sp,
           color: NewAppColor.skyDeep,
         ),
@@ -390,7 +391,7 @@ class _AdminMemberManagementScreenState
             if (!hideChevron) ...[
               SizedBox(width: 4.w),
               Icon(
-                Icons.keyboard_arrow_down,
+                LucideIcons.chevronDown,
                 size: 14.sp,
                 color: isSelected ? Colors.white : NewAppColor.textSecondary,
               ),
@@ -448,7 +449,7 @@ class _AdminMemberManagementScreenState
                         child: ListTile(
                           title: const Text('전체'),
                           trailing: selectedPositionCategory == null
-                              ? Icon(Icons.check, color: NewAppColor.primary600)
+                              ? Icon(LucideIcons.check, color: NewAppColor.primary600)
                               : null,
                           onTap: () {
                             setState(() {
@@ -471,7 +472,7 @@ class _AdminMemberManagementScreenState
                           child: ListTile(
                             title: Text(entry.value),
                             trailing: isSelected
-                                ? Icon(Icons.check,
+                                ? Icon(LucideIcons.check,
                                     color: NewAppColor.primary600)
                                 : null,
                             onTap: () {
@@ -538,7 +539,7 @@ class _AdminMemberManagementScreenState
                         child: ListTile(
                           title: const Text('전체'),
                           trailing: selectedDepartment == null
-                              ? Icon(Icons.check, color: NewAppColor.primary600)
+                              ? Icon(LucideIcons.check, color: NewAppColor.primary600)
                               : null,
                           onTap: () {
                             setState(() {
@@ -562,7 +563,7 @@ class _AdminMemberManagementScreenState
                           child: ListTile(
                             title: Text(label),
                             trailing: isSelected
-                                ? Icon(Icons.check,
+                                ? Icon(LucideIcons.check,
                                     color: NewAppColor.primary600)
                                 : null,
                             onTap: () {
@@ -646,7 +647,7 @@ class _AdminMemberManagementScreenState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.people_outline,
+                    LucideIcons.users,
                     size: 56.sp,
                     color: NewAppColor.iconFaint,
                   ),
@@ -856,7 +857,7 @@ class _AdminMemberManagementScreenState
             ),
             SizedBox(width: 8.w),
             Icon(
-              Icons.chevron_right,
+              LucideIcons.chevronRight,
               size: 18.sp,
               color: NewAppColor.iconFaint,
             ),
@@ -1078,7 +1079,7 @@ class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
                       child: ListTile(
                         title: const Text('전체'),
                         trailing: widget.selectedDistrictId == null
-                            ? Icon(Icons.check, color: NewAppColor.primary600)
+                            ? Icon(LucideIcons.check, color: NewAppColor.primary600)
                             : null,
                         onTap: () {
                           widget.onDistrictSelected(null, null);
@@ -1100,7 +1101,7 @@ class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
                         child: ListTile(
                           title: Text(displayName),
                           trailing: isSelected
-                              ? Icon(Icons.check, color: NewAppColor.primary600)
+                              ? Icon(LucideIcons.check, color: NewAppColor.primary600)
                               : null,
                           onTap: () {
                             widget.onDistrictSelected(districtId, displayName);

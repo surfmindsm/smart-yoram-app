@@ -6,6 +6,7 @@ import '../../models/user.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../services/bug_report_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 문제 신고 화면 — 1.2.0 C 방향
 class BugReportScreen extends StatefulWidget {
@@ -95,7 +96,7 @@ class _BugReportScreenState extends State<BugReportScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(Icons.close,
+          icon: Icon(LucideIcons.x,
               color: NewAppColor.textStrong, size: 22.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -157,7 +158,7 @@ class _BugReportScreenState extends State<BugReportScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.bug_report_outlined,
+          Icon(LucideIcons.bug,
               color: NewAppColor.skyDeep, size: 18.sp),
           SizedBox(width: 9.w),
           Expanded(

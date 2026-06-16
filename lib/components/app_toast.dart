@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 1.2.0 C 방향: 앱 전역 floating 다크 토스트
 ///
@@ -160,16 +161,16 @@ class _ToastWidgetState extends State<_ToastWidget>
   ({IconData icon, Color iconColor}) _typeStyle() {
     switch (widget.type) {
       case ToastType.error:
-        return (icon: Icons.error_outline, iconColor: NewAppColor.danger300);
+        return (icon: LucideIcons.circleAlert, iconColor: NewAppColor.danger300);
       case ToastType.warning:
         return (
-          icon: Icons.warning_amber_outlined,
+          icon: LucideIcons.triangleAlert,
           iconColor: NewAppColor.warning300,
         );
       case ToastType.success:
       case ToastType.info:
         return (
-          icon: Icons.check_circle_outline,
+          icon: LucideIcons.circleCheck,
           iconColor: NewAppColor.success300,
         );
     }

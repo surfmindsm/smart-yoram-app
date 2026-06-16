@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../resource/color_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 상태 뱃지 컴포넌트
 class StatusBadge extends StatelessWidget {
@@ -30,7 +31,7 @@ class StatusBadge extends StatelessWidget {
         children: [
           if (isUrgent) ...[
             Icon(
-              Icons.error,
+              LucideIcons.circleAlert,
               size: 12.sp,
               color: Colors.red,
             ),

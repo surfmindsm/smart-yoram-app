@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
-import '../resource/color_style.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../resource/color_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-enum InputSize {
-  sm,
-  md,
-  lg,
-}
+/// 입력 필드 크기 — 작은(sm) / 보통(md, 기본) / 큰(lg)
+enum InputSize { sm, md, lg }
 
+/// 1.2.0 C 방향 표준 입력 컴포넌트
+///
+/// - 라벨: textSecondary 13sp/700 + 빨강 별표(필수)
+/// - 박스: 흰 fill + borderHair 1px, 포커스 시 skyPrimary 1.5px
+/// - 텍스트: textStrong 14sp/500
+/// - placeholder: textTertiary 14sp/500
+/// - 아이콘 색: textTertiary → 포커스 시 skyPrimary
 class AppInput extends StatefulWidget {
   final String? label;
   final String? placeholder;
@@ -81,60 +85,61 @@ class _AppInputState extends State<AppInput> {
   }
 
   void _onFocusChange() {
-    setState(() {
-      _isFocused = _focusNode.hasFocus;
-    });
+    setState(() => _isFocused = _focusNode.hasFocus);
   }
 
   @override
   Widget build(BuildContext context) {
-    final sizeTheme = _getSizeTheme(widget.size);
+    final config = _sizeConfig(widget.size);
     final hasError = widget.errorText != null;
-    
+    final borderColor = hasError
+        ? NewAppColor.danger700
+        : _isFocused
+            ? NewAppColor.skyPrimary
+            : NewAppColor.borderHair;
+    final iconColor =
+        _isFocused ? NewAppColor.skyPrimary : NewAppColor.textTertiary;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label
         if (widget.label != null) ...[
           Row(
             children: [
               Text(
                 widget.label!,
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColor.secondary07,
+                  color: NewAppColor.textSecondary,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Pretendard',
                 ),
               ),
-              if (widget.required)
+              if (widget.required) ...[
+                SizedBox(width: 3.w),
                 Text(
-                  ' *',
+                  '*',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: AppColor.error,
+                    color: NewAppColor.danger700,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Pretendard',
                   ),
                 ),
+              ],
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 6.h),
         ],
-        
-        // Input Field
-        Container(
-          height: sizeTheme.height * (widget.maxLines ?? 1),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            color: widget.disabled ? NewAppColor.canvasAlt : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
-              color: hasError 
-                  ? AppColor.error
-                  : _isFocused 
-                      ? NewAppColor.skyPrimary
-                      : AppColor.border1,
-              width: _isFocused ? 1.5 : 1,
+              color: borderColor,
+              width: _isFocused || hasError ? 1.5 : 1,
             ),
-            color: widget.disabled 
-                ? AppColor.secondary00
-                : AppColor.white,
           ),
           child: TextFormField(
             controller: widget.controller,
@@ -150,56 +155,78 @@ class _AppInputState extends State<AppInput> {
             onFieldSubmitted: widget.onSubmitted,
             onTap: widget.onTap,
             style: TextStyle(
-              fontSize: sizeTheme.fontSize,
-              color: widget.disabled 
-                  ? AppColor.secondary04
-                  : AppColor.secondary07,
-              height: 1.5,
+              color: widget.disabled
+                  ? NewAppColor.textTertiary
+                  : NewAppColor.textStrong,
+              fontSize: config.fontSize,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
+              height: 1.45,
             ),
             decoration: InputDecoration(
               hintText: widget.placeholder,
               hintStyle: TextStyle(
-                fontSize: sizeTheme.fontSize,
-                color: AppColor.secondary04,
+                color: NewAppColor.textTertiary,
+                fontSize: config.fontSize,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Pretendard',
               ),
               prefixIcon: widget.prefixIcon != null
-                  ? Icon(
-                      widget.prefixIcon,
-                      color: _isFocused 
-                          ? NewAppColor.skyPrimary
-                          : AppColor.secondary04,
-                      size: sizeTheme.iconSize,
-                    )
-                  : null,
-              suffixIcon: widget.suffixIcon != null
-                  ? GestureDetector(
-                      onTap: widget.onSuffixIconTap,
+                  ? Padding(
+                      padding: EdgeInsets.only(left: 12.w, right: 6.w),
                       child: Icon(
-                        widget.suffixIcon,
-                        color: _isFocused 
-                            ? NewAppColor.skyPrimary
-                            : AppColor.secondary04,
-                        size: sizeTheme.iconSize,
+                        widget.prefixIcon,
+                        color: iconColor,
+                        size: config.iconSize,
                       ),
                     )
                   : null,
-              contentPadding: sizeTheme.padding,
+              prefixIconConstraints: BoxConstraints(
+                minWidth: 0,
+                minHeight: 0,
+              ),
+              suffixIcon: widget.suffixIcon != null
+                  ? GestureDetector(
+                      onTap: widget.onSuffixIconTap,
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 12.w, left: 6.w),
+                        child: Icon(
+                          widget.suffixIcon,
+                          color: iconColor,
+                          size: config.iconSize,
+                        ),
+                      ),
+                    )
+                  : null,
+              suffixIconConstraints: BoxConstraints(
+                minWidth: 0,
+                minHeight: 0,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: widget.prefixIcon != null ? 4.w : 14.w,
+                vertical: config.verticalPadding,
+              ),
               border: InputBorder.none,
               counterText: '',
+              isDense: true,
             ),
           ),
         ),
-        
-        // Helper/Error Text
         if (widget.helperText != null || widget.errorText != null) ...[
-          const SizedBox(height: 6),
-          Text(
-            widget.errorText ?? widget.helperText!,
-            style: TextStyle(
-              fontSize: 12,
-              color: hasError 
-                  ? AppColor.error
-                  : AppColor.secondary04,
+          SizedBox(height: 6.h),
+          Padding(
+            padding: EdgeInsets.only(left: 2.w),
+            child: Text(
+              widget.errorText ?? widget.helperText!,
+              style: TextStyle(
+                color: hasError
+                    ? NewAppColor.danger700
+                    : NewAppColor.textTertiary,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Pretendard',
+              ),
             ),
           ),
         ],
@@ -207,88 +234,42 @@ class _AppInputState extends State<AppInput> {
     );
   }
 
-  _SizeTheme _getSizeTheme(InputSize size) {
+  _InputConfig _sizeConfig(InputSize size) {
     switch (size) {
       case InputSize.sm:
-        return _SizeTheme(
-          height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          fontSize: 12,
-          iconSize: 16,
+        return _InputConfig(
+          fontSize: 13.sp,
+          iconSize: 16.sp,
+          verticalPadding: 10.h,
         );
       case InputSize.md:
-        return _SizeTheme(
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          fontSize: 14,
-          iconSize: 18,
+        return _InputConfig(
+          fontSize: 14.sp,
+          iconSize: 18.sp,
+          verticalPadding: 13.h,
         );
       case InputSize.lg:
-        return _SizeTheme(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          fontSize: 16,
-          iconSize: 20,
+        return _InputConfig(
+          fontSize: 15.sp,
+          iconSize: 20.sp,
+          verticalPadding: 15.h,
         );
     }
   }
 }
 
-class _SizeTheme {
-  final double height;
-  final EdgeInsets padding;
+class _InputConfig {
   final double fontSize;
   final double iconSize;
-
-  const _SizeTheme({
-    required this.height,
-    required this.padding,
+  final double verticalPadding;
+  const _InputConfig({
     required this.fontSize,
     required this.iconSize,
+    required this.verticalPadding,
   });
 }
 
-// Search Input with built-in search functionality
-class AppSearchInput extends StatelessWidget {
-  final String? placeholder;
-  final TextEditingController? controller;
-  final ValueChanged<String>? onChanged;
-  final ValueChanged<String>? onSubmitted;
-  final VoidCallback? onClear;
-  final InputSize size;
-
-  const AppSearchInput({
-    Key? key,
-    this.placeholder = '검색...',
-    this.controller,
-    this.onChanged,
-    this.onSubmitted,
-    this.onClear,
-    this.size = InputSize.md,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return AppInput(
-      placeholder: placeholder,
-      controller: controller,
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
-      size: size,
-      prefixIcon: Icons.search,
-      suffixIcon: controller?.text.isNotEmpty == true 
-          ? Icons.close
-          : null,
-      onSuffixIconTap: () {
-        controller?.clear();
-        onClear?.call();
-      },
-      keyboardType: TextInputType.text,
-    );
-  }
-}
-
-// Password Input with toggle visibility
+// 비밀번호 입력 (visibility 토글)
 class AppPasswordInput extends StatefulWidget {
   final String? label;
   final String? placeholder;
@@ -330,14 +311,10 @@ class _AppPasswordInputState extends State<AppPasswordInput> {
       size: widget.size,
       obscureText: _obscureText,
       onChanged: widget.onChanged,
-      prefixIcon: Icons.lock,
-      suffixIcon: _obscureText 
-          ? Icons.visibility_off
-          : Icons.visibility,
+      prefixIcon: LucideIcons.lock,
+      suffixIcon: _obscureText ? LucideIcons.eyeOff : LucideIcons.eye,
       onSuffixIconTap: () {
-        setState(() {
-          _obscureText = !_obscureText;
-        });
+        setState(() => _obscureText = !_obscureText);
       },
       keyboardType: TextInputType.visiblePassword,
     );

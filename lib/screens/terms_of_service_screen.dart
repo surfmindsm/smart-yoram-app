@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 서비스 이용약관 — 1.2.0 C 방향
 class TermsOfServiceScreen extends StatelessWidget {
@@ -21,7 +22,7 @@ class TermsOfServiceScreen extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -34,7 +35,7 @@ class TermsOfServiceScreen extends StatelessWidget {
         ),
         actions: [
           material.IconButton(
-            icon: Icon(Icons.copy_outlined,
+            icon: Icon(LucideIcons.copy,
                 color: NewAppColor.textSecondary, size: 21.sp),
             onPressed: () {
               Clipboard.setData(
@@ -105,13 +106,13 @@ class TermsOfServiceScreen extends StatelessWidget {
             ),
           ),
           SizedBox(height: 12.h),
-          _buildContactRow(Icons.business_outlined, '회사', '서프마인드'),
+          _buildContactRow(LucideIcons.building2, '회사', '서프마인드'),
           SizedBox(height: 8.h),
-          _buildContactRow(Icons.location_on_outlined, '주소', '서울시 강남구'),
+          _buildContactRow(LucideIcons.mapPin, '주소', '서울시 강남구'),
           SizedBox(height: 8.h),
-          _buildContactRow(Icons.phone_outlined, '전화', '02-123-4567'),
+          _buildContactRow(LucideIcons.phone, '전화', '02-123-4567'),
           SizedBox(height: 8.h),
-          _buildContactRow(Icons.mail_outline, '이메일', 'surfmind.sm@gmail.com'),
+          _buildContactRow(LucideIcons.mail, '이메일', 'surfmind.sm@gmail.com'),
         ],
       ),
     );

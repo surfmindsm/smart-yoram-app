@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../components/index.dart' hide IconButton;
+import '../resource/color_style_new.dart';
 import '../widget/widgets.dart';
 
 class Event {
@@ -161,7 +163,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(LucideIcons.plus),
             onPressed: () {
               _showAddEventDialog();
             },
@@ -190,7 +192,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         heroTag: "calendar_fab",
         onPressed: _showAddEventDialog,
         backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(LucideIcons.plus, color: Colors.white),
       ),
     );
   }
@@ -202,7 +204,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     
     if (todayEvents.isEmpty) {
       return const EmptyStateWidget(
-        icon: Icons.calendar_today,
+        icon: LucideIcons.calendarDays,
         title: '오늘 일정이 없습니다',
         subtitle: '좋은 하루 보내세요!',
       );
@@ -262,7 +264,7 @@ class _CalendarScreenState extends State<CalendarScreen>
       onRefresh: _loadEvents,
       child: upcomingEvents.isEmpty
           ? const EmptyStateWidget(
-              icon: Icons.calendar_month,
+              icon: LucideIcons.calendarDays,
               title: '예정된 일정이 없습니다',
               subtitle: '새로운 일정을 추가하세요!',
             )
@@ -366,19 +368,21 @@ class _CalendarScreenState extends State<CalendarScreen>
               value: 'edit',
               child: Row(
                 children: [
-                  Icon(Icons.edit, size: 16),
+                  Icon(LucideIcons.pencil, size: 16),
                   SizedBox(width: 8),
                   Text('수정'),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete, size: 16, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('삭제', style: TextStyle(color: Colors.red)),
+                  Icon(LucideIcons.trash2,
+                      size: 16, color: NewAppColor.danger700),
+                  const SizedBox(width: 8),
+                  Text('삭제',
+                      style: TextStyle(color: NewAppColor.danger700)),
                 ],
               ),
             ),
@@ -405,13 +409,13 @@ class _CalendarScreenState extends State<CalendarScreen>
   IconData _getEventIcon(String type) {
     switch (type) {
       case 'birthday':
-        return Icons.cake;
+        return LucideIcons.cake;
       case 'church':
-        return Icons.church;
+        return LucideIcons.church;
       case 'personal':
-        return Icons.person;
+        return LucideIcons.user;
       default:
-        return Icons.calendar_month;
+        return LucideIcons.calendarDays;
     }
   }
 
@@ -440,40 +444,32 @@ class _CalendarScreenState extends State<CalendarScreen>
   }
 
   void _showEventDetail(Event event) {
-    showDialog(
+    AppInfoSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(event.title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(_getEventIcon(event.type), size: 16),
-                const SizedBox(width: 8),
-                Text(_getEventTypeText(event.type)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 16),
-                const SizedBox(width: 8),
-                Text(_formatEventDate(event.date)),
-              ],
-            ),
-            if (event.description != null) ...[
-              const SizedBox(height: 12),
-              Text(event.description!),
+      title: event.title,
+      icon: _getEventIcon(event.type),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(_getEventIcon(event.type), size: 16),
+              const SizedBox(width: 8),
+              Text(_getEventTypeText(event.type)),
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
           ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(LucideIcons.clock, size: 16),
+              const SizedBox(width: 8),
+              Text(_formatEventDate(event.date)),
+            ],
+          ),
+          if (event.description != null) ...[
+            const SizedBox(height: 12),
+            Text(event.description!),
+          ],
         ],
       ),
     );
@@ -493,53 +489,27 @@ class _CalendarScreenState extends State<CalendarScreen>
   }
 
   void _showAddEventDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('일정 추가'),
-        content: const Text('일정 추가 기능은 준비 중입니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
+    AppToast.show(context, '일정 추가 기능은 준비 중입니다');
   }
 
   void _editEvent(Event event) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${event.title} 수정 기능은 준비 중입니다')),
-    );
+    AppToast.show(context, '${event.title} 수정 기능은 준비 중입니다');
   }
 
-  void _deleteEvent(Event event) {
-    showDialog(
+  Future<void> _deleteEvent(Event event) async {
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('일정 삭제'),
-        content: Text('${event.title}을(를) 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                allEvents.removeWhere((e) => e.id == event.id);
-                _filterEvents();
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('일정이 삭제되었습니다')),
-              );
-            },
-            child: const Text('삭제', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: '일정을 삭제할까요?',
+      description: '${event.title}을(를) 삭제합니다.',
+      confirmLabel: '삭제',
+      tone: AppSheetTone.danger,
     );
+    if (ok == true && mounted) {
+      setState(() {
+        allEvents.removeWhere((e) => e.id == event.id);
+        _filterEvents();
+      });
+      AppToast.success(context, '일정이 삭제되었습니다');
+    }
   }
 }

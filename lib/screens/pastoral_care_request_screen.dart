@@ -1,5 +1,5 @@
 import 'dart:async';
-// import.*lucide_icons.*;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/material.dart' hide IconButton;
 import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -334,7 +334,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -402,7 +402,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
         ),
         child: Row(
           children: [
-            Icon(Icons.event_outlined,
+            Icon(LucideIcons.calendar,
                 size: 18.sp, color: NewAppColor.textTertiary),
             SizedBox(width: 10.w),
             Expanded(
@@ -418,7 +418,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 ),
               ),
             ),
-            Icon(Icons.expand_more,
+            Icon(LucideIcons.chevronDown,
                 size: 20.sp, color: NewAppColor.iconFaint),
           ],
         ),
@@ -636,7 +636,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   AppInput(
                     controller: _contactController,
                     placeholder: '연락 가능한 번호를 입력해주세요',
-                    prefixIcon: Icons.phone_outlined,
+                    prefixIcon: LucideIcons.phone,
                     keyboardType: TextInputType.phone,
                   ),
                 ],
@@ -669,8 +669,8 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   AppInput(
                     controller: _addressController,
                     placeholder: '방문 주소를 입력하세요',
-                    prefixIcon: Icons.location_on_outlined,
-                    suffixIcon: Icons.search,
+                    prefixIcon: LucideIcons.mapPin,
+                    suffixIcon: LucideIcons.search,
                     onSuffixIconTap: _onSearchAddress,
                     onSubmitted: (_) => _onSearchAddress(),
                   ),
@@ -868,7 +868,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.location_on,
+                    LucideIcons.mapPin,
                     color: Colors.red,
                     size: 40.w,
                   ),
@@ -917,7 +917,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.map,
+                LucideIcons.map,
                 size: 48.w,
                 color: NewAppColor.textMuted,
               ),
@@ -976,7 +976,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Icon(
-                Icons.home_outlined,
+                LucideIcons.house,
                 size: 36.sp,
                 color: NewAppColor.skyDeep,
               ),
@@ -1026,7 +1026,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.add, size: 17.sp, color: Colors.white),
+                    Icon(LucideIcons.plus, size: 17.sp, color: Colors.white),
                     SizedBox(width: 7.w),
                     Text(
                       '새 신청 작성하기',
@@ -1087,7 +1087,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      Icons.home_outlined,
+                      LucideIcons.house,
                       size: 18.sp,
                       color: NewAppColor.skyDeep,
                     ),
@@ -1153,7 +1153,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                   ],
                   Row(
                     children: [
-                      Icon(Icons.access_time,
+                      Icon(LucideIcons.clock,
                           size: 13.sp, color: NewAppColor.textTertiary),
                       SizedBox(width: 4.w),
                       Text(
@@ -1171,7 +1171,7 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
                     SizedBox(height: 6.h),
                     Row(
                       children: [
-                        Icon(Icons.location_on_outlined,
+                        Icon(LucideIcons.mapPin,
                             size: 13.sp, color: NewAppColor.textTertiary),
                         SizedBox(width: 4.w),
                         Expanded(
@@ -1304,24 +1304,14 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
   }
 
   Future<void> _cancelRequest(PastoralCareRequest request) async {
-    final result = await showDialog<bool>(
+    final result = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AppDialog(
-        title: '신청 취소',
-        description: '정말로 이 신청을 취소하시겠습니까?\n취소된 신청은 복구할 수 없습니다.',
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            variant: ButtonVariant.ghost,
-            child: const Text('아니오'),
-          ),
-          AppButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            variant: ButtonVariant.destructive,
-            child: const Text('취소하기'),
-          ),
-        ],
-      ),
+      title: '신청을 취소할까요?',
+      description: '취소된 신청은 복구할 수 없어요.',
+      confirmLabel: '취소하기',
+      cancelLabel: '아니요',
+      tone: AppSheetTone.danger,
+      icon: LucideIcons.circleX,
     );
 
     if (result == true) {
@@ -1383,173 +1373,131 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
 
     if (!mounted) return;
 
-    showDialog(
+    AppInfoSheet.show(
       context: context,
-      builder: (context) => AppDialog(
-        title: '신청 상세보기',
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 기본 정보
-              _buildDetailSection('상태', request.statusDisplayName),
-
-              SizedBox(height: 16.h),
-
-              // 신청 내용
-              Text(
-                '신청 내용',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: NewAppColor.textStrong,
-                ),
+      title: '신청 상세보기',
+      icon: LucideIcons.calendarDays,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildDetailSection('상태', request.statusDisplayName),
+          SizedBox(height: 14.h),
+          Text(
+            '신청 내용',
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: NewAppColor.canvasAlt,
+              borderRadius: BorderRadius.circular(10.r),
+              border: Border.all(color: NewAppColor.borderHair),
+            ),
+            child: Text(
+              request.description,
+              style: TextStyle(
+                color: NewAppColor.textBody,
+                fontSize: 13.5.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Pretendard',
+                height: 1.55,
               ),
-              SizedBox(height: 8.h),
-              Container(
+            ),
+          ),
+          SizedBox(height: 14.h),
+          if (request.preferredDate != null)
+            _buildDetailSection(
+                '희망 날짜',
+                '${request.preferredDate!.year}.${request.preferredDate!.month.toString().padLeft(2, '0')}.${request.preferredDate!.day.toString().padLeft(2, '0')}'),
+          if (request.preferredTime != null)
+            _buildDetailSection('희망 시간', request.preferredTime!),
+          if (request.contactInfo != null)
+            _buildDetailSection('연락처', request.contactInfo!),
+          if (request.address != null)
+            _buildDetailSection('주소', request.address!),
+          if (request.latitude != null && request.longitude != null)
+            _buildDetailSection(
+                '좌표',
+                '${request.latitude!.toStringAsFixed(6)}, ${request.longitude!.toStringAsFixed(6)}'),
+          if (request.member != null)
+            _buildDetailSection('신청자', request.member!.name),
+          if (request.member?.phone != null)
+            _buildDetailSection('신청자 연락처', request.member!.phone),
+          _buildDetailSection('신청일', _formatDetailDate(request.createdAt)),
+          if (request.updatedAt != null &&
+              request.updatedAt != request.createdAt)
+            _buildDetailSection('수정일', _formatDetailDate(request.updatedAt!)),
+          _buildDetailSection('담당자', assignedPastorName ?? '미지정'),
+          if (request.completedAt != null)
+            _buildDetailSection('완료일', _formatDetailDate(request.completedAt!)),
+          if (request.adminNotes != null && request.adminNotes!.isNotEmpty)
+            _buildDetailSection('관리자 메모', request.adminNotes!),
+          if (request.latitude != null && request.longitude != null) ...[
+            SizedBox(height: 10.h),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pop();
+                _showLocationOnMap(
+                    request.latitude!, request.longitude!, request.address);
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(12.w),
+                padding: EdgeInsets.symmetric(vertical: 13.h),
                 decoration: BoxDecoration(
-                  color: NewAppColor.canvasAlt,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: NewAppColor.borderStrong),
+                  color: NewAppColor.skyTint,
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
-                child: Text(
-                  request.description,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: NewAppColor.textSecondary,
-                    height: 1.4,
-                  ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(LucideIcons.map,
+                        size: 16.sp, color: NewAppColor.skyDeep),
+                    SizedBox(width: 7.w),
+                    Text(
+                      '지도에서 위치 보기',
+                      style: TextStyle(
+                        color: NewAppColor.skyDeep,
+                        fontSize: 13.5.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
-              SizedBox(height: 16.h),
-
-              // 희망 일정 정보
-              if (request.preferredDate != null)
-                _buildDetailSection('희망 날짜',
-                    '${request.preferredDate!.year}.${request.preferredDate!.month.toString().padLeft(2, '0')}.${request.preferredDate!.day.toString().padLeft(2, '0')}'),
-              if (request.preferredTime != null)
-                _buildDetailSection('희망 시간', request.preferredTime!),
-              if (request.contactInfo != null)
-                _buildDetailSection('연락처', request.contactInfo!),
-
-              // 위치 정보
-              if (request.address != null)
-                _buildDetailSection('주소', request.address!),
-              if (request.latitude != null && request.longitude != null)
-                _buildDetailSection('좌표',
-                    '${request.latitude!.toStringAsFixed(6)}, ${request.longitude!.toStringAsFixed(6)}'),
-
-              // 신청자 정보
-              if (request.member != null)
-                _buildDetailSection('신청자', request.member!.name),
-              if (request.member?.phone != null)
-                _buildDetailSection('신청자 연락처', request.member!.phone),
-
-              // 일정 정보
-              _buildDetailSection('신청일', _formatDetailDate(request.createdAt)),
-              if (request.updatedAt != null &&
-                  request.updatedAt != request.createdAt)
-                _buildDetailSection(
-                    '수정일', _formatDetailDate(request.updatedAt!)),
-
-              // 처리 정보
-              _buildDetailSection('담당자', assignedPastorName ?? '미지정'),
-              if (request.completedAt != null)
-                _buildDetailSection(
-                    '완료일', _formatDetailDate(request.completedAt!)),
-              if (request.adminNotes != null && request.adminNotes!.isNotEmpty)
-                _buildDetailSection('관리자 메모', request.adminNotes!),
-
-              // 위치가 있으면 지도 보기 버튼 추가
-              if (request.latitude != null && request.longitude != null) ...[
-                SizedBox(height: 16.h),
-                AppButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _showLocationOnMap(
-                        request.latitude!, request.longitude!, request.address);
-                  },
-                  variant: ButtonVariant.outline,
-                  size: ButtonSize.md,
-                  child: const Text('지도에서 위치 보기'),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          AppButton(
-            variant: ButtonVariant.ghost,
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
-          ),
-          if (request.canEdit)
-            AppButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _editRequest(request);
-              },
-              child: const Text('수정'),
             ),
-          if (request.canCancel)
-            AppButton(
-              variant: ButtonVariant.destructive,
-              onPressed: () {
-                Navigator.of(context).pop();
-                _cancelRequest(request);
-              },
-              child: const Text('취소'),
-            ),
+          ],
         ],
       ),
     );
   }
 
-  // 위치를 지도에서 보기
+  // 위치를 지도에서 보기 — AppMenuSheet 헬퍼 사용
   void _showLocationOnMap(double latitude, double longitude, String? address) {
     final links = _generateMapLinks(latitude, longitude);
-
-    showDialog(
+    AppMenuSheet.show(
       context: context,
-      builder: (context) => AppDialog(
-        title: '위치 보기',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (address != null) ...[
-              Text('주소: $address'),
-              SizedBox(height: 8.h),
-            ],
-            Text(
-                '좌표: ${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}'),
-            SizedBox(height: 16.h),
-            AppButton(
-              onPressed: () => _openMapLink(links['naver']!),
-              variant: ButtonVariant.primary,
-              size: ButtonSize.md,
-              child: const Text('네이버 지도에서 보기'),
-            ),
-            SizedBox(height: 8.h),
-            AppButton(
-              onPressed: () => _openMapLink(links['google']!),
-              variant: ButtonVariant.outline,
-              size: ButtonSize.md,
-              child: const Text('구글 지도에서 보기'),
-            ),
-          ],
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.map,
+          label: '네이버 지도에서 보기',
+          onTap: () => _openMapLink(links['naver']!),
         ),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
+        AppMenuItem(
+          icon: LucideIcons.globe,
+          label: '구글 지도에서 보기',
+          onTap: () => _openMapLink(links['google']!),
+        ),
+      ],
     );
   }
 
@@ -1564,9 +1512,10 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
-                color: NewAppColor.textMuted,
+                color: NewAppColor.textTertiary,
+                fontSize: 12.5.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Pretendard',
               ),
             ),
           ),
@@ -1574,8 +1523,10 @@ class _PastoralCareRequestScreenState extends State<PastoralCareRequestScreen>
             child: Text(
               value,
               style: TextStyle(
-                fontSize: 12.sp,
                 color: NewAppColor.textStrong,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Pretendard',
               ),
             ),
           ),

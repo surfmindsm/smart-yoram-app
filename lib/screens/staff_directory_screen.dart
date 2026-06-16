@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../components/index.dart' hide IconButton;
+import '../resource/color_style_new.dart';
+import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class StaffDirectoryScreen extends StatefulWidget {
   const StaffDirectoryScreen({super.key});
@@ -8,10 +12,12 @@ class StaffDirectoryScreen extends StatefulWidget {
   State<StaffDirectoryScreen> createState() => _StaffDirectoryScreenState();
 }
 
-class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with TickerProviderStateMixin {
+class _StaffDirectoryScreenState extends State<StaffDirectoryScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  
+
   final List<String> _categories = ['전체', '목회진', '장로', '안수집사', '권사', '집사'];
 
   @override
@@ -23,67 +29,140 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('교역자/임직자 명단'),
-        backgroundColor: Colors.blue[700],
-        foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: _categories.map((category) => Tab(text: category)).toList(),
-          isScrollable: true,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-        ),
-        actions: [
-          IconButton(
-            onPressed: _showSearchDialog,
-            icon: const Icon(Icons.search),
+        title: Text(
+          '교역자/임직자 명단',
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
           ),
-        ],
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: NewAppColor.textStrong,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft, size: 26.sp, color: NewAppColor.textStrong),
+          onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.h),
+          child: Container(height: 1.h, color: NewAppColor.borderHair),
+        ),
       ),
       body: Column(
         children: [
-          // 검색 결과 표시
-          if (_searchQuery.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.blue[50],
+          // 검색바
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 10.h),
+            child: Container(
+              decoration: BoxDecoration(
+                color: NewAppColor.borderSoft,
+                borderRadius: BorderRadius.circular(11.r),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
               child: Row(
                 children: [
-                  Icon(Icons.search, color: Colors.blue[700]),
-                  const SizedBox(width: 8),
+                  Icon(LucideIcons.search, size: 18.sp, color: NewAppColor.textTertiary),
+                  SizedBox(width: 10.w),
                   Expanded(
-                    child: Text(
-                      '검색: "$_searchQuery"',
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.bold,
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: '이름·직분·부서 검색',
+                        hintStyle: FigmaTextStyles().body3.copyWith(
+                              color: NewAppColor.textTertiary,
+                            ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
                       ),
+                      style: FigmaTextStyles().body3.copyWith(
+                            color: NewAppColor.textStrong,
+                          ),
+                      onChanged: (value) {
+                        setState(() => _searchQuery = value);
+                      },
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _searchQuery = '';
-                      });
-                    },
-                    child: const Text('초기화'),
-                  ),
+                  if (_searchQuery.isNotEmpty)
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _searchController.clear();
+                          _searchQuery = '';
+                        });
+                      },
+                      child: Icon(
+                        LucideIcons.x,
+                        size: 18.sp,
+                        color: NewAppColor.textTertiary,
+                      ),
+                    ),
                 ],
               ),
             ),
-          
+          ),
+          // 카테고리 탭 (1.2.0 스타일)
+          Container(
+            height: 42.h,
+            margin: EdgeInsets.symmetric(horizontal: 16.w),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _categories.length,
+              separatorBuilder: (_, __) => SizedBox(width: 7.w),
+              itemBuilder: (context, index) {
+                final isSelected = _tabController.index == index;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _tabController.animateTo(index);
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: isSelected ? NewAppColor.skyPrimary : Colors.white,
+                      borderRadius: BorderRadius.circular(999.r),
+                      border: Border.all(
+                        color: isSelected
+                            ? NewAppColor.skyPrimary
+                            : NewAppColor.borderHair,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _categories[index],
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : NewAppColor.textSecondary,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: 8.h),
           // 탭뷰 컨텐츠
           Expanded(
             child: TabBarView(
               controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(),
               children: _categories.map((category) {
                 return _buildStaffList(category);
               }).toList(),
@@ -94,25 +173,26 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
       floatingActionButton: FloatingActionButton(
         heroTag: "staff_fab",
         onPressed: _showContactAllDialog,
-        backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.email, color: Colors.white),
+        backgroundColor: NewAppColor.skyPrimary,
+        elevation: 2,
+        child: Icon(LucideIcons.mail, color: Colors.white, size: 22.sp),
       ),
     );
   }
 
   Widget _buildStaffList(String category) {
     final filteredStaff = _getFilteredStaff(category);
-    
+
     if (filteredStaff.isEmpty) {
       return _buildEmptyState(category);
     }
-    
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
+
+    return ListView.separated(
+      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 100.h),
       itemCount: filteredStaff.length,
+      separatorBuilder: (_, __) => SizedBox(height: 10.h),
       itemBuilder: (context, index) {
-        final staff = filteredStaff[index];
-        return _buildStaffCard(staff);
+        return _buildStaffCard(filteredStaff[index]);
       },
     );
   }
@@ -122,26 +202,37 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.group,
-            size: 80,
-            color: Colors.grey[400],
+          Container(
+            width: 64.w,
+            height: 64.w,
+            decoration: BoxDecoration(
+              color: NewAppColor.borderSoft,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              LucideIcons.users,
+              size: 32.sp,
+              color: NewAppColor.textTertiary,
+            ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 14.h),
           Text(
             '$category 명단이 없습니다',
             style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold,
+              color: NewAppColor.textSecondary,
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Pretendard',
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 6.h),
           Text(
             '등록된 $category이 없습니다',
             style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
+              color: NewAppColor.textTertiary,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
             ),
           ),
         ],
@@ -150,163 +241,204 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
   }
 
   Widget _buildStaffCard(StaffMember staff) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // 프로필 사진
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.grey[300],
-              child: staff.photoUrl != null
-                  ? ClipOval(
-                      child: Image.network(
-                        staff.photoUrl!,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.person, size: 30, color: Colors.grey[600]),
-                      ),
-                    )
-                  : Icon(Icons.person, size: 30, color: Colors.grey[600]),
+    final positionTone = _getPositionTone(staff.position);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair),
+      ),
+      padding: EdgeInsets.all(14.w),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 프로필 사진
+          Container(
+            width: 52.w,
+            height: 52.w,
+            decoration: BoxDecoration(
+              color: NewAppColor.borderSoft,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 16),
-            
-            // 정보 섹션
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        staff.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: _getPositionColor(staff.position).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _getPositionColor(staff.position).withOpacity(0.3),
-                          ),
-                        ),
-                        child: Text(
-                          staff.position,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _getPositionColor(staff.position),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  
-                  if (staff.department.isNotEmpty)
-                    Text(
-                      staff.department,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+            child: staff.photoUrl != null
+                ? ClipOval(
+                    child: Image.network(
+                      staff.photoUrl!,
+                      width: 52.w,
+                      height: 52.w,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        LucideIcons.user,
+                        size: 26.sp,
+                        color: NewAppColor.textTertiary,
                       ),
                     ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  Row(
-                    children: [
-                      Icon(Icons.phone, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text(
-                        staff.phone,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
+                  )
+                : Icon(
+                    LucideIcons.user,
+                    size: 26.sp,
+                    color: NewAppColor.textTertiary,
                   ),
-                  
-                  if (staff.email.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        children: [
-                          Icon(Icons.email, size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              staff.email,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            
-            // 액션 버튼들
-            Column(
+          ),
+          SizedBox(width: 12.w),
+          // 정보 섹션
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  onPressed: () => _makeCall(staff.phone),
-                  icon: Icon(Icons.phone, color: Colors.green[600]),
-                  tooltip: '전화걸기',
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        staff.name,
+                        style: TextStyle(
+                          color: NewAppColor.textStrong,
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: positionTone.bg,
+                        borderRadius: BorderRadius.circular(999.r),
+                      ),
+                      child: Text(
+                        staff.position,
+                        style: TextStyle(
+                          color: positionTone.fg,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  onPressed: () => _sendMessage(staff.phone),
-                  icon: Icon(Icons.chat, color: Colors.blue[600]),
-                  tooltip: '문자보내기',
-                ),
+                if (staff.department.isNotEmpty) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    staff.department,
+                    style: TextStyle(
+                      color: NewAppColor.textMuted,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ],
+                SizedBox(height: 8.h),
+                _buildContactRow(LucideIcons.phone, staff.phone),
+                if (staff.email.isNotEmpty) ...[
+                  SizedBox(height: 4.h),
+                  _buildContactRow(LucideIcons.mail, staff.email),
+                ],
               ],
             ),
-          ],
-        ),
+          ),
+          // 액션 버튼
+          Column(
+            children: [
+              _buildActionIcon(
+                LucideIcons.phone,
+                onTap: () => _makeCall(staff.phone),
+              ),
+              SizedBox(height: 6.h),
+              _buildActionIcon(
+                LucideIcons.messageCircle,
+                onTap: () => _sendMessage(staff.phone),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Color _getPositionColor(String position) {
+  Widget _buildContactRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 13.sp, color: NewAppColor.textTertiary),
+        SizedBox(width: 5.w),
+        Flexible(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: NewAppColor.textSecondary,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionIcon(IconData icon, {required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 32.w,
+        height: 32.w,
+        decoration: BoxDecoration(
+          color: NewAppColor.skyTint,
+          borderRadius: BorderRadius.circular(10.r),
+        ),
+        child: Icon(icon, size: 16.sp, color: NewAppColor.skyPrimary),
+      ),
+    );
+  }
+
+  _PositionTone _getPositionTone(String position) {
     switch (position) {
       case '담임목사':
       case '목사':
-        return Colors.purple;
+        return _PositionTone(
+          bg: NewAppColor.skyTint,
+          fg: NewAppColor.skyDeep,
+        );
       case '전도사':
-        return Colors.indigo;
+        return _PositionTone(
+          bg: NewAppColor.skyTint,
+          fg: NewAppColor.skyPrimary,
+        );
       case '장로':
-        return Colors.blue;
+        return _PositionTone(
+          bg: NewAppColor.warningBg,
+          fg: NewAppColor.warning700,
+        );
       case '안수집사':
-        return Colors.teal;
+        return _PositionTone(
+          bg: NewAppColor.successBg,
+          fg: NewAppColor.success700,
+        );
       case '권사':
-        return Colors.pink;
+        return _PositionTone(
+          bg: NewAppColor.dangerBg,
+          fg: NewAppColor.danger700,
+        );
       case '집사':
-        return Colors.orange;
+        return _PositionTone(
+          bg: NewAppColor.borderSoft,
+          fg: NewAppColor.textSecondary,
+        );
       default:
-        return Colors.grey;
+        return _PositionTone(
+          bg: NewAppColor.borderSoft,
+          fg: NewAppColor.textSecondary,
+        );
     }
   }
 
   List<StaffMember> _getFilteredStaff(String category) {
     List<StaffMember> allStaff = _getAllStaff();
-    
-    // 검색어 필터링
+
     if (_searchQuery.isNotEmpty) {
       allStaff = allStaff.where((staff) =>
         staff.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -314,10 +446,9 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
         staff.department.toLowerCase().contains(_searchQuery.toLowerCase())
       ).toList();
     }
-    
-    // 카테고리 필터링
+
     if (category == '전체') return allStaff;
-    
+
     final categoryMap = {
       '목회진': ['담임목사', '목사', '전도사'],
       '장로': ['장로'],
@@ -325,13 +456,12 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
       '권사': ['권사'],
       '집사': ['집사'],
     };
-    
+
     final positions = categoryMap[category] ?? [];
     return allStaff.where((staff) => positions.contains(staff.position)).toList();
   }
 
   List<StaffMember> _getAllStaff() {
-    // 샘플 데이터 - 실제 구현시 백엔드에서 가져와야 함
     return [
       StaffMember(
         id: '1',
@@ -390,150 +520,63 @@ class _StaffDirectoryScreenState extends State<StaffDirectoryScreen> with Ticker
     ];
   }
 
-  void _showSearchDialog() {
-    showDialog(
+  Future<void> _makeCall(String phoneNumber) async {
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) {
-        String searchText = _searchQuery;
-        return AlertDialog(
-          title: const Text('명단 검색'),
-          content: TextField(
-            decoration: const InputDecoration(
-              labelText: '이름, 직분, 부서 검색',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (value) {
-              searchText = value;
-            },
-            controller: TextEditingController(text: _searchQuery),
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('취소'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _searchQuery = searchText;
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('검색'),
-            ),
-          ],
-        );
-      },
+      title: '전화를 걸까요?',
+      description: phoneNumber,
+      confirmLabel: '전화',
+      icon: LucideIcons.phone,
     );
+    if (ok == true && mounted) {
+      AppToast.show(context, '전화 걸기 기능은 추후 구현 예정입니다');
+    }
   }
 
-  void _makeCall(String phoneNumber) {
-    // TODO: 전화 걸기 기능 구현
-    showDialog(
+  Future<void> _sendMessage(String phoneNumber) async {
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('전화 걸기'),
-        content: Text('$phoneNumber 로 전화를 걸겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: url_launcher 패키지로 전화 앱 실행
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('전화 걸기 기능은 추후 구현 예정입니다')),
-              );
-            },
-            child: const Text('전화'),
-          ),
-        ],
-      ),
+      title: '문자를 보낼까요?',
+      description: phoneNumber,
+      confirmLabel: '문자',
+      icon: LucideIcons.messageCircle,
     );
-  }
-
-  void _sendMessage(String phoneNumber) {
-    // TODO: 문자 보내기 기능 구현
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('문자 보내기'),
-        content: Text('$phoneNumber 로 문자를 보내겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: url_launcher 패키지로 문자 앱 실행
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('문자 보내기 기능은 추후 구현 예정입니다')),
-              );
-            },
-            child: const Text('문자'),
-          ),
-        ],
-      ),
-    );
+    if (ok == true && mounted) {
+      AppToast.show(context, '문자 보내기 기능은 추후 구현 예정입니다');
+    }
   }
 
   void _showContactAllDialog() {
-    showModalBottomSheet(
+    AppMenuSheet.show(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '단체 연락',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.chat, color: Colors.blue),
-              title: const Text('단체 문자 보내기'),
-              subtitle: const Text('선택된 그룹에 단체 문자를 보냅니다'),
-              onTap: () {
-                Navigator.pop(context);
-                _sendGroupMessage();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.email, color: Colors.green),
-              title: const Text('단체 이메일 보내기'),
-              subtitle: const Text('선택된 그룹에 단체 이메일을 보냅니다'),
-              onTap: () {
-                Navigator.pop(context);
-                _sendGroupEmail();
-              },
-            ),
-          ],
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.messageCircle,
+          label: '단체 문자 보내기',
+          onTap: _sendGroupMessage,
         ),
-      ),
+        AppMenuItem(
+          icon: LucideIcons.mail,
+          label: '단체 이메일 보내기',
+          onTap: _sendGroupEmail,
+        ),
+      ],
     );
   }
 
   void _sendGroupMessage() {
-    // TODO: 단체 문자 기능 구현
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('단체 문자 기능은 추후 구현 예정입니다')),
-    );
+    AppToast.show(context, '단체 문자 기능은 추후 구현 예정입니다');
   }
 
   void _sendGroupEmail() {
-    // TODO: 단체 이메일 기능 구현
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('단체 이메일 기능은 추후 구현 예정입니다')),
-    );
+    AppToast.show(context, '단체 이메일 기능은 추후 구현 예정입니다');
   }
+}
+
+class _PositionTone {
+  final Color bg;
+  final Color fg;
+  const _PositionTone({required this.bg, required this.fg});
 }
 
 class StaffMember {

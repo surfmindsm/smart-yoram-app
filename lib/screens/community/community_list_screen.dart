@@ -492,7 +492,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -512,12 +512,12 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               widget.type == CommunityListType.musicTeamSeeking ||
               widget.type == CommunityListType.churchNews)
             IconButton(
-              icon: Icon(Icons.tune,
+              icon: Icon(LucideIcons.slidersHorizontal,
                   color: NewAppColor.textMuted, size: 22.sp),
               onPressed: _showAdvancedFilterBottomSheet,
             ),
           IconButton(
-            icon: Icon(Icons.search,
+            icon: Icon(LucideIcons.search,
                 color: NewAppColor.textMuted, size: 22.sp),
             onPressed: _openSearchOverlay,
           ),
@@ -541,7 +541,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.search,
+                    LucideIcons.search,
                     size: 16.sp,
                     color: NewAppColor.skyDeep,
                   ),
@@ -565,7 +565,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                     child: Padding(
                       padding: EdgeInsets.all(4.w),
                       child: Icon(
-                        Icons.close,
+                        LucideIcons.x,
                         size: 16.sp,
                         color: NewAppColor.skyDeep,
                       ),
@@ -630,7 +630,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
               onPressed: _navigateToCreate,
               backgroundColor: NewAppColor.skyPrimary,
               elevation: 6,
-              icon: Icon(Icons.add, color: Colors.white, size: 20.sp),
+              icon: Icon(LucideIcons.plus, color: Colors.white, size: 20.sp),
               label: Text(
                 '글쓰기',
                 style: TextStyle(
@@ -651,7 +651,7 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.inbox_outlined,
+            LucideIcons.inbox,
             size: 56.sp,
             color: NewAppColor.iconFaint,
           ),
@@ -2271,7 +2271,7 @@ class _AdvancedFilterBottomSheetState
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: Icon(
-                      Icons.close,
+                      LucideIcons.x,
                       size: 22.sp,
                       color: NewAppColor.textMuted,
                     ),
@@ -2466,7 +2466,7 @@ class _AdvancedFilterBottomSheetState
               ),
             ),
             Icon(
-              Icons.keyboard_arrow_down,
+              LucideIcons.chevronDown,
               size: 20.sp,
               color: enabled ? NewAppColor.textMuted : NewAppColor.iconFaint,
             ),
@@ -2608,7 +2608,7 @@ class _AdvancedFilterBottomSheetState
                                     ),
                                     if (isSel)
                                       Icon(
-                                        Icons.check,
+                                        LucideIcons.check,
                                         color: NewAppColor.skyDeep,
                                         size: 19.sp,
                                       ),

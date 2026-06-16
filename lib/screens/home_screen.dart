@@ -35,6 +35,7 @@ import '../screens/pastoral_care_request_screen.dart';
 import '../screens/prayer_request_screen.dart';
 import '../screens/offering_history_screen.dart';
 import 'settings_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -707,7 +708,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Row(
         children: [
           _buildQuickActionChip(
-            icon: Icons.home_outlined,
+            icon: LucideIcons.house,
             label: '심방 신청',
             onTap: () {
               Navigator.push(
@@ -720,7 +721,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           SizedBox(width: 9.w),
           _buildQuickActionChip(
-            icon: Icons.favorite_outline,
+            icon: LucideIcons.heart,
             label: '중보 기도',
             onTap: () {
               Navigator.push(
@@ -733,7 +734,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           SizedBox(width: 9.w),
           _buildQuickActionChip(
-            icon: Icons.account_balance_wallet_outlined,
+            icon: LucideIcons.wallet,
             label: '헌금 내역',
             onTap: () {
               Navigator.push(
@@ -821,7 +822,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       borderRadius: BorderRadius.circular(11.r),
                     ),
                     child: Icon(
-                      Icons.church_outlined,
+                      LucideIcons.church,
                       color: NewAppColor.skyDeep,
                       size: 20.sp,
                     ),
@@ -880,7 +881,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     duration: const Duration(milliseconds: 200),
                     turns: _isChurchCardExpanded ? 0.5 : 0,
                     child: Icon(
-                      Icons.keyboard_arrow_down,
+                      LucideIcons.chevronDown,
                       color: NewAppColor.iconFaint,
                       size: 20.sp,
                     ),
@@ -899,7 +900,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   SizedBox(height: 11.h),
                   // 교회 주소
                   _buildChurchInfoRow(
-                    icon: Icons.location_on_outlined,
+                    icon: LucideIcons.mapPin,
                     text: () {
                       final addr = currentChurch?.address ?? '경기도 구리시 검배로 136번길 32';
                       final district = currentChurch?.district;
@@ -916,10 +917,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   if (currentChurch?.account != null && currentChurch!.account!.isNotEmpty) ...[
                     SizedBox(height: 8.h),
                     _buildChurchInfoRow(
-                      icon: Icons.account_balance_outlined,
+                      icon: LucideIcons.landmark,
                       label: '교회 헌금 계좌',
                       text: currentChurch!.account!,
-                      trailingIcon: Icons.copy_outlined,
+                      trailingIcon: LucideIcons.copy,
                       onTap: () => _copyToClipboard(currentChurch!.account!),
                     ),
                   ],
@@ -1164,7 +1165,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.menu_book,
+                          LucideIcons.bookOpen,
                           color: NewAppColor.secondary600,
                           size: 20.sp,
                         ),
@@ -1205,7 +1206,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           turns: _isRefreshingVerse ? 1.0 : 0.0,
                           duration: const Duration(milliseconds: 800),
                           child: Icon(
-                            Icons.refresh,
+                            LucideIcons.refreshCw,
                             color: NewAppColor.neutral500,
                             size: 20.r,
                           ),
@@ -1220,7 +1221,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Container(
                         padding: EdgeInsets.all(8.r),
                         child: Icon(
-                          Icons.share,
+                          LucideIcons.share2,
                           color: NewAppColor.neutral500,
                           size: 20.r,
                         ),
@@ -1451,7 +1452,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 Icon(
-                                  Icons.chevron_right,
+                                  LucideIcons.chevronRight,
                                   size: 16.sp,
                                   color: NewAppColor.iconFaint,
                                 ),
@@ -1588,7 +1589,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               alignment: Alignment.center,
               child: Icon(
-                isEvening ? Icons.nightlight_round : Icons.wb_sunny_outlined,
+                isEvening ? LucideIcons.moon : LucideIcons.sun,
                 color: NewAppColor.skyDeep,
                 size: 15.sp,
               ),
@@ -1649,7 +1650,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   duration: const Duration(milliseconds: 200),
                   turns: _isWorshipScheduleExpanded ? 0.5 : 0,
                   child: Icon(
-                    Icons.keyboard_arrow_down,
+                    LucideIcons.chevronDown,
                     size: 16.sp,
                     color: NewAppColor.skyDeep,
                   ),
@@ -1709,6 +1710,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: _buildQuickLinkCard(
                     icon: Icons.play_arrow,
                     label: '유튜브',
+                    iconBgColor: const Color(0xFFFF0000),
+                    iconColor: Colors.white,
                     onTap: () => _launchUrl(currentChurch!.youtubeChannel!),
                   ),
                 ),
@@ -1729,6 +1732,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    Color? iconBgColor,
+    Color? iconColor,
   }) {
     return Material(
       color: Colors.white,
@@ -1755,13 +1760,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 width: 36.w,
                 height: 36.h,
                 decoration: BoxDecoration(
-                  color: NewAppColor.skyTint,
+                  color: iconBgColor ?? NewAppColor.skyTint,
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 alignment: Alignment.center,
                 child: Icon(
                   icon,
-                  color: NewAppColor.skyDeep,
+                  color: iconColor ?? NewAppColor.skyDeep,
                   size: 18.sp,
                 ),
               ),
@@ -2160,7 +2165,7 @@ class _ProfileAlertState extends State<ProfileAlert> {
                 clipBehavior: Clip.none,
                 children: [
                   const Icon(
-                    Icons.notifications_none_rounded,
+                    LucideIcons.bell,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -2192,7 +2197,7 @@ class _ProfileAlertState extends State<ProfileAlert> {
             child: const Padding(
               padding: EdgeInsets.all(6),
               child: Icon(
-                Icons.settings_outlined,
+                LucideIcons.settings,
                 color: Colors.white,
                 size: 24,
               ),
@@ -2214,7 +2219,7 @@ class _ProfileAlertState extends State<ProfileAlert> {
       ),
       alignment: Alignment.center,
       child: Icon(
-        Icons.person,
+        LucideIcons.user,
         size: 24,
         color: Colors.white.withOpacity(0.85),
       ),

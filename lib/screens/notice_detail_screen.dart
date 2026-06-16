@@ -6,6 +6,7 @@ import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../utils/announcement_categories.dart';
 import '../components/app_toast.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 // 1.2.0 C 방향: 공지 상세 — 흰 탑바 + 흰 카드(라운드 18) + 칩/제목/메타/본문
 class AnnouncementDetailScreen extends StatelessWidget {
@@ -46,7 +47,7 @@ ${announcement.content}
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: NewAppColor.textStrong, size: 23.sp),
+          icon: Icon(LucideIcons.arrowLeft, color: NewAppColor.textStrong, size: 23.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -58,7 +59,7 @@ ${announcement.content}
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.content_copy_outlined,
+            icon: Icon(LucideIcons.copy,
                 color: NewAppColor.textMuted, size: 21.sp),
             onPressed: () => _copyContent(context),
           ),
@@ -119,7 +120,7 @@ ${announcement.content}
                 // 메타: 작성자 · 작성일
                 Row(
                   children: [
-                    Icon(Icons.person_outline,
+                    Icon(LucideIcons.user,
                         size: 15.sp, color: NewAppColor.textTertiary),
                     SizedBox(width: 5.w),
                     Text(
@@ -137,7 +138,7 @@ ${announcement.content}
                       color: NewAppColor.borderStrong,
                     ),
                     SizedBox(width: 12.w),
-                    Icon(Icons.access_time,
+                    Icon(LucideIcons.clock,
                         size: 15.sp, color: NewAppColor.textTertiary),
                     SizedBox(width: 5.w),
                     Flexible(
@@ -185,7 +186,7 @@ ${announcement.content}
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.push_pin,
+          Icon(LucideIcons.pin,
               size: 11.sp, color: NewAppColor.danger700),
           SizedBox(width: 4.w),
           Text(

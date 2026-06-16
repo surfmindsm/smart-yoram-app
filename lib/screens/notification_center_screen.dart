@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide IconButton;
 import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../components/index.dart';
 import '../models/notification.dart';
 import '../models/push_notification.dart';
@@ -148,104 +149,25 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     }
   }
 
-  // 시안: 핸들바 + 단순 아이콘+라벨 두 행 (모두 읽음 / 전체 삭제)
+  // 더보기 메뉴 — AppMenuSheet 헬퍼 사용
   void _showDeleteMenu() {
-    showModalBottomSheet(
+    AppMenuSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
-      builder: (sheetContext) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(22.r)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: 10.h),
-                Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: NewAppColor.borderStrong,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                SizedBox(height: 14.h),
-                _buildMenuRow(
-                  icon: Icons.done_all,
-                  iconColor: NewAppColor.skyPrimary,
-                  label: '모두 읽음',
-                  labelColor: NewAppColor.textStrong,
-                  enabled: unreadCount > 0,
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _markAllAsRead();
-                  },
-                ),
-                Container(
-                  height: 1,
-                  color: NewAppColor.borderHair,
-                  margin: EdgeInsets.symmetric(horizontal: 20.w),
-                ),
-                _buildMenuRow(
-                  icon: Icons.delete_outline,
-                  iconColor: NewAppColor.danger700,
-                  label: '전체 삭제',
-                  labelColor: NewAppColor.danger700,
-                  enabled: notifications.isNotEmpty,
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _confirmDeleteAll();
-                  },
-                ),
-                SizedBox(height: 6.h),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMenuRow({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required Color labelColor,
-    required bool enabled,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        child: Opacity(
-          opacity: enabled ? 1.0 : 0.4,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 16.h),
-            child: Row(
-              children: [
-                Icon(icon, color: iconColor, size: 22.sp),
-                SizedBox(width: 14.w),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: labelColor,
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Pretendard',
-                  ),
-                ),
-              ],
-            ),
-          ),
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.checkCheck,
+          label: '모두 읽음',
+          enabled: unreadCount > 0,
+          onTap: _markAllAsRead,
         ),
-      ),
+        AppMenuItem(
+          icon: LucideIcons.trash2,
+          label: '전체 삭제',
+          danger: true,
+          enabled: notifications.isNotEmpty,
+          onTap: _confirmDeleteAll,
+        ),
+      ],
     );
   }
 
@@ -258,157 +180,26 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     );
   }
 
-  void _confirmDeleteAll() {
-    _showDeleteConfirmSheet(
+  Future<void> _confirmDeleteAll() async {
+    final ok = await AppConfirmSheet.show(
+      context: context,
       title: '모든 알림을 삭제할까요?',
       description: '삭제한 알림은 되돌릴 수 없어요.',
-      onConfirm: _deleteAllNotifications,
+      confirmLabel: '삭제',
+      tone: AppSheetTone.danger,
     );
+    if (ok == true) await _deleteAllNotifications();
   }
 
-  void _confirmDeleteOne(NotificationModel notification) {
-    _showDeleteConfirmSheet(
+  Future<void> _confirmDeleteOne(NotificationModel notification) async {
+    final ok = await AppConfirmSheet.show(
+      context: context,
       title: '알림을 삭제할까요?',
       description: '삭제한 알림은 되돌릴 수 없어요.',
-      onConfirm: () => _deleteNotification(notification),
+      confirmLabel: '삭제',
+      tone: AppSheetTone.danger,
     );
-  }
-
-  void _showDeleteConfirmSheet({
-    required String title,
-    required String description,
-    required Future<void> Function() onConfirm,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
-      builder: (sheetContext) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 22.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 5,
-                    margin: EdgeInsets.only(bottom: 18.h),
-                    decoration: BoxDecoration(
-                      color: NewAppColor.borderStrong,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  Container(
-                    width: 54.w,
-                    height: 54.w,
-                    decoration: BoxDecoration(
-                      color: NewAppColor.dangerBg,
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.delete_outline,
-                        color: NewAppColor.danger700, size: 26.sp),
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: NewAppColor.textStrong,
-                      fontSize: 19.sp,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Pretendard',
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    description,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: NewAppColor.textMuted,
-                      fontSize: 13.5.sp,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Pretendard',
-                      height: 1.55,
-                    ),
-                  ),
-                  SizedBox(height: 22.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(sheetContext),
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 15.h),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.borderSoft,
-                              borderRadius: BorderRadius.circular(13.r),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '취소',
-                              style: TextStyle(
-                                color: NewAppColor.textSecondary,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Pretendard',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 11.w),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(sheetContext);
-                            onConfirm();
-                          },
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 15.h),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.danger700,
-                              borderRadius: BorderRadius.circular(13.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: NewAppColor.danger700.withOpacity(0.30),
-                                  blurRadius: 22,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '삭제',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'Pretendard',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    if (ok == true) await _deleteNotification(notification);
   }
 
   Future<void> _deleteAllNotifications() async {
@@ -530,149 +321,50 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     }
   }
 
-  // 1.2.0 관리자 커스텀 메시지 시트 (이전 다이얼로그 대체)
+  // 관리자 커스텀 메시지 시트 — AppInfoSheet 헬퍼 사용
   void _showCustomMessageSheet(NotificationModel notification) {
-    showModalBottomSheet(
+    AppInfoSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
-      builder: (sheetContext) {
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.8,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: 10.h),
-                Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: NewAppColor.borderStrong,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 22.w),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40.w,
-                        height: 40.w,
-                        decoration: BoxDecoration(
-                          color: NewAppColor.skyTint,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(Icons.campaign_outlined,
-                            color: NewAppColor.skyDeep, size: 22.sp),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Text(
-                          '교회 메시지',
-                          style: TextStyle(
-                            color: NewAppColor.textStrong,
-                            fontSize: 17.sp,
-                            fontWeight: FontWeight.w800,
-                            fontFamily: 'Pretendard',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 14.h),
-                Container(height: 1, color: NewAppColor.borderHair),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(22.w, 16.h, 22.w, 4.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (notification.title.isNotEmpty) ...[
-                          Text(
-                            notification.title,
-                            style: TextStyle(
-                              color: NewAppColor.textStrong,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w800,
-                              fontFamily: 'Pretendard',
-                              height: 1.4,
-                            ),
-                          ),
-                          SizedBox(height: 10.h),
-                        ],
-                        Text(
-                          notification.message,
-                          style: TextStyle(
-                            color: NewAppColor.textBody,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Pretendard',
-                            height: 1.65,
-                          ),
-                        ),
-                        SizedBox(height: 14.h),
-                        Text(
-                          notification.timeAgo,
-                          style: TextStyle(
-                            color: NewAppColor.textTertiary,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Pretendard',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(22.w, 14.h, 22.w, 18.h),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(sheetContext),
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(vertical: 15.h),
-                      decoration: BoxDecoration(
-                        color: NewAppColor.skyPrimary,
-                        borderRadius: BorderRadius.circular(13.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: NewAppColor.skyPrimary.withOpacity(0.30),
-                            blurRadius: 22,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '확인',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w800,
-                          fontFamily: 'Pretendard',
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+      title: '교회 메시지',
+      icon: LucideIcons.megaphone,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (notification.title.isNotEmpty) ...[
+            Text(
+              notification.title,
+              style: TextStyle(
+                color: NewAppColor.textStrong,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Pretendard',
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 10.h),
+          ],
+          Text(
+            notification.message,
+            style: TextStyle(
+              color: NewAppColor.textBody,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
+              height: 1.65,
             ),
           ),
-        );
-      },
+          SizedBox(height: 14.h),
+          Text(
+            notification.timeAgo,
+            style: TextStyle(
+              color: NewAppColor.textTertiary,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -688,7 +380,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         centerTitle: false,
         titleSpacing: 0,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -701,12 +393,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         ),
         actions: [
           material.IconButton(
-            icon: Icon(Icons.more_horiz,
+            icon: Icon(LucideIcons.ellipsis,
                 color: NewAppColor.textSecondary, size: 22.sp),
             onPressed: _showDeleteMenu,
           ),
           material.IconButton(
-            icon: Icon(Icons.settings_outlined,
+            icon: Icon(LucideIcons.settings,
                 color: NewAppColor.textSecondary, size: 21.sp),
             onPressed: _goToNotificationSettings,
           ),
@@ -735,7 +427,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.notifications_none,
+                Icon(LucideIcons.bell,
                     size: 56.sp, color: NewAppColor.iconFaint),
                 SizedBox(height: 14.h),
                 Text(
@@ -772,7 +464,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                   onPressed: (_) => _confirmDeleteOne(notification),
                   backgroundColor: NewAppColor.danger700,
                   foregroundColor: Colors.white,
-                  icon: Icons.delete_outline,
+                  icon: LucideIcons.trash2,
                   label: '삭제',
                   borderRadius: BorderRadius.zero,
                 ),
@@ -823,25 +515,25 @@ class _NotificationTile extends StatelessWidget {
   IconData _getCategoryIcon(NotificationCategory category) {
     switch (category) {
       case NotificationCategory.notice:
-        return Icons.campaign_outlined;
+        return LucideIcons.megaphone;
       case NotificationCategory.important:
-        return Icons.error_outline;
+        return LucideIcons.circleAlert;
       case NotificationCategory.schedule:
-        return Icons.event_outlined;
+        return LucideIcons.calendar;
       case NotificationCategory.attendance:
-        return Icons.fact_check_outlined;
+        return LucideIcons.clipboardCheck;
       case NotificationCategory.message:
-        return Icons.chat_bubble_outline;
+        return LucideIcons.messageCircle;
       case NotificationCategory.like:
-        return Icons.favorite;
+        return LucideIcons.heart;
       case NotificationCategory.comment:
-        return Icons.mode_comment_outlined;
+        return LucideIcons.messageSquare;
       case NotificationCategory.custom:
-        return Icons.campaign;
+        return LucideIcons.megaphone;
       case NotificationCategory.pastoralCare:
-        return Icons.home_outlined;
+        return LucideIcons.house;
       case NotificationCategory.all:
-        return Icons.notifications_outlined;
+        return LucideIcons.bell;
     }
   }
 

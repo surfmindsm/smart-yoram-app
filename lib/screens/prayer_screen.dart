@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 // import.*lucide_icons.*;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../components/index.dart' hide IconButton;
 import '../widget/widgets.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 
@@ -190,7 +192,7 @@ class _PrayerScreenState extends State<PrayerScreen>
         iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(LucideIcons.plus),
             onPressed: () {
               _showAddDialog();
             },
@@ -345,7 +347,7 @@ class _PrayerScreenState extends State<PrayerScreen>
 
     if (myPrayerRequests.isEmpty) {
       return const EmptyStateWidget(
-        icon: Icons.church,
+        icon: LucideIcons.church,
         title: '등록된 기도제목이 없습니다',
         subtitle: '처음 기도제목을 등록해보세요',
       );
@@ -374,7 +376,7 @@ class _PrayerScreenState extends State<PrayerScreen>
     
     if (sharedPrayerRequests.isEmpty) {
       return const EmptyStateWidget(
-        icon: Icons.group,
+        icon: LucideIcons.users,
         title: '공동 기도제목이 없습니다',
         subtitle: '공동체와 함께 기도해보세요',
       );
@@ -415,7 +417,7 @@ class _PrayerScreenState extends State<PrayerScreen>
               child: Column(
                 children: [
                   Icon(
-                    Icons.info,
+                    LucideIcons.info,
                     color: NewAppColor.success600,
                     size: 24.r,
                   ),
@@ -442,7 +444,7 @@ class _PrayerScreenState extends State<PrayerScreen>
             Expanded(
               child: myVisitationRequests.isEmpty
                   ? const EmptyStateWidget(
-                      icon: Icons.home,
+                      icon: LucideIcons.house,
                       title: '심방 신청 내역이 없습니다',
                       subtitle: '목사님께 심방을 신청해보세요',
                     )
@@ -538,7 +540,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                       value: 'edit',
                       child: Row(
                         children: [
-                          Icon(Icons.edit, size: 16),
+                          Icon(LucideIcons.pencil, size: 16),
                           SizedBox(width: 8),
                           Text('수정'),
                         ],
@@ -549,19 +551,21 @@ class _PrayerScreenState extends State<PrayerScreen>
                         value: 'answered',
                         child: Row(
                           children: [
-                            Icon(Icons.check, size: 16, color: Colors.green),
+                            Icon(LucideIcons.check, size: 16, color: Colors.green),
                             SizedBox(width: 8),
                             Text('응답됨으로 표시'),
                           ],
                         ),
                       ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete, size: 16, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('삭제', style: TextStyle(color: Colors.red)),
+                          Icon(LucideIcons.trash2,
+                              size: 16, color: NewAppColor.danger700),
+                          const SizedBox(width: 8),
+                          Text('삭제',
+                              style: TextStyle(color: NewAppColor.danger700)),
                         ],
                       ),
                     ),
@@ -587,7 +591,7 @@ class _PrayerScreenState extends State<PrayerScreen>
           Row(
             children: [
               Icon(
-                Icons.access_time,
+                LucideIcons.clock,
                 size: 14.r,
                 color: NewAppColor.neutral500,
               ),
@@ -615,7 +619,7 @@ class _PrayerScreenState extends State<PrayerScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.favorite,
+                          LucideIcons.heart,
                           size: 14.r,
                           color: NewAppColor.success600,
                         ),
@@ -799,32 +803,20 @@ class _PrayerScreenState extends State<PrayerScreen>
   }
 
   void _showAddDialog() {
-    showDialog(
+    AppMenuSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('추가하기'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.favorite),
-              title: const Text('기도제목 등록'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAddPrayerDialog();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('심방 신청'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAddVisitationDialog();
-              },
-            ),
-          ],
+      items: [
+        AppMenuItem(
+          icon: LucideIcons.heart,
+          label: '기도제목 등록',
+          onTap: _showAddPrayerDialog,
         ),
-      ),
+        AppMenuItem(
+          icon: LucideIcons.house,
+          label: '심방 신청',
+          onTap: _showAddVisitationDialog,
+        ),
+      ],
     );
   }
 
@@ -995,32 +987,20 @@ class _PrayerScreenState extends State<PrayerScreen>
     );
   }
 
-  void _deletePrayerRequest(PrayerRequest request) {
-    showDialog(
+  Future<void> _deletePrayerRequest(PrayerRequest request) async {
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('기도제목 삭제'),
-        content: Text('${request.title}을(를) 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                myPrayerRequests.removeWhere((r) => r.id == request.id);
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('기도제목이 삭제되었습니다')),
-              );
-            },
-            child: const Text('삭제', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: '기도제목을 삭제할까요?',
+      description: '${request.title}을(를) 삭제합니다.',
+      confirmLabel: '삭제',
+      tone: AppSheetTone.danger,
     );
+    if (ok == true && mounted) {
+      setState(() {
+        myPrayerRequests.removeWhere((r) => r.id == request.id);
+      });
+      AppToast.success(context, '기도제목이 삭제되었습니다');
+    }
   }
 
   void _markAsAnswered(PrayerRequest request) {
@@ -1038,14 +1018,10 @@ class _PrayerScreenState extends State<PrayerScreen>
         );
       }
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('기도제목이 응답됨으로 표시되었습니다')),
-    );
+    AppToast.success(context, '기도제목이 응답됨으로 표시되었습니다');
   }
 
   void _prayForRequest(PrayerRequest request) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${request.title}을 위해 기도합니다 🙏')),
-    );
+    AppToast.show(context, '${request.title}을 위해 기도합니다 🙏');
   }
 }

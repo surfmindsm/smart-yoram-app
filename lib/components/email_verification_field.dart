@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/services/signup_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 이메일 인증 컴포넌트
 class EmailVerificationField extends StatefulWidget {
@@ -151,17 +152,17 @@ class _EmailVerificationFieldState extends State<EmailVerificationField> {
           children: [
             Expanded(
               child: Container(
-                height: 54.h,
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                height: 48.h,
+                padding: EdgeInsets.symmetric(horizontal: 14.w),
                 decoration: BoxDecoration(
-                  color: _isVerified ? NewAppColor.success00 : Colors.white,
+                  color: _isVerified ? NewAppColor.successBg : Colors.white,
                   border: Border.all(
                     color: _isVerified
-                        ? NewAppColor.success600
-                        : NewAppColor.primary300,
+                        ? NewAppColor.success700.withOpacity(0.4)
+                        : NewAppColor.borderHair,
                     width: 1,
                   ),
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Row(
                   children: [
@@ -172,24 +173,27 @@ class _EmailVerificationFieldState extends State<EmailVerificationField> {
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           hintText: '이메일을 입력하세요',
-                          hintStyle: figmaStyles.body1.copyWith(
-                            color: NewAppColor.neutral200,
-                            fontFamily: 'Pretendard Variable',
-                            letterSpacing: -0.38,
+                          hintStyle: TextStyle(
+                            color: NewAppColor.textTertiary,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Pretendard',
                           ),
                           border: InputBorder.none,
+                          isDense: true,
                         ),
-                        style: figmaStyles.body1.copyWith(
-                          color: NewAppColor.neutral900,
-                          fontFamily: 'Pretendard Variable',
-                          letterSpacing: -0.38,
+                        style: TextStyle(
+                          color: NewAppColor.textStrong,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Pretendard',
                         ),
                       ),
                     ),
                     if (_isVerified)
                       Icon(
-                        Icons.check_circle,
-                        color: NewAppColor.success600,
+                        LucideIcons.circleCheck,
+                        color: NewAppColor.success700,
                         size: 20.w,
                       ),
                   ],
@@ -200,13 +204,13 @@ class _EmailVerificationFieldState extends State<EmailVerificationField> {
             GestureDetector(
               onTap: _isVerified || _isSending ? null : _sendVerificationCode,
               child: Container(
-                height: 54.h,
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                height: 48.h,
+                padding: EdgeInsets.symmetric(horizontal: 14.w),
                 decoration: BoxDecoration(
                   color: _isVerified || _isSending
-                      ? NewAppColor.neutral200
-                      : NewAppColor.primary600,
-                  borderRadius: BorderRadius.circular(8.r),
+                      ? NewAppColor.borderStrong
+                      : NewAppColor.skyPrimary,
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Center(
                   child: _isSending
@@ -239,31 +243,35 @@ class _EmailVerificationFieldState extends State<EmailVerificationField> {
             children: [
               Expanded(
                 child: Container(
-                  height: 54.h,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  height: 48.h,
+                  padding: EdgeInsets.symmetric(horizontal: 14.w),
                   decoration: BoxDecoration(
+                    color: Colors.white,
                     border: Border.all(
-                      color: NewAppColor.primary300,
+                      color: NewAppColor.borderHair,
                       width: 1,
                     ),
-                    borderRadius: BorderRadius.circular(8.r),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: TextFormField(
                     controller: _verificationCodeController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       hintText: '인증 코드 6자리 입력',
-                      hintStyle: figmaStyles.body1.copyWith(
-                        color: NewAppColor.neutral200,
-                        fontFamily: 'Pretendard Variable',
-                        letterSpacing: -0.38,
+                      hintStyle: TextStyle(
+                        color: NewAppColor.textTertiary,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Pretendard',
                       ),
                       border: InputBorder.none,
+                      isDense: true,
                     ),
-                    style: figmaStyles.body1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontFamily: 'Pretendard Variable',
-                      letterSpacing: -0.38,
+                    style: TextStyle(
+                      color: NewAppColor.textStrong,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
                     ),
                   ),
                 ),
@@ -272,13 +280,13 @@ class _EmailVerificationFieldState extends State<EmailVerificationField> {
               GestureDetector(
                 onTap: _isVerifying ? null : _verifyCode,
                 child: Container(
-                  height: 54.h,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  height: 48.h,
+                  padding: EdgeInsets.symmetric(horizontal: 14.w),
                   decoration: BoxDecoration(
                     color: _isVerifying
-                        ? NewAppColor.neutral200
-                        : NewAppColor.primary600,
-                    borderRadius: BorderRadius.circular(8.r),
+                        ? NewAppColor.borderStrong
+                        : NewAppColor.skyPrimary,
+                    borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Center(
                     child: _isVerifying
@@ -313,26 +321,20 @@ class _EmailVerificationFieldState extends State<EmailVerificationField> {
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
               color: _errorMessage != null
-                  ? NewAppColor.danger100
-                  : NewAppColor.success00,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(
-                color: _errorMessage != null
-                    ? NewAppColor.danger600
-                    : NewAppColor.success600,
-                width: 1,
-              ),
+                  ? NewAppColor.dangerBg
+                  : NewAppColor.successBg,
+              borderRadius: BorderRadius.circular(10.r),
             ),
             child: Row(
               children: [
                 Icon(
                   _errorMessage != null
-                      ? Icons.error_outline
-                      : Icons.check_circle_outline,
+                      ? LucideIcons.circleAlert
+                      : LucideIcons.circleCheck,
                   size: 16.w,
                   color: _errorMessage != null
-                      ? NewAppColor.danger600
-                      : NewAppColor.success600,
+                      ? NewAppColor.danger700
+                      : NewAppColor.success700,
                 ),
                 SizedBox(width: 8.w),
                 Expanded(
@@ -340,8 +342,8 @@ class _EmailVerificationFieldState extends State<EmailVerificationField> {
                     _errorMessage ?? _successMessage ?? '',
                     style: figmaStyles.captionText1.copyWith(
                       color: _errorMessage != null
-                          ? NewAppColor.danger600
-                          : NewAppColor.success600,
+                          ? NewAppColor.danger700
+                          : NewAppColor.success700,
                       fontFamily: 'Pretendard Variable',
                       letterSpacing: -0.30,
                     ),

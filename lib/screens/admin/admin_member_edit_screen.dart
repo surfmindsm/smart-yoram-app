@@ -436,7 +436,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                               ),
                         ),
                         Icon(
-                          Icons.calendar_today,
+                          LucideIcons.calendarDays,
                           size: 20.sp,
                           color: NewAppColor.neutral400,
                         ),
@@ -1015,7 +1015,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.neutral400,
                   ),
@@ -1135,7 +1135,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                           ),
                     ),
                     Icon(
-                      Icons.calendar_today,
+                      LucideIcons.calendarDays,
                       size: 20.sp,
                       color: NewAppColor.neutral400,
                     ),
@@ -1371,7 +1371,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.neutral400,
                   ),
@@ -1546,7 +1546,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.neutral400,
                   ),
@@ -1687,7 +1687,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.neutral400,
                   ),
@@ -1720,7 +1720,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.neutral400,
                   ),

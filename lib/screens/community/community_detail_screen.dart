@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:smart_yoram_app/components/app_sheet.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/community_models.dart';
@@ -408,7 +409,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ],
             ),
             child: IconButton(
-              icon: Icon(Icons.chevron_left,
+              icon: Icon(LucideIcons.chevronLeft,
                   color: NewAppColor.textStrong, size: 24.sp),
               onPressed: () => Navigator.pop(context, _hasChanges),
               padding: EdgeInsets.zero,
@@ -429,7 +430,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 ],
               ),
               child: IconButton(
-                icon: Icon(Icons.more_vert,
+                icon: Icon(LucideIcons.ellipsisVertical,
                     color: NewAppColor.textStrong, size: 22.sp),
                 onPressed: _showPostMenu,
                 padding: EdgeInsets.zero,
@@ -537,8 +538,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                     ),
                                     child: Icon(
                                       _isFavorited
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
+                                          ? LucideIcons.heart
+                                          : LucideIcons.heart,
                                       color: _isFavorited
                                           ? Colors.red
                                           : NewAppColor.neutral400,
@@ -624,7 +625,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.error_outline,
+            LucideIcons.circleAlert,
             size: 56.sp,
             color: NewAppColor.iconFaint,
           ),
@@ -763,7 +764,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               height: 400.h,
                               color: Colors.white,
                               child: const Icon(
-                                Icons.image_not_supported,
+                                LucideIcons.imageOff,
                                 color: Colors.grey,
                               ),
                             );
@@ -1003,7 +1004,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
-                    Icons.person,
+                    LucideIcons.user,
                     color: NewAppColor.skyDeep,
                     size: 22.sp,
                   );
@@ -1011,7 +1012,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               ),
             )
           : Icon(
-              Icons.person,
+              LucideIcons.user,
               color: NewAppColor.skyDeep,
               size: 22.sp,
             ),
@@ -1099,7 +1100,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             if (onTap != null)
               Icon(
-                Icons.chevron_right,
+                LucideIcons.chevronRight,
                 color: NewAppColor.iconFaint,
                 size: 18.sp,
               ),
@@ -1138,7 +1139,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             appBar: AppBar(
               backgroundColor: Colors.black,
               leading: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
+                icon: const Icon(LucideIcons.x, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
               ),
               elevation: 0,
@@ -1165,7 +1166,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(
-                              Icons.image_not_supported,
+                              LucideIcons.imageOff,
                               color: Colors.white,
                               size: 64,
                             );
@@ -1251,7 +1252,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.phone,
+                          LucideIcons.phone,
                           color: NewAppColor.primary600,
                           size: 24.sp,
                         ),
@@ -1280,7 +1281,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.message,
+                          LucideIcons.messageCircle,
                           color: NewAppColor.primary600,
                           size: 24.sp,
                         ),
@@ -1540,7 +1541,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
         value: null, // null 값으로 취소 표시
         child: Row(
           children: [
-            Icon(Icons.close, size: 16.sp, color: NewAppColor.neutral600),
+            Icon(LucideIcons.x, size: 16.sp, color: NewAppColor.neutral600),
             SizedBox(width: 8.w),
             Text(
               '취소',
@@ -1563,7 +1564,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: 18.sp, color: NewAppColor.neutral700),
+          Icon(LucideIcons.info, size: 18.sp, color: NewAppColor.neutral700),
           SizedBox(width: 8.w),
           Text(
             '상태:',
@@ -1675,11 +1676,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       switch (status) {
         case 'open':
         case 'active': // 'active'도 모집중으로 처리
-          return Icons.work_outline;
+          return LucideIcons.briefcase;
         case 'closed':
-          return Icons.work_off_outlined;
+          return LucideIcons.briefcaseBusiness;
         default:
-          return Icons.help_outline;
+          return LucideIcons.circleHelp;
       }
     }
 
@@ -1702,7 +1703,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.work_outline,
+                  LucideIcons.briefcase,
                   color: NewAppColor.primary600,
                   size: 20.sp,
                 ),
@@ -1718,7 +1719,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (isOpen) ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.primary600,
                     size: 20.sp,
                   ),
@@ -1732,7 +1733,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.work_off_outlined,
+                  LucideIcons.briefcaseBusiness,
                   color: NewAppColor.neutral600,
                   size: 20.sp,
                 ),
@@ -1748,7 +1749,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'closed') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.neutral600,
                     size: 20.sp,
                   ),
@@ -1781,7 +1782,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             SizedBox(width: 4.w),
             Icon(
-              Icons.arrow_drop_down,
+              LucideIcons.chevronDown,
               color: Colors.white,
               size: 24.sp,
             ),
@@ -1823,11 +1824,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     IconData getStatusIcon(String status) {
       switch (status) {
         case 'active':
-          return Icons.music_note;
+          return LucideIcons.music;
         case 'closed':
-          return Icons.music_off;
+          return LucideIcons.music;
         default:
-          return Icons.help_outline;
+          return LucideIcons.circleHelp;
       }
     }
 
@@ -1849,7 +1850,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.music_note,
+                  LucideIcons.music,
                   color: NewAppColor.primary600,
                   size: 20.sp,
                 ),
@@ -1865,7 +1866,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'active') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.primary600,
                     size: 20.sp,
                   ),
@@ -1879,7 +1880,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.music_off,
+                  LucideIcons.music,
                   color: NewAppColor.neutral600,
                   size: 20.sp,
                 ),
@@ -1895,7 +1896,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'closed') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.neutral600,
                     size: 20.sp,
                   ),
@@ -1928,7 +1929,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             SizedBox(width: 4.w),
             Icon(
-              Icons.arrow_drop_down,
+              LucideIcons.chevronDown,
               color: Colors.white,
               size: 24.sp,
             ),
@@ -1975,12 +1976,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
       switch (status) {
         case 'available':
         case 'active': // active도 지원가능으로 처리
-          return Icons.person_search;
+          return LucideIcons.userSearch;
         case 'completed':
         case 'closed':
-          return Icons.check_circle;
+          return LucideIcons.circleCheck;
         default:
-          return Icons.person_search; // 기본값은 지원가능 아이콘
+          return LucideIcons.userSearch; // 기본값은 지원가능 아이콘
       }
     }
 
@@ -2002,7 +2003,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.person_search,
+                  LucideIcons.userSearch,
                   color: NewAppColor.primary600,
                   size: 20.sp,
                 ),
@@ -2018,7 +2019,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'available') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.primary600,
                     size: 20.sp,
                   ),
@@ -2032,7 +2033,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.check_circle,
+                  LucideIcons.circleCheck,
                   color: NewAppColor.neutral600,
                   size: 20.sp,
                 ),
@@ -2048,7 +2049,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'completed') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.neutral600,
                     size: 20.sp,
                   ),
@@ -2081,7 +2082,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             SizedBox(width: 4.w),
             Icon(
-              Icons.arrow_drop_down,
+              LucideIcons.chevronDown,
               color: Colors.white,
               size: 24.sp,
             ),
@@ -2123,11 +2124,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     IconData getStatusIcon(String status) {
       switch (status) {
         case 'active':
-          return Icons.event_available;
+          return LucideIcons.calendarCheck;
         case 'completed':
-          return Icons.check_circle;
+          return LucideIcons.circleCheck;
         default:
-          return Icons.event_available; // 기본값은 진행중 아이콘
+          return LucideIcons.calendarCheck; // 기본값은 진행중 아이콘
       }
     }
 
@@ -2149,7 +2150,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.event_available,
+                  LucideIcons.calendarCheck,
                   color: NewAppColor.primary600,
                   size: 20.sp,
                 ),
@@ -2165,7 +2166,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'active') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.primary600,
                     size: 20.sp,
                   ),
@@ -2179,7 +2180,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.check_circle,
+                  LucideIcons.circleCheck,
                   color: NewAppColor.neutral600,
                   size: 20.sp,
                 ),
@@ -2195,7 +2196,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'completed') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.neutral600,
                     size: 20.sp,
                   ),
@@ -2228,7 +2229,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             SizedBox(width: 4.w),
             Icon(
-              Icons.arrow_drop_down,
+              LucideIcons.chevronDown,
               color: Colors.white,
               size: 24.sp,
             ),
@@ -2274,13 +2275,13 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     IconData getStatusIcon(String status) {
       switch (status) {
         case 'active':
-          return Icons.shopping_bag_outlined;
+          return LucideIcons.shoppingBag;
         case 'ing':
-          return Icons.schedule_outlined;
+          return LucideIcons.clock;
         case 'completed':
-          return Icons.check_circle_outline;
+          return LucideIcons.circleCheck;
         default:
-          return Icons.help_outline;
+          return LucideIcons.circleHelp;
       }
     }
 
@@ -2302,7 +2303,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.shopping_bag_outlined,
+                  LucideIcons.shoppingBag,
                   color: NewAppColor.primary600,
                   size: 20.sp,
                 ),
@@ -2318,7 +2319,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'active') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.primary600,
                     size: 20.sp,
                   ),
@@ -2332,7 +2333,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.schedule_outlined,
+                  LucideIcons.clock,
                   color: NewAppColor.warning600,
                   size: 20.sp,
                 ),
@@ -2348,7 +2349,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'ing') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.warning600,
                     size: 20.sp,
                   ),
@@ -2362,7 +2363,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.check_circle_outline,
+                  LucideIcons.circleCheck,
                   color: NewAppColor.success600,
                   size: 20.sp,
                 ),
@@ -2378,7 +2379,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'completed') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.success600,
                     size: 20.sp,
                   ),
@@ -2411,7 +2412,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             SizedBox(width: 4.w),
             Icon(
-              Icons.arrow_drop_down,
+              LucideIcons.chevronDown,
               color: Colors.white,
               size: 24.sp,
             ),
@@ -2457,13 +2458,13 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
     IconData getStatusIcon(String status) {
       switch (status) {
         case 'active':
-          return Icons.search_outlined;
+          return LucideIcons.search;
         case 'ing':
-          return Icons.sync_outlined;
+          return LucideIcons.refreshCw;
         case 'completed':
-          return Icons.check_circle_outline;
+          return LucideIcons.circleCheck;
         default:
-          return Icons.help_outline;
+          return LucideIcons.circleHelp;
       }
     }
 
@@ -2485,7 +2486,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.search_outlined,
+                  LucideIcons.search,
                   color: NewAppColor.primary600,
                   size: 20.sp,
                 ),
@@ -2501,7 +2502,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'active') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.primary600,
                     size: 20.sp,
                   ),
@@ -2515,7 +2516,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.sync_outlined,
+                  LucideIcons.refreshCw,
                   color: NewAppColor.warning600,
                   size: 20.sp,
                 ),
@@ -2531,7 +2532,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'ing') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.warning600,
                     size: 20.sp,
                   ),
@@ -2545,7 +2546,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.check_circle_outline,
+                  LucideIcons.circleCheck,
                   color: NewAppColor.success600,
                   size: 20.sp,
                 ),
@@ -2561,7 +2562,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 if (currentStatus == 'completed') ...[
                   const Spacer(),
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.success600,
                     size: 20.sp,
                   ),
@@ -2594,7 +2595,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             ),
             SizedBox(width: 4.w),
             Icon(
-              Icons.arrow_drop_down,
+              LucideIcons.chevronDown,
               color: Colors.white,
               size: 24.sp,
             ),
@@ -2677,7 +2678,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // 작성자인 경우: 수정/삭제 옵션 표시
                 if (isAuthor) ...[
                   _buildMenuOption(
-                    icon: Icons.edit_outlined,
+                    icon: LucideIcons.pencil,
                     iconColor: NewAppColor.skyDeep,
                     iconBgColor: NewAppColor.skyTint,
                     title: '수정',
@@ -2687,7 +2688,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     },
                   ),
                   _buildMenuOption(
-                    icon: Icons.delete_outline,
+                    icon: LucideIcons.trash2,
                     iconColor: NewAppColor.danger700,
                     iconBgColor: NewAppColor.dangerBg,
                     title: '삭제',
@@ -2702,7 +2703,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // 작성자가 아닌 경우: 신고하기
                 if (!isAuthor) ...[
                   _buildMenuOption(
-                    icon: Icons.flag_outlined,
+                    icon: LucideIcons.flag,
                     iconColor: NewAppColor.danger700,
                     iconBgColor: NewAppColor.dangerBg,
                     title: '신고하기',
@@ -2871,24 +2872,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
   }
 
   Future<void> _deletePost() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppConfirmSheet.show(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('게시글 삭제'),
-          content: const Text('정말 삭제하시겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('삭제', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      title: '게시글을 삭제할까요?',
+      description: '삭제한 게시글은 되돌릴 수 없어요.',
+      confirmLabel: '삭제',
+      tone: AppSheetTone.danger,
     );
 
     if (confirmed == true && mounted) {
@@ -3002,8 +2991,8 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               children: [
                                 Icon(
                                   isSelected
-                                      ? Icons.radio_button_checked
-                                      : Icons.radio_button_unchecked,
+                                      ? LucideIcons.circleDot
+                                      : LucideIcons.circle,
                                   color: isSelected
                                       ? NewAppColor.primary600
                                       : NewAppColor.neutral400,
@@ -3440,7 +3429,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // 전화번호
                 if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                   _buildContactItem(
-                    icon: Icons.phone_outlined,
+                    icon: LucideIcons.phone,
                     label: '전화번호',
                     value: item.contactPhone!,
                     onTap: () => _showContactDialog(item.contactPhone!),
@@ -3450,7 +3439,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     item.contactEmail!.isNotEmpty) ...[
                   SizedBox(height: 12.h),
                   _buildContactItem(
-                    icon: Icons.email_outlined,
+                    icon: LucideIcons.mail,
                     label: '이메일',
                     value: item.contactEmail!,
                     onTap: () {
@@ -3753,7 +3742,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // 전화번호
                 if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                   _buildContactItem(
-                    icon: Icons.phone_outlined,
+                    icon: LucideIcons.phone,
                     label: '전화번호',
                     value: item.contactPhone!,
                     onTap: () => _showContactDialog(item.contactPhone!),
@@ -3763,7 +3752,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     item.contactEmail!.isNotEmpty) ...[
                   SizedBox(height: 12.h),
                   _buildContactItem(
-                    icon: Icons.email_outlined,
+                    icon: LucideIcons.mail,
                     label: '이메일',
                     value: item.contactEmail!,
                     onTap: () {
@@ -4046,7 +4035,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // 전화번호
                 if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                   _buildContactItem(
-                    icon: Icons.phone_outlined,
+                    icon: LucideIcons.phone,
                     label: '전화번호',
                     value: item.contactPhone!,
                     onTap: () => _showContactDialog(item.contactPhone!),
@@ -4056,7 +4045,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     item.contactEmail!.isNotEmpty) ...[
                   SizedBox(height: 12.h),
                   _buildContactItem(
-                    icon: Icons.email_outlined,
+                    icon: LucideIcons.mail,
                     label: '이메일',
                     value: item.contactEmail!,
                     onTap: () {
@@ -4190,7 +4179,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     style: TextStyle(color: NewAppColor.neutral400),
                   ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.visibility_outlined,
+                  Icon(LucideIcons.eye,
                       size: 14.sp, color: NewAppColor.neutral500),
                   SizedBox(width: 4.w),
                   Text(
@@ -4507,7 +4496,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                         height: 180.h,
                                         color: Colors.white,
                                         child: Icon(
-                                          Icons.video_library,
+                                          LucideIcons.video,
                                           size: 48.sp,
                                           color: NewAppColor.neutral400,
                                         ),
@@ -4527,7 +4516,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                             shape: BoxShape.circle,
                                           ),
                                           child: Icon(
-                                            Icons.play_arrow,
+                                            LucideIcons.play,
                                             color: Colors.white,
                                             size: 40.sp,
                                           ),
@@ -4554,7 +4543,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
-                                      Icons.play_arrow,
+                                      LucideIcons.play,
                                       color: Colors.red,
                                       size: 24.sp,
                                     ),
@@ -4588,7 +4577,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                                   ),
                                 ),
                                 Icon(
-                                  Icons.open_in_new,
+                                  LucideIcons.externalLink,
                                   color: NewAppColor.neutral400,
                                   size: 20.sp,
                                 ),
@@ -4629,7 +4618,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.insert_drive_file,
+                              LucideIcons.file,
                               color: NewAppColor.primary600,
                               size: 24.sp,
                             ),
@@ -4659,7 +4648,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                             ),
                           ),
                           Icon(
-                            Icons.open_in_new,
+                            LucideIcons.externalLink,
                             color: NewAppColor.neutral400,
                             size: 20.sp,
                           ),
@@ -4696,7 +4685,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // 전화번호
                 if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                   _buildContactItem(
-                    icon: Icons.phone_outlined,
+                    icon: LucideIcons.phone,
                     label: '전화번호',
                     value: item.contactPhone!,
                     onTap: () => _showContactDialog(item.contactPhone!),
@@ -4706,7 +4695,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     item.contactEmail!.isNotEmpty) ...[
                   SizedBox(height: 12.h),
                   _buildContactItem(
-                    icon: Icons.email_outlined,
+                    icon: LucideIcons.mail,
                     label: '이메일',
                     value: item.contactEmail!,
                     onTap: () {
@@ -4964,7 +4953,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // 전화번호
                 if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                   _buildContactItem(
-                    icon: Icons.phone_outlined,
+                    icon: LucideIcons.phone,
                     label: '전화번호',
                     value: item.contactPhone!,
                     onTap: () => _showContactDialog(item.contactPhone!),
@@ -4974,7 +4963,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     item.contactEmail!.isNotEmpty) ...[
                   SizedBox(height: 12.h),
                   _buildContactItem(
-                    icon: Icons.email_outlined,
+                    icon: LucideIcons.mail,
                     label: '이메일',
                     value: item.contactEmail!,
                     onTap: () {
@@ -5017,7 +5006,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
             children: [
               // 전화 걸기
               ListTile(
-                leading: Icon(Icons.phone, color: NewAppColor.primary600),
+                leading: Icon(LucideIcons.phone, color: NewAppColor.primary600),
                 title: Text(
                   '전화 걸기',
                   style: FigmaTextStyles().body1,
@@ -5045,7 +5034,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
               Divider(height: 1, color: NewAppColor.borderSoft),
               // 문자 보내기
               ListTile(
-                leading: Icon(Icons.message, color: NewAppColor.primary600),
+                leading: Icon(LucideIcons.messageCircle, color: NewAppColor.primary600),
                 title: Text(
                   '문자 보내기',
                   style: FigmaTextStyles().body1,
@@ -5264,7 +5253,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                     style: TextStyle(color: NewAppColor.neutral400),
                   ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.visibility_outlined,
+                  Icon(LucideIcons.eye,
                       size: 14.sp, color: NewAppColor.neutral500),
                   SizedBox(width: 4.w),
                   Text(
@@ -5374,7 +5363,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                 // 전화번호
                 if (item.contactPhone != null && item.contactPhone!.isNotEmpty)
                   _buildContactItem(
-                    icon: Icons.phone_outlined,
+                    icon: LucideIcons.phone,
                     label: '전화번호',
                     value: item.contactPhone!,
                     onTap: () => _showContactDialog(item.contactPhone!),
@@ -5386,7 +5375,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen> {
                       item.contactPhone!.isNotEmpty)
                     SizedBox(height: 12.h),
                   _buildContactItem(
-                    icon: Icons.email_outlined,
+                    icon: LucideIcons.mail,
                     label: '이메일',
                     value: item.contactEmail!,
                     onTap: () {

@@ -8,6 +8,7 @@ import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../services/pastoral_care_service.dart';
 import '../../services/member_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 관리자용 심방 신청 상세 화면
 class AdminPastoralCareDetailScreen extends StatefulWidget {
@@ -36,27 +37,16 @@ class _AdminPastoralCareDetailScreenState
   }
 
   Future<void> _changeStatus(String newStatus) async {
-    showDialog(
+    final isCancel = newStatus == 'cancelled';
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AppDialog(
-        title: '상태 변경',
-        content: Text('심방 신청 상태를 "${_getStatusLabel(newStatus)}"으로 변경하시겠습니까?'),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: const Text('취소'),
-          ),
-          AppButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _performStatusUpdate(newStatus);
-            },
-            child: const Text('변경'),
-          ),
-        ],
-      ),
+      title: '${_getStatusLabel(newStatus)}으로 변경할까요?',
+      description: '심방 신청 상태를 변경합니다.',
+      confirmLabel: _getStatusLabel(newStatus),
+      tone: isCancel ? AppSheetTone.danger : AppSheetTone.sky,
+      icon: isCancel ? LucideIcons.circleX : LucideIcons.circleCheck,
     );
+    if (ok == true) await _performStatusUpdate(newStatus);
   }
 
   Future<void> _performStatusUpdate(String newStatus) async {
@@ -125,7 +115,7 @@ class _AdminPastoralCareDetailScreenState
         centerTitle: false,
         titleSpacing: 0,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -379,7 +369,7 @@ class _AdminPastoralCareDetailScreenState
           ),
           // 라벨/값 라인업
           _buildLabelValueRow(
-            icon: Icons.medical_services_outlined,
+            icon: LucideIcons.stethoscope,
             label: '심방 종류',
             valueWidget: _buildTypeChip(
               _request.requestTypeDisplayName,
@@ -387,13 +377,13 @@ class _AdminPastoralCareDetailScreenState
           ),
           if (preferredText.isNotEmpty)
             _buildLabelValueRow(
-              icon: Icons.event_outlined,
+              icon: LucideIcons.calendar,
               label: '희망 일시',
               value: preferredText,
             ),
           if (_request.address != null && _request.address!.isNotEmpty)
             _buildLabelValueRow(
-              icon: Icons.location_on_outlined,
+              icon: LucideIcons.mapPin,
               label: '장소',
               value: _request.address!,
             ),
@@ -592,14 +582,14 @@ class _AdminPastoralCareDetailScreenState
         );
       case 'completed':
         return _buildStatusBanner(
-          icon: Icons.check_circle_outline,
+          icon: LucideIcons.circleCheck,
           label: '완료된 심방 신청입니다',
           bg: NewAppColor.successBg,
           fg: NewAppColor.success700,
         );
       case 'cancelled':
         return _buildStatusBanner(
-          icon: Icons.cancel_outlined,
+          icon: LucideIcons.circleX,
           label: '취소/반려된 심방 신청입니다',
           bg: NewAppColor.dangerBg,
           fg: NewAppColor.danger700,

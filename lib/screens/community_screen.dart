@@ -125,7 +125,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.error_outline,
+                LucideIcons.circleAlert,
                 size: 56.sp,
                 color: NewAppColor.iconFaint,
               ),
@@ -183,18 +183,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     if (_currentUser!.role == 'member' ||
                         _currentUser!.role == 'community_admin')
                       _headerIconButton(
-                        icon: Icons.notifications_outlined,
+                        icon: LucideIcons.bell,
                         onTap: _navigateToNotifications,
                         badgeCount: _unreadNotificationCount,
                       ),
                     // 내 글
                     _headerIconButton(
-                      icon: Icons.edit_outlined,
+                      icon: LucideIcons.pencil,
                       onTap: _navigateToMyPosts,
                     ),
                     // 찜
                     _headerIconButton(
-                      icon: Icons.favorite_border,
+                      icon: LucideIcons.heart,
                       onTap: _navigateToFavorites,
                     ),
                   ],
@@ -579,7 +579,7 @@ class _CategoryListItem extends StatelessWidget {
             SizedBox(width: 8.w),
             // chevron-right (목업의 게시글 수 칩은 실제 데이터 연결 안 되어 있으므로 일단 제외)
             Icon(
-              Icons.chevron_right,
+              LucideIcons.chevronRight,
               size: 18.sp,
               color: NewAppColor.iconFaint,
             ),

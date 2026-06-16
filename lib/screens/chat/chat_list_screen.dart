@@ -314,7 +314,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.chat_bubble_outline,
+            LucideIcons.messageCircle,
             size: 56.sp,
             color: NewAppColor.iconFaint,
           ),
@@ -360,7 +360,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.search_off,
+            LucideIcons.searchX,
             size: 56.sp,
             color: NewAppColor.iconFaint,
           ),
@@ -614,7 +614,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.local_offer_outlined,
+                              LucideIcons.tag,
                               size: 11.sp,
                               color: NewAppColor.textMuted,
                             ),

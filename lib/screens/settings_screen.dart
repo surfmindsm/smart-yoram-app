@@ -111,7 +111,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leading: _currentUser?.isCommunityAdmin == true
             ? null
             : IconButton(
-                icon: Icon(Icons.chevron_left,
+                icon: Icon(LucideIcons.chevronLeft,
                     color: NewAppColor.textStrong, size: 24.sp),
                 onPressed: () => Navigator.pop(context),
               ),
@@ -140,7 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: '계정',
                   items: [
                     _GroupedSettingItem(
-                      icon: Icons.person_outline,
+                      icon: LucideIcons.user,
                       title: '개인정보 수정',
                       subtitle: '생년월일, 전화번호, 주소, 직업 등',
                       onTap: () => Navigator.push(
@@ -151,13 +151,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     _GroupedSettingItem(
-                      icon: Icons.photo_camera_outlined,
+                      icon: LucideIcons.camera,
                       title: '프로필 이미지',
                       subtitle: '커뮤니티용 프로필 이미지 설정',
                       onTap: _showProfileImageSetup,
                     ),
                     _GroupedSettingItem(
-                      icon: Icons.lock_outline,
+                      icon: LucideIcons.lock,
                       title: '비밀번호 변경',
                       subtitle: '로그인 비밀번호 변경',
                       onTap: _changePassword,
@@ -185,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: '알림 설정',
                   items: [
                     _GroupedSettingItem(
-                      icon: Icons.notifications_outlined,
+                      icon: LucideIcons.bell,
                       title: '푸시 알림',
                       subtitle: '모든 푸시 알림 수신',
                       trailing: AppSwitch(
@@ -197,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // 커뮤니티 회원은 교회 공지 알림 메뉴 제외
                     if (_currentUser?.isCommunityAdmin != true)
                       _GroupedSettingItem(
-                        icon: Icons.campaign_outlined,
+                        icon: LucideIcons.megaphone,
                         title: '교회 공지',
                         subtitle: '새로운 공지사항 알림',
                         trailing: AppSwitch(
@@ -216,17 +216,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: '도움말 및 지원',
                   items: [
                     _GroupedSettingItem(
-                      icon: Icons.bug_report_outlined,
+                      icon: LucideIcons.bug,
                       title: '문제 신고',
                       onTap: _reportBug,
                     ),
                     _GroupedSettingItem(
-                      icon: Icons.privacy_tip_outlined,
+                      icon: LucideIcons.shield,
                       title: '개인정보처리방침',
                       onTap: _showPrivacyPolicy,
                     ),
                     _GroupedSettingItem(
-                      icon: Icons.description_outlined,
+                      icon: LucideIcons.fileText,
                       title: '서비스 이용약관',
                       onTap: _showTermsOfService,
                     ),
@@ -433,7 +433,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      Icons.text_fields_outlined,
+                      LucideIcons.type,
                       size: 17.sp,
                       color: NewAppColor.textMuted,
                     ),
@@ -538,7 +538,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.logout,
+                    LucideIcons.logOut,
                     color: NewAppColor.danger700,
                     size: 18.sp,
                   ),
@@ -619,7 +619,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _buildGroupedSettingItem(
                 item: _GroupedSettingItem(
-                  icon: Icons.people_outline,
+                  icon: LucideIcons.users,
                   title: '교인 관리',
                   subtitle: '교인 목록 · 정보 수정 · 상태 관리',
                   onTap: () =>
@@ -630,7 +630,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _buildGroupedSettingItem(
                 item: _GroupedSettingItem(
-                  icon: Icons.favorite_outline,
+                  icon: LucideIcons.heart,
                   title: '심방 신청 관리',
                   subtitle: '신청 목록 · 상태 변경 · 담당자 지정',
                   onTap: () =>
@@ -665,7 +665,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _buildGroupedSettingItem(
                 item: _GroupedSettingItem(
-                  icon: Icons.announcement_outlined,
+                  icon: LucideIcons.megaphone,
                   title: '공지사항 관리',
                   subtitle: '공지 작성 · 수정 · 삭제',
                   onTap: () =>
@@ -811,14 +811,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (item.onTap != null) ...[
                 SizedBox(width: 6.w),
                 Icon(
-                  Icons.chevron_right,
+                  LucideIcons.chevronRight,
                   size: 18.sp,
                   color: NewAppColor.iconFaint,
                 ),
               ],
             ] else
               Icon(
-                Icons.chevron_right,
+                LucideIcons.chevronRight,
                 size: 18.sp,
                 color: NewAppColor.iconFaint,
               ),
@@ -912,7 +912,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         if (isSelected)
                           Icon(
-                            Icons.check_circle,
+                            LucideIcons.circleCheck,
                             color: NewAppColor.primary600,
                             size: 24.sp,
                           ),
@@ -1150,158 +1150,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  // 1.2.0 C 방향: 로그아웃 확인 바텀시트 (시안 §213-242)
-  void _logout() {
+  // 로그아웃 확인 시트 — AppConfirmSheet 헬퍼 사용
+  Future<void> _logout() async {
     final settingsContext = context;
-    showModalBottomSheet(
+    final ok = await AppConfirmSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
-      builder: (sheetContext) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x40020817),
-                blurRadius: 40,
-                offset: Offset(0, -16),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 22.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 핸들바 (44×5)
-                  Container(
-                    width: 44,
-                    height: 5,
-                    margin: EdgeInsets.only(bottom: 18.h),
-                    decoration: BoxDecoration(
-                      color: NewAppColor.borderStrong,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  // 아이콘 박스 (54×54 라운드 16 dangerBg + danger700 logout)
-                  Container(
-                    width: 54.w,
-                    height: 54.w,
-                    decoration: BoxDecoration(
-                      color: NewAppColor.dangerBg,
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.logout,
-                      color: NewAppColor.danger700,
-                      size: 26.sp,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  // 제목
-                  Text(
-                    '로그아웃 하시겠어요?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: NewAppColor.textStrong,
-                      fontSize: 19.sp,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Pretendard',
-                      letterSpacing: -0.19,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  // 안내문
-                  Text(
-                    '다시 로그인하려면 이메일과\n비밀번호가 필요해요.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: NewAppColor.textMuted,
-                      fontSize: 13.5.sp,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Pretendard',
-                      height: 1.55,
-                    ),
-                  ),
-                  SizedBox(height: 24.h),
-                  // 버튼 2개
-                  Row(
-                    children: [
-                      // 취소 — borderSoft + textSecondary
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(sheetContext),
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 15.h),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.borderSoft,
-                              borderRadius: BorderRadius.circular(13.r),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '취소',
-                              style: TextStyle(
-                                color: NewAppColor.textSecondary,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Pretendard',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 11.w),
-                      // 로그아웃 — danger700 + 섀도
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(sheetContext);
-                            _performLogout(settingsContext);
-                          },
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 15.h),
-                            decoration: BoxDecoration(
-                              color: NewAppColor.danger700,
-                              borderRadius: BorderRadius.circular(13.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      NewAppColor.danger700.withOpacity(0.30),
-                                  blurRadius: 22,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '로그아웃',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'Pretendard',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+      title: '로그아웃 하시겠어요?',
+      description: '다시 로그인하려면 이메일과\n비밀번호가 필요해요.',
+      confirmLabel: '로그아웃',
+      tone: AppSheetTone.danger,
+      icon: LucideIcons.logOut,
     );
+    if (ok == true && mounted) _performLogout(settingsContext);
   }
 
   /// 1.2.0: 실제 로그아웃 처리 — FCM 비활성화 → AuthService.logout → 로그인 화면 이동

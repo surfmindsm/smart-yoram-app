@@ -182,8 +182,8 @@ class _SermonsScreenState extends State<SermonsScreen> {
           IconButton(
             icon: Icon(
               _currentFilter == FilterType.favorite
-                  ? Icons.favorite
-                  : Icons.favorite_border,
+                  ? LucideIcons.heart
+                  : LucideIcons.heart,
               color: _currentFilter == FilterType.favorite
                   ? NewAppColor.danger600
                   : NewAppColor.neutral900,
@@ -204,7 +204,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
           // 설교자 필터 버튼
           IconButton(
             icon: Icon(
-              Icons.person_outline,
+              LucideIcons.user,
               color: _selectedPreacher != null
                   ? NewAppColor.primary600
                   : NewAppColor.neutral900,
@@ -321,7 +321,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.person,
+                  LucideIcons.user,
                   size: 16.w,
                   color: NewAppColor.primary700,
                 ),
@@ -346,7 +346,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
               _loadSermonsByTag(_selectedTag);
             },
             child: Icon(
-              Icons.close,
+              LucideIcons.x,
               size: 20.w,
               color: NewAppColor.neutral600,
             ),
@@ -402,7 +402,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Icon(
-                      Icons.close,
+                      LucideIcons.x,
                       color: NewAppColor.neutral600,
                     ),
                   ),
@@ -443,7 +443,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.person_outline,
+                                  LucideIcons.user,
                                   size: 20.w,
                                   color: isSelected
                                       ? NewAppColor.primary600
@@ -464,7 +464,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                                 const Spacer(),
                                 if (isSelected)
                                   Icon(
-                                    Icons.check,
+                                    LucideIcons.check,
                                     size: 20.w,
                                     color: NewAppColor.primary600,
                                   ),
@@ -538,7 +538,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.favorite_border,
+                  LucideIcons.heart,
                   size: 64.w,
                   color: NewAppColor.neutral300,
                 ),
@@ -628,7 +628,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                       height: 120.h,
                       color: NewAppColor.neutral200,
                       child: Icon(
-                        Icons.play_circle_outline,
+                        LucideIcons.circlePlay,
                         size: 48.w,
                         color: NewAppColor.neutral400,
                       ),
@@ -714,7 +714,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                   height: 68.h,
                   color: NewAppColor.neutral200,
                   child: Icon(
-                    Icons.play_circle_outline,
+                    LucideIcons.circlePlay,
                     size: 32.w,
                     color: NewAppColor.neutral400,
                   ),
@@ -781,7 +781,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.video_library_outlined,
+            LucideIcons.clapperboard,
             size: 64.w,
             color: NewAppColor.neutral300,
           ),
@@ -803,7 +803,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.error_outline,
+            LucideIcons.circleAlert,
             size: 64.w,
             color: NewAppColor.danger600,
           ),
@@ -1119,7 +1119,7 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
                   height: 158.h,
                   color: NewAppColor.neutral200,
                   child: Icon(
-                    Icons.play_circle_outline,
+                    LucideIcons.circlePlay,
                     size: 64.w,
                     color: NewAppColor.neutral400,
                   ),
@@ -1217,7 +1217,7 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
                         ),
                       )
                     : Icon(
-                        _isFavorited ? Icons.favorite : Icons.favorite_border,
+                        _isFavorited ? LucideIcons.heart : LucideIcons.heart,
                         color: _isFavorited
                             ? NewAppColor.danger600
                             : NewAppColor.neutral600,
@@ -1283,7 +1283,7 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
                                     children: [
                                       if (widget.sermon.preacherName != null) ...[
                                         Icon(
-                                          Icons.person_outline,
+                                          LucideIcons.user,
                                           size: 16.w,
                                           color: NewAppColor.neutral600,
                                         ),
@@ -1298,7 +1298,7 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
                                       ],
                                       if (widget.sermon.sermonDate != null) ...[
                                         Icon(
-                                          Icons.calendar_today_outlined,
+                                          LucideIcons.calendarDays,
                                           size: 16.w,
                                           color: NewAppColor.neutral600,
                                         ),
@@ -1317,7 +1317,7 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
                                   Row(
                                     children: [
                                       Icon(
-                                        Icons.visibility_outlined,
+                                        LucideIcons.eye,
                                         size: 16.w,
                                         color: NewAppColor.neutral600,
                                       ),
@@ -1356,7 +1356,7 @@ class _SermonDetailScreenState extends State<SermonDetailScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.open_in_new,
+                                          LucideIcons.externalLink,
                                           size: 14.w,
                                           color: NewAppColor.neutral600,
                                         ),

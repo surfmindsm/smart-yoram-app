@@ -8,6 +8,7 @@ import '../../services/member_service.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../components/app_toast.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 커뮤니티 프로필 이미지 설정 화면
 class ProfileImageSetupScreen extends StatefulWidget {
@@ -63,7 +64,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
           leading: widget.isFirstSetup
               ? null
               : IconButton(
-                  icon: Icon(Icons.chevron_left,
+                  icon: Icon(LucideIcons.chevronLeft,
                       color: NewAppColor.textStrong, size: 24.sp),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -177,7 +178,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
                           children: [
                             Expanded(
                               child: _buildSourceButton(
-                                icon: Icons.photo_camera_outlined,
+                                icon: LucideIcons.camera,
                                 label: '카메라',
                                 onTap: () => _pickImageFrom(ImageSource.camera),
                               ),
@@ -185,7 +186,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
                             SizedBox(width: 12.w),
                             Expanded(
                               child: _buildSourceButton(
-                                icon: Icons.image_outlined,
+                                icon: LucideIcons.image,
                                 label: '갤러리',
                                 onTap: () => _pickImageFrom(ImageSource.gallery),
                               ),
@@ -353,7 +354,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
                       ),
                       alignment: Alignment.center,
                       child:
-                          Icon(Icons.check, color: Colors.white, size: 17.sp),
+                          Icon(LucideIcons.check, color: Colors.white, size: 17.sp),
                     ),
                   ),
               ],
@@ -392,7 +393,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
     if (kind == _AvatarOptionKind.existing) {
       final url = widget.member.fullProfilePhotoUrl;
       if (url == null || url.isEmpty) {
-        return Icon(Icons.person, size: 52.sp, color: NewAppColor.iconFaint);
+        return Icon(LucideIcons.user, size: 52.sp, color: NewAppColor.iconFaint);
       }
       return CachedNetworkImage(
         imageUrl: url,
@@ -408,7 +409,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
           ),
         ),
         errorWidget: (_, __, ___) =>
-            Icon(Icons.person, size: 52.sp, color: NewAppColor.iconFaint),
+            Icon(LucideIcons.user, size: 52.sp, color: NewAppColor.iconFaint),
       );
     }
     // 새 사진
@@ -418,7 +419,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add, size: 30.sp, color: NewAppColor.textTertiary),
+        Icon(LucideIcons.plus, size: 30.sp, color: NewAppColor.textTertiary),
         SizedBox(height: 4.h),
         Text(
           '추가',
@@ -456,7 +457,7 @@ class _ProfileImageSetupScreenState extends State<ProfileImageSetupScreen> {
             Text(
               label,
               style: TextStyle(
-                color: NewAppColor.neutral700,
+                color: NewAppColor.textSecondary,
                 fontSize: 13.5.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Pretendard',

@@ -1,10 +1,14 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide IconButton;
+import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:smart_yoram_app/components/app_toast.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/components/email_verification_field.dart';
+import 'package:smart_yoram_app/screens/privacy_policy_screen.dart';
+import 'package:smart_yoram_app/screens/terms_of_service_screen.dart';
 import 'package:smart_yoram_app/services/signup_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 교회 관리자 가입 신청 화면
 class ChurchSignupScreen extends StatefulWidget {
@@ -157,12 +161,7 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: NewAppColor.danger600,
-      ),
-    );
+    AppToast.error(context, message);
   }
 
   @override
@@ -170,20 +169,24 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
     const figmaStyles = FigmaTextStyles();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral900),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        leading: material.IconButton(
+          icon: Icon(LucideIcons.chevronLeft,
+              color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '교회 관리자 가입',
-          style: figmaStyles.subtitle1.copyWith(
-            color: NewAppColor.neutral900,
-            fontFamily: 'Pretendard Variable',
-          ),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
       ),
       body: SafeArea(
@@ -199,7 +202,7 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                   width: double.infinity,
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: NewAppColor.primary100,
+                    color: NewAppColor.skyTint,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Column(
@@ -208,7 +211,7 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                       Text(
                         'Church Round 교회 관리자 가입',
                         style: figmaStyles.subtitle2.copyWith(
-                          color: NewAppColor.primary900,
+                          color: NewAppColor.skyDeep,
                           fontFamily: 'Pretendard Variable',
                           fontWeight: FontWeight.w600,
                         ),
@@ -217,7 +220,7 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                       Text(
                         '교회 정보를 등록하고 Church Round 시스템을 이용하실 수 있습니다.',
                         style: figmaStyles.body2.copyWith(
-                          color: NewAppColor.primary700,
+                          color: NewAppColor.skyDeep,
                           fontFamily: 'Pretendard Variable',
                         ),
                       ),
@@ -225,7 +228,7 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                       Text(
                         '가입 승인 후 churchround.com에서 교회 관리 기능을 사용하실 수 있습니다.',
                         style: figmaStyles.body2.copyWith(
-                          color: NewAppColor.primary600,
+                          color: NewAppColor.skyPrimary,
                           fontFamily: 'Pretendard Variable',
                           fontWeight: FontWeight.w500,
                         ),
@@ -315,26 +318,8 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              '계정 사용자 이메일 (로그인 ID)',
-                              style: figmaStyles.bodyText2.copyWith(
-                                color: NewAppColor.neutral900,
-                                fontFamily: 'Pretendard Variable',
-                                letterSpacing: -0.35,
-                              ),
-                            ),
-                            Text(
-                              ' *',
-                              style: figmaStyles.bodyText2.copyWith(
-                                color: NewAppColor.danger600,
-                                fontFamily: 'Pretendard Variable',
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
+                        _buildLabel('계정 사용자 이메일 (로그인 ID)', true),
+                        SizedBox(height: 6.h),
                         EmailVerificationField(
                           emailController: _emailController,
                           onVerificationChanged: (verified) {
@@ -357,54 +342,26 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              '교회 소개',
-                              style: figmaStyles.bodyText2.copyWith(
-                                color: NewAppColor.neutral900,
-                                fontFamily: 'Pretendard Variable',
-                                letterSpacing: -0.35,
-                              ),
-                            ),
-                            Text(
-                              ' *',
-                              style: figmaStyles.bodyText2.copyWith(
-                                color: NewAppColor.danger600,
-                                fontFamily: 'Pretendard Variable',
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        Container(
-                          padding: EdgeInsets.all(16.w),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: NewAppColor.primary300,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8.r),
+                        _buildLabel('교회 소개', true),
+                        SizedBox(height: 6.h),
+                        TextFormField(
+                          controller: _descriptionController,
+                          maxLines: 5,
+                          style: TextStyle(
+                            color: NewAppColor.textStrong,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Pretendard',
+                            height: 1.5,
                           ),
-                          child: TextFormField(
-                            controller: _descriptionController,
-                            maxLines: 5,
-                            decoration: InputDecoration(
-                              hintText: '교회 소개 및 특징을 자세히 작성해주세요',
-                              hintStyle: figmaStyles.body1.copyWith(
-                                color: NewAppColor.neutral200,
-                                fontFamily: 'Pretendard Variable',
-                                letterSpacing: -0.38,
-                              ),
-                              border: InputBorder.none,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return '교회 소개를 입력해주세요';
-                              }
-                              return null;
-                            },
-                          ),
+                          decoration:
+                              _inputDecoration('교회 소개 및 특징을 자세히 작성해주세요'),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return '교회 소개를 입력해주세요';
+                            }
+                            return null;
+                          },
                         ),
                       ],
                     ),
@@ -473,6 +430,12 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                         });
                       },
                       isRequired: true,
+                      onDetail: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TermsOfServiceScreen(),
+                        ),
+                      ),
                     ),
                     SizedBox(height: 12.h),
                     _buildCheckbox(
@@ -484,6 +447,12 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                         });
                       },
                       isRequired: true,
+                      onDetail: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PrivacyPolicyScreen(),
+                        ),
+                      ),
                     ),
                     SizedBox(height: 12.h),
                     _buildCheckbox(
@@ -504,31 +473,41 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
                 // 제출 버튼
                 GestureDetector(
                   onTap: _isLoading ? null : _submitApplication,
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    decoration: BoxDecoration(
-                      color: _isLoading
-                          ? NewAppColor.neutral200
-                          : NewAppColor.primary600,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Center(
+                  behavior: HitTestBehavior.opaque,
+                  child: Opacity(
+                    opacity: _isLoading ? 0.5 : 1.0,
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: 15.h),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.skyPrimary,
+                        borderRadius: BorderRadius.circular(13.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: NewAppColor.skyPrimary.withOpacity(0.30),
+                            blurRadius: 22,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
                       child: _isLoading
                           ? SizedBox(
                               width: 20.w,
-                              height: 20.h,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                              height: 20.w,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
                               ),
                             )
                           : Text(
                               '가입 신청하기',
-                              style: figmaStyles.subtitle2.copyWith(
+                              style: TextStyle(
                                 color: Colors.white,
-                                fontFamily: 'Pretendard Variable',
-                                letterSpacing: -0.40,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Pretendard',
                               ),
                             ),
                     ),
@@ -553,10 +532,11 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(8.r),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: NewAppColor.borderHair, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -564,7 +544,7 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
           Text(
             title,
             style: figmaStyles.headline4.copyWith(
-              color: NewAppColor.neutral900,
+              color: NewAppColor.textStrong,
               fontFamily: 'Pretendard Variable',
               fontWeight: FontWeight.w600,
               letterSpacing: -0.50,
@@ -590,64 +570,32 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: figmaStyles.bodyText2.copyWith(
-                color: NewAppColor.neutral900,
-                fontFamily: 'Pretendard Variable',
-                letterSpacing: -0.35,
-              ),
-            ),
-            if (isRequired)
-              Text(
-                ' *',
-                style: figmaStyles.bodyText2.copyWith(
-                  color: NewAppColor.danger600,
-                  fontFamily: 'Pretendard Variable',
-                ),
-              ),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          height: 54.h,
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: NewAppColor.primary300,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(8.r),
+        _buildLabel(label, isRequired),
+        SizedBox(height: 6.h),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: TextStyle(
+            color: NewAppColor.textStrong,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Pretendard',
           ),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-              hintText: hintText,
-              hintStyle: figmaStyles.body1.copyWith(
-                color: NewAppColor.neutral200,
-                fontFamily: 'Pretendard Variable',
-                letterSpacing: -0.38,
-              ),
-              border: InputBorder.none,
-            ),
-            validator: isRequired
-                ? (value) {
-                    if (value == null || value.isEmpty) {
-                      return '$label을(를) 입력해주세요';
-                    }
-                    return null;
+          decoration: _inputDecoration(hintText),
+          validator: isRequired
+              ? (value) {
+                  if (value == null || value.isEmpty) {
+                    return '$label을(를) 입력해주세요';
                   }
-                : null,
-          ),
+                  return null;
+                }
+              : null,
         ),
       ],
     );
   }
 
-  // 드롭다운 필드 빌더
+  // 드롭다운 필드 빌더 — 박스를 탭하면 1.2.0 시트로 선택
   Widget _buildDropdownField({
     required String label,
     required String? value,
@@ -655,142 +603,309 @@ class _ChurchSignupScreenState extends State<ChurchSignupScreen> {
     required Function(String?) onChanged,
     required bool isRequired,
   }) {
-    const figmaStyles = FigmaTextStyles();
-
+    final hasValue = value != null && value.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: figmaStyles.bodyText2.copyWith(
-                color: NewAppColor.neutral900,
-                fontFamily: 'Pretendard Variable',
-                letterSpacing: -0.35,
-              ),
-            ),
-            if (isRequired)
-              Text(
-                ' *',
-                style: figmaStyles.bodyText2.copyWith(
-                  color: NewAppColor.danger600,
-                  fontFamily: 'Pretendard Variable',
-                ),
-              ),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          height: 54.h,
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: NewAppColor.primary300,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(8.r),
+        _buildLabel(label, isRequired),
+        SizedBox(height: 6.h),
+        GestureDetector(
+          onTap: () => _showSelectSheet(
+            title: label,
+            items: items,
+            selected: value,
+            onSelected: onChanged,
           ),
-          child: DropdownButtonFormField<String>(
-            value: value,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            height: 50.h,
+            padding: EdgeInsets.symmetric(horizontal: 14.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: NewAppColor.borderHair, width: 1),
+              borderRadius: BorderRadius.circular(12.r),
             ),
-            hint: Text(
-              '선택하세요',
-              style: figmaStyles.body1.copyWith(
-                color: NewAppColor.neutral200,
-                fontFamily: 'Pretendard Variable',
-                letterSpacing: -0.38,
-              ),
-            ),
-            items: items.map((item) {
-              return DropdownMenuItem(
-                value: item,
-                child: Text(
-                  item,
-                  style: figmaStyles.body1.copyWith(
-                    color: NewAppColor.neutral900,
-                    fontFamily: 'Pretendard Variable',
-                    letterSpacing: -0.38,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    hasValue ? value : '선택하세요',
+                    style: TextStyle(
+                      color: hasValue
+                          ? NewAppColor.textStrong
+                          : NewAppColor.textTertiary,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                    ),
                   ),
                 ),
-              );
-            }).toList(),
-            onChanged: onChanged,
-            validator: isRequired
-                ? (value) {
-                    if (value == null || value.isEmpty) {
-                      return '$label을(를) 선택해주세요';
-                    }
-                    return null;
-                  }
-                : null,
+                Icon(LucideIcons.chevronDown,
+                    color: NewAppColor.textTertiary, size: 20.sp),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  // 체크박스 빌더
+  // 1.2.0 선택 시트 — 핸들바 + 제목 + 라디오 리스트
+  void _showSelectSheet({
+    required String title,
+    required List<String> items,
+    required String? selected,
+    required Function(String?) onSelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 10.h),
+                Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: NewAppColor.borderStrong,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                SizedBox(height: 14.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 22.w),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: NewAppColor.textStrong,
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                Container(height: 1, color: NewAppColor.borderHair),
+                Flexible(
+                  child: ListView.builder(
+                    padding: EdgeInsets.symmetric(vertical: 4.h),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final isSelected = item == selected;
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            onSelected(item);
+                            Navigator.pop(sheetContext);
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 22.w, vertical: 14.h),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? NewAppColor.skyPrimary
+                                          : NewAppColor.textStrong,
+                                      fontSize: 14.5.sp,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w800
+                                          : FontWeight.w500,
+                                      fontFamily: 'Pretendard',
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(LucideIcons.check,
+                                      color: NewAppColor.skyPrimary,
+                                      size: 20.sp),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: 6.h),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 1.2.0 공용 입력 데코레이션 — 흰 fill + borderHair + 포커스 sky 1.5
+  InputDecoration _inputDecoration(String hintText) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(
+        color: NewAppColor.textTertiary,
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w500,
+        fontFamily: 'Pretendard',
+      ),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: NewAppColor.borderHair, width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: NewAppColor.borderHair, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: NewAppColor.skyPrimary, width: 1.5),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+    );
+  }
+
+  // 1.2.0 입력 라벨 — textSecondary 13sp/700 (디자인 정책 §3.1 표준)
+  Widget _buildLabel(String label, bool isRequired) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: NewAppColor.textSecondary,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
+        ),
+        if (isRequired) ...[
+          SizedBox(width: 3.w),
+          Text(
+            '*',
+            style: TextStyle(
+              color: NewAppColor.danger700,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // 체크박스 빌더 — onDetail 있으면 우측에 "보기 >" 링크 노출
   Widget _buildCheckbox({
     required String label,
     required bool value,
     required Function(bool?) onChanged,
     required bool isRequired,
+    VoidCallback? onDetail,
   }) {
-    const figmaStyles = FigmaTextStyles();
-
     return Row(
       children: [
         GestureDetector(
           onTap: () => onChanged(!value),
           child: Container(
             width: 20.w,
-            height: 20.h,
+            height: 20.w,
             decoration: BoxDecoration(
-              color: value ? NewAppColor.primary100 : Colors.white,
+              color: value ? NewAppColor.skyPrimary : Colors.white,
               border: Border.all(
-                color: value ? NewAppColor.primary100 : const Color(0xFFE5E5EC),
-                width: 1,
+                color: value
+                    ? NewAppColor.skyPrimary
+                    : NewAppColor.borderStrong,
+                width: 1.5,
               ),
-              borderRadius: BorderRadius.circular(100.r),
+              borderRadius: BorderRadius.circular(6.r),
             ),
             child: value
                 ? Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     size: 14.w,
-                    color: NewAppColor.primary600,
+                    color: Colors.white,
                   )
                 : null,
           ),
         ),
-        SizedBox(width: 8.w),
+        SizedBox(width: 9.w),
         Expanded(
           child: GestureDetector(
             onTap: () => onChanged(!value),
+            behavior: HitTestBehavior.opaque,
             child: Row(
               children: [
-                Text(
-                  label,
-                  style: figmaStyles.body2.copyWith(
-                    color: NewAppColor.neutral900,
-                    fontFamily: 'Pretendard Variable',
-                    letterSpacing: -0.35,
-                  ),
-                ),
-                if (isRequired)
-                  Text(
-                    ' *',
-                    style: figmaStyles.body2.copyWith(
-                      color: NewAppColor.danger600,
-                      fontFamily: 'Pretendard Variable',
+                Flexible(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: NewAppColor.textBody,
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Pretendard',
                     ),
                   ),
+                ),
+                if (isRequired) ...[
+                  SizedBox(width: 3.w),
+                  Text(
+                    '*',
+                    style: TextStyle(
+                      color: NewAppColor.danger700,
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ),
+        if (onDetail != null)
+          GestureDetector(
+            onTap: onDetail,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+              child: Row(
+                children: [
+                  Text(
+                    '보기',
+                    style: TextStyle(
+                      color: NewAppColor.skyPrimary,
+                      fontSize: 12.5.sp,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Pretendard',
+                    ),
+                  ),
+                  Icon(LucideIcons.chevronRight,
+                      size: 16.sp, color: NewAppColor.skyPrimary),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }

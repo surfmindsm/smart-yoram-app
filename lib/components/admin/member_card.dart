@@ -4,6 +4,7 @@ import '../../models/member.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import 'status_badge.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 관리자용 교인 카드 컴포넌트
 class MemberCard extends StatelessWidget {
@@ -62,7 +63,7 @@ class MemberCard extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          Icons.phone_outlined,
+                          LucideIcons.phone,
                           size: 14.sp,
                           color: NewAppColor.neutral600,
                         ),
@@ -81,7 +82,7 @@ class MemberCard extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          Icons.email_outlined,
+                          LucideIcons.mail,
                           size: 14.sp,
                           color: NewAppColor.neutral600,
                         ),
@@ -112,7 +113,7 @@ class MemberCard extends StatelessWidget {
             ),
             // 화살표 아이콘
             Icon(
-              Icons.arrow_forward_ios,
+              LucideIcons.chevronRight,
               size: 16.sp,
               color: NewAppColor.neutral400,
             ),

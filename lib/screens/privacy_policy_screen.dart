@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 개인정보처리방침 — 1.2.0 C 방향
 class PrivacyPolicyScreen extends StatelessWidget {
@@ -21,7 +22,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -34,7 +35,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         ),
         actions: [
           material.IconButton(
-            icon: Icon(Icons.copy_outlined,
+            icon: Icon(LucideIcons.copy,
                 color: NewAppColor.textSecondary, size: 21.sp),
             onPressed: () {
               Clipboard.setData(
@@ -105,11 +106,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
             ),
           ),
           SizedBox(height: 12.h),
-          _buildContactRow(Icons.person_outline, '담당자', '개인정보보호 담당자'),
+          _buildContactRow(LucideIcons.user, '담당자', '개인정보보호 담당자'),
           SizedBox(height: 8.h),
-          _buildContactRow(Icons.mail_outline, '이메일', 'surfmind.sm@gmail.com'),
+          _buildContactRow(LucideIcons.mail, '이메일', 'surfmind.sm@gmail.com'),
           SizedBox(height: 8.h),
-          _buildContactRow(Icons.phone_outlined, '전화', '010-6617-1875'),
+          _buildContactRow(LucideIcons.phone, '전화', '010-6617-1875'),
           SizedBox(height: 12.h),
           Container(height: 1, color: NewAppColor.borderHair),
           SizedBox(height: 12.h),

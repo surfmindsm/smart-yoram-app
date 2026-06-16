@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -263,7 +263,7 @@ class _MembersScreenState extends State<MembersScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.search,
+                        LucideIcons.search,
                         size: 18.sp,
                         color: NewAppColor.textTertiary,
                       ),
@@ -360,7 +360,7 @@ class _MembersScreenState extends State<MembersScreen> {
         alignment: Alignment.center,
         child: Icon(
           // 목업: 양방향 정렬 아이콘. 오름/내림차순 상태 그대로 보존
-          sortAscending ? Icons.swap_vert : Icons.swap_vert,
+          sortAscending ? LucideIcons.arrowUpDown : LucideIcons.arrowUpDown,
           size: 16.sp,
           color: NewAppColor.skyDeep,
         ),
@@ -398,7 +398,7 @@ class _MembersScreenState extends State<MembersScreen> {
             ),
             SizedBox(width: 4.w),
             Icon(
-              Icons.keyboard_arrow_down,
+              LucideIcons.chevronDown,
               size: 14.sp,
               color: isSelected ? Colors.white : NewAppColor.textSecondary,
             ),
@@ -507,7 +507,7 @@ class _MembersScreenState extends State<MembersScreen> {
                 ),
                 if (isSelected)
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.skyDeep,
                     size: 19.sp,
                   ),
@@ -882,12 +882,12 @@ class _MembersScreenState extends State<MembersScreen> {
             SizedBox(width: 8.w),
             // 통화 — 30원형 skyTint + skyDeep
             _buildMemberActionButton(
-              icon: Icons.phone,
+              icon: LucideIcons.phone,
               onTap: () => _makePhoneCall(member.phone),
             ),
             SizedBox(width: 8.w),
             _buildMemberActionButton(
-              icon: Icons.chat_bubble_outline,
+              icon: LucideIcons.messageCircle,
               onTap: () => _sendMessage(member.phone),
             ),
           ],
@@ -941,21 +941,7 @@ class _MembersScreenState extends State<MembersScreen> {
   }
 
   void _showAddMemberDialog() {
-    // 교인 추가 다이얼로그
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('교인 추가'),
-        content: const Text('교인 추가 기능은 준비 중입니다.'),
-        actions: [
-          AppButton(
-            onPressed: () => Navigator.pop(context),
-            variant: ButtonVariant.ghost,
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
-    );
+    AppToast.show(context, '교인 추가 기능은 준비 중입니다');
   }
 
   Future<void> _makePhoneCall(String? phone) async {
@@ -1184,7 +1170,7 @@ class _DistrictFilterSheetState extends State<_DistrictFilterSheet> {
                 ),
                 if (isSelected)
                   Icon(
-                    Icons.check,
+                    LucideIcons.check,
                     color: NewAppColor.skyDeep,
                     size: 19.sp,
                   ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../widget/widgets.dart';
 import '../config/api_config.dart';
 import 'dart:convert';
@@ -97,28 +97,28 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 CustomFormField(
                   controller: usernameController,
                   label: '사용자명',
-                  prefixIcon: const Icon(Icons.person),
+                  prefixIcon: const Icon(LucideIcons.user),
                   enabled: !isEdit, // 수정 시 사용자명 변경 불가
                 ),
                 const SizedBox(height: 12),
                 CustomFormField(
                   controller: emailController,
                   label: '이메일',
-                  prefixIcon: const Icon(Icons.email),
+                  prefixIcon: const Icon(LucideIcons.mail),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 12),
                 CustomFormField(
                   controller: fullNameController,
                   label: '이름',
-                  prefixIcon: const Icon(Icons.badge),
+                  prefixIcon: const Icon(LucideIcons.badge),
                 ),
                 if (!isEdit) ...[
                   const SizedBox(height: 12),
                   CustomFormField(
                     controller: passwordController,
                     label: '비밀번호',
-                    prefixIcon: const Icon(Icons.lock),
+                    prefixIcon: const Icon(LucideIcons.lock),
                     obscureText: true,
                   ),
                 ],
@@ -279,7 +279,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.error, color: Colors.red),
+            Icon(LucideIcons.circleAlert, color: Colors.red),
             SizedBox(width: 8),
             Text('오류'),
           ],
@@ -318,7 +318,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         title: '사용자 관리',
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(LucideIcons.refreshCw),
             onPressed: _loadUsers,
           ),
         ],
@@ -327,7 +327,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         heroTag: "users_fab",
         onPressed: _createUser,
         backgroundColor: Colors.blue[700],
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(LucideIcons.plus, color: Colors.white),
       ),
       body: Column(
         children: [
@@ -351,7 +351,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
               children: [
                 Expanded(
                   child: StatCard(
-                    icon: Icons.group,
+                    icon: LucideIcons.users,
                     value: users.length.toString(),
                     title: '전체 사용자',
                     color: Colors.blue,
@@ -360,7 +360,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: StatCard(
-                    icon: Icons.check_circle,
+                    icon: LucideIcons.circleCheck,
                     value: users.where((u) => u['is_active']).length.toString(),
                     title: '활성 사용자',
                     color: Colors.green,
@@ -369,7 +369,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: StatCard(
-                    icon: Icons.person,
+                    icon: LucideIcons.user,
                     value: users.where((u) => u['role'] == 'admin').length.toString(),
                     title: '관리자',
                     color: Colors.red,
@@ -387,7 +387,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 ? const LoadingWidget()
                 : filteredUsers.isEmpty
                     ? const EmptyStateWidget(
-                        icon: Icons.group,
+                        icon: LucideIcons.users,
                         title: '사용자가 없습니다.',
                       )
                     : ListView.builder(
@@ -463,7 +463,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                     value: 'edit',
                                     child: const Row(
                                       children: [
-                                        Icon(Icons.edit),
+                                        Icon(LucideIcons.pencil),
                                         SizedBox(width: 8),
                                         Text('수정'),
                                       ],
@@ -474,18 +474,18 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                     child: Row(
                                       children: [
                                         Icon(user['is_active'] 
-                                            ? Icons.block
-                                            : Icons.check_circle),
+                                            ? LucideIcons.ban
+                                            : LucideIcons.circleCheck),
                                         const SizedBox(width: 8),
                                         Text(user['is_active'] ? '비활성화' : '활성화'),
                                       ],
                                     ),
                                   ),
-                                  PopupMenuItem(
+                                  const PopupMenuItem(
                                     value: 'delete',
-                                    child: const Row(
+                                    child: Row(
                                       children: [
-                                        Icon(Icons.delete, color: Colors.red),
+                                        Icon(LucideIcons.trash2, color: Colors.red),
                                         SizedBox(width: 8),
                                         Text('삭제', style: TextStyle(color: Colors.red)),
                                       ],
@@ -532,13 +532,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   IconData _getRoleIcon(String role) {
     switch (role) {
       case 'admin':
-        return Icons.person;
+        return LucideIcons.user;
       case 'pastor':
-        return Icons.church;
+        return LucideIcons.church;
       case 'member':
-        return Icons.person;
+        return LucideIcons.user;
       default:
-        return Icons.help;
+        return LucideIcons.circleHelp;
     }
   }
 

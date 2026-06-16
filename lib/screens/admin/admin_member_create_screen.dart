@@ -326,7 +326,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                 ),
               ),
               child: Icon(
-                Icons.person_outline,
+                LucideIcons.user,
                 size: 42.sp,
                 color: NewAppColor.iconFaint,
               ),
@@ -350,7 +350,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                   ],
                 ),
                 alignment: Alignment.center,
-                child: Icon(Icons.camera_alt,
+                child: Icon(LucideIcons.camera,
                     color: Colors.white, size: 16.sp),
               ),
             ),
@@ -439,7 +439,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                               ),
                         ),
                         Icon(
-                          Icons.calendar_today,
+                          LucideIcons.calendarDays,
                           size: 20.sp,
                           color: NewAppColor.textMuted,
                         ),
@@ -788,7 +788,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(Icons.close,
+          icon: Icon(LucideIcons.x,
               color: NewAppColor.textStrong, size: 22.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -973,7 +973,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline,
+          Icon(LucideIcons.info,
               size: 14.sp, color: NewAppColor.textTertiary),
           SizedBox(width: 7.w),
           Expanded(
@@ -1083,7 +1083,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.textMuted,
                   ),
@@ -1181,7 +1181,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                           ),
                     ),
                     Icon(
-                      Icons.calendar_today,
+                      LucideIcons.calendarDays,
                       size: 20.sp,
                       color: NewAppColor.textMuted,
                     ),
@@ -1419,7 +1419,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.textMuted,
                   ),
@@ -1595,7 +1595,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.textMuted,
                   ),
@@ -1737,7 +1737,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.textMuted,
                   ),
@@ -1770,7 +1770,7 @@ class _AdminMemberCreateScreenState extends State<AdminMemberCreateScreen> {
                         ),
                   ),
                   Icon(
-                    Icons.calendar_today,
+                    LucideIcons.calendarDays,
                     size: 20.sp,
                     color: NewAppColor.textMuted,
                   ),

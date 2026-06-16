@@ -852,7 +852,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               Row(
                 children: [
                   Icon(
-                    Icons.info_outline,
+                    LucideIcons.info,
                     color: NewAppColor.primary600,
                     size: 24.sp,
                   ),
@@ -970,7 +970,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -983,7 +983,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.info_outline,
+            icon: Icon(LucideIcons.info,
                 color: NewAppColor.textMuted, size: 22.sp),
             onPressed: _showGuide,
           ),
@@ -1479,7 +1479,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add,
+                        Icon(LucideIcons.plus,
                             size: 32.sp, color: NewAppColor.neutral400),
                         SizedBox(height: 4.h),
                         Text(
@@ -1537,7 +1537,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.broken_image,
+                                  Icon(LucideIcons.imageOff,
                                       size: 40.sp, color: Colors.grey),
                                   Text(
                                     '이미지 로드 실패',
@@ -1566,7 +1566,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.close,
+                              LucideIcons.x,
                               size: 16.sp,
                               color: Colors.white,
                             ),
@@ -1612,7 +1612,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.close,
+                              LucideIcons.x,
                               size: 16.sp,
                               color: Colors.white,
                             ),
@@ -2208,7 +2208,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
             readOnly: true,
             decoration: _buildInputDecoration(
               hintText: '지원 마감일을 선택해주세요',
-              prefixIcon: const Icon(Icons.calendar_today),
+              prefixIcon: const Icon(LucideIcons.calendarDays),
             ),
             style: FigmaTextStyles().body2,
             onTap: () async {
@@ -2481,7 +2481,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       readOnly: true,
                       decoration: _buildInputDecoration(
                         hintText: '행사 날짜를 선택해주세요',
-                        prefixIcon: const Icon(Icons.calendar_today),
+                        prefixIcon: const Icon(LucideIcons.calendarDays),
                       ),
                       onTap: () async {
                         final date = await showCustomDatePicker(
@@ -2519,7 +2519,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                       controller: _rehearsalTimeController,
                       decoration: _buildInputDecoration(
                         hintText: '예: 매주 토요일 오후 2시',
-                        prefixIcon: const Icon(Icons.access_time),
+                        prefixIcon: const Icon(LucideIcons.clock),
                       ),
                     ),
                   ],
@@ -2921,7 +2921,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               children: _preferredLocations.map((location) {
                 return Chip(
                   label: Text(location),
-                  deleteIcon: Icon(Icons.close, size: 18.r),
+                  deleteIcon: Icon(LucideIcons.x, size: 18.r),
                   onDeleted: () {
                     setState(() {
                       _preferredLocations.remove(location);
@@ -3085,7 +3085,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.upload_file,
+                    Icon(LucideIcons.upload,
                         size: 40.r, color: NewAppColor.neutral500),
                     SizedBox(height: 8.h),
                     Text(
@@ -3127,7 +3127,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle,
+                            Icon(LucideIcons.circleCheck,
                                 size: 16.r, color: NewAppColor.primary600),
                             SizedBox(width: 4.w),
                             Text(
@@ -3145,7 +3145,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
                                   _portfolioFileUrl = null;
                                 });
                               },
-                              child: Icon(Icons.close,
+                              child: Icon(LucideIcons.x,
                                   size: 16.r, color: NewAppColor.primary600),
                             ),
                           ],
@@ -3364,7 +3364,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               hintStyle: FigmaTextStyles().body2.copyWith(
                     color: NewAppColor.neutral400,
                   ),
-              prefixIcon: Icon(Icons.calendar_today,
+              prefixIcon: Icon(LucideIcons.calendarDays,
                   size: 20.r, color: NewAppColor.neutral600),
               filled: true,
               fillColor: NewAppColor.neutral100,
@@ -3404,7 +3404,7 @@ class _CommunityCreateScreenState extends State<CommunityCreateScreen> {
               hintStyle: FigmaTextStyles().body2.copyWith(
                     color: NewAppColor.neutral400,
                   ),
-              suffixIcon: Icon(Icons.access_time,
+              suffixIcon: Icon(LucideIcons.clock,
                   size: 20.r, color: NewAppColor.neutral600),
               filled: true,
               fillColor: NewAppColor.neutral100,

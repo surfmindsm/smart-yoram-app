@@ -1,448 +1,460 @@
 import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
-import '../resource/color_style.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../resource/color_style_new.dart';
 
-enum SheetType {
-  bottom,
-  side,
-}
-
+/// 1.2.0 C 방향 표준 바텀시트 컴포넌트
+///
+/// 세 가지 변형 제공:
+/// - [AppConfirmSheet.show] : 위험·경고 확인 시트 (삭제, 로그아웃 등)
+/// - [AppMenuSheet.show]    : 단순 아이콘+라벨 메뉴 행 묶음
+/// - [AppInfoSheet.show]    : 헤더 + 본문 + 풀폭 확인 버튼 (상세 안내)
+///
+/// 모든 시트는 동일한 핸들바·라운드·암막 처리 사용.
 class AppSheet {
-  static Future<T?> showBottomSheet<T>(
-    BuildContext context, {
-    required Widget child,
-    String? title,
-    bool isDismissible = true,
-    bool enableDrag = true,
-    bool isScrollControlled = false,
-    double? height,
-    EdgeInsetsGeometry? padding,
-    Widget? leading,
-    List<Widget>? actions,
-    VoidCallback? onClose,
-  }) {
-    return showModalBottomSheet<T>(
-      context: context,
-      isDismissible: isDismissible,
-      enableDrag: enableDrag,
-      isScrollControlled: isScrollControlled,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _AppBottomSheet(
-        title: title,
-        height: height,
-        padding: padding,
-        leading: leading,
-        actions: actions,
-        onClose: onClose,
+  AppSheet._();
+
+  /// 공통 핸들바 + 시트 컨테이너
+  static Widget container({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
+      ),
+      child: SafeArea(
+        top: false,
         child: child,
       ),
     );
   }
 
-  static Future<T?> showSideSheet<T>(
-    BuildContext context, {
-    required Widget child,
-    String? title,
-    bool isDismissible = true,
-    double? width,
-    EdgeInsetsGeometry? padding,
-    Widget? leading,
-    List<Widget>? actions,
-    VoidCallback? onClose,
-  }) {
-    return showGeneralDialog<T>(
-      context: context,
-      barrierDismissible: isDismissible,
-      barrierLabel: 'Side Sheet',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return _AppSideSheet(
-          title: title,
-          width: width,
-          padding: padding,
-          leading: leading,
-          actions: actions,
-          onClose: onClose,
-          child: child,
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(1.0, 0.0),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOut,
-          )),
-          child: child,
-        );
-      },
-    );
-  }
-
-  // Quick access methods for common use cases
-  static Future<T?> showMenu<T>(
-    BuildContext context, {
-    required String title,
-    required List<AppSheetMenuItem> items,
-    Widget? leading,
-    VoidCallback? onClose,
-  }) {
-    return showBottomSheet<T>(
-      context,
-      title: title,
-      leading: leading,
-      onClose: onClose,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: items.map((item) {
-          return ListTile(
-            leading: item.icon != null 
-              ? Icon(item.icon, color: AppColor.secondary04) 
-              : null,
-            title: Text(
-              item.title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColor.secondary06,
-              ),
-            ),
-            subtitle: item.subtitle != null
-              ? Text(
-                  item.subtitle!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColor.secondary04,
-                  ),
-                )
-              : null,
-            trailing: item.trailing,
-            onTap: () {
-              Navigator.of(context).pop();
-              item.onTap?.call();
-            },
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  static Future<T?> showConfirm<T>(
-    BuildContext context, {
-    required String title,
-    required String message,
-    String confirmText = '확인',
-    String cancelText = '취소',
-    VoidCallback? onConfirm,
-    VoidCallback? onCancel,
-  }) {
-    return showBottomSheet<T>(
-      context,
-      title: title,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColor.secondary06,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    onCancel?.call();
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColor.secondary06,
-                    side: const BorderSide(color: AppColor.border1),
-                  ),
-                  child: Text(cancelText),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                    onConfirm?.call();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColor.primary600,
-                    foregroundColor: AppColor.white,
-                  ),
-                  child: Text(confirmText),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  static Future<T?> showForm<T>(
-    BuildContext context, {
-    required String title,
-    required Widget form,
-    String submitText = '저장',
-    String cancelText = '취소',
-    VoidCallback? onSubmit,
-    VoidCallback? onCancel,
-  }) {
-    return showSideSheet<T>(
-      context,
-      title: title,
-      width: 400,
-      child: Column(
-        children: [
-          Expanded(child: form),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    onCancel?.call();
-                  },
-                  child: Text(cancelText),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    onSubmit?.call();
-                  },
-                  child: Text(submitText),
-                ),
-              ),
-            ],
-          ),
-        ],
+  static Widget handle() {
+    return Container(
+      width: 44,
+      height: 5,
+      margin: EdgeInsets.only(top: 10.h, bottom: 14.h),
+      decoration: BoxDecoration(
+        color: NewAppColor.borderStrong,
+        borderRadius: BorderRadius.circular(999),
       ),
     );
   }
 }
 
-class _AppBottomSheet extends StatelessWidget {
-  final String? title;
-  final double? height;
-  final EdgeInsetsGeometry? padding;
-  final Widget? leading;
-  final List<Widget>? actions;
-  final VoidCallback? onClose;
-  final Widget child;
+enum AppSheetTone { sky, danger, success, warning }
 
-  const _AppBottomSheet({
-    Key? key,
-    this.title,
-    this.height,
-    this.padding,
-    this.leading,
-    this.actions,
-    this.onClose,
-    required this.child,
-  }) : super(key: key);
+/// 확인/경고 시트 — 로그아웃·삭제·취소 등 결정 확인용
+class AppConfirmSheet {
+  AppConfirmSheet._();
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: const BoxDecoration(
-        color: AppColor.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
+  static Future<bool?> show({
+    required BuildContext context,
+    required String title,
+    String? description,
+    Widget? preview,
+    String confirmLabel = '확인',
+    String cancelLabel = '취소',
+    AppSheetTone tone = AppSheetTone.sky,
+    IconData? icon,
+  }) {
+    final ({Color bg, Color fg}) toneColors = _toneColors(tone);
+    final IconData iconData = icon ?? _defaultIcon(tone);
+
+    return showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) {
+        return AppSheet.container(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(child: AppSheet.handle()),
+              Padding(
+                padding: EdgeInsets.fromLTRB(22.w, 4.h, 22.w, 22.h),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 54.w,
+                      height: 54.w,
+                      decoration: BoxDecoration(
+                        color: toneColors.bg,
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(iconData,
+                          color: toneColors.fg, size: 26.sp),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: NewAppColor.textStrong,
+                        fontSize: 19.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                    if (description != null) ...[
+                      SizedBox(height: 8.h),
+                      Text(
+                        description,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: NewAppColor.textMuted,
+                          fontSize: 13.5.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Pretendard',
+                          height: 1.55,
+                        ),
+                      ),
+                    ],
+                    if (preview != null) ...[
+                      SizedBox(height: 16.h),
+                      preview,
+                    ],
+                    SizedBox(height: 22.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildCancelButton(
+                            label: cancelLabel,
+                            onTap: () => Navigator.pop(sheetContext, false),
+                          ),
+                        ),
+                        SizedBox(width: 11.w),
+                        Expanded(
+                          child: _buildConfirmButton(
+                            label: confirmLabel,
+                            tone: tone,
+                            onTap: () => Navigator.pop(sheetContext, true),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  static Widget _buildCancelButton({
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 15.h),
+        decoration: BoxDecoration(
+          color: NewAppColor.borderSoft,
+          borderRadius: BorderRadius.circular(13.r),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: NewAppColor.textSecondary,
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Pretendard',
+          ),
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(top: 12),
-            decoration: BoxDecoration(
-              color: AppColor.secondary02,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          
-          // Header
-          if (title != null || actions != null)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  if (leading != null) ...[
-                    leading!,
-                    const SizedBox(width: 12),
-                  ],
-                  Expanded(
-                    child: title != null
-                      ? Text(
-                          title!,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.secondary06,
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                  ),
-                  if (actions != null) ...actions!,
-                  if (onClose != null)
-                    IconButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        onClose?.call();
-                      },
-                      icon: const Icon(Icons.close),
-                    ),
-                ],
-              ),
-            ),
+    );
+  }
 
-          // Content
-          if (height != null)
-            Expanded(
-              child: Padding(
-                padding: padding ?? const EdgeInsets.all(16),
-                child: child,
-              ),
-            )
-          else
-            Padding(
-              padding: padding ?? const EdgeInsets.all(16),
-              child: child,
+  static Widget _buildConfirmButton({
+    required String label,
+    required AppSheetTone tone,
+    required VoidCallback onTap,
+  }) {
+    final Color background = _confirmButtonColor(tone);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 15.h),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(13.r),
+          boxShadow: [
+            BoxShadow(
+              color: background.withOpacity(0.30),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
             ),
-        ],
+          ],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Pretendard',
+          ),
+        ),
       ),
     );
   }
 }
 
-class _AppSideSheet extends StatelessWidget {
-  final String? title;
-  final double? width;
-  final EdgeInsetsGeometry? padding;
-  final Widget? leading;
-  final List<Widget>? actions;
-  final VoidCallback? onClose;
-  final Widget child;
+/// 단순 메뉴 시트 — 핸들바 + 아이콘+라벨 행 2~N개
+class AppMenuSheet {
+  AppMenuSheet._();
 
-  const _AppSideSheet({
-    Key? key,
-    this.title,
-    this.width,
-    this.padding,
-    this.leading,
-    this.actions,
-    this.onClose,
-    required this.child,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Material(
-        child: Container(
-          width: width ?? 350,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            color: AppColor.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 16,
-                offset: Offset(-2, 0),
-              ),
+  static Future<void> show({
+    required BuildContext context,
+    required List<AppMenuItem> items,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) {
+        return AppSheet.container(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(child: AppSheet.handle()),
+              ...List.generate(items.length, (index) {
+                final item = items[index];
+                final isLast = index == items.length - 1;
+                return Column(
+                  children: [
+                    _buildMenuRow(sheetContext, item),
+                    if (!isLast)
+                      Container(
+                        height: 1,
+                        color: NewAppColor.borderHair,
+                        margin: EdgeInsets.symmetric(horizontal: 20.w),
+                      ),
+                  ],
+                );
+              }),
+              SizedBox(height: 6.h),
             ],
           ),
-          child: Column(
-            children: [
-              // Header
-              if (title != null || actions != null)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: AppColor.border1),
-                    ),
+        );
+      },
+    );
+  }
+
+  static Widget _buildMenuRow(BuildContext context, AppMenuItem item) {
+    final ({Color bg, Color fg}) toneColors = _toneColors(item.tone);
+    final Color labelColor =
+        item.danger ? NewAppColor.danger700 : NewAppColor.textStrong;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: item.enabled
+            ? () {
+                Navigator.pop(context);
+                item.onTap();
+              }
+            : null,
+        child: Opacity(
+          opacity: item.enabled ? 1.0 : 0.4,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 16.h),
+            child: Row(
+              children: [
+                Icon(item.icon,
+                    size: 22.sp,
+                    color: item.danger ? NewAppColor.danger700 : toneColors.fg),
+                SizedBox(width: 14.w),
+                Text(
+                  item.label,
+                  style: TextStyle(
+                    color: labelColor,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Pretendard',
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AppMenuItem {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final AppSheetTone tone;
+  final bool danger;
+  final bool enabled;
+
+  const AppMenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.tone = AppSheetTone.sky,
+    this.danger = false,
+    this.enabled = true,
+  });
+}
+
+/// 정보·안내 시트 — 헤더(아이콘+제목) + 스크롤 본문 + 풀폭 확인 버튼
+class AppInfoSheet {
+  AppInfoSheet._();
+
+  static Future<void> show({
+    required BuildContext context,
+    required String title,
+    required Widget body,
+    IconData icon = LucideIcons.info,
+    AppSheetTone tone = AppSheetTone.sky,
+    String confirmLabel = '확인',
+    double? maxHeightFraction,
+  }) {
+    final ({Color bg, Color fg}) toneColors = _toneColors(tone);
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height *
+                (maxHeightFraction ?? 0.8),
+          ),
+          child: AppSheet.container(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(child: AppSheet.handle()),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(22.w, 4.h, 22.w, 0),
                   child: Row(
                     children: [
-                      if (leading != null) ...[
-                        leading!,
-                        const SizedBox(width: 12),
-                      ],
-                      Expanded(
-                        child: title != null
-                          ? Text(
-                              title!,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: AppColor.secondary06,
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                      ),
-                      if (actions != null) ...actions!,
-                      if (onClose != null)
-                        IconButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            onClose?.call();
-                          },
-                          icon: const Icon(Icons.close),
+                      Container(
+                        width: 40.w,
+                        height: 40.w,
+                        decoration: BoxDecoration(
+                          color: toneColors.bg,
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
+                        alignment: Alignment.center,
+                        child: Icon(icon, color: toneColors.fg, size: 22.sp),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            color: NewAppColor.textStrong,
+                            fontSize: 17.sp,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Pretendard',
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-
-              // Content
-              Expanded(
-                child: Padding(
-                  padding: padding ?? const EdgeInsets.all(16),
-                  child: child,
+                SizedBox(height: 14.h),
+                Container(height: 1, color: NewAppColor.borderHair),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding:
+                        EdgeInsets.fromLTRB(22.w, 16.h, 22.w, 4.h),
+                    child: body,
+                  ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: EdgeInsets.fromLTRB(22.w, 14.h, 22.w, 18.h),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(sheetContext),
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: 15.h),
+                      decoration: BoxDecoration(
+                        color: NewAppColor.skyPrimary,
+                        borderRadius: BorderRadius.circular(13.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: NewAppColor.skyPrimary.withOpacity(0.30),
+                            blurRadius: 22,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        confirmLabel,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
-class AppSheetMenuItem {
-  final String title;
-  final String? subtitle;
-  final IconData? icon;
-  final Widget? trailing;
-  final VoidCallback? onTap;
+// 톤별 아이콘 박스 컬러
+({Color bg, Color fg}) _toneColors(AppSheetTone tone) {
+  switch (tone) {
+    case AppSheetTone.sky:
+      return (bg: NewAppColor.skyTint, fg: NewAppColor.skyDeep);
+    case AppSheetTone.danger:
+      return (bg: NewAppColor.dangerBg, fg: NewAppColor.danger700);
+    case AppSheetTone.success:
+      return (bg: NewAppColor.successBg, fg: NewAppColor.success700);
+    case AppSheetTone.warning:
+      return (bg: NewAppColor.warningBg, fg: NewAppColor.warning700);
+  }
+}
 
-  const AppSheetMenuItem({
-    required this.title,
-    this.subtitle,
-    this.icon,
-    this.trailing,
-    this.onTap,
-  });
+Color _confirmButtonColor(AppSheetTone tone) {
+  switch (tone) {
+    case AppSheetTone.sky:
+      return NewAppColor.skyPrimary;
+    case AppSheetTone.danger:
+      return NewAppColor.danger700;
+    case AppSheetTone.success:
+      return NewAppColor.success700;
+    case AppSheetTone.warning:
+      return NewAppColor.warning700;
+  }
+}
+
+IconData _defaultIcon(AppSheetTone tone) {
+  switch (tone) {
+    case AppSheetTone.sky:
+      return LucideIcons.circleHelp;
+    case AppSheetTone.danger:
+      return LucideIcons.trash2;
+    case AppSheetTone.success:
+      return LucideIcons.circleCheck;
+    case AppSheetTone.warning:
+      return LucideIcons.triangleAlert;
+  }
 }

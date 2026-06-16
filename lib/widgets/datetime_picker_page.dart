@@ -3,6 +3,7 @@ import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 날짜·시간 선택 화면 — 1.2.0 C 방향
 class DateTimePickerPage extends StatefulWidget {
@@ -55,7 +56,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: material.IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -154,7 +155,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
     return Row(
       children: [
         _buildArrowButton(
-          icon: Icons.chevron_left,
+          icon: LucideIcons.chevronLeft,
           onTap: () => setState(() {
             currentMonth =
                 DateTime(currentMonth.year, currentMonth.month - 1, 1);
@@ -174,7 +175,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
           ),
         ),
         _buildArrowButton(
-          icon: Icons.chevron_right,
+          icon: LucideIcons.chevronRight,
           onTap: () => setState(() {
             currentMonth =
                 DateTime(currentMonth.year, currentMonth.month + 1, 1);
@@ -397,7 +398,7 @@ class _DateTimePickerPageState extends State<DateTimePickerPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline,
+          Icon(LucideIcons.info,
               size: 15.sp, color: NewAppColor.warning700),
           SizedBox(width: 8.w),
           Expanded(

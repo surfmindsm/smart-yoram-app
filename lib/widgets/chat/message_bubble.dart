@@ -4,6 +4,7 @@ import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
 import 'package:smart_yoram_app/models/chat_models.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 메시지 말풍선 위젯
 ///
@@ -229,7 +230,7 @@ class MessageBubble extends StatelessWidget {
             height: 220.h,
             color: NewAppColor.borderSoft,
             child: Icon(
-              Icons.broken_image,
+              LucideIcons.imageOff,
               color: NewAppColor.iconFaint,
               size: 40.sp,
             ),

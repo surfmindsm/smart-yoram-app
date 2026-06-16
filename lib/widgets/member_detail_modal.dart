@@ -5,6 +5,7 @@ import '../models/member.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
 import '../services/member_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MemberDetailModal extends StatefulWidget {
   final Member member;
@@ -98,7 +99,7 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      Icons.close,
+                      LucideIcons.x,
                       size: 19.sp,
                       color: NewAppColor.textMuted,
                     ),
@@ -292,7 +293,7 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.phone, color: NewAppColor.skyDeep, size: 18.sp),
+                  Icon(LucideIcons.phone, color: NewAppColor.skyDeep, size: 18.sp),
                   SizedBox(width: 8.w),
                   Text(
                     '전화',
@@ -330,7 +331,7 @@ class _MemberDetailModalState extends State<MemberDetailModal> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.chat_bubble_outline,
+                  Icon(LucideIcons.messageCircle,
                       color: Colors.white, size: 18.sp),
                   SizedBox(width: 8.w),
                   Text(

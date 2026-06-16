@@ -4,6 +4,7 @@ import '../../components/app_toast.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
 import '../../services/auth_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 1.2.0 C 방향: 비밀번호 변경 화면
 ///
@@ -61,7 +62,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
         valid: false,
         message: '',
         color: NewAppColor.textTertiary,
-        icon: Icons.circle_outlined,
+        icon: LucideIcons.circle,
       );
     }
     if (value.length < 6) {
@@ -69,14 +70,14 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
         valid: false,
         message: '6자 이상 입력해주세요',
         color: NewAppColor.danger700,
-        icon: Icons.error_outline,
+        icon: LucideIcons.circleAlert,
       );
     }
     return (
       valid: true,
       message: '안전한 비밀번호예요',
       color: NewAppColor.skyDeep,
-      icon: Icons.check_circle_outline,
+      icon: LucideIcons.circleCheck,
     );
   }
 
@@ -150,7 +151,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -187,7 +188,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
-                            Icons.verified_user_outlined,
+                            LucideIcons.shieldCheck,
                             size: 19.sp,
                             color: NewAppColor.skyDeep,
                           ),
@@ -371,7 +372,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
           child: Row(
             children: [
               Icon(
-                Icons.lock_outline,
+                LucideIcons.lock,
                 size: 18.sp,
                 color: hasFocus
                     ? NewAppColor.skyDeep
@@ -413,8 +414,8 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
                   child: Icon(
                     obscure
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
+                        ? LucideIcons.eyeOff
+                        : LucideIcons.eye,
                     size: 18.sp,
                     color: NewAppColor.textTertiary,
                   ),

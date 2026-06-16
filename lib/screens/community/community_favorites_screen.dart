@@ -91,7 +91,7 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left,
+          icon: Icon(LucideIcons.chevronLeft,
               color: NewAppColor.textStrong, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
@@ -225,7 +225,7 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.favorite_border,
+            LucideIcons.heart,
             size: 56.sp,
             color: NewAppColor.iconFaint,
           ),
@@ -399,7 +399,7 @@ class _CommunityFavoritesScreenState extends State<CommunityFavoritesScreen> {
             // 찜하기 버튼 (우측 상단)
             SizedBox(width: 8.w),
             IconButton(
-              icon: const Icon(Icons.favorite, color: Colors.red),
+              icon: const Icon(LucideIcons.heart, color: Colors.red),
               onPressed: () => _removeFromWishlist(item),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),

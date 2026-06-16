@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/pastoral_care_request.dart';
 import '../../resource/color_style_new.dart';
 import '../../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 1.2.0 C 방향: 관리자용 심방 신청 카드
 ///
@@ -124,7 +125,7 @@ class PastoralCareCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.person_outline,
+                  LucideIcons.user,
                   size: 15.sp,
                   color: NewAppColor.textTertiary,
                 ),

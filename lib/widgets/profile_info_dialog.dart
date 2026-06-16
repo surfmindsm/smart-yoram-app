@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 프로필 정보 다이얼로그
 /// 상대방의 프로필을 클릭하거나 판매자 프로필을 선택하면 표시
@@ -63,7 +64,7 @@ class ProfileInfoDialog extends StatelessWidget {
                         errorWidget: (context, url, error) => Container(
                           color: NewAppColor.neutral100,
                           child: Icon(
-                            Icons.person,
+                            LucideIcons.user,
                             size: 50.w,
                             color: NewAppColor.neutral400,
                           ),
@@ -72,7 +73,7 @@ class ProfileInfoDialog extends StatelessWidget {
                     : Container(
                         color: NewAppColor.neutral100,
                         child: Icon(
-                          Icons.person,
+                          LucideIcons.user,
                           size: 50.w,
                           color: NewAppColor.neutral400,
                         ),
@@ -117,7 +118,7 @@ class ProfileInfoDialog extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.church,
+                      LucideIcons.church,
                       size: 18.sp,
                       color: NewAppColor.neutral600,
                     ),
@@ -165,7 +166,7 @@ class ProfileInfoDialog extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.only(top: 2.h),
                       child: Icon(
-                        Icons.location_on,
+                        LucideIcons.mapPin,
                         size: 18.sp,
                         color: NewAppColor.neutral600,
                       ),

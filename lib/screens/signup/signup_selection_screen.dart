@@ -1,117 +1,108 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide IconButton;
+import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smart_yoram_app/resource/color_style_new.dart';
 import 'package:smart_yoram_app/resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-/// 회원가입 유형 선택 화면
-/// 교회 가입 또는 커뮤니티 가입을 선택
+/// 회원가입 유형 선택 화면 — 1.2.0 C 방향
 class SignupSelectionScreen extends StatelessWidget {
   const SignupSelectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const figmaStyles = FigmaTextStyles();
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: NewAppColor.neutral900),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        leading: material.IconButton(
+          icon: Icon(LucideIcons.chevronLeft,
+              color: NewAppColor.textStrong, size: 26.sp),
           onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '회원가입',
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          padding: EdgeInsets.fromLTRB(18.w, 24.h, 18.w, 18.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 40.h),
-
-              // 타이틀
               Text(
-                '가입 유형 선택',
-                style: figmaStyles.display5.copyWith(
-                  color: NewAppColor.neutral900,
-                  fontFamily: 'Pretendard Variable',
-                  letterSpacing: -0.80,
+                '어떤 회원으로\n가입할까요?',
+                style: TextStyle(
+                  color: NewAppColor.textStrong,
+                  fontSize: 22.sp,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Pretendard',
+                  height: 1.35,
                 ),
               ),
               SizedBox(height: 8.h),
               Text(
-                '어떤 유형으로 가입하시겠습니까?',
-                style: figmaStyles.headline4.copyWith(
-                  color: NewAppColor.neutral600,
-                  fontFamily: 'Pretendard',
+                '가입 유형에 따라 입력할 정보가 달라져요.',
+                style: TextStyle(
+                  color: NewAppColor.textTertiary,
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
-                  letterSpacing: -0.50,
+                  fontFamily: 'Pretendard',
                 ),
               ),
-
-              SizedBox(height: 48.h),
-
-              // 교회 가입 카드
+              SizedBox(height: 24.h),
               _buildSelectionCard(
                 context,
                 title: '교회 관리자 가입',
                 description: 'Church Round 시스템에\n교회를 등록하고 관리합니다',
-                icon: Icons.church,
-                color: NewAppColor.primary600,
-                onTap: () {
-                  Navigator.pushNamed(context, '/signup/church');
-                },
+                icon: LucideIcons.church,
+                onTap: () => Navigator.pushNamed(context, '/signup/church'),
               ),
-
-              SizedBox(height: 16.h),
-
-              // 커뮤니티 가입 카드
+              SizedBox(height: 10.h),
               _buildSelectionCard(
                 context,
                 title: '커뮤니티 가입',
                 description: '업체, 사역자, 개인사업자 등으로\n커뮤니티에 참여합니다',
-                icon: Icons.people,
-                color: NewAppColor.secondary600,
-                onTap: () {
-                  Navigator.pushNamed(context, '/signup/community');
-                },
+                icon: LucideIcons.users,
+                onTap: () => Navigator.pushNamed(context, '/signup/community'),
               ),
-
               const Spacer(),
-
-              // 하단 안내 메시지
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(16.w),
+                padding: EdgeInsets.all(14.w),
                 decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
-                  borderRadius: BorderRadius.circular(8.r),
+                  color: NewAppColor.skyTint,
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 20.w,
-                      color: NewAppColor.neutral500,
-                    ),
-                    SizedBox(width: 8.w),
+                    Icon(LucideIcons.info,
+                        size: 16.sp, color: NewAppColor.skyDeep),
+                    SizedBox(width: 9.w),
                     Expanded(
                       child: Text(
-                        '가입 신청 후 관리자 검토를 거쳐\n승인 결과를 이메일로 안내드립니다',
-                        style: figmaStyles.captionText1.copyWith(
-                          color: NewAppColor.neutral600,
-                          fontFamily: 'Pretendard Variable',
-                          letterSpacing: -0.30,
+                        '가입 신청 후 관리자 검토를 거쳐\n승인 결과를 이메일로 안내드려요.',
+                        style: TextStyle(
+                          color: NewAppColor.skyDeep,
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Pretendard',
+                          height: 1.55,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              SizedBox(height: 40.h),
             ],
           ),
         ),
@@ -124,70 +115,62 @@ class SignupSelectionScreen extends StatelessWidget {
     required String title,
     required String description,
     required IconData icon,
-    required Color color,
     required VoidCallback onTap,
   }) {
-    const figmaStyles = FigmaTextStyles();
-
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(24.w),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: NewAppColor.neutral100,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: NewAppColor.neutral200,
-            width: 1,
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: NewAppColor.borderHair, width: 1),
         ),
         child: Row(
           children: [
             Container(
-              width: 56.w,
-              height: 56.h,
+              width: 48.w,
+              height: 48.w,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: NewAppColor.skyTint,
                 borderRadius: BorderRadius.circular(12.r),
               ),
-              child: Icon(
-                icon,
-                size: 28.w,
-                color: color,
-              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 24.sp, color: NewAppColor.skyDeep),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 13.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     title,
-                    style: figmaStyles.subtitle1.copyWith(
-                      color: NewAppColor.neutral900,
-                      fontFamily: 'Pretendard Variable',
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.40,
+                    style: TextStyle(
+                      color: NewAppColor.textStrong,
+                      fontSize: 15.5.sp,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Pretendard',
                     ),
                   ),
                   SizedBox(height: 4.h),
                   Text(
                     description,
-                    style: figmaStyles.body2.copyWith(
-                      color: NewAppColor.neutral600,
-                      fontFamily: 'Pretendard Variable',
-                      letterSpacing: -0.35,
+                    style: TextStyle(
+                      color: NewAppColor.textTertiary,
+                      fontSize: 12.5.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                      height: 1.5,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16.w,
-              color: NewAppColor.neutral400,
-            ),
+            Icon(LucideIcons.chevronRight,
+                size: 20.sp, color: NewAppColor.iconFaint),
           ],
         ),
       ),

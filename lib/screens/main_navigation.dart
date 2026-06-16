@@ -228,7 +228,7 @@ class _MainNavigationState extends State<MainNavigation>
         onTap: () => _onTap(3),
       ),
       // _NavItem(
-      //   icon: Icons.video_library_outlined,
+      //   icon: LucideIcons.clapperboard,
       //   label: '명설교',
       //   isActive: _currentIndex == 4,
       //   onTap: () => _onTap(4),
@@ -285,9 +285,9 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor =
-        isActive ? NewAppColor.neutral800 : NewAppColor.neutral400;
+        isActive ? NewAppColor.skyPrimary : NewAppColor.neutral400;
     final textColor =
-        isActive ? NewAppColor.neutral800 : NewAppColor.neutral400;
+        isActive ? NewAppColor.skyPrimary : NewAppColor.neutral400;
 
     return Expanded(
       child: GestureDetector(

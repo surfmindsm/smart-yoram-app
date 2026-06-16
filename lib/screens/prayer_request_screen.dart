@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-// import.*lucide_icons.*;
+import 'package:flutter/material.dart' hide IconButton;
+import 'package:flutter/material.dart' as material show IconButton;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../components/index.dart';
 import '../models/prayer_request.dart';
@@ -7,6 +7,7 @@ import '../services/prayer_request_service.dart';
 import '../services/auth_service.dart';
 import '../resource/color_style_new.dart';
 import '../resource/text_style_new.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PrayerRequestScreen extends StatefulWidget {
   const PrayerRequestScreen({Key? key}) : super(key: key);
@@ -109,339 +110,319 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: NewAppColor.canvasAlt,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        leading: material.IconButton(
+          icon: Icon(LucideIcons.chevronLeft,
+              color: NewAppColor.textStrong, size: 26.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           '중보 기도',
-          style: const FigmaTextStyles().headline4.copyWith(
-            color: Colors.white,
-          ),
+          style: FigmaTextStyles().subtitle1.copyWith(
+                color: NewAppColor.textStrong,
+                fontSize: 17.sp,
+              ),
         ),
-        backgroundColor: NewAppColor.success600,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(52.h),
-          child: Container(
-            width: double.infinity,
-            height: 52.h,
+      ),
+      body: Column(
+        children: [
+          // 1.2.0 탭바 — 새 기도 / 내 기도 (밑줄 강조)
+          Container(
             color: Colors.white,
             child: Row(
               children: [
-                // 새 기도 탭 (왼쪽)
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      _tabController.animateTo(0);
-                      setState(() {
-                        _currentTabIndex = 0;
-                      });
-                    },
-                    child: Container(
-                      height: 52.h,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            width: _currentTabIndex == 0 ? 2.0 : 1,
-                            color: _currentTabIndex == 0
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral200,
-                          ),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '새 기도',
-                          textAlign: TextAlign.center,
-                          style: const FigmaTextStyles().title4.copyWith(
-                            color: _currentTabIndex == 0
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral500,
-                            fontWeight: _currentTabIndex == 0
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // 내 기도 탭 (오른쪽)
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      _tabController.animateTo(1);
-                      setState(() {
-                        _currentTabIndex = 1;
-                      });
-                    },
-                    child: Container(
-                      height: 52.h,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            width: _currentTabIndex == 1 ? 2.0 : 1,
-                            color: _currentTabIndex == 1
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral200,
-                          ),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '내 기도',
-                          textAlign: TextAlign.center,
-                          style: const FigmaTextStyles().title4.copyWith(
-                            color: _currentTabIndex == 1
-                                ? NewAppColor.success600
-                                : NewAppColor.neutral500,
-                            fontWeight: _currentTabIndex == 1
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                _buildTab('새 기도', 0),
+                _buildTab('내 기도', 1),
               ],
             ),
           ),
-        ),
-      ),
-      backgroundColor: NewAppColor.neutral100,
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildRequestForm(),
-          _buildMyRequestsList(),
+          Container(height: 1, color: NewAppColor.borderSoft),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildRequestForm(),
+                _buildMyRequestsList(),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRequestForm() {
-    return Container(
-      color: NewAppColor.neutral100,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '기도 요청 정보',
-                    style: const FigmaTextStyles().headline5.copyWith(
-                      color: NewAppColor.neutral900,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // 내용
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 커스텀 라벨
-                      Text(
-                        '기도 내용*',
-                        style: const FigmaTextStyles().body2.copyWith(
-                          color: NewAppColor.neutral900,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      // 커스텀 TextField with 글자 수 카운터
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: NewAppColor.neutral200,
-                            width: 1,
-                          ),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Stack(
-                          children: [
-                            TextField(
-                              controller: _contentController,
-                              maxLines: 6,
-                              maxLength: 200,
-                              onChanged: (value) {
-                                setState(() {}); // 글자 수 업데이트를 위해
-                              },
-                              decoration: InputDecoration(
-                                hintText:
-                                    '건강 회복을 위해 기도 부탁드립니다.',
-                                hintStyle:
-                                    const FigmaTextStyles().body2.copyWith(
-                                      color: NewAppColor.neutral400,
-                                    ),
-                                border: InputBorder.none,
-                                contentPadding:
-                                    EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 40.h),
-                                counterText: '', // 기본 카운터 숨기기
-                              ),
-                              style: const FigmaTextStyles().body2.copyWith(
-                                color: NewAppColor.neutral900,
-                              ),
-                            ),
-                            // 커스텀 글자 수 카운터
-                            Positioned(
-                              bottom: 12.h,
-                              right: 16.w,
-                              child: Text(
-                                '${_contentController.text.length}/200',
-                                style:
-                                    const FigmaTextStyles().caption3.copyWith(
-                                      color: NewAppColor.neutral400,
-                                    ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // 비공개 설정
-                  Container(
-                    width: double.infinity,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _isPrivate = !_isPrivate;
-                            });
-                          },
-                          child: Container(
-                            width: 44.w,
-                            height: 26.h,
-                            padding: EdgeInsets.all(2.r),
-                            clipBehavior: Clip.antiAlias,
-                            decoration: ShapeDecoration(
-                              color: _isPrivate
-                                  ? NewAppColor.success600
-                                  : NewAppColor.neutral300,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(1000.r),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: _isPrivate
-                                  ? MainAxisAlignment.end
-                                  : MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 22.w,
-                                  height: 22.h,
-                                  padding: EdgeInsets.all(4.r),
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: ShapeDecoration(
-                                    color: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(1000.r),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: Text(
-                            '비공개 요청',
-                            style: FigmaTextStyles().body1.copyWith(
-                              color: NewAppColor.neutral600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+  Widget _buildTab(String label, int index) {
+    final selected = _currentTabIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          _tabController.animateTo(index);
+          setState(() => _currentTabIndex = index);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 13.h),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: selected ? NewAppColor.skyPrimary : Colors.transparent,
+                width: 2.5,
               ),
             ),
-            SizedBox(height: 24.h),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              color:
+                  selected ? NewAppColor.skyPrimary : NewAppColor.textTertiary,
+              fontSize: 14.sp,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              fontFamily: 'Pretendard',
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-            // 등록 버튼
-            GestureDetector(
-              onTap: _isSubmitting ? null : _submitNewRequest,
+  Widget _buildRequestForm() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 폼 카드 (1.2.0)
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(color: NewAppColor.borderHair, width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '기도 요청 정보',
+                  style: TextStyle(
+                    color: NewAppColor.textStrong,
+                    fontSize: 15.5.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Pretendard',
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // 라벨
+                Row(
+                  children: [
+                    Text(
+                      '기도 내용',
+                      style: TextStyle(
+                        color: NewAppColor.textSecondary,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                    SizedBox(width: 3.w),
+                    Text(
+                      '*',
+                      style: TextStyle(
+                        color: NewAppColor.danger700,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 6.h),
+                // 입력 박스 + 카운터
+                Stack(
+                  children: [
+                    TextField(
+                      controller: _contentController,
+                      maxLines: 6,
+                      maxLength: 200,
+                      onChanged: (_) => setState(() {}),
+                      style: TextStyle(
+                        color: NewAppColor.textStrong,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Pretendard',
+                        height: 1.5,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '건강 회복을 위해 기도 부탁드립니다.',
+                        hintStyle: TextStyle(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Pretendard',
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                              color: NewAppColor.borderHair, width: 1),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                              color: NewAppColor.borderHair, width: 1),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                              color: NewAppColor.skyPrimary, width: 1.5),
+                        ),
+                        contentPadding: EdgeInsets.fromLTRB(
+                            14.w, 13.h, 14.w, 32.h),
+                        counterText: '',
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 10.h,
+                      right: 14.w,
+                      child: Text(
+                        '${_contentController.text.length}/200',
+                        style: TextStyle(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 11.5.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                // 비공개 토글 행
+                Row(
+                  children: [
+                    Icon(LucideIcons.lock,
+                        size: 18.sp, color: NewAppColor.textTertiary),
+                    SizedBox(width: 9.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '비공개 요청',
+                            style: TextStyle(
+                              color: NewAppColor.textStrong,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            '담당 사역자에게만 공유돼요.',
+                            style: TextStyle(
+                              color: NewAppColor.textTertiary,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    AppSwitch(
+                      value: _isPrivate,
+                      onChanged: (value) =>
+                          setState(() => _isPrivate = value),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          // 등록 버튼 — sky primary + 그림자
+          GestureDetector(
+            onTap: _isSubmitting ? null : _submitNewRequest,
+            behavior: HitTestBehavior.opaque,
+            child: Opacity(
+              opacity: _isSubmitting ? 0.5 : 1.0,
               child: Container(
                 width: double.infinity,
-                height: 56.h,
+                padding: EdgeInsets.symmetric(vertical: 15.h),
                 decoration: BoxDecoration(
-                  color: _isSubmitting
-                      ? NewAppColor.success300
-                      : NewAppColor.success600,
-                  borderRadius: BorderRadius.circular(12.r),
+                  color: NewAppColor.skyPrimary,
+                  borderRadius: BorderRadius.circular(13.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: NewAppColor.skyPrimary.withOpacity(0.30),
+                      blurRadius: 22,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                child: Center(
-                  child: _isSubmitting
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 16.w,
-                              height: 16.w,
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
+                alignment: Alignment.center,
+                child: _isSubmitting
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 16.w,
+                            height: 16.w,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white),
                             ),
-                            SizedBox(width: 8.w),
-                            Text(
-                              '등록 중...',
-                              style: const FigmaTextStyles().title4.copyWith(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        )
-                      : Text(
-                          '기도 요청 등록',
-                          style: const FigmaTextStyles().title4.copyWith(
-                            color: Colors.white,
                           ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            '등록 중…',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w800,
+                              fontFamily: 'Pretendard',
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        '기도 요청 등록',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Pretendard',
                         ),
-                ),
+                      ),
               ),
             ),
-            SizedBox(height: 20.h),
-          ],
-        ),
+          ),
+          SizedBox(height: 20.h),
+        ],
       ),
     );
   }
 
   Widget _buildMyRequestsList() {
     return Container(
-      color: NewAppColor.neutral100,
+      color: NewAppColor.canvasAlt,
       child: RefreshIndicator(
         onRefresh: _loadMyRequests,
         child: _isLoadingMy
             ? _buildLoadingWidget()
             : _myRequests.isEmpty
                 ? _buildEmptyWidget(
-                    icon: Icons.favorite,
+                    icon: LucideIcons.heart,
                     title: '등록된 기도 요청이 없습니다',
                     subtitle: '첫 기도 요청을 등록해보세요',
                   )
@@ -462,12 +443,12 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: NewAppColor.success600),
+          CircularProgressIndicator(color: NewAppColor.skyPrimary),
           SizedBox(height: 16.h),
           Text(
             '기도 목록을 불러오는 중...',
             style: const FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral500,
+              color: NewAppColor.textTertiary,
             ),
           ),
         ],
@@ -487,20 +468,20 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
           Icon(
             icon,
             size: 64.w,
-            color: NewAppColor.neutral400,
+            color: NewAppColor.textMuted,
           ),
           SizedBox(height: 16.h),
           Text(
             title,
             style: const FigmaTextStyles().title3.copyWith(
-              color: NewAppColor.neutral400,
+              color: NewAppColor.textMuted,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             subtitle,
             style: const FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral400,
+              color: NewAppColor.textMuted,
             ),
           ),
         ],
@@ -509,198 +490,276 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   }
 
   Widget _buildRequestCard(PrayerRequest request, {required bool isMyRequest}) {
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 헤더 - 비공개 표시만
-          if (request.isPrivate)
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: NewAppColor.neutral400,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    '비공개',
-                    style: const FigmaTextStyles().caption1.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          if (request.isPrivate) SizedBox(height: 12.h),
-
-          // 내용 - 2줄까지만 표시
-          Text(
-            request.content,
-            style: const FigmaTextStyles().body2.copyWith(
-              color: NewAppColor.neutral700,
-              height: 1.4,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: 12.h),
-
-          // 푸터 - 날짜와 버튼들
-          Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                size: 14.r,
-                color: NewAppColor.neutral500,
-              ),
-              SizedBox(width: 4.w),
-              Text(
-                _formatDate(request.createdAt),
-                style: const FigmaTextStyles().caption1.copyWith(
-                  color: NewAppColor.neutral500,
-                ),
-              ),
-              const Spacer(),
-              if (isMyRequest) ...[
-                // 수정 버튼
-                GestureDetector(
-                  onTap: () => _showEditRequestDialog(request),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
+    final statusTone = _getStatusTone(request.status);
+    final canEdit = isMyRequest && request.status == PrayerStatus.active;
+    final canDelete = isMyRequest;
+    return GestureDetector(
+      onTap: () => _showRequestDetailDialog(request),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        margin: EdgeInsets.only(bottom: 10.h),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: NewAppColor.borderHair, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 상단 헤더 영역 — 아이콘 + 제목 + 상태 칩
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38.w,
+                    height: 38.w,
                     decoration: BoxDecoration(
-                      color: NewAppColor.success200,
-                      borderRadius: BorderRadius.circular(8.r),
+                      color: NewAppColor.skyTint,
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      LucideIcons.heart,
+                      size: 18.sp,
+                      color: NewAppColor.skyDeep,
+                    ),
+                  ),
+                  SizedBox(width: 11.w),
+                  Expanded(
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.edit,
-                          size: 14.r,
-                          color: NewAppColor.success600,
-                        ),
-                        SizedBox(width: 4.w),
                         Text(
-                          '수정',
-                          style: const FigmaTextStyles().caption1.copyWith(
-                            color: NewAppColor.success600,
+                          PrayerCategory.getCategoryName(request.category),
+                          style: TextStyle(
+                            color: NewAppColor.textStrong,
+                            fontSize: 14.5.sp,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Pretendard',
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                        if (request.isPrivate) ...[
+                          SizedBox(width: 6.w),
+                          Icon(LucideIcons.lock,
+                              size: 13.sp,
+                              color: NewAppColor.textTertiary),
+                        ],
                       ],
                     ),
                   ),
-                ),
-                SizedBox(width: 8.w),
-                // 삭제 버튼
-                GestureDetector(
-                  onTap: () => _showDeleteConfirmDialog(request),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
+                  SizedBox(width: 8.w),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 9.w, vertical: 3.h),
                     decoration: BoxDecoration(
-                      color: NewAppColor.warning200,
-                      borderRadius: BorderRadius.circular(8.r),
+                      color: statusTone.bg,
+                      borderRadius: BorderRadius.circular(999),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.delete,
-                          size: 14.r,
-                          color: NewAppColor.warning600,
+                    child: Text(
+                      PrayerStatus.getStatusName(request.status),
+                      style: TextStyle(
+                        color: statusTone.fg,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 내용 영역
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (request.content.isNotEmpty) ...[
+                    Text(
+                      request.content,
+                      style: TextStyle(
+                        color: NewAppColor.textBody,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Pretendard',
+                        height: 1.5,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 10.h),
+                  ],
+                  Row(
+                    children: [
+                      Icon(LucideIcons.clock,
+                          size: 13.sp, color: NewAppColor.textTertiary),
+                      SizedBox(width: 4.w),
+                      Text(
+                        _formatDate(request.createdAt),
+                        style: TextStyle(
+                          color: NewAppColor.textTertiary,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Pretendard',
                         ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          '삭제',
-                          style: const FigmaTextStyles().caption1.copyWith(
-                            color: NewAppColor.warning600,
-                          ),
-                        ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // 하단 액션 영역 — 수정/삭제 풀폭 분할
+            if (canEdit || canDelete) ...[
+              SizedBox(height: 14.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: NewAppColor.borderHair,
+                      width: 1,
                     ),
                   ),
                 ),
-              ],
+                child: Row(
+                  children: [
+                    if (canEdit) ...[
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _showEditRequestDialog(request),
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 10.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.borderSoft,
+                              borderRadius: BorderRadius.circular(11.r),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '수정',
+                              style: TextStyle(
+                                color: NewAppColor.textSecondary,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (canEdit && canDelete) SizedBox(width: 8.w),
+                    if (canDelete) ...[
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _showDeleteConfirmDialog(request),
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 10.h),
+                            decoration: BoxDecoration(
+                              color: NewAppColor.dangerBg,
+                              borderRadius: BorderRadius.circular(11.r),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '삭제',
+                              style: TextStyle(
+                                color: NewAppColor.danger700,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Pretendard',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ] else ...[
+              SizedBox(height: 16.h),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  // 1.2.0 상태별 톤 — 심방 신청 카드와 동일 패턴
+  ({Color bg, Color fg}) _getStatusTone(String status) {
+    switch (status) {
+      case PrayerStatus.active:
+        return (bg: NewAppColor.skyTint, fg: NewAppColor.skyDeep);
+      case PrayerStatus.answered:
+        return (bg: NewAppColor.successBg, fg: NewAppColor.success700);
+      case PrayerStatus.paused:
+        return (bg: NewAppColor.warningBg, fg: NewAppColor.warning700);
+      case PrayerStatus.closed:
+        return (bg: NewAppColor.borderSoft, fg: NewAppColor.textSecondary);
+      default:
+        return (bg: NewAppColor.borderSoft, fg: NewAppColor.textSecondary);
+    }
+  }
+
   void _showRequestDetailDialog(PrayerRequest request) {
-    showDialog(
+    AppInfoSheet.show(
       context: context,
-      builder: (context) => AppDialog(
-        title: '기도 요청 상세보기',
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 기본 정보
-              _buildDetailSection(
-                  '카테고리', PrayerCategory.getCategoryName(request.category)),
-              _buildDetailSection(
-                  '상태', PrayerStatus.getStatusName(request.status)),
-              if (request.priority == PrayerPriority.urgent)
-                _buildDetailSection('우선순위', '긴급'),
-              if (request.isPrivate) _buildDetailSection('공개 설정', '비공개'),
-
-              SizedBox(height: 16.h),
-
-              // 내용
-              Text(
-                '내용',
-                style: const FigmaTextStyles().body2.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: NewAppColor.neutral900,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: NewAppColor.neutral100,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: NewAppColor.neutral300),
-                ),
-                child: Text(
-                  request.content,
-                  style: const FigmaTextStyles().body2.copyWith(
-                    color: NewAppColor.neutral600,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 16.h),
-
-              // 추가 정보
-              if (request.memberName != null)
-                _buildDetailSection('요청자', request.memberName!),
-              _buildDetailSection('등록일', _formatDetailDate(request.createdAt)),
-              if (request.updatedAt != null &&
-                  request.updatedAt != request.createdAt)
-                _buildDetailSection(
-                    '수정일', _formatDetailDate(request.updatedAt!)),
-            ],
+      title: '기도 요청 상세보기',
+      icon: LucideIcons.heart,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildDetailSection(
+              '카테고리', PrayerCategory.getCategoryName(request.category)),
+          _buildDetailSection(
+              '상태', PrayerStatus.getStatusName(request.status)),
+          if (request.priority == PrayerPriority.urgent)
+            _buildDetailSection('우선순위', '긴급'),
+          if (request.isPrivate) _buildDetailSection('공개 설정', '비공개'),
+          SizedBox(height: 14.h),
+          Text(
+            '내용',
+            style: TextStyle(
+              color: NewAppColor.textStrong,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Pretendard',
+            ),
           ),
-        ),
+          SizedBox(height: 8.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: NewAppColor.canvasAlt,
+              borderRadius: BorderRadius.circular(10.r),
+              border: Border.all(color: NewAppColor.borderHair),
+            ),
+            child: Text(
+              request.content,
+              style: TextStyle(
+                color: NewAppColor.textBody,
+                fontSize: 13.5.sp,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Pretendard',
+                height: 1.55,
+              ),
+            ),
+          ),
+          SizedBox(height: 14.h),
+          if (request.memberName != null)
+            _buildDetailSection('요청자', request.memberName!),
+          _buildDetailSection('등록일', _formatDetailDate(request.createdAt)),
+          if (request.updatedAt != null &&
+              request.updatedAt != request.createdAt)
+            _buildDetailSection('수정일', _formatDetailDate(request.updatedAt!)),
+        ],
       ),
     );
   }
@@ -712,20 +771,25 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 70.w,
+            width: 80.w,
             child: Text(
               label,
-              style: const FigmaTextStyles().caption1.copyWith(
-                color: NewAppColor.neutral400,
-                fontWeight: FontWeight.w500,
+              style: TextStyle(
+                color: NewAppColor.textTertiary,
+                fontSize: 12.5.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Pretendard',
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const FigmaTextStyles().caption1.copyWith(
-                color: NewAppColor.neutral900,
+              style: TextStyle(
+                color: NewAppColor.textStrong,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Pretendard',
               ),
             ),
           ),
@@ -738,27 +802,8 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     return '${date.year}년 ${date.month}월 ${date.day}일 ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  BadgeVariant _getStatusBadgeVariant(String status) {
-    switch (status) {
-      case PrayerStatus.active:
-        return BadgeVariant.primary;
-      case PrayerStatus.answered:
-        return BadgeVariant.success;
-      case PrayerStatus.closed:
-        return BadgeVariant.secondary;
-      case PrayerStatus.paused:
-        return BadgeVariant.warning;
-      default:
-        return BadgeVariant.secondary;
-    }
-  }
-
   String _formatDate(DateTime date) {
     return '${date.month}월 ${date.day}일 ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _prayForRequest(PrayerRequest request) {
-    _showSuccessSnackBar('기도하겠습니다 ');
   }
 
   void _showEditRequestDialog(PrayerRequest request) {
@@ -767,29 +812,15 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
     _showRequestDialog(isEdit: true, request: request);
   }
 
-  void _showDeleteConfirmDialog(PrayerRequest request) {
-    showDialog(
+  Future<void> _showDeleteConfirmDialog(PrayerRequest request) async {
+    final ok = await AppConfirmSheet.show(
       context: context,
-      builder: (context) => AppDialog(
-        title: '기도 요청 삭제',
-        description: '이 기도 요청을 삭제하시겠습니까?',
-        actions: [
-          AppButton(
-            variant: ButtonVariant.ghost,
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소'),
-          ),
-          AppButton(
-            variant: ButtonVariant.destructive,
-            onPressed: () async {
-              Navigator.of(context).pop();
-              _deleteRequest(request);
-            },
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
+      title: '기도 요청을 삭제할까요?',
+      description: '삭제한 기도 요청은 되돌릴 수 없어요.',
+      confirmLabel: '삭제',
+      tone: AppSheetTone.danger,
     );
+    if (ok == true) _deleteRequest(request);
   }
 
   Future<void> _deleteRequest(PrayerRequest request) async {
@@ -807,57 +838,282 @@ class _PrayerRequestScreenState extends State<PrayerRequestScreen>
   }
 
   void _showRequestDialog({required bool isEdit, PrayerRequest? request}) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AppDialog(
-          title: isEdit ? '기도 요청 수정' : '기도 요청 등록',
-          content: Form(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppInput(
-                  label: '내용',
-                  placeholder: '기도 요청 내용을 입력하세요',
-                  maxLines: 5,
-                  controller: _contentController,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: const Color(0xFF0F172A).withOpacity(0.45),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(26.r)),
                 ),
-                SizedBox(height: 16.h),
-                AppCheckbox(
-                  label: '비공개 요청',
-                  description: '다른 사용자에게 보이지 않습니다',
-                  value: _isPrivate,
-                  onChanged: (value) {
-                    setState(() => _isPrivate = value!);
-                  },
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding:
+                        EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 22.h),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 핸들바
+                        Container(
+                          width: 44,
+                          height: 5,
+                          margin: EdgeInsets.only(bottom: 18.h),
+                          decoration: BoxDecoration(
+                            color: NewAppColor.borderStrong,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                        // 아이콘 박스
+                        Container(
+                          width: 54.w,
+                          height: 54.w,
+                          decoration: BoxDecoration(
+                            color: NewAppColor.skyTint,
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(LucideIcons.heart,
+                              color: NewAppColor.skyDeep, size: 26.sp),
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          isEdit ? '기도 요청 수정' : '기도 요청 등록',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: NewAppColor.textStrong,
+                            fontSize: 19.sp,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Pretendard',
+                          ),
+                        ),
+                        SizedBox(height: 22.h),
+                        // 내용 라벨
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            children: [
+                              Text(
+                                '기도 내용',
+                                style: TextStyle(
+                                  color: NewAppColor.textSecondary,
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'Pretendard',
+                                ),
+                              ),
+                              SizedBox(width: 3.w),
+                              Text(
+                                '*',
+                                style: TextStyle(
+                                  color: NewAppColor.danger700,
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'Pretendard',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        TextField(
+                          controller: _contentController,
+                          maxLines: 5,
+                          style: TextStyle(
+                            color: NewAppColor.textStrong,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Pretendard',
+                            height: 1.5,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: '기도 요청 내용을 입력하세요',
+                            hintStyle: TextStyle(
+                              color: NewAppColor.textTertiary,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Pretendard',
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: BorderSide(
+                                  color: NewAppColor.borderHair, width: 1),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: BorderSide(
+                                  color: NewAppColor.borderHair, width: 1),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: BorderSide(
+                                  color: NewAppColor.skyPrimary, width: 1.5),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 14.w, vertical: 13.h),
+                          ),
+                        ),
+                        SizedBox(height: 14.h),
+                        // 비공개 토글
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 14.w, vertical: 10.h),
+                          decoration: BoxDecoration(
+                            color: NewAppColor.canvasAlt,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(LucideIcons.lock,
+                                  size: 18.sp,
+                                  color: NewAppColor.textTertiary),
+                              SizedBox(width: 9.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '비공개 요청',
+                                      style: TextStyle(
+                                        color: NewAppColor.textStrong,
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w700,
+                                        fontFamily: 'Pretendard',
+                                      ),
+                                    ),
+                                    SizedBox(height: 2.h),
+                                    Text(
+                                      '담당 사역자에게만 공유돼요.',
+                                      style: TextStyle(
+                                        color: NewAppColor.textTertiary,
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w500,
+                                        fontFamily: 'Pretendard',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              AppSwitch(
+                                value: _isPrivate,
+                                onChanged: (value) =>
+                                    setSheetState(() => _isPrivate = value),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 22.h),
+                        // 액션 버튼
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: _isSubmitting
+                                    ? null
+                                    : () {
+                                        Navigator.pop(sheetContext);
+                                        _clearForm();
+                                      },
+                                behavior: HitTestBehavior.opaque,
+                                child: Container(
+                                  padding:
+                                      EdgeInsets.symmetric(vertical: 15.h),
+                                  decoration: BoxDecoration(
+                                    color: NewAppColor.borderSoft,
+                                    borderRadius: BorderRadius.circular(13.r),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '취소',
+                                    style: TextStyle(
+                                      color: NewAppColor.textSecondary,
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Pretendard',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 11.w),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: _isSubmitting
+                                    ? null
+                                    : () => _submitRequest(
+                                          isEdit: isEdit,
+                                          request: request,
+                                        ),
+                                behavior: HitTestBehavior.opaque,
+                                child: Opacity(
+                                  opacity: _isSubmitting ? 0.5 : 1.0,
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 15.h),
+                                    decoration: BoxDecoration(
+                                      color: NewAppColor.skyPrimary,
+                                      borderRadius:
+                                          BorderRadius.circular(13.r),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: NewAppColor.skyPrimary
+                                              .withOpacity(0.30),
+                                          blurRadius: 22,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: _isSubmitting
+                                        ? SizedBox(
+                                            width: 18.w,
+                                            height: 18.w,
+                                            child:
+                                                const CircularProgressIndicator(
+                                              strokeWidth: 2.4,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<
+                                                      Color>(Colors.white),
+                                            ),
+                                          )
+                                        : Text(
+                                            isEdit ? '수정' : '등록',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 15.sp,
+                                              fontWeight: FontWeight.w800,
+                                              fontFamily: 'Pretendard',
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ),
-          actions: [
-            AppButton(
-              variant: ButtonVariant.ghost,
-              onPressed: () {
-                Navigator.of(context).pop();
-                _clearForm();
-              },
-              child: const Text('취소'),
-            ),
-            AppButton(
-              onPressed: _isSubmitting
-                  ? null
-                  : () => _submitRequest(isEdit: isEdit, request: request),
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(isEdit ? '수정' : '등록'),
-            ),
-          ],
-        ),
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
